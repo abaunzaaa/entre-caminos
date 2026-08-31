@@ -2,7 +2,6 @@ import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthTextField } from "../components/auth/AuthTextField";
 import { SocialButtons } from "../components/auth/SocialButtons";
-import { AuthBackLink } from "../components/auth/AuthBackLink";
 import { saveOnboarding } from "../utils/onboarding";
 import { getApiErrorMessage } from "../utils/api-error";
 import { validateRegisterForm, type RegisterFieldErrors } from "../utils/register-validation";
@@ -79,7 +78,6 @@ export function RegisterForm() {
         >
           Continuar
         </button>
-        <AuthBackLink />
       </div>
     );
   }
@@ -148,7 +146,6 @@ export function RegisterForm() {
         <div className="auth-alt">
           <SocialButtons label="O regístrate con" />
         </div>
-        <AuthBackLink />
       </footer>
     </div>
   );

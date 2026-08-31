@@ -22,6 +22,8 @@ export default {
       fontFamily: {
         serif: ["\"Playfair Display\"", "Georgia", "serif"],
         sans: ["Inter", "system-ui", "sans-serif"],
+        nunito: ["Nunito", "Inter", "system-ui", "sans-serif"],
+        poppins: ["Poppins", "Nunito", "system-ui", "sans-serif"],
       },
       letterSpacing: {
         brand: "0.28em",

@@ -19,7 +19,7 @@ function MicrosoftIcon() {
 
 export function SocialButtons({ label }: { label: string }) {
   return (
-    <div className="space-y-5">
+    <div className="auth-social">
       <div className="flex items-center gap-3 text-xs text-neutral-400">
         <span className="h-px flex-1 bg-neutral-200" />
         {label}
