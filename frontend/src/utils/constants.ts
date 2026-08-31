@@ -1,0 +1,1 @@
+export const EXPERIENCE_STATUSES = ["DRAFT", "PENDING", "PUBLISHED", "ARCHIVED"] as const;
