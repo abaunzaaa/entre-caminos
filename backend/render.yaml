@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: entre-caminos-api
+    env: node
+    plan: starter
+    rootDir: backend
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: npx prisma migrate deploy && node dist/server.js
+    healthCheckPath: /api/health

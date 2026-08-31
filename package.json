@@ -1,0 +1,19 @@
+{
+  "name": "entre-caminos",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Plataforma para descubrir experiencias culturales, recreativas, deportivas y turísticas.",
+  "scripts": {
+    "dev:backend": "npm run dev --prefix backend",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "build": "npm run build --prefix backend && npm run build --prefix frontend",
+    "test": "npm test --prefix backend",
+    "db:migrate": "npm run prisma:deploy --prefix backend",
+    "db:seed": "npm run prisma:seed --prefix backend",
+    "db:studio": "npm run prisma:studio --prefix backend",
+    "db:verify": "npm run db:verify --prefix backend"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
