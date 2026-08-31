@@ -1,19 +1,17 @@
 import { FormEvent, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Lock, Mail, User } from "lucide-react";
-import { IllustrationPanel } from "../components/auth/IllustrationPanel";
-import { IconField } from "../components/auth/IconField";
+import { useNavigate } from "react-router-dom";
+import { AuthTextField } from "../components/auth/AuthTextField";
 import { SocialButtons } from "../components/auth/SocialButtons";
+import { AuthBackLink } from "../components/auth/AuthBackLink";
 import { saveOnboarding } from "../utils/onboarding";
 import { getApiErrorMessage } from "../utils/api-error";
 import { validateRegisterForm, type RegisterFieldErrors } from "../utils/register-validation";
 import { useAuth } from "../hooks/useAuth";
-import panelRegister from "../assets/panel-register.png";
 
 const PASSWORD_HINT =
   "Usa al menos 8 caracteres, con mayúscula, minúscula, número y símbolo. Ejemplo: Caminos#2026";
 
-export function RegisterPage() {
+export function RegisterForm() {
   const { register } = useAuth();
   const navigate = useNavigate();
   const [fieldErrors, setFieldErrors] = useState<RegisterFieldErrors>({});
@@ -23,6 +21,9 @@ export function RegisterPage() {
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (loading) {
+      return;
+    }
     setFormError("");
     const form = new FormData(event.currentTarget);
     const payload = {
@@ -64,99 +65,97 @@ export function RegisterPage() {
 
   if (success) {
     return (
-      <div className="grid min-h-screen bg-white lg:grid-cols-[58%_42%]">
-        <main className="flex items-center justify-center px-6 py-12 lg:rounded-r-[48px]">
-          <div className="w-full max-w-md text-center">
-            <h1 className="font-serif text-5xl text-black">¡Cuenta creada correctamente!</h1>
-            <p className="mt-6 text-sm leading-6 text-neutral-600">
-              {success.verificationEmailSent
-                ? `Enviamos un enlace a ${success.email} para confirmar tu correo.`
-                : `Tu cuenta ${success.email} ya está guardada. El correo de verificación se enviará cuando SendGrid esté configurado; por ahora puedes continuar.`}
-            </p>
-            <button
-              type="button"
-              className="mt-10 w-full rounded-full bg-charcoal py-3.5 text-white"
-              onClick={() => navigate("/onboarding", { replace: true })}
-            >
-              Continuar
-            </button>
-          </div>
-        </main>
-        <IllustrationPanel image={panelRegister} variant="register" />
+      <div className="auth-form auth-success">
+        <h1 className="auth-form__title">¡Cuenta creada correctamente!</h1>
+        <p className="auth-form__lead">
+          {success.verificationEmailSent
+            ? `Enviamos un enlace a ${success.email} para confirmar tu correo.`
+            : `Tu cuenta ${success.email} ya está guardada. El correo de verificación se enviará cuando SendGrid esté configurado; por ahora puedes continuar.`}
+        </p>
+        <button
+          type="button"
+          className="auth-submit"
+          onClick={() => navigate("/onboarding", { replace: true })}
+        >
+          Continuar
+        </button>
+        <AuthBackLink />
       </div>
     );
   }
 
   return (
-    <div className="grid min-h-screen bg-white lg:grid-cols-[58%_42%]">
-      <main className="flex items-center justify-center px-6 py-12 lg:rounded-r-[48px]">
-        <div className="w-full max-w-md">
-          <h1 className="text-center font-serif text-5xl text-black">Crear cuenta</h1>
-          <form className="mt-10 space-y-4" onSubmit={onSubmit} noValidate>
-            <IconField
-              name="name"
-              placeholder="Nombre completo"
-              icon={<User size={18} />}
-              autoComplete="name"
-              error={fieldErrors.name}
-            />
-            <IconField
-              name="email"
-              type="email"
-              placeholder="Correo electrónico"
-              icon={<Mail size={18} />}
-              autoComplete="email"
-              error={fieldErrors.email}
-            />
-            <IconField
-              name="password"
-              type="password"
-              placeholder="Contraseña"
-              icon={<Lock size={18} />}
-              autoComplete="new-password"
-              error={fieldErrors.password}
-            />
-            <p className="text-xs text-neutral-500">{PASSWORD_HINT}</p>
-            <IconField
-              name="confirmPassword"
-              type="password"
-              placeholder="Confirmar contraseña"
-              icon={<Lock size={18} />}
-              autoComplete="new-password"
-              error={fieldErrors.confirmPassword}
-            />
-            <label className="flex items-start gap-3 pt-1 text-sm">
-              <input type="checkbox" name="terms" className="mt-1 accent-charcoal" />
-              <span>
-                Acepto los <span className="underline">términos de servicio</span> y la{" "}
-                <span className="underline">política de privacidad</span>
-              </span>
-            </label>
-            {fieldErrors.termsAccepted && (
-              <p className="text-sm text-red-600">{fieldErrors.termsAccepted}</p>
-            )}
-            {formError && <p className="text-sm text-red-600">{formError}</p>}
-            <button
-              className="w-full rounded-full bg-charcoal py-3.5 text-white disabled:opacity-60"
-              disabled={loading}
-            >
-              {loading ? "Creando tu cuenta..." : "Registrarse"}
-            </button>
-          </form>
-          <div className="mt-8">
-            <SocialButtons label="O regístrate con" />
-          </div>
-          <p className="mt-8 text-center text-sm">
-            ¿Ya tienes una cuenta?{" "}
-            <Link to="/login" className="underline">
-              Iniciar sesión
-            </Link>
+    <div className="auth-form">
+      <header className="auth-form__header">
+        <h1 className="auth-form__title">Crea tu cuenta</h1>
+        <p className="auth-form__lead">Empieza a descubrir experiencias que van contigo.</p>
+      </header>
+      <form className="auth-form__stack" onSubmit={onSubmit} noValidate>
+        <AuthTextField
+          name="name"
+          label="Nombre completo"
+          placeholder="Tu nombre"
+          autoComplete="name"
+          error={fieldErrors.name}
+        />
+        <AuthTextField
+          name="email"
+          type="email"
+          label="Correo electrónico"
+          placeholder="tucorreo@email.com"
+          autoComplete="email"
+          error={fieldErrors.email}
+        />
+        <AuthTextField
+          name="password"
+          type="password"
+          label="Contraseña"
+          placeholder="Crea una contraseña segura"
+          autoComplete="new-password"
+          error={fieldErrors.password}
+        />
+        <p className="auth-hint">{PASSWORD_HINT}</p>
+        <AuthTextField
+          name="confirmPassword"
+          type="password"
+          label="Confirmar contraseña"
+          placeholder="Repite tu contraseña"
+          autoComplete="new-password"
+          error={fieldErrors.confirmPassword}
+        />
+        <label className="auth-check">
+          <input type="checkbox" name="terms" />
+          <span>
+            Acepto los <span className="underline">términos de servicio</span> y la{" "}
+            <span className="underline">política de privacidad</span>
+          </span>
+        </label>
+        {fieldErrors.termsAccepted && (
+          <p className="auth-error" role="alert">
+            {fieldErrors.termsAccepted}
           </p>
+        )}
+        {formError && (
+          <p className="auth-error" role="alert">
+            {formError}
+          </p>
+        )}
+        <button type="submit" className="auth-submit" disabled={loading}>
+          {loading ? "Creando tu cuenta..." : "Crear cuenta"}
+        </button>
+      </form>
+      <footer className="auth-form__footer">
+        <div className="auth-alt">
+          <SocialButtons label="O regístrate con" />
         </div>
-      </main>
-      <IllustrationPanel image={panelRegister} variant="register" />
+        <AuthBackLink />
+      </footer>
     </div>
   );
+}
+
+export function RegisterPage() {
+  return <RegisterForm />;
 }
 
 function mapRegisterError(err: unknown): { form: string; fields: RegisterFieldErrors } {
