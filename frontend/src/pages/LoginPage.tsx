@@ -2,7 +2,6 @@ import { FormEvent, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AuthTextField } from "../components/auth/AuthTextField";
 import { SocialButtons } from "../components/auth/SocialButtons";
-import { AuthBackLink } from "../components/auth/AuthBackLink";
 import { useAuth } from "../hooks/useAuth";
 import { getApiErrorMessage } from "../utils/api-error";
 
@@ -77,7 +76,6 @@ export function LoginForm() {
         <div className="auth-alt">
           <SocialButtons label="O inicia sesión con" />
         </div>
-        <AuthBackLink />
       </footer>
     </div>
   );

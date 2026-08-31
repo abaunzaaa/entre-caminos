@@ -2,8 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AdminLayout } from "../layouts/AdminLayout";
 import { PublicLayout } from "../layouts/PublicLayout";
 import { LandingPage } from "../pages/LandingPage";
-import { LoginPage } from "../pages/LoginPage";
-import { RegisterPage } from "../pages/RegisterPage";
+import { AuthPage } from "../pages/AuthPage";
 import { ForgotPasswordPage } from "../pages/ForgotPasswordPage";
 import { ResetPasswordPage } from "../pages/ResetPasswordPage";
 import { VerifyEmailPage } from "../pages/VerifyEmailPage";
@@ -26,8 +25,10 @@ export function AppRoutes() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<LandingPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/login" element={<LoginPage />} />
+        <Route element={<AuthPage />}>
+          <Route path="/register" element={<></>} />
+          <Route path="/login" element={<></>} />
+        </Route>
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/verify-email" element={<VerifyEmailPage />} />

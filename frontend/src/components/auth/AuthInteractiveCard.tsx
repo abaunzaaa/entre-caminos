@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { AuthBackLink } from "./AuthBackLink";
 import { AuthVisualPanel } from "./AuthVisualPanel";
 import { authArt, type AuthMode } from "./authArt";
 import { cn } from "../../utils/cn";
@@ -100,6 +101,8 @@ export function AuthInteractiveCard({
       >
         {loginForm}
       </div>
+
+      <AuthBackLink />
     </div>
   );
 }
