@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Entre Caminos">
+  <g fill="#294942">
+    <path fill-rule="evenodd" d="M32 3a29 29 0 1 0 0 58 29 29 0 0 0 0-58Zm0 8.5a20.5 20.5 0 1 0 0 41 20.5 20.5 0 0 0 0-41Z"/>
+    <rect x="29.4" y="7.2" width="5.2" height="8.2" rx="1.2"/>
+    <rect x="29.4" y="48.6" width="5.2" height="8.2" rx="1.2"/>
+    <rect x="7.2" y="29.4" width="8.2" height="5.2" rx="1.2"/>
+    <rect x="48.6" y="29.4" width="8.2" height="5.2" rx="1.2"/>
+    <path d="M32 14.5 37.6 32 32 35.2 26.4 32Z"/>
+    <path fill-opacity=".42" d="M32 49.5 26.4 32 32 28.8 37.6 32Z"/>
+    <circle cx="32" cy="32" r="3.4"/>
+  </g>
+</svg>
