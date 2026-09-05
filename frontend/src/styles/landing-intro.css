@@ -1,0 +1,332 @@
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+.landing-intro {
+  position: relative;
+  box-sizing: border-box;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
+  background: #ffffff;
+  padding: 0;
+  overflow: hidden;
+  scroll-margin-top: 0;
+}
+
+.landing-intro__stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.landing-intro__copy {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  min-width: 0;
+  max-width: 34rem;
+  margin: 0 auto;
+  padding: 0 1.25rem;
+}
+
+.landing-intro__kicker {
+  margin: 0 auto 1.35rem;
+  width: max-content;
+  max-width: none;
+  color: #5a7c75;
+  font-family: "Cormorant Garamond", "Times New Roman", serif;
+  font-size: clamp(0.84rem, 1.05vw, 1rem);
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  line-height: 1.55;
+  white-space: nowrap;
+}
+
+.landing-intro__title {
+  margin: 0;
+  max-width: none;
+  color: #1c332e;
+  font-family: "Cormorant Garamond", "Times New Roman", serif;
+  font-size: clamp(1.85rem, 3.4vw, 3.15rem);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.18;
+}
+
+.landing-intro__title-line {
+  display: block;
+  white-space: nowrap;
+}
+
+.landing-intro__body {
+  margin: 1.25rem 0 0;
+  max-width: 32rem;
+  color: #2d3e3b;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 0.95rem;
+  font-weight: 300;
+  line-height: 1.8;
+}
+
+.landing-intro__cta {
+  display: inline-flex;
+  margin-top: 1.85rem;
+  padding: 0.9rem 2.15rem;
+  border: 1px solid #294942;
+  border-radius: 999px;
+  background: #294942;
+  color: #ffffff;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.24em;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+.landing-intro__cta:hover {
+  border-color: #1c332e;
+  background: #1c332e;
+  color: #ffffff;
+}
+
+.landing-intro__photo {
+  position: absolute;
+  z-index: 1;
+  display: block;
+  object-fit: cover;
+  background: #ffffff;
+}
+
+.landing-intro__photo--bike {
+  left: -2.15rem;
+  top: 17%;
+  width: 16.75rem;
+  height: 22.25rem;
+}
+
+.landing-intro__photo--pilates {
+  left: 11.25rem;
+  top: 4%;
+  width: 9.15rem;
+  height: 9.65rem;
+}
+
+.landing-intro__photo--solo {
+  left: 3.35rem;
+  bottom: 5.5%;
+  width: 8.1rem;
+  height: 11.15rem;
+}
+
+.landing-intro__photo--forest {
+  left: 14.75rem;
+  bottom: 13%;
+  width: 7.35rem;
+  height: 9.85rem;
+}
+
+.landing-intro__photo--sky {
+  right: 15.5rem;
+  top: 3%;
+  width: 7.85rem;
+  height: 11.1rem;
+}
+
+.landing-intro__photo--museum {
+  right: -2.15rem;
+  top: 20%;
+  width: 16.15rem;
+  height: 21.75rem;
+}
+
+.landing-intro__photo--paint {
+  right: 10.25rem;
+  bottom: 6.5%;
+  width: 8.85rem;
+  height: 10.6rem;
+}
+
+@media (max-width: 1280px) {
+  .landing-intro__photo--bike {
+    width: 14.5rem;
+    height: 19.25rem;
+  }
+
+  .landing-intro__photo--museum {
+    width: 14rem;
+    height: 18.75rem;
+  }
+
+  .landing-intro__photo--pilates {
+    left: 9.25rem;
+    width: 8rem;
+    height: 8.5rem;
+  }
+
+  .landing-intro__photo--forest {
+    left: 12.25rem;
+  }
+
+  .landing-intro__photo--sky {
+    right: 12.75rem;
+  }
+
+  .landing-intro__photo--paint {
+    right: 8rem;
+  }
+}
+
+@media (max-width: 1100px) {
+  .landing-intro {
+    height: auto;
+    max-height: none;
+    overflow: visible;
+    padding: 3.25rem 0 4.5rem;
+  }
+
+  .landing-intro__stage {
+    display: flex;
+    flex-wrap: wrap;
+    place-items: unset;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 1.35rem 1.6rem;
+    height: auto;
+    min-height: 0;
+    padding: 0 1.15rem 1.5rem;
+  }
+
+  .landing-intro__copy {
+    flex: 1 0 100%;
+    order: -1;
+    padding: 0 0.75rem 2.25rem;
+  }
+
+  .landing-intro__photo {
+    position: relative;
+    top: auto;
+    right: auto;
+    bottom: auto;
+    left: auto;
+  }
+
+  .landing-intro__photo--bike,
+  .landing-intro__photo--museum {
+    width: min(13.5rem, 46vw);
+    height: 17.25rem;
+  }
+
+  .landing-intro__photo--pilates,
+  .landing-intro__photo--paint {
+    width: 8.5rem;
+    height: 9.75rem;
+  }
+
+  .landing-intro__photo--solo,
+  .landing-intro__photo--sky,
+  .landing-intro__photo--forest {
+    width: 7.5rem;
+    height: 10.25rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .landing-intro__title-line {
+    white-space: normal;
+  }
+
+  .landing-intro__kicker {
+    width: auto;
+    max-width: 100%;
+    white-space: normal;
+  }
+}
+
+.landing-intro__photo,
+.landing-intro__kicker,
+.landing-intro__title,
+.landing-intro__body,
+.landing-intro__cta {
+  opacity: 0;
+  transform: translateY(40px);
+}
+
+.landing-intro.is-inview .landing-intro__photo,
+.landing-intro.is-inview .landing-intro__kicker,
+.landing-intro.is-inview .landing-intro__title,
+.landing-intro.is-inview .landing-intro__body,
+.landing-intro.is-inview .landing-intro__cta {
+  animation: landing-intro-rise 0.9s ease-out forwards;
+}
+
+.landing-intro.is-inview .landing-intro__photo--bike,
+.landing-intro.is-inview .landing-intro__photo--museum {
+  animation-delay: 0s;
+}
+
+.landing-intro.is-inview .landing-intro__photo--pilates,
+.landing-intro.is-inview .landing-intro__photo--sky {
+  animation-delay: 0.07s;
+}
+
+.landing-intro.is-inview .landing-intro__photo--solo,
+.landing-intro.is-inview .landing-intro__photo--paint {
+  animation-delay: 0.12s;
+}
+
+.landing-intro.is-inview .landing-intro__photo--forest {
+  animation-delay: 0.16s;
+}
+
+.landing-intro.is-inview .landing-intro__kicker {
+  animation-delay: 0.22s;
+}
+
+.landing-intro.is-inview .landing-intro__title {
+  animation-delay: 0.32s;
+}
+
+.landing-intro.is-inview .landing-intro__body {
+  animation-delay: 0.48s;
+}
+
+.landing-intro.is-inview .landing-intro__cta {
+  animation-delay: 0.68s;
+}
+
+@keyframes landing-intro-rise {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-intro__photo,
+  .landing-intro__kicker,
+  .landing-intro__title,
+  .landing-intro__body,
+  .landing-intro__cta {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+}
