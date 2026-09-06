@@ -18,6 +18,7 @@ import { PermissionsPage } from "../pages/admin/PermissionsPage";
 import { CategoriesPage } from "../pages/admin/CategoriesPage";
 import { ExperiencesPage } from "../pages/admin/ExperiencesPage";
 import { ExperienceFormPage } from "../pages/admin/ExperienceFormPage";
+import { ExperiencePreviewPage } from "../pages/admin/ExperiencePreviewPage";
 import { ProtectedRoute } from "./ProtectedRoute";
 
 export function AppRoutes() {
@@ -51,8 +52,10 @@ export function AppRoutes() {
             <Route path="experiences" element={<ExperiencesPage />} />
             <Route path="experiencias" element={<ExperiencesPage />} />
             <Route path="experiencias/nueva" element={<ExperienceFormPage />} />
+            <Route path="experiencias/:id/ver" element={<ExperiencePreviewPage />} />
             <Route path="experiencias/:id" element={<ExperienceFormPage />} />
             <Route path="experiences/nueva" element={<ExperienceFormPage />} />
+            <Route path="experiences/:id/ver" element={<ExperiencePreviewPage />} />
             <Route path="experiences/:id" element={<ExperienceFormPage />} />
           </Route>
         </Route>

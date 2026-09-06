@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { ChevronDown, Search } from "lucide-react";
 import { Button } from "../../components/ui/Button";
-import { Panel, StatusDot } from "../../components/admin/Panel";
+import { ExperienceCatalogCard } from "../../components/admin/ExperienceCatalogCard";
+import { Panel } from "../../components/admin/Panel";
 import {
   changeExperienceStatus,
   deleteExperience,
@@ -10,21 +11,10 @@ import {
   getAdminExperiences,
 } from "../../services/catalog.service";
 import { getApiErrorMessage } from "../../utils/api-error";
-import { formatPrice } from "../../utils/cn";
-import { mediaUrl } from "../../utils/media";
 import type { Category, Experience, ExperienceStatus } from "../../types";
 import expeIlus from "../../assets/expe-agregadas.png";
 import superadmIlus2 from "../../assets/superadm-ilus2.png";
 import "../../styles/admin-access.css";
-
-const STATUSES: ExperienceStatus[] = ["DRAFT", "PENDING", "PUBLISHED", "ARCHIVED"];
-
-const STATUS_LABEL: Record<ExperienceStatus, string> = {
-  DRAFT: "Borrador",
-  PENDING: "Revisión",
-  PUBLISHED: "Publicada",
-  ARCHIVED: "Archivada",
-};
 
 type FilterMenuOption<T extends string> = { value: T; label: string };
 
@@ -73,21 +63,6 @@ function FilterMenu<T extends string>({
 
 function isCatalogActive(status: ExperienceStatus) {
   return status === "PUBLISHED";
-}
-
-function formatCreatedAt(value?: string) {
-  if (!value) {
-    return "";
-  }
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
-  return new Intl.DateTimeFormat("es-CO", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  }).format(date);
 }
 
 export function ExperiencesPage() {
@@ -345,64 +320,19 @@ export function ExperiencesPage() {
               <p>No hay coincidencias con estos filtros.</p>
             </Panel>
           ) : (
-            <div className="dash-team-board__people">
+            <div className="dash-exps-catalog">
               {visibleExperiences.map((experience) => {
-                const active = isCatalogActive(experience.status);
-                const created = formatCreatedAt(experience.createdAt);
                 const statusMenu = `status-${experience.id}`;
                 return (
-                  <article key={experience.id} className="dash-team-card dash-exps-card">
-                    <span className="dash-exps-card__photo">
-                      <img src={mediaUrl(experience.imageUrl)} alt="" />
-                    </span>
-                    <div className="dash-team-card__info">
-                      <h3>{experience.title}</h3>
-                      <p className="dash-team-card__email">{experience.location}</p>
-                      <div className="dash-team-card__facts">
-                        {experience.category?.name ? (
-                          <StatusDot active>{experience.category.name}</StatusDot>
-                        ) : null}
-                        <StatusDot active={active}>{active ? "Activa" : "Inactiva"}</StatusDot>
-                        <StatusDot>{formatPrice(experience.price)}</StatusDot>
-                        {created ? <StatusDot>{created}</StatusDot> : null}
-                      </div>
-                    </div>
-                    <div className="dash-exps-card__actions">
-                      <Link
-                        to={`/admin/experiencias/${experience.id}`}
-                        className="admin-cta-hover inline-flex shrink-0 items-center justify-center rounded-full px-5 py-1.5 font-poppins text-[13px] font-medium tracking-[0.03em] text-forest"
-                      >
-                        Editar
-                      </Link>
-                      <div className="dash-exps-status" data-exp-status={experience.id}>
-                        <button
-                          type="button"
-                          className="admin-cta-hover inline-flex shrink-0 items-center justify-center rounded-full px-5 py-1.5 font-poppins text-[13px] font-medium tracking-[0.03em] text-forest"
-                          aria-expanded={openMenu === statusMenu}
-                          disabled={statusBusyId === experience.id}
-                          onClick={() => setOpenMenu((current) => (current === statusMenu ? null : statusMenu))}
-                        >
-                          {statusBusyId === experience.id ? "Actualizando..." : "Cambiar estado"}
-                        </button>
-                        <div className={`dash-team-filters__menu dash-exps-status__menu${openMenu === statusMenu ? " is-open" : ""}`} role="listbox">
-                          {STATUSES.map((status) => (
-                            <button
-                              key={status}
-                              type="button"
-                              role="option"
-                              className={`dash-team-filters__option${experience.status === status ? " is-active" : ""}`}
-                              onClick={() => void onChangeStatus(experience, status)}
-                            >
-                              {STATUS_LABEL[status]}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                      <Button type="button" variant="ghost" size="sm" className="shrink-0" onClick={() => setPendingDelete(experience)}>
-                        Eliminar
-                      </Button>
-                    </div>
-                  </article>
+                  <ExperienceCatalogCard
+                    key={experience.id}
+                    experience={experience}
+                    statusOpen={openMenu === statusMenu}
+                    statusBusy={statusBusyId === experience.id}
+                    onToggleStatus={() => setOpenMenu((current) => (current === statusMenu ? null : statusMenu))}
+                    onChangeStatus={(status) => void onChangeStatus(experience, status)}
+                    onDelete={() => setPendingDelete(experience)}
+                  />
                 );
               })}
             </div>
