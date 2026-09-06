@@ -2,8 +2,10 @@ import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ImagePlus, MapPin } from "lucide-react";
 import { IllustrationPanel } from "../../components/auth/IllustrationPanel";
+import { Button } from "../../components/ui/Button";
 import { getOnboarding, saveOnboarding } from "../../utils/onboarding";
 import panelOnboarding from "../../assets/panel-onboarding.png";
+import "../../styles/auth-interactive.css";
 
 const avatars = [
   "https://api.dicebear.com/9.x/adventurer/svg?seed=Leo",
@@ -41,14 +43,14 @@ export function OnboardingWelcomePage() {
   return (
     <div className="grid min-h-screen bg-white lg:grid-cols-[58%_42%]">
       <main className="flex items-center justify-center px-6 py-12">
-        <form className="w-full max-w-xl space-y-8" onSubmit={onSubmit}>
-          <h1 className="text-center font-serif text-5xl italic">¡Bienvenido!</h1>
+        <form className="font-poppins w-full max-w-xl space-y-8" onSubmit={onSubmit}>
+          <h1 className="auth-form__title text-center">¡Bienvenido!</h1>
           <label className="block space-y-2">
-            <span className="text-sm text-neutral-500">Ubicación</span>
+            <span className="auth-field__label">Ubicación</span>
             <div className="flex items-center gap-3 rounded-2xl border border-[#E0E0E0] px-4 py-3.5">
               <MapPin size={18} className="text-neutral-400" />
               <select
-                className="w-full bg-transparent text-sm outline-none"
+                className="w-full bg-transparent text-[15px] font-normal outline-none"
                 value={location}
                 onChange={(event) => setLocation(event.target.value)}
                 required
@@ -63,25 +65,25 @@ export function OnboardingWelcomePage() {
             </div>
           </label>
           <div className="space-y-3">
-            <p className="text-sm text-neutral-500">Foto de perfil</p>
-            <div className="inline-flex rounded-full bg-neutral-100 p-1 text-sm">
+            <p className="auth-field__label">Foto de perfil</p>
+            <div className="inline-flex rounded-full bg-neutral-100 p-1">
               <button
                 type="button"
-                className={`rounded-full px-4 py-2 ${mode === "upload" ? "bg-white shadow-sm" : ""}`}
+                className={`rounded-full px-4 py-2 text-[13px] font-medium ${mode === "upload" ? "bg-white shadow-sm" : ""}`}
                 onClick={() => setMode("upload")}
               >
                 Subir foto
               </button>
               <button
                 type="button"
-                className={`rounded-full px-4 py-2 ${mode === "avatar" ? "bg-white shadow-sm" : ""}`}
+                className={`rounded-full px-4 py-2 text-[13px] font-medium ${mode === "avatar" ? "bg-white shadow-sm" : ""}`}
                 onClick={() => setMode("avatar")}
               >
                 Elegir avatar
               </button>
             </div>
             <div className="flex flex-wrap items-center gap-4">
-              <label className="grid h-28 w-28 cursor-pointer place-items-center rounded-full border border-dashed border-neutral-300 text-center text-xs text-neutral-400">
+              <label className="grid h-28 w-28 cursor-pointer place-items-center rounded-full border border-dashed border-neutral-300 text-center text-[13px] font-medium text-neutral-400">
                 <span>
                   <ImagePlus className="mx-auto mb-1" />
                   Subir foto
@@ -118,7 +120,9 @@ export function OnboardingWelcomePage() {
               </div>
             </div>
           </div>
-          <button className="w-full rounded-full bg-charcoal py-3.5 text-white">Continuar</button>
+          <Button type="submit" className="w-full">
+            Continuar
+          </Button>
         </form>
       </main>
       <IllustrationPanel image={panelOnboarding} variant="register" />

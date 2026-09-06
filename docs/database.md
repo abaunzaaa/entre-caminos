@@ -83,13 +83,13 @@ Están versionadas en GitHub. En una base vacía de Supabase, `migrate deploy` c
 
 ## Seed
 
-`backend/prisma/seed.ts` hace upsert (no borra el catálogo existente):
+`backend/prisma/seed.ts` hace upsert (no borra usuarios ni roles existentes):
 
 - Roles USER, ADMIN, SUPER_ADMIN
 - Permisos del Sprint 1
 - Tres SUPER_ADMIN (Angie, Natalia, Juliana)
-- Categorías Cultural, Deportivo, Recreativo, Turístico
-- Experiencias de ejemplo (varias PUBLISHED)
+
+El catálogo (categorías y experiencias) no se siembra: se gestiona desde el panel.
 
 Las contraseñas se hashean con bcrypt. La clave de semilla vive solo en `.env` local.
 
@@ -102,7 +102,7 @@ Las contraseñas se hashean con bcrypt. La clave de semilla vive solo en `.env` 
 5. Completar JWT secrets (≥ 32 caracteres) y `SEED_ADMIN_PASSWORD` (canal privado).
 6. `cd backend && npx prisma generate`
 7. `npx prisma migrate deploy` (solo aplica lo pendiente; no resetea).
-8. `npm run prisma:seed` si hace falta poblar roles/catálogo.
+8. `npm run prisma:seed` si hace falta poblar roles y cuentas fundadoras.
 9. `npm run db:verify` — el host debe ser Supabase.
 10. `npm run dev` (backend) y `npm run dev` (frontend).
 

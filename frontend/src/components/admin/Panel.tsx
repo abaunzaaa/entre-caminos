@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { cn } from "../../utils/cn";
 
 export function Panel({ children, className }: { children: ReactNode; className?: string }) {
-  return <section className={cn("border border-black bg-white", className)}>{children}</section>;
+  return <section className={cn("admin-card", className)}>{children}</section>;
 }
 
 export function StatusDot({
@@ -13,12 +13,7 @@ export function StatusDot({
   children: ReactNode;
 }) {
   return (
-    <span
-      className={cn(
-        "inline-flex rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.16em]",
-        active ? "bg-charcoal text-white" : "border border-black/20 text-neutral-600",
-      )}
-    >
+    <span className={cn("admin-status", active ? "is-on" : "is-off")}>
       {children}
     </span>
   );

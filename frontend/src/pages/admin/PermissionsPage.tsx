@@ -31,18 +31,18 @@ export function PermissionsPage() {
   }
 
   return (
-    <div className="grid gap-px bg-black lg:grid-cols-[1fr_340px]">
+    <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
       <Panel className="p-8">
-        <h2 className="font-serif text-3xl italic">Claves del sistema</h2>
+        <h2 className="font-poppins text-3xl font-semibold tracking-[-0.02em] text-forest">Claves del sistema</h2>
         <p className="mt-2 text-sm text-neutral-600">
           Identificadores que se asignan a cada rol. Los cambios se ven al instante en Roles.
         </p>
-        <ul className="mt-8 divide-y divide-black">
+        <ul className="mt-8 divide-y divide-forest/10">
           {permissions.length === 0 && (
             <li className="py-8 text-sm text-neutral-500">Aún no hay permisos.</li>
           )}
           {permissions.map((permission) => (
-            <li key={permission.id} className="py-4 font-mono text-sm">
+            <li key={permission.id} className="py-4 text-sm">
               {permission.name}
             </li>
           ))}
@@ -50,10 +50,10 @@ export function PermissionsPage() {
       </Panel>
       <Panel className="p-8">
         <form className="space-y-4" onSubmit={onSubmit}>
-          <h2 className="font-serif text-3xl italic">Nuevo permiso</h2>
+          <h2 className="font-poppins text-3xl font-semibold tracking-[-0.02em] text-forest">Nuevo permiso</h2>
           <Input name="name" label="Identificador" placeholder="reports.view" required />
           {error && <p className="text-sm text-red-700">{error}</p>}
-          <Button className="w-full bg-charcoal">Crear</Button>
+          <Button className="w-full">Crear</Button>
         </form>
       </Panel>
     </div>

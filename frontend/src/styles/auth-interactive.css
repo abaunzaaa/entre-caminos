@@ -407,19 +407,24 @@
 
 .auth-form__title {
   margin: 0;
+  font-family: Poppins, Nunito, system-ui, sans-serif;
   font-size: 32px;
   font-weight: 600;
+  font-style: normal;
   letter-spacing: -0.02em;
   line-height: 1.15;
-  color: var(--auth-ink);
+  color: var(--auth-ink, #33352f);
 }
 
 .auth-form__lead {
   margin: 8px 0 0;
+  font-family: Poppins, Nunito, system-ui, sans-serif;
   font-size: 15px;
   font-weight: 400;
+  font-style: normal;
+  letter-spacing: normal;
   line-height: 1.55;
-  color: var(--auth-muted);
+  color: var(--auth-muted, #74766f);
 }
 
 .auth-form__stack {
@@ -439,9 +444,11 @@
 .auth-field__label {
   display: block;
   margin-bottom: 5px;
+  font-family: Poppins, Nunito, system-ui, sans-serif;
   font-size: 13px;
   font-weight: 500;
-  color: var(--auth-label);
+  letter-spacing: normal;
+  color: var(--auth-label, #55584f);
 }
 
 .auth-field__control {
@@ -571,7 +578,7 @@
   border-radius: 14px;
   background: var(--auth-sage);
   color: var(--auth-cream);
-  font-family: inherit;
+  font-family: Poppins, Nunito, system-ui, sans-serif;
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;

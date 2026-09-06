@@ -1,13 +1,15 @@
 import type { Request, Response } from "express";
 import * as adminService from "../services/admin.service.js";
+import { parseLimitQuery } from "../utils/query.js";
 
-export async function dashboard(_req: Request, res: Response) {
-  const metrics = await adminService.getDashboardMetrics();
+export async function dashboard(req: Request, res: Response) {
+  const metrics = await adminService.getDashboardMetrics(req.user!.id);
   return res.json({ success: true, data: metrics });
 }
 
-export async function listAdmins(_req: Request, res: Response) {
-  const admins = await adminService.listAdministrators();
+export async function listAdmins(req: Request, res: Response) {
+  const take = parseLimitQuery(req.query.limit);
+  const admins = await adminService.listAdministrators(take ? { take } : undefined);
   return res.json({ success: true, data: { admins } });
 }
 

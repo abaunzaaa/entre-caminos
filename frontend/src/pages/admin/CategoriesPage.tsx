@@ -57,20 +57,20 @@ export function CategoriesPage() {
   }
 
   return (
-    <div className="grid gap-px bg-black xl:grid-cols-2">
+    <div className="grid gap-4 xl:grid-cols-2">
       <Panel className="p-8">
-        <h2 className="font-serif text-3xl italic">Colección viva</h2>
+        <h2 className="font-poppins text-3xl font-semibold tracking-[-0.02em] text-forest">Colección viva</h2>
         <p className="mt-2 text-sm text-neutral-600">
           No se elimina una categoría si ya tiene experiencias asociadas.
         </p>
-        <ul className="mt-8 divide-y divide-black">
+        <ul className="mt-8 divide-y divide-forest/10">
           {categories.length === 0 && (
             <li className="py-8 text-sm text-neutral-500">Crea la primera a la derecha.</li>
           )}
           {categories.map((category) => (
             <li key={category.id} className="flex items-start justify-between gap-4 py-5">
               <div>
-                <p className="font-serif text-2xl">{category.name}</p>
+                <p className="font-poppins text-2xl font-semibold tracking-[-0.02em]">{category.name}</p>
                 <p className="mt-1 text-sm text-neutral-600">{category.description}</p>
                 <div className="mt-3">
                   <StatusDot active={category.status === "ACTIVE"}>
@@ -78,7 +78,7 @@ export function CategoriesPage() {
                   </StatusDot>
                 </div>
               </div>
-              <div className="flex flex-col items-end gap-2 text-[11px] uppercase tracking-[0.16em]">
+              <div className="flex flex-col items-end gap-2 text-[13px] font-medium">
                 <button type="button" className="underline underline-offset-4" onClick={() => setEditing(category)}>
                   Editar
                 </button>
@@ -106,15 +106,15 @@ export function CategoriesPage() {
       </Panel>
       <Panel className="p-8">
         <form key={editing?.id ?? "create"} className="space-y-4" onSubmit={onSubmit}>
-          <h2 className="font-serif text-3xl italic">{editing ? "Editar" : "Nueva categoría"}</h2>
+          <h2 className="font-poppins text-3xl font-semibold tracking-[-0.02em] text-forest">{editing ? "Editar" : "Nueva categoría"}</h2>
           <Input name="name" label="Nombre" defaultValue={editing?.name} required />
           <Textarea name="description" label="Descripción" defaultValue={editing?.description ?? ""} />
           <label className="block space-y-2">
-            <span className="text-[11px] uppercase tracking-[0.18em] text-neutral-500">Estado</span>
+            <span className="text-[13px] font-medium text-neutral-500">Estado</span>
             <select
               name="status"
               defaultValue={editing?.status ?? "ACTIVE"}
-              className="w-full border border-black bg-white px-4 py-3"
+              className="w-full rounded-xl border border-forest/10 bg-white px-4 py-3 text-[15px]"
             >
               <option value="ACTIVE">Activa</option>
               <option value="INACTIVE">Inactiva</option>
@@ -122,7 +122,7 @@ export function CategoriesPage() {
           </label>
           {error && <p className="text-sm text-red-700">{error}</p>}
           {success && <p className="text-sm text-charcoal">{success}</p>}
-          <Button className="w-full bg-charcoal" disabled={saving}>
+          <Button className="w-full" disabled={saving}>
             {saving ? "Guardando..." : editing ? "Actualizar" : "Crear y guardar"}
           </Button>
         </form>

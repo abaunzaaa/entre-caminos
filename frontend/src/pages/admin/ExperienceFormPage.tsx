@@ -113,7 +113,7 @@ export function ExperienceFormPage() {
   }
 
   return (
-    <div className="grid gap-px bg-black xl:grid-cols-[1.15fr_0.85fr]">
+    <div className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
       <Panel className="p-8 md:p-10">
         <form className="space-y-6" onSubmit={onSubmit}>
           <p className="text-sm text-neutral-600">
@@ -125,7 +125,7 @@ export function ExperienceFormPage() {
               <button
                 key={spark.title}
                 type="button"
-                className="border border-black px-3 py-1.5 text-[11px] uppercase tracking-[0.12em] hover:bg-charcoal hover:text-white"
+                className="admin-chip px-3 py-1.5 text-[13px] font-medium"
                 onClick={() => {
                   setTitle(spark.title);
                   setDescription(spark.description);
@@ -140,9 +140,9 @@ export function ExperienceFormPage() {
           <Textarea label="Descripción" value={description} onChange={(e) => setDescription(e.target.value)} required />
 
           <label className="block space-y-2">
-            <span className="text-[11px] uppercase tracking-[0.18em] text-neutral-500">Categoría</span>
+            <span className="text-[13px] font-medium text-neutral-500">Categoría</span>
             <select
-              className="w-full border border-black bg-white px-4 py-3"
+              className="w-full rounded-xl border border-forest/10 bg-white px-4 py-3 text-[15px]"
               value={categoryId}
               onChange={(e) => setCategoryId(e.target.value)}
               required
@@ -157,13 +157,13 @@ export function ExperienceFormPage() {
           </label>
 
           <div>
-            <p className="mb-2 text-[11px] uppercase tracking-[0.18em] text-neutral-500">Lugar rápido</p>
+            <p className="mb-2 text-[13px] font-medium text-neutral-500">Lugar rápido</p>
             <div className="flex flex-wrap gap-2">
               {LOCATION_PRESETS.map((preset) => (
                 <button
                   key={preset.label}
                   type="button"
-                  className="border border-black px-3 py-1.5 text-[11px] uppercase tracking-[0.12em] hover:bg-sand"
+                  className="admin-chip px-3 py-1.5 text-[13px] font-medium"
                   onClick={() => {
                     setLocation(preset.location);
                     setLatitude(preset.latitude);
@@ -184,9 +184,7 @@ export function ExperienceFormPage() {
           </div>
 
           <div
-            className={`border border-dashed p-8 text-center transition ${
-              dragOver ? "border-black bg-sand" : "border-black/40"
-            }`}
+            className={`admin-dropzone p-8 text-center ${dragOver ? "is-over" : ""}`}
             onDragOver={(event) => {
               event.preventDefault();
               setDragOver(true);
@@ -201,7 +199,7 @@ export function ExperienceFormPage() {
               }
             }}
           >
-            <p className="font-serif text-2xl italic">Fotografía</p>
+            <p className="font-poppins text-2xl font-semibold tracking-[-0.02em]">Fotografía</p>
             <p className="mt-2 text-sm text-neutral-600">Arrastra una imagen o elige un archivo</p>
             <p className="text-xs text-neutral-400">JPG, PNG o WebP · máx. 5 MB</p>
             <input
@@ -226,14 +224,14 @@ export function ExperienceFormPage() {
           />
 
           <div>
-            <p className="mb-3 text-[11px] uppercase tracking-[0.18em] text-neutral-500">Estado</p>
+            <p className="mb-3 text-[13px] font-medium text-neutral-500">Estado</p>
             <div className="flex flex-wrap gap-2">
               {(Object.keys(STATUS_LABEL) as ExperienceStatus[]).map((item) => (
                 <button
                   key={item}
                   type="button"
-                  className={`rounded-full px-4 py-2 text-[11px] uppercase tracking-[0.14em] ${
-                    status === item ? "bg-charcoal text-white" : "border border-black text-ink"
+                  className={`admin-chip px-4 py-2 text-[13px] font-medium ${
+                    status === item ? "is-active" : ""
                   }`}
                   onClick={() => setStatus(item)}
                 >
@@ -244,27 +242,27 @@ export function ExperienceFormPage() {
           </div>
 
           {error && <p className="text-sm text-red-700">{error}</p>}
-          <Button className="w-full bg-charcoal" disabled={saving || uploading}>
+          <Button className="w-full" disabled={saving || uploading}>
             {saving ? "Guardando..." : "Guardar publicación"}
           </Button>
         </form>
       </Panel>
 
-      <aside className="bg-white">
-        <p className="border-b border-black px-8 py-4 text-[11px] uppercase tracking-[0.22em] text-neutral-500">
+      <aside className="admin-card overflow-hidden bg-white">
+        <p className="border-b border-forest/10 px-8 py-4 text-[13px] font-medium text-neutral-500">
           Vista previa
         </p>
         <img src={mediaUrl(imageUrl)} alt="" className="aspect-[4/5] w-full object-cover" />
-        <div className="space-y-3 border-t border-black p-8">
-          <p className="text-[11px] uppercase tracking-[0.2em] text-neutral-500">
+        <div className="space-y-3 border-t border-forest/10 p-8">
+          <p className="text-[13px] font-medium text-neutral-500">
             {location || "Ubicación"} · {categoryName}
           </p>
-          <h3 className="font-serif text-3xl italic leading-tight">{title || "Título de la experiencia"}</h3>
+          <h3 className="font-poppins text-3xl font-semibold leading-tight tracking-[-0.02em]">{title || "Título de la experiencia"}</h3>
           <p className="line-clamp-5 text-sm leading-6 text-neutral-600">
             {description || "La descripción aparecerá aquí mientras escribes."}
           </p>
-          <p className="font-serif text-xl">{formatPrice(Number(price) || 0)}</p>
-          <p className="text-[11px] uppercase tracking-[0.16em] text-neutral-400">{STATUS_LABEL[status]}</p>
+          <p className="font-poppins text-xl font-semibold">{formatPrice(Number(price) || 0)}</p>
+          <p className="text-[13px] font-medium text-neutral-400">{STATUS_LABEL[status]}</p>
         </div>
       </aside>
     </div>

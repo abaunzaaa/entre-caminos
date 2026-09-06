@@ -1,7 +1,9 @@
 import { useNavigate } from "react-router-dom";
 import { IllustrationPanel } from "../../components/auth/IllustrationPanel";
+import { Button } from "../../components/ui/Button";
 import { getOnboarding } from "../../utils/onboarding";
 import panelReady from "../../assets/panel-ready.png";
+import "../../styles/auth-interactive.css";
 
 export function OnboardingReadyPage() {
   const navigate = useNavigate();
@@ -11,14 +13,14 @@ export function OnboardingReadyPage() {
 
   return (
     <div className="grid min-h-screen bg-white lg:grid-cols-[58%_42%]">
-      <main className="flex flex-col items-center justify-center px-6 py-16 text-center">
-        <h1 className="font-serif text-5xl italic">¡Todo listo, {firstName}!</h1>
-        <p className="mx-auto mt-4 max-w-md text-neutral-600">
+      <main className="font-poppins flex flex-col items-center justify-center px-6 py-16 text-center">
+        <h1 className="auth-form__title">¡Todo listo, {firstName}!</h1>
+        <p className="auth-form__lead mx-auto max-w-md">
           Creamos tu perfil viajero, según tus gustos encontraremos experiencias que combinan perfecto contigo
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           {tags.map((tag) => (
-            <span key={tag} className="rounded-full border border-black px-5 py-2 text-sm">
+            <span key={tag} className="rounded-full border border-black px-5 py-2 text-[13px] font-medium">
               {tag}
             </span>
           ))}
@@ -31,12 +33,9 @@ export function OnboardingReadyPage() {
           alt=""
           className="mt-10 h-40 w-40 rounded-full object-cover"
         />
-        <button
-          className="mt-10 w-full max-w-md rounded-full bg-charcoal py-3.5 text-white"
-          onClick={() => navigate("/explorar")}
-        >
+        <Button type="button" className="mt-10 w-full max-w-md" onClick={() => navigate("/explorar")}>
           Explorar mis planes
-        </button>
+        </Button>
       </main>
       <IllustrationPanel image={panelReady} variant="register" />
     </div>

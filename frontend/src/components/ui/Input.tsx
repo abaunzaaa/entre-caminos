@@ -14,10 +14,10 @@ export function Input({
 }: FieldProps & InputHTMLAttributes<HTMLInputElement>) {
   return (
     <label className="block space-y-2">
-      <span className="text-[11px] uppercase tracking-[0.18em] text-neutral-500">{label}</span>
+      <span className="font-poppins text-[13px] font-medium tracking-normal text-neutral-500">{label}</span>
       <input
         className={cn(
-          "w-full rounded-none border border-black bg-white px-4 py-3 text-ink outline-none transition focus:ring-1 focus:ring-black",
+          "w-full rounded-xl border border-forest/10 bg-white px-4 py-3 font-poppins text-[15px] font-normal text-ink outline-none transition focus:ring-2 focus:ring-forest/15",
           error && "border-red-400",
           className,
         )}
@@ -36,10 +36,10 @@ export function Textarea({
 }: FieldProps & TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return (
     <label className="block space-y-2">
-      <span className="text-[11px] uppercase tracking-[0.18em] text-neutral-500">{label}</span>
+      <span className="font-poppins text-[13px] font-medium tracking-normal text-neutral-500">{label}</span>
       <textarea
         className={cn(
-          "min-h-28 w-full rounded-none border border-black bg-white px-4 py-3 text-ink outline-none transition focus:ring-1 focus:ring-black",
+          "min-h-28 w-full rounded-xl border border-forest/10 bg-white px-4 py-3 font-poppins text-[15px] font-normal text-ink outline-none transition focus:ring-2 focus:ring-forest/15",
           error && "border-red-400",
           className,
         )}

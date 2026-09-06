@@ -35,109 +35,98 @@ const featuredShowcase = [
   {
     image: ceramicaExpd,
     title: "Crea tu propia pieza: Cerámicas El Dorado",
-    description:
-      "Vive una experiencia artesanal en El Carmen de Viboral, conoce la tradición cerámica antioqueña y crea tu propia pieza junto a artesanos locales.",
-    place: "Cerámicas El Dorado — El Carmen de Viboral, Antioquia",
+    description: "Moldea tu pieza junto a artesanos y vive la tradición cerámica antioqueña.",
+    place: "El Carmen de Viboral, Antioquia",
     price: "Desde $75.000 COP",
     available: "Reservas programadas",
-    duration: "2 horas aproximadamente",
+    duration: "2 horas",
   },
   {
     image: castilloExpd,
     title: "Historia y encanto: Museo El Castillo",
-    description:
-      "Recorre uno de los lugares más emblemáticos de Medellín, descubre su arquitectura europea, jardines y colecciones de arte mientras conoces una parte de la historia de la ciudad.",
-    place: "Museo El Castillo — Medellín, Antioquia",
-    price: "Desde $12.000 COP aproximadamente",
+    description: "Arquitectura, jardines e historia en un rincón emblemático de Medellín.",
+    place: "Museo El Castillo, Medellín",
+    price: "Desde $12.000 COP",
     available: "Martes a domingo",
     duration: "2 a 3 horas",
   },
   {
     image: pilatesExpd,
     title: "Equilibrio y bienestar: Pilates",
-    description:
-      "Conecta cuerpo y mente mediante una experiencia de movimiento consciente, fortalecimiento y relajación en espacios especializados de Medellín.",
-    place: "Estudios de Pilates en Medellín, Antioquia",
-    price: "Desde $80.000 COP por clase aproximadamente",
+    description: "Movimiento consciente para conectar cuerpo, fuerza y calma.",
+    place: "Medellín, Antioquia",
+    price: "Desde $80.000 COP",
     available: "Lunes a sábado",
     duration: "50 a 60 minutos",
   },
   {
     image: pinturaExpd,
     title: "Pinta una historia: Taller artístico",
-    description:
-      "Explora tu creatividad en un espacio artístico donde puedes pintar, experimentar y crear una obra propia mientras disfrutas un momento diferente.",
-    place: "Talleres artísticos en Medellín, Antioquia",
-    price: "Desde $80.000 - $140.000 COP según experiencia",
+    description: "Crea una obra propia en un espacio pensado para tu creatividad.",
+    place: "Medellín, Antioquia",
+    price: "Desde $80.000 COP",
     available: "Fechas programadas",
-    duration: "2 horas aproximadamente",
+    duration: "2 horas",
   },
   {
     image: floresExpd,
     title: "Entre flores y naturaleza: Taller floral",
-    description:
-      "Aprende técnicas florales y crea composiciones únicas en una experiencia rodeada de color, naturaleza y creatividad.",
+    description: "Composiciones únicas entre color, forma y naturaleza.",
     place: "Medellín, Antioquia",
-    price: "Desde $80.000 COP aproximadamente",
+    price: "Desde $80.000 COP",
     available: "Reservas programadas",
-    duration: "2 horas aproximadamente",
+    duration: "2 horas",
   },
   {
     image: boteroExpd,
     title: "Ruta de arte con Botero",
-    description:
-      "Descubre el legado de Fernando Botero recorriendo espacios culturales donde el arte, la historia y la identidad de Medellín se encuentran.",
-    place: "Plaza Botero y Museo de Antioquia — Medellín",
-    price: "Gratis / ingreso al museo según recorrido",
-    available: "Todos los días (según espacios culturales)",
+    description: "El legado de Botero y la identidad de Medellín, a pie de plaza.",
+    place: "Plaza Botero, Medellín",
+    price: "Gratis o ingreso al museo",
+    available: "Todos los días",
   },
   {
     image: cafetourExpd,
     title: "Ruta del café antioqueño",
-    description:
-      "Conoce el origen del café antioqueño visitando fincas cafeteras, aprendiendo su proceso y disfrutando una experiencia de tradición y sabor.",
-    place: "Oriente Antioqueño / Antioquia",
-    price: "Desde $80.000 - $150.000 COP según finca y plan",
+    description: "Del cafetal a la taza: origen, proceso y sabor de altura.",
+    place: "Oriente antioqueño",
+    price: "Desde $80.000 COP",
     available: "Lunes a sábado",
     duration: "3 a 5 horas",
   },
   {
     image: billarExp,
     title: "Billar: Una experiencia para compartir",
-    description:
-      "Disfruta una partida de billar en espacios de entretenimiento de Medellín, ideal para compartir con amigos, competir y pasar un momento diferente.",
-    place: "Clubes y salas de billar en Medellín",
-    price: "Desde $20.000 COP aproximadamente por persona",
+    description: "Una partida para competir, reír y pasar el rato.",
+    place: "Medellín, Antioquia",
+    price: "Desde $20.000 COP",
     available: "Todos los días",
     duration: "1 a 2 horas",
   },
   {
     image: carroExp,
     title: "Diversión y adrenalina: Parque de experiencias",
-    description:
-      "Disfruta un día lleno de emoción con atracciones, actividades recreativas y espacios para compartir con amigos o familia en parques de entretenimiento de Antioquia.",
+    description: "Atracciones y adrenalina para un día fuera de lo cotidiano.",
     place: "Antioquia",
-    price: "Desde $30.000 COP aproximadamente (según parque y actividades)",
-    available: "Fines de semana, festivos y fechas programadas",
+    price: "Desde $30.000 COP",
+    available: "Fines de semana y festivos",
     duration: "Medio día o día completo",
   },
   {
     image: padelExp,
     title: "Pádel: Deporte y conexión",
-    description:
-      "Disfruta un deporte dinámico que combina diversión, ejercicio y conexión con otras personas en canchas especializadas de Medellín.",
-    place: "Clubes deportivos de pádel — Medellín, Antioquia",
-    price: "Desde $25.000 COP por persona aproximadamente",
-    available: "Lunes a domingo según cancha",
-    duration: "1 hora aproximadamente",
+    description: "Deporte, energía y compañía en un mismo plan.",
+    place: "Medellín, Antioquia",
+    price: "Desde $25.000 COP",
+    available: "Lunes a domingo",
+    duration: "1 hora",
   },
   {
     image: golfExp,
     title: "Golf: Una experiencia tranquila y exclusiva",
-    description:
-      "Vive una experiencia deportiva rodeada de naturaleza, concentración y tranquilidad en escenarios de golf de Antioquia.",
-    place: "Clubes de golf en Antioquia",
-    price: "Desde $70.000 COP aproximadamente",
+    description: "Juego, paisaje y calma en escenarios exclusivos.",
+    place: "Antioquia",
+    price: "Desde $70.000 COP",
     available: "Reservas programadas",
     duration: "2 a 4 horas",
   },
@@ -204,26 +193,30 @@ function ValueIconExplore() {
 const landingValues = [
   {
     title: "Caminos con historia",
+    titleLines: ["Caminos con", "historia"],
     description:
-      "Descubre experiencias con identidad, lugares que tienen una historia detrás y momentos que te permiten conectar con la cultura, la ciudad y nuevas formas de vivir cada camino.",
+      "Descubre experiencias con identidad, lugares con historia y momentos para conectar con la cultura, la ciudad y cada nuevo camino.",
     icon: <ValueIconPath />,
   },
   {
     title: "Experiencias seleccionadas",
+    titleLines: ["Experiencias", "seleccionadas"],
     description:
-      "Encuentra planes pensados para cada momento. Con nuestro asistente de inteligencia artificial descubre experiencias personalizadas según tus gustos, tu tiempo, tu presupuesto y la forma en que quieres disfrutar la ciudad.",
+      "Encuentra planes para cada momento y descubre, con inteligencia artificial, experiencias según tus gustos, tu tiempo y tu presupuesto.",
     icon: <ValueIconCompass />,
   },
   {
     title: "Conexiones reales",
+    titleLines: ["Conexiones", "reales"],
     description:
-      "Conoce opiniones reales que inspiran nuevos caminos. Además, crea planes junto a tus amigos y encuentra con ayuda de la inteligencia artificial experiencias que se adapten a todos.",
+      "Conoce opiniones reales, crea planes con tus amigos y encuentra, con inteligencia artificial, experiencias que se adaptan a todos.",
     icon: <ValueIconConnection />,
   },
   {
     title: "Nuevas formas de explorar",
+    titleLines: ["Nuevas formas", "de explorar"],
     description:
-      "Explora la ciudad más allá de lo común. Descubre lugares, actividades y experiencias únicas que convierten cada salida en un recuerdo especial.",
+      "Explora la ciudad más allá de lo común y descubre lugares y actividades únicas que convierten cada salida en un recuerdo especial.",
     icon: <ValueIconExplore />,
   },
 ];
@@ -238,6 +231,7 @@ function featuredOffset(index: number, active: number, count: number) {
 
 export function LandingPage() {
   const { user, isAdmin } = useAuth();
+  const heroRef = useRef<HTMLElement>(null);
   const introRef = useRef<HTMLElement>(null);
   const featuredRef = useRef<HTMLElement>(null);
   const valuesRef = useRef<HTMLElement>(null);
@@ -247,53 +241,26 @@ export function LandingPage() {
   const [contactOpen, setContactOpen] = useState(false);
 
   useEffect(() => {
-    const section = introRef.current;
-    if (!section) return;
+    const sections = [heroRef.current, introRef.current, featuredRef.current, valuesRef.current].filter(
+      (section): section is HTMLElement => Boolean(section),
+    );
+    if (sections.length === 0) {
+      return;
+    }
 
     const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting) return;
-        section.classList.add("is-inview");
-        observer.disconnect();
+      (entries) => {
+        for (const entry of entries) {
+          entry.target.classList.toggle("is-inview", entry.isIntersecting);
+        }
       },
-      { threshold: 0.12 },
+      { threshold: 0.16, rootMargin: "0px 0px -6% 0px" },
     );
 
-    observer.observe(section);
-    return () => observer.disconnect();
-  }, []);
+    for (const section of sections) {
+      observer.observe(section);
+    }
 
-  useEffect(() => {
-    const section = featuredRef.current;
-    if (!section) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting) return;
-        section.classList.add("is-inview");
-        observer.disconnect();
-      },
-      { threshold: 0.18 },
-    );
-
-    observer.observe(section);
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    const section = valuesRef.current;
-    if (!section) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting) return;
-        section.classList.add("is-inview");
-        observer.disconnect();
-      },
-      { threshold: 0.16 },
-    );
-
-    observer.observe(section);
     return () => observer.disconnect();
   }, []);
 
@@ -306,12 +273,13 @@ export function LandingPage() {
   };
 
   return (
-    <div className="bg-white text-black">
-      <section
-        className="landing-hero"
-        style={{ backgroundImage: `url(${encabezado})` }}
-        aria-label="Encabezado"
-      >
+    <div className="landing bg-white text-black">
+      <section className="landing-hero" ref={heroRef} aria-label="Encabezado">
+        <div
+          className="landing-hero__bg"
+          style={{ backgroundImage: `url(${encabezado})` }}
+          aria-hidden="true"
+        />
         <nav className="landing-hero__nav" aria-label="Principal">
           <div className="landing-hero__links landing-hero__links--left">
             <Link to="/">INICIO</Link>
@@ -331,9 +299,14 @@ export function LandingPage() {
             )}
           </div>
         </nav>
-        <h1 className="landing-hero__title">
-          <img src={tituloEncabezado} alt="Entre Caminos" className="landing-hero__wordmark" />
-        </h1>
+        <div className="landing-hero__stage">
+          <h1 className="landing-hero__title">
+            <img src={tituloEncabezado} alt="Entre Caminos" className="landing-hero__wordmark" />
+          </h1>
+          <Link to={user ? "/explorar" : "/register"} className="landing-hero__cta">
+            Comenzar ahora
+          </Link>
+        </div>
       </section>
 
       <section id="como-funciona" ref={introRef} className="landing-intro">
@@ -356,7 +329,7 @@ export function LandingPage() {
               culturales, recreativas y turísticas seleccionadas según tus gustos, tu tiempo y la forma en que quieres
               vivir cada momento.
             </p>
-            <a href="#experiencias-destacadas" className="landing-intro__cta">
+            <a href="#experiencias-destacadas" className="landing-intro__cta admin-cta">
               Ver experiencias destacadas
             </a>
           </div>
@@ -484,7 +457,14 @@ export function LandingPage() {
           {landingValues.map((item) => (
             <article key={item.title} className="landing-values__item">
               {item.icon}
-              <h3 className="landing-values__title">{item.title}</h3>
+              <h3 className="landing-values__title">
+                {item.titleLines.map((line, index) => (
+                  <span key={line}>
+                    {index > 0 ? <br /> : null}
+                    {line}
+                  </span>
+                ))}
+              </h3>
               <p className="landing-values__desc">{item.description}</p>
             </article>
           ))}
@@ -492,48 +472,43 @@ export function LandingPage() {
       </section>
 
       <footer id="contacto" className="landing-footer">
+        <div className="landing-footer__crest">
+          <img src={logoEntreCaminos} alt="Entre Caminos" className="landing-footer__logo" />
+        </div>
         <div className="landing-footer__inner">
-          <div className="landing-footer__main">
-            <div className="landing-footer__brand">
-              <img src={logoEntreCaminos} alt="Entre Caminos" className="landing-footer__logo" />
+          <div className="landing-footer__columns">
+            <div className="landing-footer__col landing-footer__col--left">
+              <h3 className="landing-footer__col-title">Entre Caminos</h3>
+              <ul className="landing-footer__links">
+                <li>
+                  <a href="#como-funciona">Cómo funciona</a>
+                </li>
+                <li>
+                  <a
+                    href="#contacto"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      setContactOpen(true);
+                    }}
+                  >
+                    Contacto
+                  </a>
+                </li>
+              </ul>
             </div>
-
-            <div className="landing-footer__content">
-              <div className="landing-footer__columns">
-                <div>
-                  <h3 className="landing-footer__col-title">Entre Caminos</h3>
-                  <ul className="landing-footer__links">
-                    <li>
-                      <a href="#como-funciona">Cómo funciona</a>
-                    </li>
-                    <li>
-                      <a
-                        href="#contacto"
-                        onClick={(event) => {
-                          event.preventDefault();
-                          setContactOpen(true);
-                        }}
-                      >
-                        Contacto
-                      </a>
-                    </li>
-                  </ul>
-                </div>
-                <div>
-                  <h3 className="landing-footer__col-title">Legal</h3>
-                  <ul className="landing-footer__links">
-                    <li>
-                      <a href="#contacto">Términos y condiciones</a>
-                    </li>
-                    <li>
-                      <a href="#contacto">Tratamiento de datos personales</a>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-              <p className="landing-footer__copy">© 2026 Entre Caminos. Todos los derechos reservados.</p>
+            <div className="landing-footer__col landing-footer__col--right">
+              <h3 className="landing-footer__col-title">Legal</h3>
+              <ul className="landing-footer__links">
+                <li>
+                  <a href="#contacto">Términos y condiciones</a>
+                </li>
+                <li>
+                  <a href="#contacto">Tratamiento de datos personales</a>
+                </li>
+              </ul>
             </div>
           </div>
+          <p className="landing-footer__copy">© 2026 Entre Caminos. Todos los derechos reservados.</p>
         </div>
       </footer>
       <ContactModal open={contactOpen} onClose={() => setContactOpen(false)} />

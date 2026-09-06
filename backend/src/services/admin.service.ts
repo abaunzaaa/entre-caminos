@@ -7,11 +7,25 @@ import { recordAudit } from "./audit.service.js";
 
 const adminRoles = [ROLES.SUPER_ADMIN, ROLES.ADMIN];
 
-export async function listAdministrators() {
+const administratorRoleWhere = {
+  role: { name: { in: adminRoles } },
+} as const;
+
+export async function countActiveAdministrators() {
+  return prisma.user.count({
+    where: {
+      ...administratorRoleWhere,
+      status: "ACTIVE",
+    },
+  });
+}
+
+export async function listAdministrators(options?: { take?: number }) {
   const users = await prisma.user.findMany({
-    where: { role: { name: { in: adminRoles } } },
+    where: administratorRoleWhere,
     include: { role: true },
     orderBy: { createdAt: "desc" },
+    take: options?.take,
   });
 
   return users.map(publicUser);
@@ -99,15 +113,17 @@ export async function updateAdministrator(
   return publicUser(updated);
 }
 
-export async function getDashboardMetrics() {
-  const [users, experiences, published, categories, admins] = await Promise.all([
-    prisma.user.count({ where: { role: { name: ROLES.USER } } }),
-    prisma.experience.count(),
-    prisma.experience.count({ where: { status: "PUBLISHED" } }),
-    prisma.category.count({ where: { status: "ACTIVE" } }),
-    prisma.user.count({ where: { role: { name: { in: adminRoles } } } }),
-  ]);
-
+export async function getDashboardMetrics(actorId: string) {
+  const users = await prisma.user.count({ where: { role: { name: ROLES.USER } } });
+  const experiences = await prisma.experience.count();
+  const published = await prisma.experience.count({ where: { status: "PUBLISHED" } });
+  const categories = await prisma.category.count({ where: { status: "ACTIVE" } });
+  const admins = await countActiveAdministrators();
+  const createdCategories = await prisma.auditLog.count({
+    where: { userId: actorId, action: "CATEGORY_CREATE" },
+  });
+  const createdExperiences = await prisma.experience.count({ where: { createdBy: actorId } });
+  const administrators = await listAdministrators({ take: 3 });
   const recentLogs = await prisma.auditLog.findMany({
     take: 8,
     orderBy: { createdAt: "desc" },
@@ -120,6 +136,9 @@ export async function getDashboardMetrics() {
     published,
     categories,
     admins,
+    createdCategories,
+    createdExperiences,
+    administrators,
     recentLogs,
   };
 }

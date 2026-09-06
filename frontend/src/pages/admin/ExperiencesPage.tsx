@@ -35,33 +35,33 @@ export function ExperiencesPage() {
         <p className="max-w-xl text-sm text-neutral-600">
           Cada pieza se guarda en la base. Al publicarla, aparece en la vitrina pública.
         </p>
-        <Link to="/admin/experiencias/nueva" className="rounded-full bg-charcoal px-7 py-3 text-sm text-white">
+        <Link to="/admin/experiencias/nueva" className="admin-cta">
           Nueva experiencia
         </Link>
       </div>
       {error && <p className="mb-4 text-sm text-red-700">{error}</p>}
       {experiences.length === 0 ? (
         <Panel className="px-8 py-20 text-center">
-          <p className="font-serif text-3xl italic">El catálogo espera su primera historia.</p>
-          <Link to="/admin/experiencias/nueva" className="mt-6 inline-flex rounded-full bg-charcoal px-8 py-3 text-sm text-white">
+          <p className="font-poppins text-3xl font-semibold tracking-[-0.02em] text-forest">El catálogo espera su primera historia.</p>
+          <Link to="/admin/experiencias/nueva" className="admin-cta mt-6">
             Crear experiencia
           </Link>
         </Panel>
       ) : (
-        <div className="grid gap-px bg-black md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-2">
           {experiences.map((experience) => (
-            <article key={experience.id} className="grid bg-white md:grid-cols-[160px_1fr]">
+            <article key={experience.id} className="admin-card grid overflow-hidden md:grid-cols-[160px_1fr]">
               <img src={mediaUrl(experience.imageUrl)} alt="" className="h-40 w-full object-cover md:h-full" />
               <div className="flex flex-col justify-between p-5">
                 <div>
-                  <p className="text-[10px] uppercase tracking-[0.2em] text-neutral-500">
+                  <p className="text-[13px] font-medium text-neutral-500">
                     {experience.category?.name} · {experience.location}
                   </p>
-                  <h2 className="mt-2 font-serif text-2xl leading-tight">{experience.title}</h2>
+                  <h2 className="mt-2 font-poppins text-2xl font-semibold leading-tight tracking-[-0.02em]">{experience.title}</h2>
                 </div>
                 <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
                   <select
-                    className="border border-black bg-white px-3 py-1 text-[11px] uppercase tracking-[0.12em]"
+                    className="rounded-xl border border-forest/10 bg-white px-3 py-1.5 text-[13px] font-medium"
                     value={experience.status}
                     onChange={(e) => {
                       setError("");
@@ -78,7 +78,7 @@ export function ExperiencesPage() {
                       </option>
                     ))}
                   </select>
-                  <div className="flex gap-4 text-[11px] uppercase tracking-[0.16em]">
+                  <div className="flex gap-4 text-[13px] font-medium">
                     <Link to={`/admin/experiencias/${experience.id}`} className="underline underline-offset-4">
                       Editar
                     </Link>

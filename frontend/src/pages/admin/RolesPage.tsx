@@ -48,15 +48,15 @@ export function RolesPage() {
         </Link>
       </p>
       {error && <p className="text-sm text-red-700">{error}</p>}
-      <div className="space-y-px bg-black">
+      <div className="space-y-4">
         {roles.map((role) => (
           <Panel key={role.id} className="p-8">
             <div className="flex items-end justify-between gap-4">
               <div>
-                <h2 className="font-serif text-3xl italic">{role.name}</h2>
+                <h2 className="font-poppins text-3xl font-semibold tracking-[-0.02em] text-forest">{role.name}</h2>
                 <p className="mt-1 text-sm text-neutral-500">{ROLE_COPY[role.name] ?? "Rol personalizado."}</p>
               </div>
-              <span className="text-[11px] uppercase tracking-[0.18em] text-neutral-400">
+              <span className="text-[13px] font-medium text-neutral-400">
                 {role._count?.users ?? 0} personas
               </span>
             </div>
@@ -69,8 +69,8 @@ export function RolesPage() {
                     type="button"
                     disabled={role.name === "USER"}
                     onClick={() => toggle(role, permission.id)}
-                    className={`border px-3 py-1.5 text-[11px] uppercase tracking-[0.12em] ${
-                      active ? "border-black bg-charcoal text-white" : "border-black/30 bg-white text-neutral-600"
+                    className={`admin-chip px-3 py-1.5 text-[13px] font-medium ${
+                      active ? "is-active" : ""
                     }`}
                   >
                     {permission.name}

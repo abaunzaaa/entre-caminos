@@ -1,17 +1,18 @@
-import { NavLink, Outlet, Navigate, Link, useLocation } from "react-router-dom";
-import { MapHeartLogo } from "../components/brand/MapHeartLogo";
+import { useEffect, useState } from "react";
+import { Outlet, Navigate, useLocation } from "react-router-dom";
+import { Menu } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
+import {
+  ADMIN_NAV_ITEMS,
+  AdminSidebar,
+} from "../components/admin/AdminSidebar";
+import { AdminTopbar } from "../components/admin/AdminTopbar";
+import "../styles/admin-sidebar.css";
+import "../styles/admin-ui.css";
 
-const links = [
-  { to: "/admin", label: "Tablero", end: true, permission: null as string | null },
-  { to: "/admin/experiencias", label: "Publicaciones", permission: "experiences.manage" },
-  { to: "/admin/categorias", label: "Categorías", permission: "categories.manage" },
-  { to: "/admin/administradores", label: "Equipo", permission: "admins.manage" },
-  { to: "/admin/roles", label: "Roles", permission: "roles.manage" },
-];
+const SIDEBAR_KEY = "ec_admin_sidebar_collapsed";
 
 const titles: Record<string, { kicker: string; title: string }> = {
-  "/admin": { kicker: "Curaduría", title: "El territorio, en una mirada" },
   "/admin/experiencias": { kicker: "Catálogo", title: "Publicaciones" },
   "/admin/experiencias/nueva": { kicker: "Estudio", title: "Nueva experiencia" },
   "/admin/experiences": { kicker: "Catálogo", title: "Publicaciones" },
@@ -22,13 +23,52 @@ const titles: Record<string, { kicker: string; title: string }> = {
   "/admin/permissions": { kicker: "Acceso", title: "Permisos" },
 };
 
+function readCollapsed() {
+  try {
+    return window.localStorage.getItem(SIDEBAR_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
 export function AdminLayout() {
-  const { user, loading, isAdmin, logout, hasPermission } = useAuth();
+  const { user, loading, isAdmin, hasPermission } = useAuth();
   const location = useLocation();
+  const [collapsed, setCollapsed] = useState(readCollapsed);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(SIDEBAR_KEY, collapsed ? "1" : "0");
+    } catch {
+      /* ignore quota / private mode */
+    }
+  }, [collapsed]);
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (!mobileOpen) {
+      return;
+    }
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setMobileOpen(false);
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = "";
+    };
+  }, [mobileOpen]);
 
   if (loading) {
     return (
-      <div className="grid min-h-screen place-items-center bg-white font-serif text-2xl italic">
+      <div className="grid min-h-screen place-items-center bg-white font-poppins text-2xl font-semibold text-forest">
         Entre Caminos
       </div>
     );
@@ -38,63 +78,78 @@ export function AdminLayout() {
     return <Navigate to="/login" replace />;
   }
 
-  const visibleLinks = links.filter((link) => !link.permission || hasPermission(link.permission));
-  const heading =
-    titles[location.pathname] ??
-    (location.pathname.includes("/experiencias/") || location.pathname.includes("/experiences/")
-      ? { kicker: "Estudio", title: "Editar experiencia" }
-      : { kicker: "Atelier", title: "Panel" });
+  const visibleLinks = ADMIN_NAV_ITEMS.filter(
+    (link) => !link.permission || hasPermission(link.permission),
+  );
+  const isDashboard = location.pathname === "/admin";
+  const isTeamPage =
+    location.pathname === "/admin/administradores" || location.pathname === "/admin/administrators";
+  const useDashCanvas = isDashboard || isTeamPage;
+  const heading = useDashCanvas
+    ? null
+    : (titles[location.pathname] ??
+      (location.pathname.includes("/experiencias/") || location.pathname.includes("/experiences/")
+        ? { kicker: "Estudio", title: "Editar experiencia" }
+        : { kicker: "Atelier", title: "Panel" }));
+
+  function toggleSidebar() {
+    if (window.matchMedia("(max-width: 900px)").matches) {
+      setMobileOpen((open) => !open);
+      return;
+    }
+    setCollapsed((value) => !value);
+  }
 
   return (
-    <div className="min-h-screen bg-white text-ink">
-      <header className="border-b border-black">
-        <div className="relative mx-auto grid max-w-6xl grid-cols-[1fr_auto_1fr] items-center px-6 py-5">
-          <p className="text-[11px] uppercase tracking-[0.28em]">Atelier</p>
-          <div className="flex flex-col items-center">
-            <p className="font-serif text-xl tracking-wide">ENTRE CAMINOS</p>
-            <MapHeartLogo className="absolute left-1/2 top-full z-10 h-16 w-16 -translate-x-1/2 -translate-y-1/2" />
-          </div>
-          <div className="flex items-center justify-end gap-6 text-sm">
-            <Link to="/" replace>
-              Ver sitio
-            </Link>
-            <button
-              type="button"
-              onClick={() => logout().then(() => window.location.replace("/login"))}
-            >
-              Cerrar sesión
-            </button>
-          </div>
-        </div>
-        <nav className="mx-auto mt-10 flex max-w-6xl flex-wrap justify-center gap-8 border-t border-black px-6 pb-4 pt-8 text-[11px] uppercase tracking-[0.22em]">
-          {visibleLinks.map((link) => (
-            <NavLink
-              key={link.to}
-              to={link.to}
-              end={link.end}
-              className={({ isActive }) =>
-                isActive ? "text-black underline decoration-1 underline-offset-8" : "text-neutral-500 hover:text-black"
-              }
-            >
-              {link.label}
-            </NavLink>
-          ))}
-        </nav>
-      </header>
+    <div className="admin-shell">
+      {mobileOpen ? (
+        <button
+          type="button"
+          className="admin-sidebar__backdrop"
+          aria-label="Cerrar menú"
+          onClick={() => setMobileOpen(false)}
+        />
+      ) : null}
 
-      <div className="border-b border-black bg-charcoal px-6 py-10 text-white">
-        <div className="mx-auto max-w-6xl">
-          <p className="text-[11px] uppercase tracking-[0.28em] text-white/70">{heading.kicker}</p>
-          <h1 className="mt-2 font-serif text-4xl italic md:text-5xl">{heading.title}</h1>
-          <p className="mt-3 text-sm text-white/70">{user?.name} · {user?.role === "SUPER_ADMIN" ? "Super administración" : "Administración"}</p>
+      <AdminSidebar
+        collapsed={collapsed}
+        mobileOpen={mobileOpen}
+        items={visibleLinks}
+        onToggle={toggleSidebar}
+        onCloseMobile={() => setMobileOpen(false)}
+      />
+
+      <div className="admin-shell__main">
+        <div className="admin-shell__mobilebar">
+          <button
+            type="button"
+            className="admin-shell__mobilebar-btn"
+            aria-label="Abrir menú"
+            onClick={() => setMobileOpen(true)}
+          >
+            <Menu size={20} strokeWidth={1.8} />
+          </button>
+          <span className="admin-shell__mobilebar-title">Entre Caminos</span>
         </div>
+
+        <AdminTopbar user={user} />
+
+        {heading ? (
+          <header className="admin-pagehead">
+            <p className="admin-pagehead__kicker">{heading.kicker}</p>
+            <h1 className="admin-pagehead__title">{heading.title}</h1>
+            <p className="admin-pagehead__meta">
+              {`${user?.name} · ${user?.role === "SUPER_ADMIN" ? "Super administrador" : "Administrador"}`}
+            </p>
+          </header>
+        ) : null}
+
+        <main className="admin-shell__content">
+          <div className={useDashCanvas ? "admin-shell__canvas" : "mx-auto max-w-6xl px-6 py-8 md:px-8"}>
+            <Outlet />
+          </div>
+        </main>
       </div>
-
-      <main className="stripe-bg min-h-[60vh]">
-        <div className="mx-auto max-w-6xl px-6 py-12">
-          <Outlet />
-        </div>
-      </main>
     </div>
   );
 }

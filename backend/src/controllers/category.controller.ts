@@ -1,13 +1,18 @@
 import type { Request, Response } from "express";
 import * as categoryService from "../services/category.service.js";
+import { parseLimitQuery } from "../utils/query.js";
 
 export async function listPublic(_req: Request, res: Response) {
   const categories = await categoryService.listCategories({ includeInactive: false });
   return res.json({ success: true, data: { categories } });
 }
 
-export async function listAdmin(_req: Request, res: Response) {
-  const categories = await categoryService.listCategories({ includeInactive: true });
+export async function listAdmin(req: Request, res: Response) {
+  const take = parseLimitQuery(req.query.limit);
+  const categories = await categoryService.listCategories({
+    includeInactive: true,
+    take,
+  });
   return res.json({ success: true, data: { categories } });
 }
 

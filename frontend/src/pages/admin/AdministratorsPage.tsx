@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
+import { Users } from "lucide-react";
 import {
   createAdministrator,
   getAdministrators,
@@ -9,6 +10,17 @@ import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
 import { Panel, StatusDot } from "../../components/admin/Panel";
 import { getApiErrorMessage } from "../../utils/api-error";
+import { readAdminAvatar } from "../../utils/admin-avatar";
+
+function roleLabel(role: PublicUser["role"]) {
+  if (role === "SUPER_ADMIN") {
+    return "Super administrador";
+  }
+  if (role === "ADMIN") {
+    return "Administrador";
+  }
+  return "Administración";
+}
 
 export function AdministratorsPage() {
   const [admins, setAdmins] = useState<PublicUser[]>([]);
@@ -48,69 +60,115 @@ export function AdministratorsPage() {
   }
 
   return (
-    <div className="space-y-10">
-      <form className="grid gap-4 border border-black bg-white p-8 md:grid-cols-2" onSubmit={onSubmit}>
-        <h2 className="font-serif text-3xl italic md:col-span-2">Invitar al atelier</h2>
-        <Input name="name" label="Nombre" required />
-        <Input name="email" type="email" label="Correo" required />
-        <Input name="password" type="password" label="Contraseña" required />
-        <label className="block space-y-2">
-          <span className="text-[11px] uppercase tracking-[0.18em] text-neutral-500">Rol</span>
-          <select name="role" className="w-full border border-black bg-white px-4 py-3" defaultValue="ADMIN">
-            <option value="ADMIN">Administración</option>
-            <option value="SUPER_ADMIN">Super administración</option>
-          </select>
-        </label>
-        <p className="text-xs text-neutral-500 md:col-span-2">
-          La contraseña necesita mayúscula, minúscula, número y símbolo. Ejemplo: Caminos#2026
-        </p>
-        {error && <p className="text-sm text-red-700 md:col-span-2">{error}</p>}
-        {success && <p className="text-sm text-charcoal md:col-span-2">{success}</p>}
-        <div className="md:col-span-2">
-          <Button className="bg-charcoal" disabled={saving}>
-            {saving ? "Guardando..." : "Invitar administrador"}
-          </Button>
+    <div className="dash">
+      <article className="dash-profile dash-profile--welcome">
+        <div className="dash-profile__top">
+          <span className="dash-profile__photo" aria-hidden="true">
+            <Users strokeWidth={1.6} />
+          </span>
+          <div className="dash-profile__identity">
+            <h1 className="dash-profile__name">Equipo administrativo</h1>
+            <p className="dash-section__lead">
+              Gestiona las personas autorizadas para administrar y mantener Entre Caminos.
+            </p>
+            <p className="dash-section__lead">
+              Administra los accesos del equipo, asigna roles y controla quién puede gestionar la plataforma.
+            </p>
+          </div>
         </div>
-      </form>
+      </article>
 
-      <div className="grid gap-px bg-black md:grid-cols-2">
-        {admins.map((admin) => (
-          <Panel key={admin.id} className="flex items-center justify-between gap-4 p-6">
-            <div className="flex items-center gap-4">
-              <span className="grid h-14 w-14 place-items-center rounded-full border border-black font-serif text-xl italic">
-                {admin.name.slice(0, 1)}
-              </span>
-              <div>
-                <p className="font-serif text-2xl">{admin.name}</p>
-                <p className="text-sm text-neutral-500">{admin.email}</p>
-                <div className="mt-2 flex gap-2">
-                  <StatusDot active>{admin.role === "SUPER_ADMIN" ? "Super admin" : "Admin"}</StatusDot>
-                  <StatusDot active={admin.status === "ACTIVE"}>
-                    {admin.status === "ACTIVE" ? "Activo" : "Inactivo"}
-                  </StatusDot>
-                </div>
-              </div>
-            </div>
-            {admin.status === "ACTIVE" ? (
-              <button
-                type="button"
-                className="text-[11px] uppercase tracking-[0.16em] underline underline-offset-4"
-                onClick={() => updateAdministrator(admin.id, { status: "INACTIVE" }).then(load)}
-              >
-                Desactivar
-              </button>
-            ) : (
-              <button
-                type="button"
-                className="text-[11px] uppercase tracking-[0.16em] underline underline-offset-4"
-                onClick={() => updateAdministrator(admin.id, { status: "ACTIVE" }).then(load)}
-              >
-                Activar
-              </button>
-            )}
+      <section className="dash-split__panel" aria-label="Invitar administrador">
+        <div>
+          <h2 className="dash-section__title">Invitar administrador</h2>
+          <p className="dash-section__lead">Suma a una persona con acceso al panel.</p>
+        </div>
+        <form className="grid gap-5 md:grid-cols-2" onSubmit={onSubmit}>
+          <Input name="name" label="Nombre" required />
+          <Input name="email" type="email" label="Correo" required />
+          <Input name="password" type="password" label="Contraseña" required />
+          <label className="block space-y-2">
+            <span className="font-poppins text-[13px] font-medium tracking-normal text-neutral-500">Rol</span>
+            <select
+              name="role"
+              className="w-full rounded-xl border border-forest/10 bg-white px-4 py-3 font-poppins text-[15px] font-normal text-ink outline-none transition focus:ring-2 focus:ring-forest/15"
+              defaultValue="ADMIN"
+            >
+              <option value="ADMIN">Administración</option>
+              <option value="SUPER_ADMIN">Super administración</option>
+            </select>
+          </label>
+          <p className="dash-section__lead md:col-span-2">
+            La contraseña necesita mayúscula, minúscula, número y símbolo. Ejemplo: Caminos#2026
+          </p>
+          {error ? <p className="text-sm text-red-700 md:col-span-2">{error}</p> : null}
+          {success ? <p className="text-sm text-charcoal md:col-span-2">{success}</p> : null}
+          <div className="md:col-span-2">
+            <Button type="submit" disabled={saving}>
+              {saving ? "Guardando..." : "Invitar administrador"}
+            </Button>
+          </div>
+        </form>
+      </section>
+
+      <section aria-label="Administradores registrados">
+        <header className="dash-section__head">
+          <div>
+            <h2 className="dash-section__title">Administradores registrados</h2>
+            <p className="dash-section__lead">Personas con acceso para administrar la plataforma.</p>
+          </div>
+        </header>
+        {admins.length === 0 ? (
+          <Panel className="dash-empty">
+            <p>No hay administradores registrados.</p>
           </Panel>
-        ))}
-      </div>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2">
+            {admins.map((admin) => {
+              const avatar = readAdminAvatar(admin.id);
+              const initial = admin.name.trim().charAt(0).toUpperCase() || "A";
+              return (
+                <article key={admin.id} className="dash-team-card">
+                  <span className="dash-team-card__avatar">
+                    {avatar ? <img src={avatar} alt="" /> : initial}
+                  </span>
+                  <div className="dash-team-card__info">
+                    <h3>{admin.name}</h3>
+                    <p className="dash-team-card__email">{admin.email}</p>
+                    <div className="dash-team-card__facts">
+                      <StatusDot active>{roleLabel(admin.role)}</StatusDot>
+                      <StatusDot active={admin.status === "ACTIVE"}>
+                        {admin.status === "ACTIVE" ? "Activo" : "Inactivo"}
+                      </StatusDot>
+                    </div>
+                  </div>
+                  {admin.status === "ACTIVE" ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="ml-auto shrink-0"
+                      onClick={() => updateAdministrator(admin.id, { status: "INACTIVE" }).then(load)}
+                    >
+                      Desactivar
+                    </Button>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="ml-auto shrink-0"
+                      onClick={() => updateAdministrator(admin.id, { status: "ACTIVE" }).then(load)}
+                    >
+                      Activar
+                    </Button>
+                  )}
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

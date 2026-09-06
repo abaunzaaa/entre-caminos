@@ -15,14 +15,17 @@ export function Button({
   return (
     <button
       className={cn(
-        "inline-flex items-center justify-center rounded-full font-medium transition duration-200 disabled:cursor-not-allowed disabled:opacity-50",
-        size === "sm" && "px-4 py-2 text-sm",
-        size === "md" && "px-5 py-2.5 text-sm",
-        size === "lg" && "px-7 py-3.5 text-base",
-        variant === "primary" && "bg-charcoal text-white hover:bg-forest-deep",
-        variant === "secondary" && "border border-black bg-white text-ink hover:bg-sand",
+        variant === "primary" && "admin-cta",
+        variant === "primary" && size === "sm" && "admin-cta--sm",
+        variant === "primary" && size === "lg" && "admin-cta--lg",
+        variant !== "primary" &&
+          "inline-flex items-center justify-center rounded-full font-poppins font-medium tracking-[0.03em] transition duration-200 disabled:cursor-not-allowed disabled:opacity-50",
+        variant !== "primary" && size === "sm" && "px-5 py-1.5 text-[13px]",
+        variant !== "primary" && size === "md" && "px-[22px] py-2 text-[13.5px]",
+        variant !== "primary" && size === "lg" && "px-7 py-2.5 text-sm",
+        variant === "secondary" && "border border-forest/15 bg-white text-ink hover:bg-[#eef3ef]",
         variant === "ghost" && "text-forest hover:bg-forest/5",
-        variant === "gold" && "bg-gold text-white hover:bg-[#9a753f]",
+        variant === "gold" && "bg-gold text-white hover:opacity-90",
         className,
       )}
       {...props}

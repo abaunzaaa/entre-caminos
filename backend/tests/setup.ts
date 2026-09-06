@@ -28,7 +28,7 @@ export async function resetDatabase() {
   await prisma.permission.deleteMany();
   await prisma.role.deleteMany();
 
-  await seedCore({ includeCatalog: false });
+  await seedCore();
 }
 
 await resetDatabase();

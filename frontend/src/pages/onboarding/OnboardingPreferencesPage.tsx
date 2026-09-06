@@ -22,8 +22,10 @@ import {
   Snowflake,
 } from "lucide-react";
 import { IllustrationPanel } from "../../components/auth/IllustrationPanel";
+import { Button } from "../../components/ui/Button";
 import { getOnboarding, saveOnboarding } from "../../utils/onboarding";
 import panelPreferences from "../../assets/panel-preferences.png";
+import "../../styles/auth-interactive.css";
 
 const groups = [
   {
@@ -105,13 +107,13 @@ export function OnboardingPreferencesPage() {
 
   return (
     <div className="grid min-h-screen bg-white lg:grid-cols-[62%_38%]">
-      <main className="px-6 py-10 lg:px-12">
-        <h1 className="font-serif text-4xl italic md:text-5xl">Cuéntanos más de ti</h1>
-        <p className="mt-3 text-neutral-600">¿Cómo son tus viajes ideales? Selecciona tus preferencias</p>
+      <main className="font-poppins px-6 py-10 lg:px-12">
+        <h1 className="auth-form__title">Cuéntanos más de ti</h1>
+        <p className="auth-form__lead">¿Cómo son tus viajes ideales? Selecciona tus preferencias</p>
         <div className="mt-8 space-y-8">
           {groups.map((group) => (
             <section key={group.title}>
-              <h2 className="mb-3 text-sm font-medium">{group.title}</h2>
+              <h2 className="auth-field__label mb-3">{group.title}</h2>
               <div className="flex flex-wrap gap-3">
                 {group.options.map((option) => {
                   const active = selected.includes(option.label);
@@ -120,7 +122,7 @@ export function OnboardingPreferencesPage() {
                       key={option.label}
                       type="button"
                       onClick={() => toggle(option.label)}
-                      className={`relative flex items-center gap-2 rounded-2xl border px-4 py-3 text-sm ${
+                      className={`relative flex items-center gap-2 rounded-2xl border px-4 py-3 text-[13px] font-medium ${
                         active ? "border-charcoal" : "border-neutral-200"
                       }`}
                     >
@@ -139,18 +141,18 @@ export function OnboardingPreferencesPage() {
           ))}
         </div>
         <div className="mt-10 flex items-center justify-between">
-          <button type="button" className="text-sm" onClick={() => navigate("/onboarding")}>
+          <Button type="button" onClick={() => navigate("/onboarding")}>
             ← Volver
-          </button>
-          <button
-            className="rounded-full bg-charcoal px-10 py-3 text-white"
+          </Button>
+          <Button
+            type="button"
             onClick={() => {
               saveOnboarding({ preferences: selected });
               navigate("/onboarding/listo");
             }}
           >
             Continuar
-          </button>
+          </Button>
         </div>
       </main>
       <IllustrationPanel image={panelPreferences} variant="register" />

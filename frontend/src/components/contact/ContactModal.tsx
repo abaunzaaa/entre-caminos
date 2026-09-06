@@ -258,10 +258,6 @@ export function ContactModal({
           <h2 id={titleId} className="contact-modal__title">
             HABLEMOS DE NUEVAS EXPERIENCIAS
           </h2>
-          <p className="contact-modal__lead">
-            Ya sea que quieras descubrir nuevos planes o hacer parte de Entre Caminos como aliado,
-            estamos aquí para escucharte.
-          </p>
 
           {submitted ? (
             <p className="contact-modal__thanks">
@@ -276,10 +272,7 @@ export function ContactModal({
                   onClick={() => setIntent("discover")}
                   aria-pressed={intent === "discover"}
                 >
-                  <span className="contact-modal__option-title">Quiero descubrir experiencias</span>
-                  <span className="contact-modal__option-text">
-                    Encuentra nuevos lugares y planes que se adapten a tus gustos.
-                  </span>
+                  <span className="contact-modal__option-title">Quiero ser usuario</span>
                 </button>
                 <button
                   type="button"
@@ -288,9 +281,6 @@ export function ContactModal({
                   aria-pressed={intent === "ally"}
                 >
                   <span className="contact-modal__option-title">Quiero ser aliado</span>
-                  <span className="contact-modal__option-text">
-                    Comparte tu experiencia y haz parte de Entre Caminos.
-                  </span>
                 </button>
               </div>
 
@@ -316,8 +306,8 @@ export function ContactModal({
                     />
                     {discoverErrors.reason ? <em>{discoverErrors.reason}</em> : null}
                   </label>
-                  <button type="submit" className="contact-modal__submit">
-                    Enviar solicitud
+                  <button type="submit" className="contact-modal__submit admin-cta">
+                    Enviar
                   </button>
                 </form>
               ) : (
@@ -352,8 +342,8 @@ export function ContactModal({
                     />
                     {allyErrors.type ? <em>{allyErrors.type}</em> : null}
                   </label>
-                  <button type="submit" className="contact-modal__submit">
-                    Quiero ser aliado
+                  <button type="submit" className="contact-modal__submit admin-cta">
+                    Enviar
                   </button>
                 </form>
               )}

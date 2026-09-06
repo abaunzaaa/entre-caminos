@@ -1,0 +1,57 @@
+.admin-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 8px 22px;
+  border: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--admin-forest, #294942) 84%, #ffffff);
+  color: #fff;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  line-height: 1.2;
+  text-decoration: none;
+  box-shadow: none;
+  cursor: pointer;
+  transition:
+    background 220ms ease,
+    box-shadow 220ms ease,
+    opacity 220ms ease,
+    transform 220ms ease;
+}
+
+.admin-cta:hover,
+.admin-cta:focus-visible {
+  background: var(--admin-forest, #294942);
+  outline: none;
+  opacity: 0.92;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(41, 73, 66, 0.12);
+}
+
+.admin-cta:active {
+  opacity: 0.88;
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.admin-cta:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  transform: none;
+  box-shadow: none;
+}
+
+.admin-cta--sm {
+  min-height: 32px;
+  padding: 6px 18px;
+  font-size: 13px;
+}
+
+.admin-cta--lg {
+  min-height: 40px;
+  padding: 10px 26px;
+}

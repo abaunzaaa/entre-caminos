@@ -29,7 +29,7 @@ adminRouter.get(
 
 adminRouter.get(
   "/administrators",
-  permissionMiddleware(PERMISSIONS.ADMINS_MANAGE),
+  permissionMiddleware(PERMISSIONS.DASHBOARD_VIEW),
   asyncHandler(adminController.listAdmins),
 );
 

@@ -2,11 +2,12 @@ import { prisma } from "../database/prisma.js";
 import { ApiError } from "../utils/api-error.js";
 import { recordAudit } from "./audit.service.js";
 
-export async function listCategories(options?: { includeInactive?: boolean }) {
+export async function listCategories(options?: { includeInactive?: boolean; take?: number }) {
   return prisma.category.findMany({
     where: options?.includeInactive ? undefined : { status: "ACTIVE" },
     include: { _count: { select: { experiences: true } } },
-    orderBy: { name: "asc" },
+    orderBy: options?.take ? { createdAt: "desc" } : { name: "asc" },
+    take: options?.take,
   });
 }
 

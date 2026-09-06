@@ -32,7 +32,7 @@ export function IllustrationPanel({
         }`}
       />
       <div className="absolute inset-0 bg-gradient-to-b from-slateblue/70 via-slateblue/25 to-transparent" />
-      <div className="relative flex h-full flex-col justify-between p-10 text-white">
+      <div className="relative flex h-full flex-col justify-between p-10 font-poppins text-white">
         {showBack ? (
           <button
             type="button"

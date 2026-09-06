@@ -1,4 +1,4 @@
-import { PrismaClient, ExperienceStatus } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
 import path from "node:path";
@@ -11,106 +11,7 @@ dotenv.config({ path: path.resolve(here, "../.env"), override: true });
 
 const prisma = new PrismaClient();
 
-const categories = [
-  {
-    name: "Cultural",
-    description: "Museos, patrimonio, talleres y encuentros que cuentan la historia de un lugar.",
-  },
-  {
-    name: "Recreativo",
-    description: "Paseos, ocio y momentos ligeros para habitar la ciudad con calma.",
-  },
-  {
-    name: "Deportivo",
-    description: "Rutas, deporte al aire libre y movimiento en paisaje natural.",
-  },
-  {
-    name: "Turístico",
-    description: "Miradores, sabores y recorridos para residentes y viajeros.",
-  },
-];
-
-const experienceSeeds: Array<{
-  title: string;
-  description: string;
-  category: string;
-  price: number;
-  location: string;
-  latitude: number;
-  longitude: number;
-  imageUrl: string;
-  status: ExperienceStatus;
-}> = [
-  {
-    title: "Amanecer entre cafetales",
-    description:
-      "Caminata guiada al amanecer por fincas de altura, cata de café de origen y desayuno campesino. Un ritual lento para entender el paisaje con todos los sentidos.",
-    category: "Turístico",
-    price: 180000,
-    location: "Salento, Quindío",
-    latitude: 4.6373,
-    longitude: -75.5705,
-    imageUrl:
-      "https://images.unsplash.com/photo-1447933601403-0c6688de566e?auto=format&fit=crop&w=1600&q=80",
-    status: "PUBLISHED",
-  },
-  {
-    title: "Noche de murales en La Candelaria",
-    description:
-      "Recorrido editorial por el arte urbano del centro histórico. Historias de barrio, grafiti contemporáneo y una parada en un café de especialidad.",
-    category: "Cultural",
-    price: 75000,
-    location: "La Candelaria, Bogotá",
-    latitude: 4.5964,
-    longitude: -74.0739,
-    imageUrl:
-      "https://images.unsplash.com/photo-1587595431973-160d0d94add1?auto=format&fit=crop&w=1600&q=80",
-    status: "PUBLISHED",
-  },
-  {
-    title: "Kayak en la laguna de Guatavita",
-    description:
-      "Salida deportiva al amanecer, técnica básica de palada y lectura del paisaje sagrado. Incluye equipo y guía certificado.",
-    category: "Deportivo",
-    price: 140000,
-    location: "Guatavita, Cundinamarca",
-    latitude: 4.9342,
-    longitude: -73.8331,
-    imageUrl:
-      "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1600&q=80",
-    status: "PUBLISHED",
-  },
-  {
-    title: "Picnic editorial en el desierto",
-    description:
-      "Tarde de lectura, gastronomía local y horizonte abierto. Una experiencia recreativa para desconectar sin prisa, con menú de temporada.",
-    category: "Recreativo",
-    price: 95000,
-    location: "Villa de Leyva, Boyacá",
-    latitude: 5.6339,
-    longitude: -73.5259,
-    imageUrl:
-      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1600&q=80",
-    status: "PUBLISHED",
-  },
-  {
-    title: "Taller de cerámica en el barrio",
-    description:
-      "Sesión íntima con una maestra artesana. Modelado, esmaltes minerales y la historia de las manos que dan forma al oficio.",
-    category: "Cultural",
-    price: 120000,
-    location: "Ráquira, Boyacá",
-    latitude: 5.5381,
-    longitude: -73.6336,
-    imageUrl:
-      "https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?auto=format&fit=crop&w=1600&q=80",
-    status: "DRAFT",
-  },
-];
-
-export async function seedCore(options?: { includeCatalog?: boolean }) {
-  const includeCatalog = options?.includeCatalog ?? true;
-
+export async function seedCore() {
   for (const name of Object.values(PERMISSIONS)) {
     await prisma.permission.upsert({
       where: { name },
@@ -183,64 +84,11 @@ export async function seedCore(options?: { includeCatalog?: boolean }) {
     admins.push(admin);
   }
 
-  const admin = admins[0];
-
-  if (!includeCatalog) {
-    return { admin };
-  }
-
-  const categoryRenames: Record<string, string> = {
-    Recreativa: "Recreativo",
-    Deportiva: "Deportivo",
-    Turística: "Turístico",
-  };
-  for (const [from, to] of Object.entries(categoryRenames)) {
-    const previous = await prisma.category.findUnique({ where: { name: from } });
-    const next = await prisma.category.findUnique({ where: { name: to } });
-    if (previous && !next) {
-      await prisma.category.update({ where: { id: previous.id }, data: { name: to } });
-    }
-  }
-
-  const categoryRecords = [];
-  for (const category of categories) {
-    const record = await prisma.category.upsert({
-      where: { name: category.name },
-      update: { description: category.description, status: "ACTIVE" },
-      create: category,
-    });
-    categoryRecords.push(record);
-  }
-
-  const categoryByName = Object.fromEntries(categoryRecords.map((item) => [item.name, item]));
-
-  for (const item of experienceSeeds) {
-    const existing = await prisma.experience.findFirst({ where: { title: item.title } });
-    if (existing) {
-      continue;
-    }
-
-    await prisma.experience.create({
-      data: {
-        title: item.title,
-        description: item.description,
-        categoryId: categoryByName[item.category].id,
-        price: item.price,
-        location: item.location,
-        latitude: item.latitude,
-        longitude: item.longitude,
-        imageUrl: item.imageUrl,
-        status: item.status,
-        createdBy: admin.id,
-      },
-    });
-  }
-
-  return { admin };
+  return { admin: admins[0] };
 }
 
 async function main() {
-  await seedCore({ includeCatalog: true });
+  await seedCore();
   console.log("Semilla de Entre Caminos lista.");
   console.log("SUPER_ADMIN (contraseña: SEED_ADMIN_PASSWORD de tu .env local):");
   console.log("  angie.diaz@entrecaminos.com");

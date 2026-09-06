@@ -59,6 +59,10 @@ export type DashboardStats = {
   categories: number;
   experiences: number;
   published: number;
+  createdCategories?: number;
+  createdExperiences?: number;
+  administrators?: PublicUser[];
+  recentCategories?: Category[];
   recentLogs?: Array<{
     id: string;
     action: string;

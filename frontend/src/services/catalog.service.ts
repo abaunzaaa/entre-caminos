@@ -1,5 +1,5 @@
 import { api } from "./api";
-import type { ApiResponse, Category, Experience, Permission, PublicUser, Role } from "../types";
+import type { ApiResponse, Category, DashboardStats, Experience, Permission, PublicUser, Role } from "../types";
 
 export async function getFeaturedExperiences() {
   const { data } = await api.get<ApiResponse<{ experiences: Experience[] }>>("/experiences/featured");
@@ -27,13 +27,26 @@ export async function getPublicCategories() {
 }
 
 export async function getDashboard() {
-  const { data } = await api.get("/admin/dashboard");
+  const { data } = await api.get<ApiResponse<DashboardStats>>("/admin/dashboard");
   return data.data;
 }
 
-export async function getAdministrators() {
-  const { data } = await api.get<ApiResponse<{ admins: PublicUser[] }>>("/admin/administrators");
-  return data.data.admins;
+export async function getAdministrators(options?: { limit?: number }) {
+  const { data } = await api.get<ApiResponse<{ admins?: PublicUser[]; administrators?: PublicUser[] } | PublicUser[]>>(
+    "/admin/administrators",
+    { params: options?.limit ? { limit: options.limit } : undefined },
+  );
+  const payload = data.data;
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+  if (Array.isArray(payload?.admins)) {
+    return payload.admins;
+  }
+  if (Array.isArray(payload?.administrators)) {
+    return payload.administrators;
+  }
+  return [];
 }
 
 export async function createAdministrator(payload: {
@@ -79,8 +92,10 @@ export async function createPermission(name: string) {
   return data.data.permission as Permission;
 }
 
-export async function getAdminCategories() {
-  const { data } = await api.get<ApiResponse<{ categories: Category[] }>>("/admin/categories");
+export async function getAdminCategories(options?: { limit?: number }) {
+  const { data } = await api.get<ApiResponse<{ categories: Category[] }>>("/admin/categories", {
+    params: options?.limit ? { limit: options.limit } : undefined,
+  });
   return data.data.categories;
 }
 

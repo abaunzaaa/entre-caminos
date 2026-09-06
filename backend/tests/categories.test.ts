@@ -60,4 +60,15 @@ describe("HU-20 Categorías", () => {
 
     expect(deleted.status).toBe(409);
   });
+
+  it("permite consultar solo las últimas categorías para el resumen", async () => {
+    const token = (await loginAsAdmin()).body.data.accessToken as string;
+    const recent = await api()
+      .get("/api/admin/categories")
+      .query({ limit: 3 })
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(recent.status).toBe(200);
+    expect(recent.body.data.categories.length).toBeLessThanOrEqual(3);
+  });
 });
