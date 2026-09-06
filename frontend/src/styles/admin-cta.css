@@ -1,3 +1,9 @@
+.admin-cta,
+.admin-cta-hover {
+  --admin-cta-hover-bg: color-mix(in srgb, var(--admin-forest, #294942) 92%, #ffffff);
+  --admin-cta-hover-shadow: 0 14px 32px rgba(16, 22, 16, 0.18);
+}
+
 .admin-cta {
   display: inline-flex;
   align-items: center;
@@ -19,26 +25,41 @@
   transition:
     background 220ms ease,
     box-shadow 220ms ease,
+    border-color 220ms ease,
     opacity 220ms ease,
     transform 220ms ease;
 }
 
-.admin-cta:hover,
-.admin-cta:focus-visible {
-  background: var(--admin-forest, #294942);
-  outline: none;
-  opacity: 0.92;
-  transform: translateY(-1px);
-  box-shadow: 0 8px 18px rgba(41, 73, 66, 0.12);
+.admin-cta-hover {
+  cursor: pointer;
+  transition:
+    background 220ms ease,
+    box-shadow 220ms ease,
+    border-color 220ms ease,
+    color 220ms ease,
+    opacity 220ms ease,
+    transform 220ms ease;
 }
 
-.admin-cta:active {
-  opacity: 0.88;
+.admin-cta:hover:not(:disabled),
+.admin-cta:focus-visible,
+.admin-cta-hover:hover:not(:disabled),
+.admin-cta-hover:focus-visible {
+  background: var(--admin-cta-hover-bg);
+  color: #fff;
+  outline: none;
+  transform: translateY(-2px);
+  box-shadow: var(--admin-cta-hover-shadow);
+}
+
+.admin-cta:active:not(:disabled),
+.admin-cta-hover:active:not(:disabled) {
   transform: translateY(0);
   box-shadow: none;
 }
 
-.admin-cta:disabled {
+.admin-cta:disabled,
+.admin-cta-hover:disabled {
   cursor: not-allowed;
   opacity: 0.5;
   transform: none;

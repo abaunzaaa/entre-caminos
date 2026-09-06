@@ -1,5 +1,5 @@
-import { FormEvent, useEffect, useState } from "react";
-import { Users } from "lucide-react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { ChevronDown, Search } from "lucide-react";
 import {
   createAdministrator,
   getAdministrators,
@@ -9,8 +9,21 @@ import type { PublicUser } from "../../types";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
 import { Panel, StatusDot } from "../../components/admin/Panel";
+import { TeamInviteCarousel } from "../../components/admin/TeamInviteCarousel";
 import { getApiErrorMessage } from "../../utils/api-error";
 import { readAdminAvatar } from "../../utils/admin-avatar";
+import adminIlus from "../../assets/admin-ilus.png";
+import superadmIlus from "../../assets/superadm-ilus.png";
+
+function readRole(value: unknown): PublicUser["role"] | "" {
+  if (typeof value === "string") {
+    return value as PublicUser["role"];
+  }
+  if (value && typeof value === "object" && "name" in value && typeof value.name === "string") {
+    return value.name as PublicUser["role"];
+  }
+  return "";
+}
 
 function roleLabel(role: PublicUser["role"]) {
   if (role === "SUPER_ADMIN") {
@@ -22,11 +35,74 @@ function roleLabel(role: PublicUser["role"]) {
   return "Administración";
 }
 
+function countActiveByRole(users: PublicUser[], role: PublicUser["role"]) {
+  return users.filter((user) => user.status === "ACTIVE" && readRole(user.role) === role).length;
+}
+
+type FilterMenuOption<T extends string> = { value: T; label: string };
+
+function FilterMenu<T extends string>({
+  label,
+  active,
+  open,
+  options,
+  onToggle,
+  onSelect,
+}: {
+  label: string;
+  active: boolean;
+  open: boolean;
+  options: FilterMenuOption<T>[];
+  onToggle: () => void;
+  onSelect: (value: T) => void;
+}) {
+  return (
+    <div className={`dash-team-filters__menuwrap${active || open ? " is-active" : ""}`}>
+      <button
+        type="button"
+        className="dash-team-filters__chip dash-team-filters__trigger"
+        aria-expanded={open}
+        onClick={onToggle}
+      >
+        <span>{label}</span>
+        <ChevronDown size={14} strokeWidth={1.8} aria-hidden="true" />
+      </button>
+      <div className={`dash-team-filters__menu${open ? " is-open" : ""}`} role="listbox">
+        {options.map((option) => (
+          <button
+            key={option.value}
+            type="button"
+            className="dash-team-filters__option"
+            role="option"
+            onClick={() => onSelect(option.value)}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function AdministratorsPage() {
   const [admins, setAdmins] = useState<PublicUser[]>([]);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [saving, setSaving] = useState(false);
+
+  const [statusFilter, setStatusFilter] = useState<"all" | "ACTIVE" | "INACTIVE">("all");
+  const [roleFilter, setRoleFilter] = useState<"" | "ADMIN" | "SUPER_ADMIN">("");
+  const [dateSort, setDateSort] = useState<"newest" | "oldest">("newest");
+  const [query, setQuery] = useState("");
+  const [inviteRole, setInviteRole] = useState<"ADMIN" | "SUPER_ADMIN">("ADMIN");
+  const [inviteRoleOpen, setInviteRoleOpen] = useState(false);
+  const [openMenu, setOpenMenu] = useState<"role" | "sort" | null>(null);
+  const [pendingDeactivate, setPendingDeactivate] = useState<PublicUser | null>(null);
+  const [statusBusyId, setStatusBusyId] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ text: string; tone: "success" | "error" } | null>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const filtersRef = useRef<HTMLDivElement>(null);
+  const inviteRoleRef = useRef<HTMLDivElement>(null);
 
   async function load() {
     setAdmins(await getAdministrators());
@@ -36,11 +112,78 @@ export function AdministratorsPage() {
     load().catch(() => setAdmins([]));
   }, []);
 
+  useEffect(() => {
+    function onPointerDown(event: MouseEvent) {
+      const target = event.target as Node;
+      if (!filtersRef.current?.contains(target)) {
+        setOpenMenu(null);
+      }
+      if (!inviteRoleRef.current?.contains(target)) {
+        setInviteRoleOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onPointerDown);
+    return () => document.removeEventListener("mousedown", onPointerDown);
+  }, []);
+
+  useEffect(() => {
+    if (!toast) {
+      return;
+    }
+    const timer = window.setTimeout(() => setToast(null), 4200);
+    return () => window.clearTimeout(timer);
+  }, [toast]);
+
+  useEffect(() => {
+    if (!pendingDeactivate) {
+      return;
+    }
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape" && !statusBusyId) {
+        setPendingDeactivate(null);
+      }
+    }
+    document.addEventListener("keydown", onKeyDown);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [pendingDeactivate, statusBusyId]);
+
+  async function changeAdminStatus(admin: PublicUser, status: "ACTIVE" | "INACTIVE") {
+    setStatusBusyId(admin.id);
+    try {
+      const updated = await updateAdministrator(admin.id, { status });
+      const nextStatus = updated?.status ?? status;
+      setAdmins((current) =>
+        current.map((item) =>
+          item.id === admin.id ? { ...item, ...(updated ?? {}), status: nextStatus } : item,
+        ),
+      );
+      setPendingDeactivate(null);
+      setToast({
+        tone: "success",
+        text:
+          status === "ACTIVE" ? "Usuario activado correctamente." : "Usuario desactivado correctamente.",
+      });
+    } catch (err) {
+      setToast({
+        tone: "error",
+        text: getApiErrorMessage(err, "No se pudo actualizar el usuario"),
+      });
+    } finally {
+      setStatusBusyId(null);
+    }
+  }
+
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
     setError("");
     setSuccess("");
-    const form = new FormData(event.currentTarget);
     try {
       setSaving(true);
       await createAdministrator({
@@ -49,126 +192,320 @@ export function AdministratorsPage() {
         password: String(form.get("password")),
         role: String(form.get("role")) as "ADMIN" | "SUPER_ADMIN",
       });
-      event.currentTarget.reset();
-      setSuccess("Administrador creado.");
-      await load();
+      formElement.reset();
+      setInviteRole("ADMIN");
+      setInviteRoleOpen(false);
+      setSuccess("Administrador creado correctamente.");
+      try {
+        await load();
+      } catch {
+        /* El usuario ya se creó; la lista se actualizará al recargar. */
+      }
     } catch (err) {
-      setError(getApiErrorMessage(err, "No se pudo crear"));
+      setError(getApiErrorMessage(err, "No se pudo crear el administrador"));
     } finally {
       setSaving(false);
     }
   }
 
+  const activeAdmins = countActiveByRole(admins, "ADMIN");
+  const activeSuperAdmins = countActiveByRole(admins, "SUPER_ADMIN");
+  const visibleAdmins = useMemo(() => {
+    const term = query.trim().toLowerCase();
+    const next = admins.filter((user) => {
+      if (statusFilter !== "all" && user.status !== statusFilter) {
+        return false;
+      }
+      if (roleFilter && readRole(user.role) !== roleFilter) {
+        return false;
+      }
+      if (term && !user.name.toLowerCase().includes(term)) {
+        return false;
+      }
+      return true;
+    });
+    return [...next].sort((left, right) => {
+      const leftTime = left.createdAt ? new Date(left.createdAt).getTime() : 0;
+      const rightTime = right.createdAt ? new Date(right.createdAt).getTime() : 0;
+      return dateSort === "oldest" ? leftTime - rightTime : rightTime - leftTime;
+    });
+  }, [admins, statusFilter, roleFilter, dateSort, query]);
+
   return (
-    <div className="dash">
-      <article className="dash-profile dash-profile--welcome">
+    <div className="dash dash--team">
+      {toast ? (
+        <p className={`dash-team-toast${toast.tone === "error" ? " is-error" : ""}`} role="status">
+          {toast.text}
+        </p>
+      ) : null}
+      <article className="dash-profile">
         <div className="dash-profile__top">
-          <span className="dash-profile__photo" aria-hidden="true">
-            <Users strokeWidth={1.6} />
-          </span>
           <div className="dash-profile__identity">
             <h1 className="dash-profile__name">Equipo administrativo</h1>
-            <p className="dash-section__lead">
-              Gestiona las personas autorizadas para administrar y mantener Entre Caminos.
+            <p className="dash-profile__row">
+              <span>Gestiona los usuarios autorizados y sus permisos.</span>
             </p>
-            <p className="dash-section__lead">
-              Administra los accesos del equipo, asigna roles y controla quién puede gestionar la plataforma.
-            </p>
+          </div>
+        </div>
+        <div className="dash-profile__stats">
+          <div className="dash-profile__stat">
+            <img src={adminIlus} alt="" className="dash-profile__stat-art dash-float-art" />
+            <p className="dash-profile__stat-label">Administradores registrados</p>
+            <p className="dash-profile__stat-value">{activeAdmins}</p>
+          </div>
+          <div className="dash-profile__stat">
+            <img src={superadmIlus} alt="" className="dash-profile__stat-art dash-float-art" />
+            <p className="dash-profile__stat-label">Super administradores registrados</p>
+            <p className="dash-profile__stat-value">{activeSuperAdmins}</p>
           </div>
         </div>
       </article>
 
-      <section className="dash-split__panel" aria-label="Invitar administrador">
-        <div>
-          <h2 className="dash-section__title">Invitar administrador</h2>
-          <p className="dash-section__lead">Suma a una persona con acceso al panel.</p>
+      <section className="dash-team-board" aria-label="Gestión del equipo">
+        <div className="dash-team-compose">
+          <section className="dash-split__panel" aria-label="Añadir usuario al equipo">
+            <div>
+              <h2 className="dash-section__title">Añadir usuario al equipo</h2>
+              <p className="dash-section__lead">
+                Crea nuevos usuarios con permisos de administración dentro de la plataforma.
+              </p>
+            </div>
+            <form className="dash-team-invite" onSubmit={onSubmit}>
+              <Input name="name" label="Nombre" required />
+              <Input name="email" type="email" label="Correo" required />
+              <Input name="password" type="password" label="Contraseña" required />
+              <div className="dash-team-role" ref={inviteRoleRef}>
+                <span className="dash-team-role__label">Rol</span>
+                <input type="hidden" name="role" value={inviteRole} />
+                <button
+                  type="button"
+                  className={`dash-team-role__trigger${inviteRoleOpen ? " is-open" : ""}`}
+                  aria-haspopup="listbox"
+                  aria-expanded={inviteRoleOpen}
+                  onClick={() => setInviteRoleOpen((open) => !open)}
+                >
+                  <span>{inviteRole === "SUPER_ADMIN" ? "Super administrador" : "Administrador"}</span>
+                  <ChevronDown size={18} strokeWidth={1.7} aria-hidden="true" />
+                </button>
+                <div className={`dash-team-role__menu${inviteRoleOpen ? " is-open" : ""}`} role="listbox">
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={inviteRole === "ADMIN"}
+                    className={`dash-team-role__option${inviteRole === "ADMIN" ? " is-active" : ""}`}
+                    onClick={() => {
+                      setInviteRole("ADMIN");
+                      setInviteRoleOpen(false);
+                    }}
+                  >
+                    Administrador
+                  </button>
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={inviteRole === "SUPER_ADMIN"}
+                    className={`dash-team-role__option${inviteRole === "SUPER_ADMIN" ? " is-active" : ""}`}
+                    onClick={() => {
+                      setInviteRole("SUPER_ADMIN");
+                      setInviteRoleOpen(false);
+                    }}
+                  >
+                    Super administrador
+                  </button>
+                </div>
+              </div>
+              <p className="dash-section__lead dash-team-invite__full">
+                La contraseña necesita mayúscula, minúscula, número y símbolo.
+              </p>
+              {error ? <p className="text-sm text-red-700 dash-team-invite__full">{error}</p> : null}
+              {success ? <p className="text-sm text-charcoal dash-team-invite__full">{success}</p> : null}
+              <div className="dash-team-invite__full">
+                <Button type="submit" disabled={saving}>
+                  {saving ? "Guardando..." : "Añadir usuario"}
+                </Button>
+              </div>
+            </form>
+          </section>
+          <TeamInviteCarousel />
         </div>
-        <form className="grid gap-5 md:grid-cols-2" onSubmit={onSubmit}>
-          <Input name="name" label="Nombre" required />
-          <Input name="email" type="email" label="Correo" required />
-          <Input name="password" type="password" label="Contraseña" required />
-          <label className="block space-y-2">
-            <span className="font-poppins text-[13px] font-medium tracking-normal text-neutral-500">Rol</span>
-            <select
-              name="role"
-              className="w-full rounded-xl border border-forest/10 bg-white px-4 py-3 font-poppins text-[15px] font-normal text-ink outline-none transition focus:ring-2 focus:ring-forest/15"
-              defaultValue="ADMIN"
-            >
-              <option value="ADMIN">Administración</option>
-              <option value="SUPER_ADMIN">Super administración</option>
-            </select>
-          </label>
-          <p className="dash-section__lead md:col-span-2">
-            La contraseña necesita mayúscula, minúscula, número y símbolo. Ejemplo: Caminos#2026
-          </p>
-          {error ? <p className="text-sm text-red-700 md:col-span-2">{error}</p> : null}
-          {success ? <p className="text-sm text-charcoal md:col-span-2">{success}</p> : null}
-          <div className="md:col-span-2">
-            <Button type="submit" disabled={saving}>
-              {saving ? "Guardando..." : "Invitar administrador"}
-            </Button>
-          </div>
-        </form>
-      </section>
 
-      <section aria-label="Administradores registrados">
-        <header className="dash-section__head">
+        <section className="dash-split__panel" aria-label="Equipo registrado">
           <div>
-            <h2 className="dash-section__title">Administradores registrados</h2>
+            <h2 className="dash-section__title">Equipo registrado</h2>
             <p className="dash-section__lead">Personas con acceso para administrar la plataforma.</p>
           </div>
-        </header>
-        {admins.length === 0 ? (
-          <Panel className="dash-empty">
-            <p>No hay administradores registrados.</p>
-          </Panel>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2">
-            {admins.map((admin) => {
-              const avatar = readAdminAvatar(admin.id);
-              const initial = admin.name.trim().charAt(0).toUpperCase() || "A";
-              return (
-                <article key={admin.id} className="dash-team-card">
-                  <span className="dash-team-card__avatar">
-                    {avatar ? <img src={avatar} alt="" /> : initial}
-                  </span>
-                  <div className="dash-team-card__info">
-                    <h3>{admin.name}</h3>
-                    <p className="dash-team-card__email">{admin.email}</p>
-                    <div className="dash-team-card__facts">
-                      <StatusDot active>{roleLabel(admin.role)}</StatusDot>
-                      <StatusDot active={admin.status === "ACTIVE"}>
-                        {admin.status === "ACTIVE" ? "Activo" : "Inactivo"}
-                      </StatusDot>
-                    </div>
-                  </div>
-                  {admin.status === "ACTIVE" ? (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="ml-auto shrink-0"
-                      onClick={() => updateAdministrator(admin.id, { status: "INACTIVE" }).then(load)}
-                    >
-                      Desactivar
-                    </Button>
-                  ) : (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="ml-auto shrink-0"
-                      onClick={() => updateAdministrator(admin.id, { status: "ACTIVE" }).then(load)}
-                    >
-                      Activar
-                    </Button>
-                  )}
-                </article>
-              );
-            })}
+          <div className="dash-team-filters" role="toolbar" aria-label="Filtros del equipo" ref={filtersRef}>
+            <button
+              type="button"
+              className={`dash-team-filters__chip${statusFilter === "all" ? " is-active" : ""}`}
+              onClick={() => setStatusFilter("all")}
+            >
+              Ver todos
+            </button>
+            <button
+              type="button"
+              className={`dash-team-filters__chip${statusFilter === "ACTIVE" ? " is-active" : ""}`}
+              onClick={() => setStatusFilter("ACTIVE")}
+            >
+              Activos
+            </button>
+            <button
+              type="button"
+              className={`dash-team-filters__chip${statusFilter === "INACTIVE" ? " is-active" : ""}`}
+              onClick={() => setStatusFilter("INACTIVE")}
+            >
+              Inactivos
+            </button>
+            <FilterMenu
+              label={roleFilter === "ADMIN" ? "Administración" : roleFilter === "SUPER_ADMIN" ? "Super administración" : "Rol"}
+              active={Boolean(roleFilter) || openMenu === "role"}
+              open={openMenu === "role"}
+              options={[
+                { value: "", label: "Todos los roles" },
+                { value: "ADMIN", label: "Administración" },
+                { value: "SUPER_ADMIN", label: "Super administración" },
+              ]}
+              onToggle={() => setOpenMenu((current) => (current === "role" ? null : "role"))}
+              onSelect={(value) => {
+                setRoleFilter(value as "" | "ADMIN" | "SUPER_ADMIN");
+                setOpenMenu(null);
+              }}
+            />
+            <FilterMenu
+              label={dateSort === "oldest" ? "Más antiguos" : "Más recientes"}
+              active={dateSort === "oldest" || openMenu === "sort"}
+              open={openMenu === "sort"}
+              options={[
+                { value: "newest", label: "Más recientes" },
+                { value: "oldest", label: "Más antiguos" },
+              ]}
+              onToggle={() => setOpenMenu((current) => (current === "sort" ? null : "sort"))}
+              onSelect={(value) => {
+                setDateSort(value as "newest" | "oldest");
+                setOpenMenu(null);
+              }}
+            />
+            <div className="dash-team-filters__search">
+              <input
+                ref={searchRef}
+                type="search"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Buscar nombre"
+              />
+              <button
+                type="button"
+                className="dash-team-filters__search-btn"
+                aria-label="Buscar nombre"
+                onClick={() => searchRef.current?.focus()}
+              >
+                <Search size={16} strokeWidth={1.75} aria-hidden="true" />
+              </button>
+            </div>
           </div>
-        )}
+          {admins.length === 0 ? (
+            <Panel className="dash-empty">
+              <p>No hay administradores registrados.</p>
+            </Panel>
+          ) : visibleAdmins.length === 0 ? (
+            <Panel className="dash-empty">
+              <p>No hay coincidencias con estos filtros.</p>
+            </Panel>
+          ) : (
+            <div className="dash-team-board__people">
+              {visibleAdmins.map((admin) => {
+                const avatar = readAdminAvatar(admin.id);
+                const initial = admin.name.trim().charAt(0).toUpperCase() || "A";
+                return (
+                  <article key={admin.id} className="dash-team-card">
+                    <span className="dash-team-card__avatar">
+                      {avatar ? <img src={avatar} alt="" /> : initial}
+                    </span>
+                    <div className="dash-team-card__info">
+                      <h3>{admin.name}</h3>
+                      <p className="dash-team-card__email">{admin.email}</p>
+                      <div className="dash-team-card__facts">
+                        <StatusDot active>{roleLabel(admin.role)}</StatusDot>
+                        <StatusDot active={admin.status === "ACTIVE"}>
+                          {admin.status === "ACTIVE" ? "Activo" : "Inactivo"}
+                        </StatusDot>
+                      </div>
+                    </div>
+                    {admin.status === "ACTIVE" ? (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="ml-auto shrink-0"
+                        disabled={statusBusyId === admin.id}
+                        onClick={() => setPendingDeactivate(admin)}
+                      >
+                        {statusBusyId === admin.id ? "Actualizando..." : "Desactivar"}
+                      </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="ml-auto shrink-0"
+                        disabled={statusBusyId === admin.id}
+                        onClick={() => changeAdminStatus(admin, "ACTIVE")}
+                      >
+                        {statusBusyId === admin.id ? "Actualizando..." : "Activar"}
+                      </Button>
+                    )}
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </section>
       </section>
+
+      {pendingDeactivate ? (
+        <div
+          className="dash-team-confirm"
+          role="presentation"
+          onClick={() => {
+            if (!statusBusyId) {
+              setPendingDeactivate(null);
+            }
+          }}
+        >
+          <div
+            className="dash-team-confirm__card"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="team-deactivate-title"
+            aria-describedby="team-deactivate-copy"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h2 id="team-deactivate-title" className="dash-team-confirm__title">
+              ¿Estás seguro de que quieres desactivar este usuario?
+            </h2>
+            <p id="team-deactivate-copy" className="dash-team-confirm__lead">
+              Este usuario perderá el acceso al panel administrativo hasta que sea activado nuevamente.
+            </p>
+            <div className="dash-team-confirm__actions">
+              <Button
+                type="button"
+                variant="secondary"
+                disabled={Boolean(statusBusyId)}
+                onClick={() => setPendingDeactivate(null)}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="button"
+                disabled={Boolean(statusBusyId)}
+                onClick={() => changeAdminStatus(pendingDeactivate, "INACTIVE")}
+              >
+                {statusBusyId ? "Actualizando..." : "Desactivar usuario"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

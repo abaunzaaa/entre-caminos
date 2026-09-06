@@ -56,7 +56,11 @@ export async function createAdministrator(payload: {
   role: "ADMIN" | "SUPER_ADMIN";
 }) {
   const { data } = await api.post("/admin/administrators", payload);
-  return data.data.admin as PublicUser;
+  const admin = data?.data?.admin ?? data?.admin;
+  if (!admin) {
+    throw new Error("Respuesta inválida al crear el administrador");
+  }
+  return admin as PublicUser;
 }
 
 export async function updateAdministrator(
@@ -102,6 +106,7 @@ export async function getAdminCategories(options?: { limit?: number }) {
 export async function createCategory(payload: {
   name: string;
   description?: string;
+  icon?: string;
   status?: "ACTIVE" | "INACTIVE";
 }) {
   const { data } = await api.post("/admin/categories", payload);

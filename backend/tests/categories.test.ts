@@ -14,6 +14,22 @@ describe("HU-20 Categorías", () => {
 
     expect(response.status).toBe(201);
     expect(response.body.data.category.name).toContain("Gastronomía");
+    expect(response.body.data.category.icon).toBe("tags");
+  });
+
+  it("guarda el icono seleccionado al crear una categoría", async () => {
+    const token = (await loginAsAdmin()).body.data.accessToken as string;
+    const response = await api()
+      .post("/api/admin/categories")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        name: `Café ${Date.now()}`,
+        description: "Experiencias relacionadas con café",
+        icon: "coffee",
+      });
+
+    expect(response.status).toBe(201);
+    expect(response.body.data.category.icon).toBe("coffee");
   });
 
   it("edita una categoría", async () => {

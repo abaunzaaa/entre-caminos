@@ -15,6 +15,7 @@ export type Category = {
   id: string;
   name: string;
   description: string | null;
+  icon?: string;
   status: "ACTIVE" | "INACTIVE";
   createdAt: string;
   _count?: { experiences: number };

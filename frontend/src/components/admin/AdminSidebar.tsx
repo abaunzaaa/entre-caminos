@@ -37,7 +37,7 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   },
   {
     to: "/admin/roles",
-    label: "Roles",
+    label: "Accesos",
     icon: Shield,
     permission: "roles.manage",
     match: ["/admin/roles", "/admin/permissions"],

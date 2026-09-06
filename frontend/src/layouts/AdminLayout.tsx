@@ -19,7 +19,7 @@ const titles: Record<string, { kicker: string; title: string }> = {
   "/admin/experiences/nueva": { kicker: "Estudio", title: "Nueva experiencia" },
   "/admin/categorias": { kicker: "Taxonomía", title: "Categorías" },
   "/admin/administradores": { kicker: "Atelier", title: "Equipo editorial" },
-  "/admin/roles": { kicker: "Acceso", title: "Roles y permisos" },
+  "/admin/roles": { kicker: "Acceso", title: "Gestión de accesos" },
   "/admin/permissions": { kicker: "Acceso", title: "Permisos" },
 };
 
@@ -84,7 +84,10 @@ export function AdminLayout() {
   const isDashboard = location.pathname === "/admin";
   const isTeamPage =
     location.pathname === "/admin/administradores" || location.pathname === "/admin/administrators";
-  const useDashCanvas = isDashboard || isTeamPage;
+  const isAccessPage = location.pathname === "/admin/roles";
+  const isCategoriesPage =
+    location.pathname === "/admin/categorias" || location.pathname === "/admin/categories";
+  const useDashCanvas = isDashboard || isTeamPage || isAccessPage || isCategoriesPage;
   const heading = useDashCanvas
     ? null
     : (titles[location.pathname] ??

@@ -1,3 +1,4 @@
+import { normalizeCategoryIcon } from "../config/category-icons.js";
 import { prisma } from "../database/prisma.js";
 import { ApiError } from "../utils/api-error.js";
 import { recordAudit } from "./audit.service.js";
@@ -26,7 +27,7 @@ export async function getCategory(id: string) {
 
 export async function createCategory(
   actorId: string,
-  input: { name: string; description?: string; status?: "ACTIVE" | "INACTIVE" },
+  input: { name: string; description?: string; icon?: string; status?: "ACTIVE" | "INACTIVE" },
 ) {
   const existing = await prisma.category.findUnique({ where: { name: input.name } });
   if (existing) {
@@ -37,6 +38,7 @@ export async function createCategory(
     data: {
       name: input.name,
       description: input.description || null,
+      icon: normalizeCategoryIcon(input.icon),
       status: input.status ?? "ACTIVE",
     },
   });
@@ -54,7 +56,7 @@ export async function createCategory(
 export async function updateCategory(
   actorId: string,
   id: string,
-  input: { name?: string; description?: string; status?: "ACTIVE" | "INACTIVE" },
+  input: { name?: string; description?: string; icon?: string; status?: "ACTIVE" | "INACTIVE" },
 ) {
   await getCategory(id);
 
@@ -72,6 +74,7 @@ export async function updateCategory(
     data: {
       name: input.name,
       description: input.description === "" ? null : input.description,
+      icon: input.icon === undefined ? undefined : normalizeCategoryIcon(input.icon),
       status: input.status,
     },
   });

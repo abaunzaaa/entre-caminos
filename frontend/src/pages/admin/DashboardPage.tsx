@@ -1,13 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  Bike,
   Clock,
   Compass,
-  Dumbbell,
-  Landmark,
   Mail,
-  MapPinned,
   Shield,
   Tags,
   UserRound,
@@ -25,6 +21,7 @@ import { ADMIN_AVATAR_EVENT, readAdminAvatar } from "../../utils/admin-avatar";
 import { Panel } from "../../components/admin/Panel";
 import { useAuth } from "../../hooks/useAuth";
 import { getApiErrorMessage } from "../../utils/api-error";
+import { getCategoryIcon } from "../../utils/category-icons";
 import catAgregadas from "../../assets/cat-creadas.png";
 import expeAgregadas from "../../assets/expe-agregadas.png";
 import gifPanel from "../../assets/gif-panel.mp4";
@@ -90,23 +87,6 @@ function newestFirst<T extends { createdAt?: string }>(items: T[], limit = SUMMA
       return rightTime - leftTime;
     })
     .slice(0, limit);
-}
-
-function categoryIcon(name: string): LucideIcon {
-  const key = name.toLowerCase();
-  if (key.includes("cultur")) {
-    return Landmark;
-  }
-  if (key.includes("recreat")) {
-    return Bike;
-  }
-  if (key.includes("deport")) {
-    return Dumbbell;
-  }
-  if (key.includes("turis")) {
-    return MapPinned;
-  }
-  return Tags;
 }
 
 function experienceMeta(item: Experience) {
@@ -333,12 +313,12 @@ export function DashboardPage() {
         </div>
         <div id="dashboard-metrics-images" className="dash-profile__stats">
           <div className="dash-profile__stat">
-            <img src={catAgregadas} alt="" className="dash-profile__stat-art" />
+            <img src={catAgregadas} alt="" className="dash-profile__stat-art dash-float-art" />
             <p className="dash-profile__stat-label">Categorías creadas</p>
             <p className="dash-profile__stat-value">{createdCategories}</p>
           </div>
           <div className="dash-profile__stat">
-            <img src={expeAgregadas} alt="" className="dash-profile__stat-art" />
+            <img src={expeAgregadas} alt="" className="dash-profile__stat-art dash-float-art" />
             <p className="dash-profile__stat-label">Experiencias agregadas</p>
             <p className="dash-profile__stat-value">{createdExperiences}</p>
           </div>
@@ -434,7 +414,7 @@ export function DashboardPage() {
             ) : (
               <div className="dash-split__list">
                 {categories.map((category) => {
-                  const Icon = categoryIcon(category.name);
+                  const Icon = getCategoryIcon(category.icon);
                   const count = category._count?.experiences ?? 0;
                   return (
                     <article key={category.id} className="dash-cat-card">
