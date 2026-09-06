@@ -48,7 +48,7 @@
   background: var(--admin-cta-hover-bg);
   color: #fff;
   outline: none;
-  transform: translateY(-2px);
+  transform: translateY(-2px) scale(1.02);
   box-shadow: var(--admin-cta-hover-shadow);
 }
 

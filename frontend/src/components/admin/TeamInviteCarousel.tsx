@@ -9,13 +9,20 @@ const INTERVAL_MS = 5000;
 export function TeamInviteCarousel({
   slides = DEFAULT_SLIDES,
   label = "Galería Entre Caminos",
+  className,
 }: {
   slides?: readonly string[];
   label?: string;
+  className?: string;
 }) {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const total = slides.length;
+  const signature = slides.join("|");
+
+  useEffect(() => {
+    setIndex(0);
+  }, [signature]);
 
   useEffect(() => {
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -30,9 +37,13 @@ export function TeamInviteCarousel({
     return () => window.clearTimeout(timer);
   }, [paused, index, total]);
 
+  if (!total) {
+    return null;
+  }
+
   return (
     <aside
-      className="dash-team-gallery"
+      className={`dash-team-gallery${className ? ` ${className}` : ""}`}
       aria-label={label}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
@@ -47,6 +58,7 @@ export function TeamInviteCarousel({
             aria-hidden={slideIndex !== index}
           />
         ))}
+        {total > 1 ? (
         <div className="dash-team-gallery__dots" role="tablist" aria-label="Posición de la galería">
           {slides.map((_, slideIndex) => (
             <button
@@ -60,6 +72,7 @@ export function TeamInviteCarousel({
             />
           ))}
         </div>
+        ) : null}
       </div>
     </aside>
   );

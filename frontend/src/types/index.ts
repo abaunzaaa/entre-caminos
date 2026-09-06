@@ -33,6 +33,7 @@ export type Experience = {
   latitude: string | number | null;
   longitude: string | number | null;
   imageUrl: string | null;
+  imageUrls?: string[];
   status: ExperienceStatus;
   createdBy: string;
   createdAt: string;

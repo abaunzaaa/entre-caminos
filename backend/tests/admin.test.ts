@@ -102,4 +102,101 @@ describe("HU-21 Administración", () => {
     expect(recent.status).toBe(200);
     expect(recent.body.data.admins.length).toBeLessThanOrEqual(3);
   });
+
+  it("cuenta solo categorías y experiencias vigentes del administrador", async () => {
+    const token = (await loginAsAdmin()).body.data.accessToken as string;
+    const stamp = Date.now();
+
+    const baseline = await api().get("/api/admin/dashboard").set("Authorization", `Bearer ${token}`);
+    expect(baseline.status).toBe(200);
+    const cats0 = baseline.body.data.createdCategories as number;
+    const exps0 = baseline.body.data.createdExperiences as number;
+
+    const activeCat = await api()
+      .post("/api/admin/categories")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ name: `Dash activa ${stamp}`, status: "ACTIVE" });
+    const inactiveCat = await api()
+      .post("/api/admin/categories")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ name: `Dash inactiva ${stamp}`, status: "INACTIVE" });
+    const deletedCat = await api()
+      .post("/api/admin/categories")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ name: `Dash eliminada ${stamp}`, status: "ACTIVE" });
+
+    expect(activeCat.status).toBe(201);
+    expect(inactiveCat.status).toBe(201);
+    expect(deletedCat.status).toBe(201);
+
+    const afterCreateCats = await api().get("/api/admin/dashboard").set("Authorization", `Bearer ${token}`);
+    expect(afterCreateCats.body.data.createdCategories).toBe(cats0 + 3);
+
+    await api()
+      .delete(`/api/admin/categories/${deletedCat.body.data.category.id}`)
+      .set("Authorization", `Bearer ${token}`);
+
+    const afterDeleteCat = await api().get("/api/admin/dashboard").set("Authorization", `Bearer ${token}`);
+    expect(afterDeleteCat.body.data.createdCategories).toBe(cats0 + 2);
+
+    const draft = await api()
+      .post("/api/admin/experiences")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        title: `Borrador dashboard ${stamp}`,
+        description: "Borrador de prueba para el conteo del panel de inicio del administrador.",
+        categoryId: activeCat.body.data.category.id,
+        price: 10000,
+        location: "Medellín",
+        status: "DRAFT",
+      });
+    expect(draft.status).toBe(201);
+
+    const afterDraft = await api().get("/api/admin/dashboard").set("Authorization", `Bearer ${token}`);
+    expect(afterDraft.body.data.createdExperiences).toBe(exps0);
+
+    const published = await api()
+      .post("/api/admin/experiences")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        title: `Publicada dashboard ${stamp}`,
+        description: "Experiencia publicada de prueba para el conteo del panel de inicio.",
+        categoryId: activeCat.body.data.category.id,
+        price: 20000,
+        location: "Guatapé",
+        imageUrl: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1200&q=80",
+        status: "PUBLISHED",
+      });
+    expect(published.status).toBe(201);
+    const publishedId = published.body.data.experience.id as string;
+
+    const afterPublish = await api().get("/api/admin/dashboard").set("Authorization", `Bearer ${token}`);
+    expect(afterPublish.body.data.createdExperiences).toBe(exps0 + 1);
+
+    await api()
+      .patch(`/api/admin/experiences/${publishedId}/status`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ status: "ARCHIVED" });
+
+    const afterArchive = await api().get("/api/admin/dashboard").set("Authorization", `Bearer ${token}`);
+    expect(afterArchive.body.data.createdExperiences).toBe(exps0 + 1);
+
+    await api().delete(`/api/admin/experiences/${publishedId}`).set("Authorization", `Bearer ${token}`);
+    await api()
+      .delete(`/api/admin/experiences/${draft.body.data.experience.id}`)
+      .set("Authorization", `Bearer ${token}`);
+
+    const afterDeleteExp = await api().get("/api/admin/dashboard").set("Authorization", `Bearer ${token}`);
+    expect(afterDeleteExp.body.data.createdExperiences).toBe(exps0);
+
+    await api()
+      .delete(`/api/admin/categories/${activeCat.body.data.category.id}`)
+      .set("Authorization", `Bearer ${token}`);
+    await api()
+      .delete(`/api/admin/categories/${inactiveCat.body.data.category.id}`)
+      .set("Authorization", `Bearer ${token}`);
+
+    const restored = await api().get("/api/admin/dashboard").set("Authorization", `Bearer ${token}`);
+    expect(restored.body.data.createdCategories).toBe(cats0);
+  });
 });

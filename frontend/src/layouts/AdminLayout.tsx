@@ -9,6 +9,8 @@ import {
 import { AdminTopbar } from "../components/admin/AdminTopbar";
 import "../styles/admin-sidebar.css";
 import "../styles/admin-ui.css";
+import "../styles/admin-access.css";
+import "../styles/admin-motion.css";
 
 const SIDEBAR_KEY = "ec_admin_sidebar_collapsed";
 
@@ -154,7 +156,10 @@ export function AdminLayout() {
         ) : null}
 
         <main className="admin-shell__content">
-          <div className={useDashCanvas ? "admin-shell__canvas" : "mx-auto max-w-6xl px-6 py-8 md:px-8"}>
+          <div
+            key={location.pathname}
+            className={useDashCanvas ? "admin-shell__canvas admin-page-enter" : "mx-auto max-w-6xl px-6 py-8 md:px-8 admin-page-enter"}
+          >
             <Outlet />
           </div>
         </main>

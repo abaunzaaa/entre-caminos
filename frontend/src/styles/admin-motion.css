@@ -1,0 +1,278 @@
+.admin-page-enter {
+  animation: admin-page-enter 420ms var(--admin-ease, cubic-bezier(0.22, 1, 0.36, 1)) both;
+  overflow: visible;
+}
+
+.admin-kpi-card,
+.dash-profile,
+.dash-split__panel,
+.dash-team-card,
+.dash-cat-card,
+.dash-exp-card,
+.dash-exps-tile,
+.dash-access-role,
+.dash-access-perm,
+.dash-exps-mapcard,
+.dash-exps-formcard {
+  animation: admin-rise 520ms var(--admin-ease, cubic-bezier(0.22, 1, 0.36, 1)) both;
+  animation-delay: calc(var(--admin-stagger, 0) * 55ms);
+}
+
+.dash-split__media {
+  animation: dash-split-media-in 1.15s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--admin-stagger, 0) * 55ms);
+}
+
+.dash-profile__stats > .dash-profile__stat {
+  animation: admin-rise 520ms var(--admin-ease, cubic-bezier(0.22, 1, 0.36, 1)) both;
+  animation-delay: calc(140ms + var(--admin-stagger, 0) * 70ms);
+}
+
+.admin-shell .admin-kpi-card,
+.admin-shell .dash-profile,
+.admin-shell .dash-profile__stat:not(.dash-access-hero__frame),
+.admin-shell .dash-split__media,
+.admin-shell .dash-team-card,
+.admin-shell .dash-cat-card,
+.admin-shell .dash-exp-card,
+.admin-shell .dash-exps-tile,
+.admin-shell .dash-access-role,
+.admin-shell .dash-access-perm:not(.is-locked),
+.admin-shell .dash-exps-mapcard,
+.admin-shell .dash-exps-formcard,
+.admin-shell .dash-cats-card {
+  transition:
+    transform 250ms ease,
+    box-shadow 250ms ease,
+    border-color 250ms ease,
+    background 250ms ease;
+}
+
+.admin-shell .admin-kpi-card:hover,
+.admin-shell .dash-profile__stat:not(.dash-access-hero__frame):hover,
+.admin-shell .dash-split__media:hover,
+.admin-shell .dash-team-card:hover,
+.admin-shell .dash-cat-card:hover,
+.admin-shell .dash-exp-card:hover,
+.admin-shell .dash-exps-tile:hover,
+.admin-shell .dash-access-role:hover,
+.admin-shell .dash-access-role:focus-visible,
+.admin-shell .dash-access-perm:not(.is-locked):hover,
+.admin-shell .dash-access-perm:not(.is-locked):focus-visible,
+.admin-shell .dash-exps-mapcard:hover,
+.admin-shell .dash-exps-formcard:hover,
+.admin-shell .dash-cats-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 36px rgba(28, 51, 46, 0.12), 0 4px 10px rgba(28, 51, 46, 0.06);
+}
+
+.dash-profile__stat-value,
+.admin-kpi-card__value {
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-kpi-card__value,
+.dash-profile__stat-value {
+  animation: admin-count-in 480ms ease both;
+  animation-delay: calc(var(--admin-stagger, 0) * 55ms + 80ms);
+}
+
+.admin-chip {
+  transition:
+    background 200ms ease,
+    color 200ms ease,
+    border-color 200ms ease,
+    transform 200ms ease;
+}
+
+.admin-chip:hover:not(:disabled):not(.is-active),
+.admin-chip:focus-visible:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.admin-cta:hover:not(:disabled),
+.admin-cta:focus-visible,
+.admin-cta-hover:hover:not(:disabled),
+.admin-cta-hover:focus-visible {
+  transform: translateY(-2px) scale(1.02);
+}
+
+.dash > *:nth-child(1),
+.dash-profile__stats > *:nth-child(1),
+.admin-kpi-grid > *:nth-child(1),
+.dash-split > *:nth-child(1),
+.dash-split__cards > *:nth-child(1),
+.dash-split__list > *:nth-child(1),
+.dash-team-board > *:nth-child(1),
+.dash-team-board__people > *:nth-child(1),
+.dash-access-roles > *:nth-child(1),
+.dash-access-perms > *:nth-child(1),
+.dash-exp-grid > *:nth-child(1),
+.dash-exps-catalog > *:nth-child(1),
+.dash-exps-studio > *:nth-child(1),
+.dash-access-section > *:nth-child(1) {
+  --admin-stagger: 0;
+}
+
+.dash > *:nth-child(2),
+.dash-profile__stats > *:nth-child(2),
+.admin-kpi-grid > *:nth-child(2),
+.dash-split > *:nth-child(2),
+.dash-split__cards > *:nth-child(2),
+.dash-split__list > *:nth-child(2),
+.dash-team-board > *:nth-child(2),
+.dash-team-board__people > *:nth-child(2),
+.dash-access-roles > *:nth-child(2),
+.dash-access-perms > *:nth-child(2),
+.dash-exp-grid > *:nth-child(2),
+.dash-exps-catalog > *:nth-child(2),
+.dash-exps-studio > *:nth-child(2),
+.dash-access-section > *:nth-child(2) {
+  --admin-stagger: 1;
+}
+
+.dash > *:nth-child(3),
+.admin-kpi-grid > *:nth-child(3),
+.dash-split__list > *:nth-child(3),
+.dash-team-board__people > *:nth-child(3),
+.dash-access-roles > *:nth-child(3),
+.dash-access-perms > *:nth-child(3),
+.dash-exp-grid > *:nth-child(3),
+.dash-exps-catalog > *:nth-child(3),
+.dash-access-section > *:nth-child(3) {
+  --admin-stagger: 2;
+}
+
+.dash > *:nth-child(4),
+.admin-kpi-grid > *:nth-child(4),
+.dash-split__list > *:nth-child(4),
+.dash-team-board__people > *:nth-child(4),
+.dash-access-perms > *:nth-child(4),
+.dash-exp-grid > *:nth-child(4),
+.dash-exps-catalog > *:nth-child(4) {
+  --admin-stagger: 3;
+}
+
+.dash-team-board__people > *:nth-child(5),
+.dash-access-perms > *:nth-child(5),
+.dash-exps-catalog > *:nth-child(5) {
+  --admin-stagger: 4;
+}
+
+.dash-team-board__people > *:nth-child(6),
+.dash-access-perms > *:nth-child(6),
+.dash-exps-catalog > *:nth-child(6) {
+  --admin-stagger: 5;
+}
+
+.dash-team-board__people > *:nth-child(7),
+.dash-exps-catalog > *:nth-child(7) {
+  --admin-stagger: 6;
+}
+
+.dash-team-board__people > *:nth-child(n + 8),
+.dash-exps-catalog > *:nth-child(n + 8),
+.dash-access-perms > *:nth-child(n + 7) {
+  --admin-stagger: 7;
+}
+
+@keyframes admin-page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes admin-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes dash-split-media-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes admin-count-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-page-enter,
+  .admin-kpi-card,
+  .dash-profile,
+  .dash-profile__stats > .dash-profile__stat,
+  .dash-split__media,
+  .dash-split__panel,
+  .dash-team-card,
+  .dash-cat-card,
+  .dash-exp-card,
+  .dash-exps-tile,
+  .dash-access-role,
+  .dash-access-perm,
+  .dash-exps-mapcard,
+  .dash-exps-formcard,
+  .admin-kpi-card__value,
+  .dash-profile__stat-value {
+    animation: none;
+  }
+
+  .admin-kpi-card,
+  .dash-profile__stat:not(.dash-access-hero__frame),
+  .dash-split__media,
+  .dash-team-card,
+  .dash-cat-card,
+  .dash-exp-card,
+  .dash-exps-tile,
+  .dash-access-role,
+  .dash-access-perm:not(.is-locked),
+  .dash-exps-mapcard,
+  .dash-exps-formcard,
+  .dash-cats-card,
+  .admin-chip,
+  .admin-cta,
+  .admin-cta-hover {
+    transition: none;
+  }
+
+  .admin-kpi-card:hover,
+  .dash-profile__stat:not(.dash-access-hero__frame):hover,
+  .dash-split__media:hover,
+  .dash-team-card:hover,
+  .dash-cat-card:hover,
+  .dash-exp-card:hover,
+  .dash-exps-tile:hover,
+  .dash-access-role:hover,
+  .dash-access-perm:not(.is-locked):hover,
+  .dash-exps-mapcard:hover,
+  .dash-exps-formcard:hover,
+  .dash-cats-card:hover,
+  .admin-chip:hover,
+  .admin-cta:hover:not(:disabled),
+  .admin-cta-hover:hover:not(:disabled) {
+    transform: none;
+  }
+}

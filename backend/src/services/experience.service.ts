@@ -53,6 +53,18 @@ export async function getExperience(id: string, opts?: { publishedOnly?: boolean
   return experience;
 }
 
+function normalizeExperienceImages(input: { imageUrl?: string | null; imageUrls?: string[] | null }) {
+  const listed = Array.isArray(input.imageUrls)
+    ? input.imageUrls.map((url) => url.trim()).filter(Boolean)
+    : null;
+  if (listed) {
+    return { imageUrl: listed[0] ?? null, imageUrls: listed };
+  }
+  const single = typeof input.imageUrl === "string" ? input.imageUrl.trim() : "";
+  const urls = single ? [single] : [];
+  return { imageUrl: urls[0] ?? null, imageUrls: urls };
+}
+
 function requirePublishFields(imageUrl?: string | null, location?: string | null) {
   if (!imageUrl) {
     throw ApiError.unprocessable("Una experiencia publicada debe tener imagen");
@@ -73,6 +85,7 @@ export async function createExperience(
     latitude?: number | null;
     longitude?: number | null;
     imageUrl?: string | null;
+    imageUrls?: string[];
     status?: ExperienceStatus;
   },
 ) {
@@ -84,8 +97,9 @@ export async function createExperience(
     throw ApiError.badRequest("La categoría está inactiva");
   }
 
+  const gallery = normalizeExperienceImages(input);
   if ((input.status ?? "DRAFT") === "PUBLISHED") {
-    requirePublishFields(input.imageUrl, input.location);
+    requirePublishFields(gallery.imageUrl, input.location);
   }
 
   const experience = await prisma.experience.create({
@@ -97,7 +111,8 @@ export async function createExperience(
       location: input.location,
       latitude: input.latitude ?? null,
       longitude: input.longitude ?? null,
-      imageUrl: input.imageUrl || null,
+      imageUrl: gallery.imageUrl,
+      imageUrls: gallery.imageUrls,
       status: input.status ?? "DRAFT",
       createdBy: actorId,
     },
@@ -129,17 +144,22 @@ export async function updateExperience(
   }
 
   const nextStatus = (typeof input.status === "string" ? input.status : current.status) as ExperienceStatus;
-  const nextImage =
-    input.imageUrl === undefined ? current.imageUrl : ((input.imageUrl as string | null) || null);
+  const hasGalleryUpdate = input.imageUrl !== undefined || input.imageUrls !== undefined;
+  const gallery = hasGalleryUpdate
+    ? normalizeExperienceImages({
+        imageUrl: input.imageUrl === undefined ? current.imageUrl : ((input.imageUrl as string | null) || null),
+        imageUrls: Array.isArray(input.imageUrls) ? (input.imageUrls as string[]) : undefined,
+      })
+    : { imageUrl: current.imageUrl, imageUrls: current.imageUrls };
   const nextLocation =
     input.location === undefined ? current.location : String(input.location);
   if (nextStatus === "PUBLISHED") {
-    requirePublishFields(nextImage, nextLocation);
+    requirePublishFields(gallery.imageUrl, nextLocation);
   }
 
   const experience = await prisma.experience.update({
     where: { id },
-    data: input,
+    data: hasGalleryUpdate ? { ...input, imageUrl: gallery.imageUrl, imageUrls: gallery.imageUrls } : input,
     include: experienceInclude,
   });
 

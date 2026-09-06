@@ -18,6 +18,7 @@ import {
 } from "../../services/catalog.service";
 import { mediaUrl } from "../../utils/media";
 import { ADMIN_AVATAR_EVENT, readAdminAvatar } from "../../utils/admin-avatar";
+import { CountUp } from "../../components/admin/CountUp";
 import { Panel } from "../../components/admin/Panel";
 import { useAuth } from "../../hooks/useAuth";
 import { getApiErrorMessage } from "../../utils/api-error";
@@ -155,7 +156,6 @@ export function DashboardPage() {
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [categoriesError, setCategoriesError] = useState("");
   const [photo, setPhoto] = useState<string | null>(() => readAdminAvatar(user?.id));
-  const [experienceCreators, setExperienceCreators] = useState<string[]>([]);
 
   useEffect(() => {
     setPhoto(readAdminAvatar(user?.id));
@@ -268,11 +268,9 @@ export function DashboardPage() {
 
     getAdminExperiences()
       .then((list) => {
-        setExperienceCreators(list.map((item) => item.createdBy));
         setExperiences(list.slice(0, 4));
       })
       .catch(() => {
-        setExperienceCreators([]);
         setExperiences([]);
       });
 
@@ -284,8 +282,7 @@ export function DashboardPage() {
   const fullName = user?.name?.trim() || "Administrador";
   const initial = fullName.charAt(0).toUpperCase() || "A";
   const createdCategories = metrics?.createdCategories ?? 0;
-  const createdExperiences =
-    metrics?.createdExperiences ?? experienceCreators.filter((id) => id === user?.id).length;
+  const createdExperiences = metrics?.createdExperiences ?? 0;
   return (
     <div className="dash">
       <article id="admin-profile-summary-card" className="dash-profile">
@@ -315,12 +312,16 @@ export function DashboardPage() {
           <div className="dash-profile__stat">
             <img src={catAgregadas} alt="" className="dash-profile__stat-art dash-float-art" />
             <p className="dash-profile__stat-label">Categorías creadas</p>
-            <p className="dash-profile__stat-value">{createdCategories}</p>
+            <p className="dash-profile__stat-value">
+              <CountUp value={createdCategories} />
+            </p>
           </div>
           <div className="dash-profile__stat">
             <img src={expeAgregadas} alt="" className="dash-profile__stat-art dash-float-art" />
             <p className="dash-profile__stat-label">Experiencias agregadas</p>
-            <p className="dash-profile__stat-value">{createdExperiences}</p>
+            <p className="dash-profile__stat-value">
+              <CountUp value={createdExperiences} />
+            </p>
           </div>
         </div>
       </article>
@@ -335,7 +336,9 @@ export function DashboardPage() {
                 </span>
                 <p className="admin-kpi-card__label">{card.label}</p>
               </div>
-              <p className="admin-kpi-card__value">{metrics?.[card.key] ?? 0}</p>
+              <p className="admin-kpi-card__value">
+                <CountUp value={metrics?.[card.key] ?? 0} />
+              </p>
             </article>
           );
         })}

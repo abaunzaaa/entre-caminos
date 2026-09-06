@@ -61,10 +61,6 @@ function FilterMenu<T extends string>({
   );
 }
 
-function isCatalogActive(status: ExperienceStatus) {
-  return status === "PUBLISHED";
-}
-
 export function ExperiencesPage() {
   const [experiences, setExperiences] = useState<Experience[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -172,10 +168,10 @@ export function ExperiencesPage() {
   const visibleExperiences = useMemo(() => {
     const term = query.trim().toLowerCase();
     const next = experiences.filter((experience) => {
-      if (statusFilter === "active" && !isCatalogActive(experience.status)) {
+      if (statusFilter === "active" && experience.status !== "PUBLISHED") {
         return false;
       }
-      if (statusFilter === "inactive" && isCatalogActive(experience.status)) {
+      if (statusFilter === "inactive" && experience.status === "PUBLISHED") {
         return false;
       }
       if (categoryFilter && experience.categoryId !== categoryFilter) {
@@ -191,7 +187,7 @@ export function ExperiencesPage() {
       const rightTime = right.createdAt ? new Date(right.createdAt).getTime() : 0;
       return dateSort === "oldest" ? leftTime - rightTime : rightTime - leftTime;
     });
-  }, [experiences, statusFilter, categoryFilter, dateSort, query]);
+  }, [categoryFilter, dateSort, experiences, query, statusFilter]);
 
   const selectedCategoryName = categories.find((item) => item.id === categoryFilter)?.name;
 

@@ -27,6 +27,15 @@ export function saveAdminAvatar(userId: string, dataUrl: string) {
   }
 }
 
+export function clearAdminAvatar(userId: string) {
+  try {
+    window.localStorage.removeItem(storageKey(userId));
+    window.dispatchEvent(new Event(ADMIN_AVATAR_EVENT));
+  } catch {
+    /* ignore quota / private mode */
+  }
+}
+
 export function fileToAvatarDataUrl(file: File) {
   return new Promise<string>((resolve, reject) => {
     const reader = new FileReader();

@@ -99,6 +99,7 @@ model Experience {
   latitude    Decimal?         @db.Decimal(10, 7)
   longitude   Decimal?         @db.Decimal(10, 7)
   imageUrl    String?          @map("image_url")
+  imageUrls   String[]         @default([]) @map("image_urls")
   status      ExperienceStatus @default(DRAFT)
   createdBy   String           @map("created_by")
   createdAt   DateTime         @default(now()) @map("created_at")

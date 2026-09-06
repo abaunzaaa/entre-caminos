@@ -2,6 +2,17 @@ import { z } from "zod";
 
 const experienceStatus = z.enum(["DRAFT", "PENDING", "PUBLISHED", "ARCHIVED"]);
 
+const imageUrlValue = z
+  .string()
+  .trim()
+  .refine(
+    (value) =>
+      value === "" ||
+      value.startsWith("/uploads/") ||
+      /^https?:\/\//i.test(value),
+    "URL de imagen inválida",
+  );
+
 export const experienceSchema = z.object({
   title: z.string().trim().min(3, "El título es obligatorio").max(140),
   description: z.string().trim().min(20, "La descripción debe tener al menos 20 caracteres"),
@@ -10,18 +21,8 @@ export const experienceSchema = z.object({
   location: z.string().trim().min(2, "La ubicación es obligatoria").max(160),
   latitude: z.coerce.number().min(-90).max(90).optional().nullable(),
   longitude: z.coerce.number().min(-180).max(180).optional().nullable(),
-  imageUrl: z
-    .string()
-    .trim()
-    .refine(
-      (value) =>
-        value === "" ||
-        value.startsWith("/uploads/") ||
-        /^https?:\/\//i.test(value),
-      "URL de imagen inválida",
-    )
-    .optional()
-    .nullable(),
+  imageUrl: imageUrlValue.optional().nullable(),
+  imageUrls: z.array(imageUrlValue).max(12).optional(),
   status: experienceStatus.optional(),
 });
 

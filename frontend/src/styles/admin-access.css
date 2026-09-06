@@ -70,17 +70,17 @@
   text-align: left;
   cursor: pointer;
   transition:
-    border-color 180ms ease,
-    box-shadow 180ms ease,
-    transform 180ms ease,
-    background 180ms ease;
+    border-color 250ms ease,
+    box-shadow 250ms ease,
+    transform 250ms ease,
+    background 250ms ease;
 }
 
 .dash-access-role:hover,
 .dash-access-role:focus-visible {
   outline: none;
-  transform: translateY(-2px);
-  box-shadow: 0 14px 32px rgba(28, 51, 46, 0.1);
+  transform: translateY(-4px);
+  box-shadow: 0 16px 36px rgba(28, 51, 46, 0.12), 0 4px 10px rgba(28, 51, 46, 0.06);
 }
 
 .dash-access-role.is-selected {
@@ -199,9 +199,9 @@
   font: inherit;
   color: inherit;
   transition:
-    background 180ms ease,
-    box-shadow 180ms ease,
-    transform 180ms ease;
+    background 250ms ease,
+    box-shadow 250ms ease,
+    transform 250ms ease;
 }
 
 .dash-access-perm.is-active {
@@ -219,8 +219,8 @@
 .dash-access-perm:not(.is-locked):hover,
 .dash-access-perm:not(.is-locked):focus-visible {
   outline: none;
-  transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(28, 51, 46, 0.08);
+  transform: translateY(-4px);
+  box-shadow: 0 16px 36px rgba(28, 51, 46, 0.12), 0 4px 10px rgba(28, 51, 46, 0.06);
 }
 
 .dash-access-perm:disabled {

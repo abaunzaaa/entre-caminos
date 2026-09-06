@@ -20,3 +20,11 @@ export function mediaUrl(url?: string | null) {
   }
   return url;
 }
+
+export function experienceImages(experience: { imageUrl?: string | null; imageUrls?: string[] | null }) {
+  const listed = (experience.imageUrls ?? []).map((url) => url.trim()).filter(Boolean);
+  if (listed.length) {
+    return listed;
+  }
+  return experience.imageUrl ? [experience.imageUrl] : [];
+}

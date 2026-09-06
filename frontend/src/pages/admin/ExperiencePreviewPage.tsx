@@ -2,11 +2,12 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ExperienceLocationMap } from "../../components/admin/ExperienceLocationMap";
 import { StatusDot } from "../../components/admin/Panel";
+import { TeamInviteCarousel } from "../../components/admin/TeamInviteCarousel";
 import { parseStoredLocation } from "../../data/colombia-locations";
 import { getAdminExperience } from "../../services/catalog.service";
 import { getApiErrorMessage } from "../../utils/api-error";
 import { formatPrice } from "../../utils/cn";
-import { mediaUrl } from "../../utils/media";
+import { experienceImages, mediaUrl } from "../../utils/media";
 import type { Experience, ExperienceStatus } from "../../types";
 import superadmIlus2 from "../../assets/superadm-ilus2.png";
 import "../../styles/admin-access.css";
@@ -82,8 +83,12 @@ export function ExperiencePreviewPage() {
         <section className="dash-exps-preview-page" aria-label="Detalle de la experiencia">
           <article className="dash-split__panel dash-exps-preview-hero">
             <div className="dash-exps-preview-hero__media">
-              {experience.imageUrl ? (
-                <img src={mediaUrl(experience.imageUrl)} alt={experience.title} />
+              {experienceImages(experience).length ? (
+                <TeamInviteCarousel
+                  className="dash-exps-preview-hero__gallery"
+                  slides={experienceImages(experience).map((url) => mediaUrl(url))}
+                  label={experience.title}
+                />
               ) : (
                 <div className="dash-exps-preview-hero__empty">Sin imagen</div>
               )}

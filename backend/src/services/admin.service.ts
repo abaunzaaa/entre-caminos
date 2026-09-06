@@ -119,10 +119,26 @@ export async function getDashboardMetrics(actorId: string) {
   const published = await prisma.experience.count({ where: { status: "PUBLISHED" } });
   const categories = await prisma.category.count({ where: { status: "ACTIVE" } });
   const admins = await countActiveAdministrators();
-  const createdCategories = await prisma.auditLog.count({
-    where: { userId: actorId, action: "CATEGORY_CREATE" },
+  const createdCategoryIds = await prisma.auditLog.findMany({
+    where: { userId: actorId, action: "CATEGORY_CREATE", entity: "Category" },
+    select: { entityId: true },
+    distinct: ["entityId"],
   });
-  const createdExperiences = await prisma.experience.count({ where: { createdBy: actorId } });
+  const ownedCategoryIds = createdCategoryIds.map((row) => row.entityId);
+  const createdCategories = ownedCategoryIds.length
+    ? await prisma.category.count({
+        where: {
+          id: { in: ownedCategoryIds },
+          status: { in: ["ACTIVE", "INACTIVE"] },
+        },
+      })
+    : 0;
+  const createdExperiences = await prisma.experience.count({
+    where: {
+      createdBy: actorId,
+      status: { in: ["PUBLISHED", "ARCHIVED"] },
+    },
+  });
   const administrators = await listAdministrators({ take: 3 });
   const recentLogs = await prisma.auditLog.findMany({
     take: 8,

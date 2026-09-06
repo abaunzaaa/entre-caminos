@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ChevronDown, MapPin } from "lucide-react";
+import { ChevronDown, ImagePlus, MapPin, X } from "lucide-react";
 import { ExperienceLocationMap } from "../../components/admin/ExperienceLocationMap";
 import { Button } from "../../components/ui/Button";
 import { Input, Textarea } from "../../components/ui/Input";
@@ -18,9 +18,10 @@ import {
   uploadImage,
 } from "../../services/catalog.service";
 import { getApiErrorMessage } from "../../utils/api-error";
+import { experienceImages, mediaUrl } from "../../utils/media";
 import { geocodeColombia } from "../../utils/geocode";
 import type { Category, ExperienceStatus } from "../../types";
-import expeIlus from "../../assets/expe-agregadas.png";
+import superadmIlus2 from "../../assets/superadm-ilus2.png";
 import "../../styles/admin-access.css";
 
 const STATUS_LABEL: Record<ExperienceStatus, string> = {
@@ -146,7 +147,7 @@ export function ExperienceFormPage() {
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [imageUrl, setImageUrl] = useState("");
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [status, setStatus] = useState<ExperienceStatus>("DRAFT");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -163,6 +164,7 @@ export function ExperienceFormPage() {
   const [statusOpen, setStatusOpen] = useState(false);
   const categoryRef = useRef<HTMLDivElement>(null);
   const statusRef = useRef<HTMLDivElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const selectedDepartment = findDepartment(department);
   const cityOptions = selectedDepartment?.cities ?? [];
@@ -194,7 +196,7 @@ export function ExperienceFormPage() {
           setAddress(parsed.address);
           setLatitude(experience.latitude ? String(experience.latitude) : "");
           setLongitude(experience.longitude ? String(experience.longitude) : "");
-          setImageUrl(experience.imageUrl ?? "");
+          setImageUrls(experienceImages(experience));
           setStatus(experience.status);
         })
         .catch((err) => setError(getApiErrorMessage(err, "No se pudo cargar")));
@@ -240,11 +242,19 @@ export function ExperienceFormPage() {
     };
   }, [address, department, municipality, pinAdjusted, selectedDepartment]);
 
-  async function onFile(file: File) {
+  async function onFiles(files: FileList | File[]) {
+    const list = Array.from(files);
+    if (!list.length) {
+      return;
+    }
     setError("");
     setUploading(true);
     try {
-      setImageUrl(await uploadImage(file));
+      const uploaded: string[] = [];
+      for (const file of list) {
+        uploaded.push(await uploadImage(file));
+      }
+      setImageUrls((current) => [...current, ...uploaded].slice(0, 12));
     } catch (err) {
       setError(getApiErrorMessage(err, "No se pudo subir la imagen"));
     } finally {
@@ -271,7 +281,8 @@ export function ExperienceFormPage() {
       location: locationLabel,
       latitude: latitude ? Number(latitude) : null,
       longitude: longitude ? Number(longitude) : null,
-      imageUrl: imageUrl || null,
+      imageUrl: imageUrls[0] || null,
+      imageUrls,
       status,
     };
     try {
@@ -306,7 +317,7 @@ export function ExperienceFormPage() {
         </div>
         <div className="dash-access-hero" aria-hidden="true">
           <div className="dash-profile__stat dash-access-hero__frame">
-            <img src={expeIlus} alt="" className="dash-profile__stat-art dash-access-hero__art dash-float-art" />
+            <img src={superadmIlus2} alt="" className="dash-profile__stat-art dash-access-hero__art dash-float-art" />
           </div>
         </div>
       </article>
@@ -417,36 +428,77 @@ export function ExperienceFormPage() {
               required
             />
             <div
-              className={`admin-dropzone dash-exps-dropzone ${dragOver ? "is-over" : ""}`}
+              className={`admin-dropzone dash-exps-dropzone${dragOver ? " is-over" : ""}${uploading ? " is-busy" : ""}`}
               onDragOver={(event) => {
                 event.preventDefault();
                 setDragOver(true);
               }}
-              onDragLeave={() => setDragOver(false)}
+              onDragLeave={(event) => {
+                if (!event.currentTarget.contains(event.relatedTarget as Node)) {
+                  setDragOver(false);
+                }
+              }}
               onDrop={(event) => {
                 event.preventDefault();
                 setDragOver(false);
-                const file = event.dataTransfer.files[0];
-                if (file) {
-                  void onFile(file);
+                if (event.dataTransfer.files.length) {
+                  void onFiles(event.dataTransfer.files);
                 }
               }}
             >
-              <p className="dash-exps-dropzone__title">Imagen</p>
-              <p className="dash-exps-dropzone__lead">Arrastra una imagen o elige un archivo · JPG, PNG o WebP · máx. 5 MB</p>
+              <button
+                type="button"
+                className="dash-exps-dropzone__hit"
+                disabled={uploading}
+                aria-label="Agregar imágenes de la experiencia"
+                onClick={() => imageInputRef.current?.click()}
+              >
+                <span className="dash-exps-dropzone__icon" aria-hidden="true">
+                  <ImagePlus size={22} strokeWidth={1.75} />
+                </span>
+                <span className="dash-exps-dropzone__copy">
+                  <span className="dash-exps-dropzone__title">Agrega imágenes de tu experiencia</span>
+                  <span className="dash-exps-dropzone__lead">
+                    Sube una o varias fotos para mostrar mejor esta experiencia
+                  </span>
+                  <span className="dash-exps-dropzone__hint">
+                    Formatos permitidos: JPG, PNG o WebP · Máximo 5 MB cada una
+                  </span>
+                  {uploading ? <span className="dash-exps-dropzone__status">Subiendo…</span> : null}
+                </span>
+              </button>
               <input
-                className="mt-3 w-full text-sm"
+                ref={imageInputRef}
+                className="dash-exps-dropzone__input"
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
+                multiple
+                tabIndex={-1}
+                aria-hidden="true"
                 onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    void onFile(file);
+                  if (e.target.files?.length) {
+                    void onFiles(e.target.files);
+                    e.target.value = "";
                   }
                 }}
               />
-              {uploading && <p className="mt-2 text-sm text-neutral-500">Subiendo…</p>}
-              {imageUrl && !uploading ? <p className="mt-2 text-sm text-neutral-500">Imagen cargada.</p> : null}
+              {imageUrls.length ? (
+                <ul className="dash-exps-thumbs">
+                  {imageUrls.map((url) => (
+                    <li key={url} className="dash-exps-thumbs__item">
+                      <img src={mediaUrl(url)} alt="" />
+                      <button
+                        type="button"
+                        className="dash-exps-thumbs__remove"
+                        aria-label="Quitar imagen"
+                        onClick={() => setImageUrls((current) => current.filter((item) => item !== url))}
+                      >
+                        <X size={12} strokeWidth={2.2} aria-hidden="true" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
             </div>
             <div className="dash-exps-form__grid">
               <Input

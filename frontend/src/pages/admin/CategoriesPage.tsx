@@ -230,7 +230,7 @@ export function CategoriesPage() {
       const rightTime = right.createdAt ? new Date(right.createdAt).getTime() : 0;
       return dateSort === "oldest" ? leftTime - rightTime : rightTime - leftTime;
     });
-  }, [categories, statusFilter, dateSort, query]);
+  }, [categories, dateSort, query, statusFilter]);
 
   return (
     <div className="dash dash--cats">

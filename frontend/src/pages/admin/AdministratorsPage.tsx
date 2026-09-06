@@ -8,6 +8,7 @@ import {
 import type { PublicUser } from "../../types";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
+import { CountUp } from "../../components/admin/CountUp";
 import { Panel, StatusDot } from "../../components/admin/Panel";
 import { TeamInviteCarousel } from "../../components/admin/TeamInviteCarousel";
 import { getApiErrorMessage } from "../../utils/api-error";
@@ -19,8 +20,8 @@ function readRole(value: unknown): PublicUser["role"] | "" {
   if (typeof value === "string") {
     return value as PublicUser["role"];
   }
-  if (value && typeof value === "object" && "name" in value && typeof value.name === "string") {
-    return value.name as PublicUser["role"];
+  if (value && typeof value === "object" && "name" in value && typeof (value as { name: unknown }).name === "string") {
+    return (value as { name: PublicUser["role"] }).name;
   }
   return "";
 }
@@ -89,11 +90,11 @@ export function AdministratorsPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [saving, setSaving] = useState(false);
-
   const [statusFilter, setStatusFilter] = useState<"all" | "ACTIVE" | "INACTIVE">("all");
   const [roleFilter, setRoleFilter] = useState<"" | "ADMIN" | "SUPER_ADMIN">("");
   const [dateSort, setDateSort] = useState<"newest" | "oldest">("newest");
   const [query, setQuery] = useState("");
+
   const [inviteRole, setInviteRole] = useState<"ADMIN" | "SUPER_ADMIN">("ADMIN");
   const [inviteRoleOpen, setInviteRoleOpen] = useState(false);
   const [openMenu, setOpenMenu] = useState<"role" | "sort" | null>(null);
@@ -229,7 +230,7 @@ export function AdministratorsPage() {
       const rightTime = right.createdAt ? new Date(right.createdAt).getTime() : 0;
       return dateSort === "oldest" ? leftTime - rightTime : rightTime - leftTime;
     });
-  }, [admins, statusFilter, roleFilter, dateSort, query]);
+  }, [admins, dateSort, query, roleFilter, statusFilter]);
 
   return (
     <div className="dash dash--team">
@@ -251,12 +252,16 @@ export function AdministratorsPage() {
           <div className="dash-profile__stat">
             <img src={adminIlus} alt="" className="dash-profile__stat-art dash-float-art" />
             <p className="dash-profile__stat-label">Administradores registrados</p>
-            <p className="dash-profile__stat-value">{activeAdmins}</p>
+            <p className="dash-profile__stat-value">
+              <CountUp value={activeAdmins} />
+            </p>
           </div>
           <div className="dash-profile__stat">
             <img src={superadmIlus} alt="" className="dash-profile__stat-art dash-float-art" />
             <p className="dash-profile__stat-label">Super administradores registrados</p>
-            <p className="dash-profile__stat-value">{activeSuperAdmins}</p>
+            <p className="dash-profile__stat-value">
+              <CountUp value={activeSuperAdmins} />
+            </p>
           </div>
         </div>
       </article>
