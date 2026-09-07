@@ -23,6 +23,29 @@ export async function loginAsAdmin() {
   return loginAs(adminCredentials.email, adminCredentials.password);
 }
 
+export async function createAndLoginStaffAdmin(overrides?: { name?: string; email?: string; password?: string }) {
+  const superToken = (await loginAsAdmin()).body.data.accessToken as string;
+  const email = overrides?.email ?? uniqueEmail("admin");
+  const password = overrides?.password ?? "Admin#2026x";
+  const created = await api()
+    .post("/api/admin/administrators")
+    .set("Authorization", `Bearer ${superToken}`)
+    .send({
+      name: overrides?.name ?? "Admin Prueba",
+      email,
+      password,
+      role: "ADMIN",
+    });
+  const login = await loginAs(email, password);
+  return {
+    superToken,
+    adminToken: login.body.data.accessToken as string,
+    email,
+    created,
+    login,
+  };
+}
+
 export async function registerUser(overrides?: { email?: string; password?: string; name?: string }) {
   const payload = {
     name: overrides?.name ?? "Camila Viajera",

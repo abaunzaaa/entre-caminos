@@ -2,7 +2,7 @@ import type { ExperienceStatus, Prisma } from "@prisma/client";
 import { prisma } from "../database/prisma.js";
 import type { AuthUser } from "../models/auth-user.js";
 import { ApiError } from "../utils/api-error.js";
-import { canReviewExperiences } from "../utils/permissions.js";
+import { canReviewExperiences, publishesExperiencesDirectly } from "../utils/permissions.js";
 import { recordAudit } from "./audit.service.js";
 import {
   notifyExperienceApproved,
@@ -147,8 +147,11 @@ export async function createExperience(
 
   const gallery = normalizeExperienceImages(input);
   requirePublishFields(gallery.imageUrl, input.location);
+  void input.status;
 
-  const submittedAt = new Date();
+  const publishesDirectly = publishesExperiencesDirectly(actor);
+  const status: ExperienceStatus = publishesDirectly ? "PUBLISHED" : "PENDING";
+  const submittedAt = publishesDirectly ? null : new Date();
   const experience = await prisma.experience.create({
     data: {
       title: input.title,
@@ -160,7 +163,7 @@ export async function createExperience(
       longitude: input.longitude ?? null,
       imageUrl: gallery.imageUrl,
       imageUrls: gallery.imageUrls,
-      status: "PENDING",
+      status,
       createdBy: actor.id,
       submittedAt,
       rejectionReason: null,
@@ -176,12 +179,14 @@ export async function createExperience(
     entity: "Experience",
     entityId: experience.id,
   });
-  await notifyExperienceSubmitted({
-    experienceId: experience.id,
-    title: experience.title,
-    creatorId: actor.id,
-    creatorName: actor.name,
-  });
+  if (!publishesDirectly) {
+    await notifyExperienceSubmitted({
+      experienceId: experience.id,
+      title: experience.title,
+      creatorId: actor.id,
+      creatorName: actor.name,
+    });
+  }
 
   return experience;
 }
@@ -227,6 +232,7 @@ export async function updateExperience(
   }
 
   const data = pickExperienceUpdate(input);
+  delete data.status;
   const hasGalleryUpdate = data.imageUrl !== undefined || data.imageUrls !== undefined;
   const gallery = hasGalleryUpdate
     ? normalizeExperienceImages({

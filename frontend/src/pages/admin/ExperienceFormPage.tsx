@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ChevronDown, ImagePlus, MapPin, Plus, X } from "lucide-react";
+import { ChevronDown, Clock, ImagePlus, MapPin, Plus, X } from "lucide-react";
 import { ExperienceLocationMap } from "../../components/admin/ExperienceLocationMap";
 import { Button } from "../../components/ui/Button";
 import { Input, Textarea } from "../../components/ui/Input";
@@ -136,8 +136,10 @@ function FieldPicker({
 export function ExperienceFormPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { hasPermission } = useAuth();
+  const { hasPermission, user } = useAuth();
   const canReview = hasPermission("experiences.review");
+  const isAdministrator = user?.role === "ADMIN";
+  const isSuperAdmin = user?.role === "SUPER_ADMIN";
   const [categories, setCategories] = useState<Category[]>([]);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -329,7 +331,9 @@ export function ExperienceFormPage() {
               <span>
                 {id
                   ? "Actualiza los datos de esta experiencia."
-                  : "Completa la información para enviarla a revisión."}
+                  : isSuperAdmin
+                    ? "Completa la información para publicarla en el catálogo."
+                    : "Completa la información para enviarla a revisión."}
               </span>
             </p>
           </div>
@@ -605,9 +609,10 @@ export function ExperienceFormPage() {
               Esta experiencia fue rechazada. Motivo: {rejectionReason}
             </p>
           ) : null}
-          {status === "PENDING" ? (
-            <p className="dash-exps-reject" role="status">
-              Esta experiencia está pendiente de revisión. Aún no es visible en el catálogo público.
+          {id && isAdministrator && status === "PENDING" ? (
+            <p className="dash-exps-pending" role="status">
+              <Clock size={16} strokeWidth={1.8} aria-hidden="true" />
+              <span>Tu experiencia está en revisión y aún no es visible en el catálogo.</span>
             </p>
           ) : null}
           {error && <p className="text-sm text-red-700">{error}</p>}
@@ -623,7 +628,7 @@ export function ExperienceFormPage() {
               </>
             ) : (
               <Button type="submit" disabled={saving || uploading || Boolean(id && status === "PUBLISHED" && !canReview)}>
-                {saving ? "Guardando..." : id ? "Guardar cambios" : "Enviar a revisión"}
+                {saving ? "Guardando..." : id ? "Guardar cambios" : isSuperAdmin ? "Publicar experiencia" : "Enviar a revisión"}
               </Button>
             )}
             <Link

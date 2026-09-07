@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { ChevronDown, Search } from "lucide-react";
+import { ChevronDown, Clock, Compass, Plus, Search } from "lucide-react";
+import { CountUp } from "../../components/admin/CountUp";
 import { Button } from "../../components/ui/Button";
 import { ExperienceCatalogCard } from "../../components/admin/ExperienceCatalogCard";
 import { Panel } from "../../components/admin/Panel";
@@ -12,8 +13,12 @@ import {
   getAdminExperiences,
 } from "../../services/catalog.service";
 import { getApiErrorMessage } from "../../utils/api-error";
+import { experienceImages, mediaUrl } from "../../utils/media";
 import type { Category, Experience, ExperienceStatus } from "../../types";
+import crearExp from "../../assets/crear-exp.png";
 import expeIlus from "../../assets/expe-agregadas.png";
+import sinRevisar from "../../assets/sinrevisar.png";
+import sinRevisar2 from "../../assets/sinrevisar2.png";
 import superadmIlus2 from "../../assets/superadm-ilus2.png";
 import "../../styles/admin-access.css";
 
@@ -59,6 +64,27 @@ function FilterMenu<T extends string>({
         ))}
       </div>
     </div>
+  );
+}
+
+function pendingReviewTime(experience: Experience) {
+  return new Date(experience.submittedAt || experience.createdAt || 0).getTime();
+}
+
+function PendingPreviewCard({ experience }: { experience: Experience }) {
+  const photo = mediaUrl(experienceImages(experience)[0] ?? null);
+  return (
+    <Link
+      to={`/admin/experiencias/${experience.id}/ver`}
+      className="dash-exp-card dash-exps-pending-mini"
+      aria-label={`${experience.title}. En revisión`}
+    >
+      <img src={photo} alt="" />
+      <div className="dash-exp-card__body">
+        <h3>{experience.title}</h3>
+        <p className="dash-exp-card__meta">En revisión</p>
+      </div>
+    </Link>
   );
 }
 
@@ -182,6 +208,28 @@ export function ExperiencesPage() {
     }
   }
 
+  const pendingExperiences = useMemo(
+    () =>
+      experiences
+        .filter((experience) => experience.status === "PENDING")
+        .sort((left, right) => pendingReviewTime(right) - pendingReviewTime(left)),
+    [experiences],
+  );
+  const pendingCount = pendingExperiences.length;
+  const pendingPreview = pendingExperiences.slice(0, 3);
+  const publishedCount = useMemo(
+    () => experiences.filter((experience) => experience.status === "PUBLISHED").length,
+    [experiences],
+  );
+
+  function scrollToCatalog() {
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    document.getElementById("experiencias-catalogo")?.scrollIntoView({
+      behavior: reduceMotion ? "auto" : "smooth",
+      block: "start",
+    });
+  }
+
   const visibleExperiences = useMemo(() => {
     const term = query.trim().toLowerCase();
     const next = experiences.filter((experience) => {
@@ -235,18 +283,130 @@ export function ExperiencesPage() {
         </div>
       </article>
 
-      <section className="dash-team-board" aria-label="Gestión de experiencias">
-        <section className="dash-split__panel dash-exps-create" aria-label="Crear experiencia">
-          <div>
-            <h2 className="dash-section__title">Crear experiencia</h2>
-            <p className="dash-section__lead">Añade un nuevo plan al catálogo público de Entre Caminos.</p>
-          </div>
-          <Link to="/admin/experiencias/nueva" className="admin-cta">
-            Crear experiencia
-          </Link>
-        </section>
+      <section className="admin-kpi-grid dash-exps-summary" aria-label="Resumen de experiencias">
+        <article className={`admin-kpi-card dash-exps-summary__pending${pendingPreview.length ? "" : " is-empty"}`}>
+          {pendingPreview.length ? (
+            <>
+              <p className="admin-kpi-card__label">Pendientes de revisión</p>
+              <p className="dash-exps-summary__lead">Esperando a ser aprobadas</p>
+              <div className="dash-exps-pending-preview" aria-label="Últimas experiencias pendientes de revisión">
+                {pendingPreview.map((experience) => (
+                  <PendingPreviewCard key={experience.id} experience={experience} />
+                ))}
+              </div>
+              <div className="dash-exps-summary__foot">
+                <p className="admin-kpi-card__value">
+                  <CountUp value={pendingCount} />
+                </p>
+                <div className="dash-exps-summary__action">
+                  {canReview ? (
+                    <Link
+                      to="/admin/experiencias?vista=pendientes"
+                      className="dash-section__glass"
+                      onClick={() => {
+                        window.setTimeout(scrollToCatalog, 40);
+                      }}
+                    >
+                      Gestionar
+                    </Link>
+                  ) : null}
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="dash-exps-pending-empty__head">
+                <span className="dash-kpi__icon" aria-hidden="true">
+                  <Clock size={18} strokeWidth={1.7} />
+                </span>
+                <div className="dash-exps-pending-empty__copy">
+                  <p className="admin-kpi-card__label">Pendientes de revisión</p>
+                  <p className="dash-exps-summary__lead">Esperando a ser aprobadas</p>
+                </div>
+                <p className="admin-kpi-card__value dash-exps-pending-empty__count">
+                  <CountUp value={pendingCount} />
+                </p>
+              </div>
+              <div className="dash-exps-pending-empty__body">
+                <div className="dash-exps-pending-empty__visual">
+                  <img src={sinRevisar} alt="" />
+                </div>
+                <p className="dash-exps-pending-empty__msg">No hay experiencias pendientes de revisión.</p>
+              </div>
+              <div className="dash-exps-summary__action dash-exps-pending-empty__action">
+                {canReview ? (
+                  <Link
+                    to="/admin/experiencias?vista=pendientes"
+                    className="dash-section__glass"
+                    onClick={() => {
+                      window.setTimeout(scrollToCatalog, 40);
+                    }}
+                  >
+                    Gestionar
+                  </Link>
+                ) : null}
+              </div>
+            </>
+          )}
+        </article>
 
-        <section className="dash-split__panel" aria-label="Experiencias registradas">
+        <article className="admin-kpi-card dash-exps-summary__visual" aria-label="Crear experiencia">
+          <img src={crearExp} alt="" className="dash-exps-summary__visual-img" />
+          <div className="dash-exps-summary__visual-info">
+            <span className="dash-kpi__icon" aria-hidden="true">
+              <Plus size={18} strokeWidth={1.7} />
+            </span>
+            <div className="dash-exps-summary__visual-info-copy">
+              <p className="admin-kpi-card__label">Crear experiencia</p>
+              <p className="dash-exps-summary__lead">Añade un nuevo plan al catálogo de Entre Caminos.</p>
+            </div>
+          </div>
+          <div className="dash-exps-summary__action dash-exps-summary__visual-action">
+            <Link to="/admin/experiencias/nueva" className="dash-section__glass">
+              Añadir experiencia
+            </Link>
+          </div>
+        </article>
+
+        <article className="admin-kpi-card dash-exps-summary__published">
+          <div className="dash-exps-pending-empty__head">
+            <span className="dash-kpi__icon" aria-hidden="true">
+              <Compass size={18} strokeWidth={1.7} />
+            </span>
+            <div className="dash-exps-pending-empty__copy">
+              <p className="admin-kpi-card__label">Publicadas</p>
+              <p className="dash-exps-summary__lead">Experiencias disponibles en el catálogo</p>
+            </div>
+            <p className="admin-kpi-card__value dash-exps-pending-empty__count">
+              <CountUp value={publishedCount} />
+            </p>
+          </div>
+          <div className="dash-exps-pending-empty__body">
+            <div className="dash-exps-pending-empty__visual">
+              <img src={sinRevisar2} alt="" />
+            </div>
+            {publishedCount === 0 ? (
+              <p className="dash-exps-pending-empty__msg">No hay experiencias publicadas.</p>
+            ) : null}
+          </div>
+          <div className="dash-exps-summary__action dash-exps-pending-empty__action">
+            <button
+              type="button"
+              className="dash-section__glass"
+              onClick={() => {
+                setStatusFilter("all");
+                setSearchParams({}, { replace: true });
+                window.setTimeout(scrollToCatalog, 40);
+              }}
+            >
+              Ver catálogo
+            </button>
+          </div>
+        </article>
+      </section>
+
+      <section className="dash-team-board" aria-label="Gestión de experiencias">
+        <section id="experiencias-catalogo" className="dash-split__panel" aria-label="Experiencias registradas">
           <div>
             <h2 className="dash-section__title">Experiencias registradas</h2>
             <p className="dash-section__lead">Consulta, edita y envía a revisión las experiencias del catálogo.</p>

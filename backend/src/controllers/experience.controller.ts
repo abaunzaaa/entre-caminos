@@ -39,7 +39,7 @@ export async function create(req: Request, res: Response) {
   const experience = await experienceService.createExperience(req.user!, req.body);
   return res.status(201).json({
     success: true,
-    message: "Experiencia enviada a revisión",
+    message: experience.status === "PUBLISHED" ? "Experiencia publicada" : "Experiencia enviada a revisión",
     data: { experience },
   });
 }

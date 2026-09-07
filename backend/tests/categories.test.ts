@@ -15,7 +15,22 @@ describe("HU-20 Categorías", () => {
     expect(response.status).toBe(201);
     expect(response.body.data.category.name).toContain("Gastronomía");
     expect(response.body.data.category.icon).toBe("tags");
+    expect(response.body.data.category.status).toBe("ACTIVE");
   });
+
+  it("crea la categoría activa aunque el cliente pida inactiva", async () => {
+    const token = (await loginAsAdmin()).body.data.accessToken as string;
+    const response = await api()
+      .post("/api/admin/categories")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        name: `Inactiva ${Date.now()}`,
+        description: "No debe quedar inactiva al crearse.",
+        status: "INACTIVE",
+      });
+
+    expect(response.status).toBe(201);
+    expect(response.body.data.category.status).toBe("ACTIVE");
 
   it("guarda el icono seleccionado al crear una categoría", async () => {
     const token = (await loginAsAdmin()).body.data.accessToken as string;

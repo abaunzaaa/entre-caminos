@@ -39,7 +39,7 @@ export async function createCategory(
       name: input.name,
       description: input.description || null,
       icon: normalizeCategoryIcon(input.icon),
-      status: "ACTIVE",
+      status: "ACTIVE", // las categorías no pasan por revisión
     },
   });
 

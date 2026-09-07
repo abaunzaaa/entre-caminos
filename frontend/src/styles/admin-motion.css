@@ -110,6 +110,7 @@
 .dash-exp-grid > *:nth-child(1),
 .dash-exps-catalog > *:nth-child(1),
 .dash-exps-studio > *:nth-child(1),
+.dash-exps-summary > *:nth-child(1),
 .dash-access-section > *:nth-child(1) {
   --admin-stagger: 0;
 }
@@ -127,6 +128,7 @@
 .dash-exp-grid > *:nth-child(2),
 .dash-exps-catalog > *:nth-child(2),
 .dash-exps-studio > *:nth-child(2),
+.dash-exps-summary > *:nth-child(2),
 .dash-access-section > *:nth-child(2) {
   --admin-stagger: 1;
 }
@@ -139,6 +141,7 @@
 .dash-access-perms > *:nth-child(3),
 .dash-exp-grid > *:nth-child(3),
 .dash-exps-catalog > *:nth-child(3),
+.dash-exps-summary > *:nth-child(3),
 .dash-access-section > *:nth-child(3) {
   --admin-stagger: 2;
 }
