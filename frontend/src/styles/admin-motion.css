@@ -275,4 +275,8 @@
   .admin-cta-hover:hover:not(:disabled) {
     transform: none;
   }
+
+  .dash-card-rail__scroller {
+    scroll-behavior: auto;
+  }
 }

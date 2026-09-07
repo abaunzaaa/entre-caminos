@@ -5,6 +5,7 @@ import { asyncHandler } from "../utils/async-handler.js";
 import { PERMISSIONS } from "../config/constants.js";
 import * as experienceController from "../controllers/experience.controller.js";
 import {
+  experienceRejectSchema,
   experienceSchema,
   experienceStatusSchema,
   experienceUpdateSchema,
@@ -26,6 +27,13 @@ adminExperienceRouter.put(
   "/:id",
   validate(experienceUpdateSchema),
   asyncHandler(experienceController.update),
+);
+adminExperienceRouter.post("/:id/submit", asyncHandler(experienceController.submit));
+adminExperienceRouter.post("/:id/approve", asyncHandler(experienceController.approve));
+adminExperienceRouter.post(
+  "/:id/reject",
+  validate(experienceRejectSchema),
+  asyncHandler(experienceController.reject),
 );
 adminExperienceRouter.patch(
   "/:id/status",

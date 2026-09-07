@@ -71,6 +71,10 @@ export async function updateAdministrator(
   return data.data.admin as PublicUser;
 }
 
+export async function deleteAdministrator(id: string) {
+  await api.delete(`/admin/administrators/${id}`);
+}
+
 export async function getRoles() {
   const { data } = await api.get<ApiResponse<{ roles: Role[] }>>("/admin/roles");
   return data.data.roles;
@@ -122,8 +126,10 @@ export async function deleteCategory(id: string) {
   await api.delete(`/admin/categories/${id}`);
 }
 
-export async function getAdminExperiences() {
-  const { data } = await api.get<ApiResponse<{ experiences: Experience[] }>>("/admin/experiences");
+export async function getAdminExperiences(options?: { limit?: number }) {
+  const { data } = await api.get<ApiResponse<{ experiences: Experience[] }>>("/admin/experiences", {
+    params: options?.limit ? { limit: options.limit } : undefined,
+  });
   return data.data.experiences;
 }
 
@@ -134,6 +140,21 @@ export async function createExperience(payload: Record<string, unknown>) {
 
 export async function updateExperience(id: string, payload: Record<string, unknown>) {
   const { data } = await api.put(`/admin/experiences/${id}`, payload);
+  return data.data.experience as Experience;
+}
+
+export async function submitExperience(id: string) {
+  const { data } = await api.post(`/admin/experiences/${id}/submit`);
+  return data.data.experience as Experience;
+}
+
+export async function approveExperience(id: string) {
+  const { data } = await api.post(`/admin/experiences/${id}/approve`);
+  return data.data.experience as Experience;
+}
+
+export async function rejectExperience(id: string, reason: string) {
+  const { data } = await api.post(`/admin/experiences/${id}/reject`, { reason });
   return data.data.experience as Experience;
 }
 

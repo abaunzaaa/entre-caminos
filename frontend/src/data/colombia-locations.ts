@@ -222,6 +222,24 @@ export function parseStoredLocation(location: string) {
   return { department: "", municipality: "", address: location.trim() };
 }
 
+function looksLikeStreet(value: string) {
+  return /(?:calle|carrera|cra\.?|cll?\.?|avenida|av\.?|transversal|tv\.?|diagonal|dg\.?|vereda|km\b|#)/i.test(value);
+}
+
+export function formatDepartmentMunicipality(location?: string | null) {
+  if (!location?.trim()) {
+    return "";
+  }
+  const parsed = parseStoredLocation(location);
+  const department = parsed.department.trim();
+  const municipality = parsed.municipality.trim();
+  const city = municipality && !looksLikeStreet(municipality) ? municipality : "";
+  if (department && city) {
+    return `${department} · ${city}`;
+  }
+  return department || city;
+}
+
 export function composeLocation(address: string, municipality: string, department: string) {
   return [address, municipality, department]
     .map((part) => part.trim())

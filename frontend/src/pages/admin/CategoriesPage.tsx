@@ -164,7 +164,7 @@ export function CategoriesPage() {
       name: String(form.get("name")),
       description: String(form.get("description")),
       icon: icon || DEFAULT_CATEGORY_ICON,
-      status: String(form.get("status")) as "ACTIVE" | "INACTIVE",
+      ...(editing ? { status } : {}),
     };
 
     try {
@@ -269,6 +269,7 @@ export function CategoriesPage() {
             </div>
           <form key={editing?.id ?? "create"} className="dash-team-invite" onSubmit={onSubmit}>
             <Input name="name" label="Nombre" defaultValue={editing?.name} required />
+            {editing ? (
             <div className="dash-team-role" ref={statusRef}>
               <span className="dash-team-role__label">Estado</span>
               <input type="hidden" name="status" value={status} />
@@ -309,6 +310,7 @@ export function CategoriesPage() {
                 </button>
               </div>
             </div>
+            ) : null}
             <div className="dash-team-invite__full">
               <CategoryIconPicker value={icon} onChange={setIcon} />
             </div>

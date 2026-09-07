@@ -13,6 +13,7 @@ export const PERMISSIONS = {
   PERMISSIONS_MANAGE: "permissions.manage",
   CATEGORIES_MANAGE: "categories.manage",
   EXPERIENCES_MANAGE: "experiences.manage",
+  EXPERIENCES_REVIEW: "experiences.review",
   USERS_VIEW: "users.view",
   AUDIT_VIEW: "audit.view",
 } as const;

@@ -1,5 +1,6 @@
 import { prisma } from "../database/prisma.js";
 import { ApiError } from "../utils/api-error.js";
+import { clearAuthUserCache } from "../utils/auth-cache.js";
 import { recordAudit } from "./audit.service.js";
 
 export async function listRoles() {
@@ -36,6 +37,8 @@ export async function assignPermissions(actorId: string, roleId: string, permiss
       skipDuplicates: true,
     }),
   ]);
+
+  clearAuthUserCache();
 
   await recordAudit({
     userId: actorId,

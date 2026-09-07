@@ -5,6 +5,7 @@ import { prisma } from "./database/prisma.js";
 
 const app = createApp();
 
+
 async function bootstrap() {
   await prisma.$connect();
   app.listen(env.PORT, () => {

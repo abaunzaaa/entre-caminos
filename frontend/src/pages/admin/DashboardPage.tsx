@@ -16,9 +16,10 @@ import {
   getAdministrators,
   getDashboard,
 } from "../../services/catalog.service";
-import { mediaUrl } from "../../utils/media";
 import { ADMIN_AVATAR_EVENT, readAdminAvatar } from "../../utils/admin-avatar";
 import { CountUp } from "../../components/admin/CountUp";
+import { DashCardRail } from "../../components/admin/DashCardRail";
+import { ExperienceCatalogCard } from "../../components/admin/ExperienceCatalogCard";
 import { Panel } from "../../components/admin/Panel";
 import { useAuth } from "../../hooks/useAuth";
 import { getApiErrorMessage } from "../../utils/api-error";
@@ -90,23 +91,6 @@ function newestFirst<T extends { createdAt?: string }>(items: T[], limit = SUMMA
     .slice(0, limit);
 }
 
-function experienceMeta(item: Experience) {
-  const category = item.category?.name?.trim();
-  const location = item.location?.trim();
-  if (category && location) {
-    return `${category} / ${location}`;
-  }
-  return category || location || "Sin clasificar";
-}
-
-function briefText(value: string, max = 88) {
-  const text = value.replace(/\s+/g, " ").trim();
-  if (text.length <= max) {
-    return text;
-  }
-  return `${text.slice(0, max).trim()}…`;
-}
-
 function daysOnPlatform(createdAt: string | undefined) {
   if (!createdAt) {
     return 0;
@@ -146,7 +130,8 @@ const KPI: Array<{
 ];
 
 export function DashboardPage() {
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
+  const canReview = hasPermission("experiences.review");
   const [metrics, setMetrics] = useState<DashboardStats | null>(null);
   const [experiences, setExperiences] = useState<Experience[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -182,97 +167,71 @@ export function DashboardPage() {
       setCategoriesLoading(true);
       setCategoriesError("");
 
-      let dash: DashboardStats | null = null;
-      try {
-        dash = await getDashboard();
-      } catch {
-        dash = null;
-      }
-      if (cancelled) {
-        return;
-      }
-
-      let fromEndpoint: PublicUser[] = [];
-      let listError: unknown;
-      try {
-        fromEndpoint = asAdministratorList(await getAdministrators({ limit: SUMMARY_LIMIT }));
-      } catch (err) {
-        listError = err;
-      }
+      const dash = await getDashboard().catch(() => null);
       if (cancelled) {
         return;
       }
 
       if (dash && typeof dash.admins === "number") {
         setMetrics(dash);
-      } else {
-        try {
-          const allAdmins = asAdministratorList(await getAdministrators());
-          if (cancelled) {
-            return;
-          }
-          setMetrics({
-            users: 0,
-            experiences: 0,
-            categories: 0,
-            published: 0,
-            admins: countActiveTeam(allAdmins),
-          });
-          if (fromEndpoint.length === 0) {
-            fromEndpoint = allAdmins;
-          }
-        } catch {
-          if (!cancelled) {
-            setMetrics(null);
-          }
-        }
-      }
-
-      const fromDashboard = asAdministratorList(dash?.administrators);
-      const nextAdmins = newestFirst(fromEndpoint.length > 0 ? fromEndpoint : fromDashboard);
-      setAdmins(nextAdmins);
-      setAdminsLoading(false);
-
-      if (nextAdmins.length === 0 && listError && !dash) {
-        setAdminsError(getApiErrorMessage(listError, "No se pudieron cargar los administradores."));
-      } else {
+        setAdmins(newestFirst(asAdministratorList(dash.administrators)));
+        setAdminsLoading(false);
         setAdminsError("");
+        setCategories(newestFirst(Array.isArray(dash.recentCategories) ? dash.recentCategories : []));
+        setCategoriesLoading(false);
+        setCategoriesError("");
+        if (Array.isArray(dash.recentExperiences)) {
+          setExperiences(dash.recentExperiences);
+        }
+        return;
       }
 
-      let fromCategoriesEndpoint: Category[] = [];
-      let categoriesFetchError: unknown;
-      try {
-        fromCategoriesEndpoint = await getAdminCategories({ limit: SUMMARY_LIMIT });
-      } catch (err) {
-        categoriesFetchError = err;
-      }
+      const [adminsResult, categoriesResult, experiencesResult] = await Promise.allSettled([
+        getAdministrators({ limit: SUMMARY_LIMIT }),
+        getAdminCategories({ limit: SUMMARY_LIMIT }),
+        getAdminExperiences({ limit: 10 }),
+      ]);
       if (cancelled) {
         return;
       }
 
-      const fromDashboardCategories = Array.isArray(dash?.recentCategories) ? dash.recentCategories : [];
-      const nextCategories = newestFirst(
-        fromCategoriesEndpoint.length > 0 ? fromCategoriesEndpoint : fromDashboardCategories,
+      const fromEndpoint = adminsResult.status === "fulfilled" ? asAdministratorList(adminsResult.value) : [];
+      const allAdmins = fromEndpoint;
+      setMetrics({
+        users: 0,
+        experiences: 0,
+        categories: 0,
+        published: 0,
+        admins: countActiveTeam(allAdmins),
+      });
+      setAdmins(newestFirst(fromEndpoint));
+      setAdminsLoading(false);
+      setAdminsError(
+        fromEndpoint.length === 0 && adminsResult.status === "rejected"
+          ? getApiErrorMessage(adminsResult.reason, "No se pudieron cargar los administradores.")
+          : "",
       );
-      setCategories(nextCategories);
-      setCategoriesLoading(false);
 
-      if (nextCategories.length === 0 && categoriesFetchError && fromDashboardCategories.length === 0) {
-        setCategoriesError(getApiErrorMessage(categoriesFetchError, "No se pudieron cargar las categorías."));
+      const fromCategoriesEndpoint =
+        categoriesResult.status === "fulfilled" && Array.isArray(categoriesResult.value)
+          ? categoriesResult.value
+          : [];
+      setCategories(newestFirst(fromCategoriesEndpoint));
+      setCategoriesLoading(false);
+      setCategoriesError(
+        fromCategoriesEndpoint.length === 0 && categoriesResult.status === "rejected"
+          ? getApiErrorMessage(categoriesResult.reason, "No se pudieron cargar las categorías.")
+          : "",
+      );
+
+      if (experiencesResult.status === "fulfilled") {
+        setExperiences(experiencesResult.value);
       } else {
-        setCategoriesError("");
+        setExperiences([]);
       }
     }
 
     void loadSummary();
-
-    getAdminExperiences()
-      .then((list) => {
-        setExperiences(list.slice(0, 4));
-      })
-      .catch(() => {
-        setExperiences([]);
-      });
 
     return () => {
       cancelled = true;
@@ -446,29 +405,32 @@ export function DashboardPage() {
         <div className="dash-section__head">
           <div>
             <h2 className="dash-section__title">Experiencias registradas</h2>
-            <p className="dash-section__lead">Un recorte del catálogo activo en Entre Caminos.</p>
+            <p className="dash-section__lead">Últimas experiencias añadidas</p>
           </div>
-          <Link to="/admin/experiencias" className="admin-cta dash-section__cta">
-            {experiences.length > 0 ? "Ver todas" : "Añadir experiencia"}
-          </Link>
+          <div className="dash-section__actions">
+            <Link to="/admin/experiencias" className="dash-section__glass">
+              Ver más
+            </Link>
+            <Link to="/admin/experiencias/nueva" className="admin-cta dash-section__cta">
+              Añadir experiencia
+            </Link>
+          </div>
         </div>
         {experiences.length === 0 ? (
           <Panel className="dash-empty">
             <p>Aún no hay experiencias registradas.</p>
           </Panel>
         ) : (
-          <div className="dash-exp-grid">
+          <DashCardRail label="Experiencias registradas" className="dash-card-rail--experiences" scrollerClassName="dash-exp-grid">
             {experiences.map((item) => (
-              <Link key={item.id} to={`/admin/experiencias/${item.id}`} className="dash-exp-card">
-                <img src={mediaUrl(item.imageUrl)} alt="" />
-                <div className="dash-exp-card__body">
-                  <h3>{item.title}</h3>
-                  <p className="dash-exp-card__meta">{experienceMeta(item)}</p>
-                  <p className="dash-exp-card__brief">{briefText(item.description)}</p>
-                </div>
-              </Link>
+              <ExperienceCatalogCard
+                key={item.id}
+                experience={item}
+                canReview={canReview}
+                showManage={false}
+              />
             ))}
-          </div>
+          </DashCardRail>
         )}
       </section>
 

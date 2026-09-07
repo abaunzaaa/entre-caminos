@@ -72,6 +72,7 @@ export async function seedCore() {
         roleId: superAdminRole.id,
         status: "ACTIVE",
         emailVerified: true,
+        deletedAt: null,
       },
       create: {
         name: founder.name,

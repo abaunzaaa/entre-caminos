@@ -3,7 +3,7 @@ import * as adminService from "../services/admin.service.js";
 import { parseLimitQuery } from "../utils/query.js";
 
 export async function dashboard(req: Request, res: Response) {
-  const metrics = await adminService.getDashboardMetrics(req.user!.id);
+  const metrics = await adminService.getDashboardMetrics(req.user!);
   return res.json({ success: true, data: metrics });
 }
 
@@ -21,4 +21,9 @@ export async function createAdmin(req: Request, res: Response) {
 export async function updateAdmin(req: Request, res: Response) {
   const admin = await adminService.updateAdministrator(req.user!.id, req.params.id, req.body);
   return res.json({ success: true, data: { admin } });
+}
+
+export async function deleteAdmin(req: Request, res: Response) {
+  await adminService.deleteAdministrator(req.user!.id, req.params.id);
+  return res.json({ success: true, message: "Administrador eliminado correctamente." });
 }

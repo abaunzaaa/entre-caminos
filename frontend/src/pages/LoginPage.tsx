@@ -3,13 +3,14 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AuthTextField } from "../components/auth/AuthTextField";
 import { SocialButtons } from "../components/auth/SocialButtons";
 import { useAuth } from "../hooks/useAuth";
+import { consumeSessionExpiredMessage } from "../services/api";
 import { getApiErrorMessage } from "../utils/api-error";
 
 export function LoginForm() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [error, setError] = useState("");
+  const [error, setError] = useState(() => consumeSessionExpiredMessage());
   const [loading, setLoading] = useState(false);
   const registered = Boolean((location.state as { registered?: boolean } | null)?.registered);
 

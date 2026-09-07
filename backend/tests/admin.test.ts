@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { ROLES } from "../src/config/constants.js";
-import { api, loginAsAdmin, prisma, registerUser } from "./helpers.js";
+import { PERMISSIONS, ROLES } from "../src/config/constants.js";
+import { ACCOUNT_REMOVED_MESSAGE } from "../src/utils/account.js";
+import { api, loginAs, loginAsAdmin, prisma, registerUser, uniqueEmail } from "./helpers.js";
 
 async function countActiveAdministratorsInDb() {
   return prisma.user.count({
     where: {
+      deletedAt: null,
       status: "ACTIVE",
       role: { name: { in: [ROLES.SUPER_ADMIN, ROLES.ADMIN] } },
     },
@@ -139,21 +141,21 @@ describe("HU-21 Administración", () => {
     const afterDeleteCat = await api().get("/api/admin/dashboard").set("Authorization", `Bearer ${token}`);
     expect(afterDeleteCat.body.data.createdCategories).toBe(cats0 + 2);
 
-    const draft = await api()
+    const pending = await api()
       .post("/api/admin/experiences")
       .set("Authorization", `Bearer ${token}`)
       .send({
-        title: `Borrador dashboard ${stamp}`,
-        description: "Borrador de prueba para el conteo del panel de inicio del administrador.",
+        title: `Pendiente dashboard ${stamp}`,
+        description: "Experiencia pendiente de prueba para el conteo del panel de inicio del administrador.",
         categoryId: activeCat.body.data.category.id,
         price: 10000,
-        location: "Medellín",
-        status: "DRAFT",
+        location: "Medellín, Antioquia",
+        imageUrl: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1200&q=80",
       });
-    expect(draft.status).toBe(201);
+    expect(pending.status).toBe(201);
 
-    const afterDraft = await api().get("/api/admin/dashboard").set("Authorization", `Bearer ${token}`);
-    expect(afterDraft.body.data.createdExperiences).toBe(exps0);
+    const afterPending = await api().get("/api/admin/dashboard").set("Authorization", `Bearer ${token}`);
+    expect(afterPending.body.data.createdExperiences).toBe(exps0);
 
     const published = await api()
       .post("/api/admin/experiences")
@@ -163,12 +165,15 @@ describe("HU-21 Administración", () => {
         description: "Experiencia publicada de prueba para el conteo del panel de inicio.",
         categoryId: activeCat.body.data.category.id,
         price: 20000,
-        location: "Guatapé",
+        location: "Guatapé, Antioquia",
         imageUrl: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1200&q=80",
-        status: "PUBLISHED",
       });
     expect(published.status).toBe(201);
     const publishedId = published.body.data.experience.id as string;
+    const approved = await api()
+      .post(`/api/admin/experiences/${publishedId}/approve`)
+      .set("Authorization", `Bearer ${token}`);
+    expect(approved.status).toBe(200);
 
     const afterPublish = await api().get("/api/admin/dashboard").set("Authorization", `Bearer ${token}`);
     expect(afterPublish.body.data.createdExperiences).toBe(exps0 + 1);
@@ -183,7 +188,7 @@ describe("HU-21 Administración", () => {
 
     await api().delete(`/api/admin/experiences/${publishedId}`).set("Authorization", `Bearer ${token}`);
     await api()
-      .delete(`/api/admin/experiences/${draft.body.data.experience.id}`)
+      .delete(`/api/admin/experiences/${pending.body.data.experience.id}`)
       .set("Authorization", `Bearer ${token}`);
 
     const afterDeleteExp = await api().get("/api/admin/dashboard").set("Authorization", `Bearer ${token}`);
@@ -198,5 +203,147 @@ describe("HU-21 Administración", () => {
 
     const restored = await api().get("/api/admin/dashboard").set("Authorization", `Bearer ${token}`);
     expect(restored.body.data.createdCategories).toBe(cats0);
+  });
+
+  it("elimina un administrador de forma persistente e invalida su sesión", async () => {
+    const superLogin = await loginAsAdmin();
+    const superToken = superLogin.body.data.accessToken as string;
+    const superId = superLogin.body.data.user.id as string;
+    const password = "Admin#2026!";
+    const email = uniqueEmail("admin.delete");
+
+    const created = await api()
+      .post("/api/admin/administrators")
+      .set("Authorization", `Bearer ${superToken}`)
+      .send({
+        name: "Admin Eliminar",
+        email,
+        password,
+        role: "ADMIN",
+      });
+    expect(created.status).toBe(201);
+    const adminId = created.body.data.admin.id as string;
+
+    const adminLogin = await loginAs(email, password);
+    expect(adminLogin.status).toBe(200);
+    const adminToken = adminLogin.body.data.accessToken as string;
+
+    const forbidden = await api()
+      .delete(`/api/admin/administrators/${superId}`)
+      .set("Authorization", `Bearer ${adminToken}`);
+    expect(forbidden.status).toBe(403);
+
+    const self = await api()
+      .delete(`/api/admin/administrators/${superId}`)
+      .set("Authorization", `Bearer ${superToken}`);
+    expect(self.status).toBe(400);
+    expect(self.body.error.message).toMatch(/propia cuenta/i);
+
+    const removed = await api()
+      .delete(`/api/admin/administrators/${adminId}`)
+      .set("Authorization", `Bearer ${superToken}`);
+    expect(removed.status).toBe(200);
+
+    const listed = await api()
+      .get("/api/admin/administrators")
+      .set("Authorization", `Bearer ${superToken}`);
+    expect(listed.status).toBe(200);
+    expect(listed.body.data.admins.some((admin: { id: string }) => admin.id === adminId)).toBe(false);
+
+    const persisted = await prisma.user.findUnique({ where: { id: adminId } });
+    expect(persisted?.deletedAt).toBeTruthy();
+
+    const loginAgain = await loginAs(email, password);
+    expect(loginAgain.status).toBe(403);
+    expect(loginAgain.body.error.message).toBe(ACCOUNT_REMOVED_MESSAGE);
+
+    const staleSession = await api()
+      .get("/api/admin/dashboard")
+      .set("Authorization", `Bearer ${adminToken}`);
+    expect(staleSession.status).toBe(401);
+    expect(staleSession.body.error.message).toBe(ACCOUNT_REMOVED_MESSAGE);
+
+    const reactivate = await api()
+      .put(`/api/admin/administrators/${adminId}`)
+      .set("Authorization", `Bearer ${superToken}`)
+      .send({ status: "ACTIVE" });
+    expect(reactivate.status).toBe(404);
+  });
+
+  it("impide eliminar al último super administrador activo", async () => {
+    const superLogin = await loginAsAdmin();
+    const superToken = superLogin.body.data.accessToken as string;
+    const superId = superLogin.body.data.user.id as string;
+    const password = "Admin#2026!";
+    const email = uniqueEmail("admin.lastsuper");
+
+    const created = await api()
+      .post("/api/admin/administrators")
+      .set("Authorization", `Bearer ${superToken}`)
+      .send({
+        name: "Admin Último Super",
+        email,
+        password,
+        role: "ADMIN",
+      });
+    expect(created.status).toBe(201);
+    const adminId = created.body.data.admin.id as string;
+    const adminToken = (await loginAs(email, password)).body.data.accessToken as string;
+
+    const permission = await prisma.permission.findUnique({
+      where: { name: PERMISSIONS.ADMINS_MANAGE },
+    });
+    const adminRole = await prisma.role.findUnique({
+      where: { name: ROLES.ADMIN },
+    });
+    expect(permission).toBeTruthy();
+    expect(adminRole).toBeTruthy();
+
+    const otherSupers = await prisma.user.findMany({
+      where: {
+        deletedAt: null,
+        role: { name: ROLES.SUPER_ADMIN },
+        NOT: { id: superId },
+      },
+      select: { id: true },
+    });
+
+    await prisma.rolePermission.upsert({
+      where: {
+        roleId_permissionId: {
+          roleId: adminRole!.id,
+          permissionId: permission!.id,
+        },
+      },
+      update: {},
+      create: {
+        roleId: adminRole!.id,
+        permissionId: permission!.id,
+      },
+    });
+    await prisma.user.updateMany({
+      where: { id: { in: otherSupers.map((item) => item.id) } },
+      data: { status: "INACTIVE" },
+    });
+
+    try {
+      const attempt = await api()
+        .delete(`/api/admin/administrators/${superId}`)
+        .set("Authorization", `Bearer ${adminToken}`);
+      expect(attempt.status).toBe(400);
+      expect(attempt.body.error.message).toMatch(/último super administrador/i);
+    } finally {
+      await prisma.user.updateMany({
+        where: { id: { in: otherSupers.map((item) => item.id) } },
+        data: { status: "ACTIVE" },
+      });
+      await prisma.rolePermission.deleteMany({
+        where: { roleId: adminRole!.id, permissionId: permission!.id },
+      });
+      await prisma.user.update({
+        where: { id: adminId },
+        data: { deletedAt: new Date() },
+      });
+    }
   });
 });

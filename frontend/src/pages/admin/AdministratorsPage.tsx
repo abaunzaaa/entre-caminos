@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown, Search } from "lucide-react";
 import {
   createAdministrator,
+  deleteAdministrator,
   getAdministrators,
   updateAdministrator,
 } from "../../services/catalog.service";
@@ -11,6 +12,7 @@ import { Input } from "../../components/ui/Input";
 import { CountUp } from "../../components/admin/CountUp";
 import { Panel, StatusDot } from "../../components/admin/Panel";
 import { TeamInviteCarousel } from "../../components/admin/TeamInviteCarousel";
+import { useAuth } from "../../hooks/useAuth";
 import { getApiErrorMessage } from "../../utils/api-error";
 import { readAdminAvatar } from "../../utils/admin-avatar";
 import adminIlus from "../../assets/admin-ilus.png";
@@ -86,6 +88,8 @@ function FilterMenu<T extends string>({
 }
 
 export function AdministratorsPage() {
+  const { user, hasPermission } = useAuth();
+  const canManageAdmins = hasPermission("admins.manage");
   const [admins, setAdmins] = useState<PublicUser[]>([]);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -99,7 +103,9 @@ export function AdministratorsPage() {
   const [inviteRoleOpen, setInviteRoleOpen] = useState(false);
   const [openMenu, setOpenMenu] = useState<"role" | "sort" | null>(null);
   const [pendingDeactivate, setPendingDeactivate] = useState<PublicUser | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<PublicUser | null>(null);
   const [statusBusyId, setStatusBusyId] = useState<string | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
   const [toast, setToast] = useState<{ text: string; tone: "success" | "error" } | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const filtersRef = useRef<HTMLDivElement>(null);
@@ -136,12 +142,13 @@ export function AdministratorsPage() {
   }, [toast]);
 
   useEffect(() => {
-    if (!pendingDeactivate) {
+    if (!pendingDeactivate && !pendingDelete) {
       return;
     }
     function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape" && !statusBusyId) {
+      if (event.key === "Escape" && !statusBusyId && !deleteBusy) {
         setPendingDeactivate(null);
+        setPendingDelete(null);
       }
     }
     document.addEventListener("keydown", onKeyDown);
@@ -151,7 +158,7 @@ export function AdministratorsPage() {
       document.removeEventListener("keydown", onKeyDown);
       document.body.style.overflow = previousOverflow;
     };
-  }, [pendingDeactivate, statusBusyId]);
+  }, [pendingDeactivate, pendingDelete, statusBusyId, deleteBusy]);
 
   async function changeAdminStatus(admin: PublicUser, status: "ACTIVE" | "INACTIVE") {
     setStatusBusyId(admin.id);
@@ -176,6 +183,30 @@ export function AdministratorsPage() {
       });
     } finally {
       setStatusBusyId(null);
+    }
+  }
+
+  async function confirmDeleteAdministrator() {
+    if (!pendingDelete) {
+      return;
+    }
+    const target = pendingDelete;
+    setDeleteBusy(true);
+    try {
+      await deleteAdministrator(target.id);
+      setAdmins((current) => current.filter((item) => item.id !== target.id));
+      setPendingDelete(null);
+      setToast({
+        tone: "success",
+        text: "Administrador eliminado correctamente.",
+      });
+    } catch (err) {
+      setToast({
+        tone: "error",
+        text: getApiErrorMessage(err, "No se pudo eliminar el administrador"),
+      });
+    } finally {
+      setDeleteBusy(false);
     }
   }
 
@@ -437,27 +468,53 @@ export function AdministratorsPage() {
                       </div>
                     </div>
                     {admin.status === "ACTIVE" ? (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="ml-auto shrink-0"
-                        disabled={statusBusyId === admin.id}
-                        onClick={() => setPendingDeactivate(admin)}
-                      >
-                        {statusBusyId === admin.id ? "Actualizando..." : "Desactivar"}
-                      </Button>
+                      <div className="dash-team-card__actions">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          disabled={statusBusyId === admin.id || deleteBusy}
+                          onClick={() => setPendingDeactivate(admin)}
+                        >
+                          {statusBusyId === admin.id ? "Actualizando..." : "Desactivar"}
+                        </Button>
+                        {canManageAdmins && admin.id !== user?.id ? (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="dash-team-card__delete"
+                            disabled={statusBusyId === admin.id || deleteBusy}
+                            onClick={() => setPendingDelete(admin)}
+                          >
+                            Eliminar
+                          </Button>
+                        ) : null}
+                      </div>
                     ) : (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="ml-auto shrink-0"
-                        disabled={statusBusyId === admin.id}
-                        onClick={() => changeAdminStatus(admin, "ACTIVE")}
-                      >
-                        {statusBusyId === admin.id ? "Actualizando..." : "Activar"}
-                      </Button>
+                      <div className="dash-team-card__actions">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          disabled={statusBusyId === admin.id || deleteBusy}
+                          onClick={() => changeAdminStatus(admin, "ACTIVE")}
+                        >
+                          {statusBusyId === admin.id ? "Actualizando..." : "Activar"}
+                        </Button>
+                        {canManageAdmins && admin.id !== user?.id ? (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="dash-team-card__delete"
+                            disabled={statusBusyId === admin.id || deleteBusy}
+                            onClick={() => setPendingDelete(admin)}
+                          >
+                            Eliminar
+                          </Button>
+                        ) : null}
+                      </div>
                     )}
                   </article>
                 );
@@ -506,6 +563,54 @@ export function AdministratorsPage() {
                 onClick={() => changeAdminStatus(pendingDeactivate, "INACTIVE")}
               >
                 {statusBusyId ? "Actualizando..." : "Desactivar usuario"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {pendingDelete ? (
+        <div
+          className="dash-team-confirm"
+          role="presentation"
+          onClick={() => {
+            if (!deleteBusy) {
+              setPendingDelete(null);
+            }
+          }}
+        >
+          <div
+            className="dash-team-confirm__card"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="team-delete-title"
+            aria-describedby="team-delete-copy"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h2 id="team-delete-title" className="dash-team-confirm__title">
+              ¿Eliminar administrador?
+            </h2>
+            <p id="team-delete-copy" className="dash-team-confirm__lead">
+              Esta acción eliminará el acceso de este administrador a Entre Caminos.
+            </p>
+            <p className="dash-team-confirm__name">{pendingDelete.name}</p>
+            <div className="dash-team-confirm__actions">
+              <Button
+                type="button"
+                variant="secondary"
+                disabled={deleteBusy}
+                onClick={() => setPendingDelete(null)}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                className="dash-team-confirm__danger"
+                disabled={deleteBusy}
+                onClick={() => void confirmDeleteAdministrator()}
+              >
+                {deleteBusy ? "Eliminando..." : "Eliminar administrador"}
               </Button>
             </div>
           </div>

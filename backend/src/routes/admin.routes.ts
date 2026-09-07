@@ -8,6 +8,7 @@ import * as adminController from "../controllers/admin.controller.js";
 import * as roleController from "../controllers/role.controller.js";
 import { adminCategoryRouter } from "./category.routes.js";
 import { adminExperienceRouter } from "./experience.routes.js";
+import * as notificationController from "../controllers/notification.controller.js";
 import {
   assignPermissionsSchema,
   createAdminSchema,
@@ -47,6 +48,12 @@ adminRouter.put(
   asyncHandler(adminController.updateAdmin),
 );
 
+adminRouter.delete(
+  "/administrators/:id",
+  permissionMiddleware(PERMISSIONS.ADMINS_MANAGE),
+  asyncHandler(adminController.deleteAdmin),
+);
+
 adminRouter.get(
   "/roles",
   permissionMiddleware(PERMISSIONS.ROLES_MANAGE),
@@ -79,6 +86,10 @@ adminRouter.post(
   validate(createPermissionSchema),
   asyncHandler(roleController.createPermission),
 );
+
+adminRouter.get("/notifications", asyncHandler(notificationController.list));
+adminRouter.patch("/notifications/read-all", asyncHandler(notificationController.markAllRead));
+adminRouter.patch("/notifications/:id/read", asyncHandler(notificationController.markRead));
 
 adminRouter.use("/categories", adminCategoryRouter);
 adminRouter.use("/experiences", adminExperienceRouter);

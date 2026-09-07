@@ -2,8 +2,12 @@ import crypto from "node:crypto";
 import type { Response } from "express";
 import { COOKIE_NAMES } from "../config/constants.js";
 import { env, isProduction } from "../config/env.js";
+import { durationToMs } from "../utils/duration.js";
 import { signAccessToken, signRefreshToken } from "../utils/jwt.js";
 import type { RoleName } from "../config/constants.js";
+
+const ACCESS_MAX_AGE_MS = durationToMs(env.JWT_ACCESS_EXPIRES_IN, 15 * 60 * 1000);
+const REFRESH_MAX_AGE_MS = durationToMs(env.JWT_REFRESH_EXPIRES_IN, 7 * 24 * 60 * 60 * 1000);
 
 const cookieBase = {
   httpOnly: true,
@@ -25,19 +29,19 @@ export function setAuthCookies(
 
   res.cookie(COOKIE_NAMES.ACCESS, accessToken, {
     ...cookieBase,
-    maxAge: 15 * 60 * 1000,
+    maxAge: ACCESS_MAX_AGE_MS,
   });
   res.cookie(COOKIE_NAMES.REFRESH, refreshToken, {
     ...cookieBase,
-    maxAge: 7 * 24 * 60 * 60 * 1000,
+    maxAge: REFRESH_MAX_AGE_MS,
   });
 
   return { accessToken, refreshToken };
 }
 
 export function clearAuthCookies(res: Response) {
-  res.clearCookie(COOKIE_NAMES.ACCESS, { path: "/" });
-  res.clearCookie(COOKIE_NAMES.REFRESH, { path: "/" });
+  res.clearCookie(COOKIE_NAMES.ACCESS, cookieBase);
+  res.clearCookie(COOKIE_NAMES.REFRESH, cookieBase);
 }
 
 export function createRawToken(): { raw: string; hash: string } {

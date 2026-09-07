@@ -1,9 +1,11 @@
 import type { Request, Response } from "express";
+import { prisma } from "../database/prisma.js";
 import { COOKIE_NAMES, type RoleName } from "../config/constants.js";
+import { ACCOUNT_REMOVED_MESSAGE, isAccountRemoved } from "../utils/account.js";
 import * as authService from "../services/auth.service.js";
 import { clearAuthCookies, setAuthCookies } from "../services/token.service.js";
+import { isAuthRevoked } from "../utils/auth-cache.js";
 import { verifyRefreshToken } from "../utils/jwt.js";
-import { prisma } from "../database/prisma.js";
 import { ApiError } from "../utils/api-error.js";
 import { publicUser } from "../utils/serializers.js";
 
@@ -58,12 +60,24 @@ export async function refresh(req: Request, res: Response) {
   }
 
   const payload = verifyRefreshToken(token);
+  if (payload.type !== "refresh") {
+    throw ApiError.unauthorized("Sesión inválida");
+  }
+
+  if (isAuthRevoked(payload.sub, payload.iat)) {
+    throw ApiError.unauthorized(ACCOUNT_REMOVED_MESSAGE);
+  }
+
   const user = await prisma.user.findUnique({
     where: { id: payload.sub },
     include: { role: true },
   });
 
-  if (!user || user.status !== "ACTIVE") {
+  if (!user || isAccountRemoved(user)) {
+    throw ApiError.unauthorized(ACCOUNT_REMOVED_MESSAGE);
+  }
+
+  if (user.status !== "ACTIVE") {
     throw ApiError.unauthorized("Sesión inválida");
   }
 

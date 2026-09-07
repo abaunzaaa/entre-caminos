@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const experienceStatus = z.enum(["DRAFT", "PENDING", "PUBLISHED", "ARCHIVED"]);
+const experienceStatus = z.enum(["DRAFT", "PENDING", "PUBLISHED", "ARCHIVED", "REJECTED"]);
 
 const imageUrlValue = z
   .string()
@@ -33,4 +33,12 @@ export const experienceUpdateSchema = experienceSchema.partial().refine(
 
 export const experienceStatusSchema = z.object({
   status: experienceStatus,
+});
+
+export const experienceRejectSchema = z.object({
+  reason: z
+    .string()
+    .trim()
+    .min(8, "Describe el motivo del rechazo")
+    .max(500, "El motivo es demasiado largo"),
 });

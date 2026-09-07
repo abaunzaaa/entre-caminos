@@ -1,12 +1,50 @@
 import type { ExperienceStatus, Prisma } from "@prisma/client";
 import { prisma } from "../database/prisma.js";
+import type { AuthUser } from "../models/auth-user.js";
 import { ApiError } from "../utils/api-error.js";
+import { canReviewExperiences } from "../utils/permissions.js";
 import { recordAudit } from "./audit.service.js";
+import {
+  notifyExperienceApproved,
+  notifyExperienceRejected,
+  notifyExperienceSubmitted,
+} from "./notification.service.js";
 
 const experienceInclude = {
   category: true,
   creator: { select: { id: true, name: true, email: true } },
+  reviewedBy: { select: { id: true, name: true, email: true } },
 } as const;
+
+const experienceListSelect = {
+  id: true,
+  title: true,
+  description: true,
+  categoryId: true,
+  price: true,
+  location: true,
+  latitude: true,
+  longitude: true,
+  imageUrl: true,
+  imageUrls: true,
+  status: true,
+  createdBy: true,
+  submittedAt: true,
+  rejectionReason: true,
+  reviewedAt: true,
+  reviewedById: true,
+  createdAt: true,
+  updatedAt: true,
+  category: { select: { id: true, name: true, icon: true, status: true } },
+  creator: { select: { id: true, name: true, email: true } },
+  reviewedBy: { select: { id: true, name: true, email: true } },
+} as const;
+
+function assertCanAccess(experience: { createdBy: string }, actor: AuthUser) {
+  if (!canReviewExperiences(actor) && experience.createdBy !== actor.id) {
+    throw ApiError.forbidden("Solo puedes consultar tus propias experiencias");
+  }
+}
 
 export async function listPublicExperiences() {
   return prisma.experience.findMany({
@@ -25,18 +63,24 @@ export async function listFeaturedExperiences() {
   });
 }
 
-export async function listAdminExperiences(filters?: { status?: ExperienceStatus; categoryId?: string }) {
+export async function listAdminExperiences(
+  actor: AuthUser,
+  filters?: { status?: ExperienceStatus; categoryId?: string; take?: number },
+) {
+  const reviewer = canReviewExperiences(actor);
   return prisma.experience.findMany({
     where: {
       status: filters?.status,
       categoryId: filters?.categoryId,
+      ...(reviewer ? {} : { createdBy: actor.id }),
     },
-    include: experienceInclude,
-    orderBy: { createdAt: "desc" },
+    select: experienceListSelect,
+    orderBy: filters?.take ? { createdAt: "desc" } : [{ submittedAt: "desc" }, { createdAt: "desc" }],
+    take: filters?.take,
   });
 }
 
-export async function getExperience(id: string, opts?: { publishedOnly?: boolean }) {
+export async function getExperience(id: string, opts?: { publishedOnly?: boolean; actor?: AuthUser }) {
   const experience = await prisma.experience.findUnique({
     where: { id },
     include: experienceInclude,
@@ -48,6 +92,10 @@ export async function getExperience(id: string, opts?: { publishedOnly?: boolean
 
   if (opts?.publishedOnly && experience.status !== "PUBLISHED") {
     throw ApiError.notFound("Experiencia no encontrada");
+  }
+
+  if (opts?.actor) {
+    assertCanAccess(experience, opts.actor);
   }
 
   return experience;
@@ -75,7 +123,7 @@ function requirePublishFields(imageUrl?: string | null, location?: string | null
 }
 
 export async function createExperience(
-  actorId: string,
+  actor: AuthUser,
   input: {
     title: string;
     description: string;
@@ -98,10 +146,9 @@ export async function createExperience(
   }
 
   const gallery = normalizeExperienceImages(input);
-  if ((input.status ?? "DRAFT") === "PUBLISHED") {
-    requirePublishFields(gallery.imageUrl, input.location);
-  }
+  requirePublishFields(gallery.imageUrl, input.location);
 
+  const submittedAt = new Date();
   const experience = await prisma.experience.create({
     data: {
       title: input.title,
@@ -113,28 +160,64 @@ export async function createExperience(
       longitude: input.longitude ?? null,
       imageUrl: gallery.imageUrl,
       imageUrls: gallery.imageUrls,
-      status: input.status ?? "DRAFT",
-      createdBy: actorId,
+      status: "PENDING",
+      createdBy: actor.id,
+      submittedAt,
+      rejectionReason: null,
+      reviewedAt: null,
+      reviewedById: null,
     },
     include: experienceInclude,
   });
 
   await recordAudit({
-    userId: actorId,
+    userId: actor.id,
     action: "EXPERIENCE_CREATE",
     entity: "Experience",
     entityId: experience.id,
+  });
+  await notifyExperienceSubmitted({
+    experienceId: experience.id,
+    title: experience.title,
+    creatorId: actor.id,
+    creatorName: actor.name,
   });
 
   return experience;
 }
 
+function pickExperienceUpdate(input: Prisma.ExperienceUncheckedUpdateInput) {
+  const data: Prisma.ExperienceUncheckedUpdateInput = {};
+  const keys = [
+    "title",
+    "description",
+    "categoryId",
+    "price",
+    "location",
+    "latitude",
+    "longitude",
+    "imageUrl",
+    "imageUrls",
+  ] as const;
+  for (const key of keys) {
+    if (input[key] !== undefined) {
+      data[key] = input[key] as never;
+    }
+  }
+  return data;
+}
+
 export async function updateExperience(
-  actorId: string,
+  actor: AuthUser,
   id: string,
   input: Prisma.ExperienceUncheckedUpdateInput,
 ) {
-  const current = await getExperience(id);
+  const current = await getExperience(id, { actor });
+  const reviewer = canReviewExperiences(actor);
+
+  if (!reviewer && (current.status === "PUBLISHED" || current.status === "ARCHIVED")) {
+    throw ApiError.forbidden("No puedes editar una experiencia ya publicada o archivada");
+  }
 
   if (input.categoryId && typeof input.categoryId === "string") {
     const category = await prisma.category.findUnique({ where: { id: input.categoryId } });
@@ -143,28 +226,23 @@ export async function updateExperience(
     }
   }
 
-  const nextStatus = (typeof input.status === "string" ? input.status : current.status) as ExperienceStatus;
-  const hasGalleryUpdate = input.imageUrl !== undefined || input.imageUrls !== undefined;
+  const data = pickExperienceUpdate(input);
+  const hasGalleryUpdate = data.imageUrl !== undefined || data.imageUrls !== undefined;
   const gallery = hasGalleryUpdate
     ? normalizeExperienceImages({
-        imageUrl: input.imageUrl === undefined ? current.imageUrl : ((input.imageUrl as string | null) || null),
-        imageUrls: Array.isArray(input.imageUrls) ? (input.imageUrls as string[]) : undefined,
+        imageUrl: data.imageUrl === undefined ? current.imageUrl : ((data.imageUrl as string | null) || null),
+        imageUrls: Array.isArray(data.imageUrls) ? (data.imageUrls as string[]) : undefined,
       })
     : { imageUrl: current.imageUrl, imageUrls: current.imageUrls };
-  const nextLocation =
-    input.location === undefined ? current.location : String(input.location);
-  if (nextStatus === "PUBLISHED") {
-    requirePublishFields(gallery.imageUrl, nextLocation);
-  }
 
   const experience = await prisma.experience.update({
     where: { id },
-    data: hasGalleryUpdate ? { ...input, imageUrl: gallery.imageUrl, imageUrls: gallery.imageUrls } : input,
+    data: hasGalleryUpdate ? { ...data, imageUrl: gallery.imageUrl, imageUrls: gallery.imageUrls } : data,
     include: experienceInclude,
   });
 
   await recordAudit({
-    userId: actorId,
+    userId: actor.id,
     action: "EXPERIENCE_UPDATE",
     entity: "Experience",
     entityId: experience.id,
@@ -173,34 +251,214 @@ export async function updateExperience(
   return experience;
 }
 
-export async function changeExperienceStatus(actorId: string, id: string, status: ExperienceStatus) {
-  const current = await getExperience(id);
-
-  if (status === "PUBLISHED") {
-    requirePublishFields(current.imageUrl, current.location);
+export async function submitExperienceForReview(actor: AuthUser, id: string) {
+  const current = await getExperience(id, { actor });
+  if (current.createdBy !== actor.id && !canReviewExperiences(actor)) {
+    throw ApiError.forbidden("No puedes enviar esta experiencia a revisión");
   }
+  if (current.status === "PUBLISHED") {
+    throw ApiError.badRequest("Esta experiencia ya está publicada");
+  }
+  if (current.status === "PENDING") {
+    return current;
+  }
+  if (current.status !== "REJECTED" && current.status !== "DRAFT" && current.status !== "ARCHIVED") {
+    throw ApiError.badRequest("Esta experiencia no se puede enviar a revisión");
+  }
+
+  requirePublishFields(current.imageUrl, current.location);
 
   const experience = await prisma.experience.update({
     where: { id },
-    data: { status },
+    data: {
+      status: "PENDING",
+      submittedAt: new Date(),
+      rejectionReason: null,
+      reviewedAt: null,
+      reviewedById: null,
+    },
     include: experienceInclude,
   });
 
   await recordAudit({
-    userId: actorId,
-    action: `EXPERIENCE_STATUS_${status}`,
+    userId: actor.id,
+    action: "EXPERIENCE_SUBMIT",
     entity: "Experience",
     entityId: experience.id,
+  });
+  await notifyExperienceSubmitted({
+    experienceId: experience.id,
+    title: experience.title,
+    creatorId: experience.createdBy,
+    creatorName: experience.creator.name,
   });
 
   return experience;
 }
 
-export async function deleteExperience(actorId: string, id: string) {
-  await getExperience(id);
+export async function approveExperience(actor: AuthUser, id: string) {
+  if (!canReviewExperiences(actor)) {
+    throw ApiError.forbidden("No tienes permiso para aprobar experiencias");
+  }
+  const current = await getExperience(id);
+  if (current.status !== "PENDING") {
+    throw ApiError.badRequest("Solo se pueden aprobar experiencias pendientes de revisión");
+  }
+
+  requirePublishFields(current.imageUrl, current.location);
+
+  const reviewedAt = new Date();
+  const [experience] = await prisma.$transaction([
+    prisma.experience.update({
+      where: { id },
+      data: {
+        status: "PUBLISHED",
+        rejectionReason: null,
+        reviewedAt,
+        reviewedById: actor.id,
+      },
+      include: experienceInclude,
+    }),
+    prisma.experienceReview.create({
+      data: {
+        experienceId: id,
+        reviewerId: actor.id,
+        decision: "APPROVED",
+      },
+    }),
+  ]);
+
+  await recordAudit({
+    userId: actor.id,
+    action: "EXPERIENCE_APPROVE",
+    entity: "Experience",
+    entityId: experience.id,
+  });
+  if (experience.createdBy !== actor.id) {
+    await notifyExperienceApproved({
+      experienceId: experience.id,
+      title: experience.title,
+      creatorId: experience.createdBy,
+    });
+  }
+
+  return experience;
+}
+
+export async function rejectExperience(actor: AuthUser, id: string, reason: string) {
+  if (!canReviewExperiences(actor)) {
+    throw ApiError.forbidden("No tienes permiso para rechazar experiencias");
+  }
+  const trimmed = reason.trim();
+  if (trimmed.length < 8) {
+    throw ApiError.unprocessable("El motivo del rechazo es obligatorio");
+  }
+  const current = await getExperience(id);
+  if (current.status !== "PENDING") {
+    throw ApiError.badRequest("Solo se pueden rechazar experiencias pendientes de revisión");
+  }
+
+  const reviewedAt = new Date();
+  const [experience] = await prisma.$transaction([
+    prisma.experience.update({
+      where: { id },
+      data: {
+        status: "REJECTED",
+        rejectionReason: trimmed,
+        reviewedAt,
+        reviewedById: actor.id,
+      },
+      include: experienceInclude,
+    }),
+    prisma.experienceReview.create({
+      data: {
+        experienceId: id,
+        reviewerId: actor.id,
+        decision: "REJECTED",
+        reason: trimmed,
+      },
+    }),
+  ]);
+
+  await recordAudit({
+    userId: actor.id,
+    action: "EXPERIENCE_REJECT",
+    entity: "Experience",
+    entityId: experience.id,
+  });
+  if (experience.createdBy !== actor.id) {
+    await notifyExperienceRejected({
+      experienceId: experience.id,
+      title: experience.title,
+      creatorId: experience.createdBy,
+      reason: trimmed,
+    });
+  }
+
+  return experience;
+}
+
+export async function changeExperienceStatus(actor: AuthUser, id: string, status: ExperienceStatus) {
+  if (status === "REJECTED") {
+    throw ApiError.forbidden("Para rechazar una experiencia debes indicar un motivo");
+  }
+  if (status === "PENDING") {
+    return submitExperienceForReview(actor, id);
+  }
+  if (status === "PUBLISHED") {
+    if (!canReviewExperiences(actor)) {
+      throw ApiError.forbidden("Las experiencias se publican al aprobarlas, no cambiando el estado manualmente");
+    }
+    const current = await getExperience(id);
+    if (current.status !== "ARCHIVED") {
+      throw ApiError.forbidden("Las experiencias se publican al aprobarlas, no cambiando el estado manualmente");
+    }
+    requirePublishFields(current.imageUrl, current.location);
+    const experience = await prisma.experience.update({
+      where: { id },
+      data: { status: "PUBLISHED" },
+      include: experienceInclude,
+    });
+    await recordAudit({
+      userId: actor.id,
+      action: "EXPERIENCE_STATUS_RESTORED",
+      entity: "Experience",
+      entityId: experience.id,
+    });
+    return experience;
+  }
+  if (status === "ARCHIVED") {
+    if (!canReviewExperiences(actor)) {
+      throw ApiError.forbidden("No puedes archivar experiencias");
+    }
+    const current = await getExperience(id);
+    if (current.status !== "PUBLISHED" && current.status !== "ARCHIVED") {
+      throw ApiError.badRequest("Solo se pueden archivar experiencias publicadas");
+    }
+    const experience = await prisma.experience.update({
+      where: { id },
+      data: { status: "ARCHIVED" },
+      include: experienceInclude,
+    });
+    await recordAudit({
+      userId: actor.id,
+      action: "EXPERIENCE_STATUS_ARCHIVED",
+      entity: "Experience",
+      entityId: experience.id,
+    });
+    return experience;
+  }
+  throw ApiError.badRequest("Estado no permitido");
+}
+
+export async function deleteExperience(actor: AuthUser, id: string) {
+  const current = await getExperience(id, { actor });
+  if (!canReviewExperiences(actor) && current.status === "PUBLISHED") {
+    throw ApiError.forbidden("No puedes eliminar una experiencia publicada");
+  }
   await prisma.experience.delete({ where: { id } });
   await recordAudit({
-    userId: actorId,
+    userId: actor.id,
     action: "EXPERIENCE_DELETE",
     entity: "Experience",
     entityId: id,

@@ -1,9 +1,11 @@
 import { prisma } from "../database/prisma.js";
 import { ROLES } from "../config/constants.js";
 import { env } from "../config/env.js";
+import { ACCOUNT_REMOVED_MESSAGE, isAccountRemoved } from "../utils/account.js";
 import { ApiError } from "../utils/api-error.js";
 import { hashPassword, verifyPassword } from "../utils/password.js";
 import { publicUser } from "../utils/serializers.js";
+import { getCachedProfile } from "../utils/auth-cache.js";
 import { recordAudit } from "./audit.service.js";
 import { sendPasswordResetEmail, sendVerificationEmail } from "./email.service.js";
 import { createRawToken, hashToken } from "./token.service.js";
@@ -102,6 +104,10 @@ export async function loginUser(input: { email: string; password: string }) {
     throw ApiError.unauthorized("Credenciales incorrectas");
   }
 
+  if (isAccountRemoved(user)) {
+    throw ApiError.forbidden(ACCOUNT_REMOVED_MESSAGE);
+  }
+
   if (user.status !== "ACTIVE") {
     throw ApiError.forbidden("Tu cuenta está inactiva. Contacta a soporte.");
   }
@@ -122,16 +128,40 @@ export async function loginUser(input: { email: string; password: string }) {
 }
 
 export async function getProfile(userId: string) {
+  const cached = getCachedProfile(userId);
+  if (cached) {
+    return {
+      id: cached.id,
+      name: cached.name,
+      email: cached.email,
+      emailVerified: cached.emailVerified,
+      status: cached.status,
+      role: cached.role,
+      createdAt: cached.createdAt,
+      permissions: cached.permissions,
+    };
+  }
+
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    include: {
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      emailVerified: true,
+      status: true,
+      deletedAt: true,
+      createdAt: true,
       role: {
-        include: { permissions: { include: { permission: true } } },
+        select: {
+          name: true,
+          permissions: { select: { permission: { select: { name: true } } } },
+        },
       },
     },
   });
 
-  if (!user) {
+  if (!user || isAccountRemoved(user)) {
     throw ApiError.notFound("Usuario no encontrado");
   }
 
@@ -143,7 +173,7 @@ export async function getProfile(userId: string) {
 
 export async function requestPasswordReset(email: string) {
   const user = await prisma.user.findUnique({ where: { email } });
-  if (!user) {
+  if (!user || isAccountRemoved(user)) {
     return { accepted: true };
   }
 
@@ -168,6 +198,14 @@ export async function resetPassword(token: string, password: string) {
   });
 
   if (!record || record.usedAt || record.expiresAt < new Date()) {
+    throw ApiError.badRequest("El enlace de recuperación no es válido o expiró");
+  }
+
+  const owner = await prisma.user.findUnique({
+    where: { id: record.userId },
+    select: { deletedAt: true },
+  });
+  if (!owner || isAccountRemoved(owner)) {
     throw ApiError.badRequest("El enlace de recuperación no es válido o expiró");
   }
 

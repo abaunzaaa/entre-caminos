@@ -1,4 +1,5 @@
-import { api, setAccessToken } from "./api";
+import axios from "axios";
+import { api, clearSession, getAccessToken, refreshAccessToken, setAccessToken, setStoredUser } from "./api";
 import type { ApiResponse, PublicUser } from "../types";
 
 export async function registerAccount(payload: {
@@ -14,6 +15,9 @@ export async function registerAccount(payload: {
   if (data.data.accessToken) {
     setAccessToken(data.data.accessToken);
   }
+  if (data.data.user) {
+    setStoredUser(data.data.user);
+  }
   return data.data;
 }
 
@@ -23,17 +27,39 @@ export async function loginAccount(payload: { email: string; password: string })
     payload,
   );
   setAccessToken(data.data.accessToken);
+  setStoredUser(data.data.user);
   return data.data;
 }
 
 export async function logoutAccount() {
-  await api.post("/auth/logout");
-  setAccessToken(null);
+  try {
+    await api.post("/auth/logout", undefined, { skipAuthRefresh: true });
+  } finally {
+    clearSession();
+  }
 }
 
 export async function getMe() {
   const { data } = await api.get<ApiResponse<{ user: PublicUser }>>("/auth/me");
+  setStoredUser(data.data.user);
   return data.data.user;
+}
+
+export async function restoreSession() {
+  if (!getAccessToken()) {
+    await refreshAccessToken({ silent: true });
+  }
+  if (!getAccessToken()) {
+    return null;
+  }
+  try {
+    return await getMe();
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
+      return null;
+    }
+    throw error;
+  }
 }
 
 export async function forgotPassword(email: string) {

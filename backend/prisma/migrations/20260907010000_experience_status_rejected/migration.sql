@@ -1,0 +1,2 @@
+-- AlterEnum
+ALTER TYPE "ExperienceStatus" ADD VALUE IF NOT EXISTS 'REJECTED';

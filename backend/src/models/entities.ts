@@ -2,4 +2,4 @@
 
 export type UserStatus = "ACTIVE" | "INACTIVE" | "SUSPENDED";
 export type CategoryStatus = "ACTIVE" | "INACTIVE";
-export type ExperienceStatus = "DRAFT" | "PENDING" | "PUBLISHED" | "ARCHIVED";
+export type ExperienceStatus = "DRAFT" | "PENDING" | "PUBLISHED" | "ARCHIVED" | "REJECTED";

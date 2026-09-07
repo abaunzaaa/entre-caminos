@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { ChevronDown, Search } from "lucide-react";
 import { Button } from "../../components/ui/Button";
 import { ExperienceCatalogCard } from "../../components/admin/ExperienceCatalogCard";
 import { Panel } from "../../components/admin/Panel";
+import { useAuth } from "../../hooks/useAuth";
 import {
   changeExperienceStatus,
   deleteExperience,
@@ -62,10 +63,15 @@ function FilterMenu<T extends string>({
 }
 
 export function ExperiencesPage() {
+  const { hasPermission } = useAuth();
+  const canReview = hasPermission("experiences.review");
+  const [searchParams, setSearchParams] = useSearchParams();
   const [experiences, setExperiences] = useState<Experience[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [error, setError] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive" | "pending">(
+    searchParams.get("vista") === "pendientes" && canReview ? "pending" : "all",
+  );
   const [categoryFilter, setCategoryFilter] = useState("");
   const [dateSort, setDateSort] = useState<"newest" | "oldest">("newest");
   const [query, setQuery] = useState("");
@@ -89,6 +95,17 @@ export function ExperiencesPage() {
   useEffect(() => {
     load().catch((err) => setError(getApiErrorMessage(err, "No se pudieron cargar las experiencias")));
   }, []);
+
+  useEffect(() => {
+    if (searchParams.get("vista") === "pendientes" && canReview) {
+      setStatusFilter("pending");
+      return;
+    }
+    if (searchParams.get("vista") === "pendientes" && !canReview) {
+      setStatusFilter("all");
+      setSearchParams({}, { replace: true });
+    }
+  }, [canReview, searchParams, setSearchParams]);
 
   useEffect(() => {
     function onPointerDown(event: MouseEvent) {
@@ -171,7 +188,10 @@ export function ExperiencesPage() {
       if (statusFilter === "active" && experience.status !== "PUBLISHED") {
         return false;
       }
-      if (statusFilter === "inactive" && experience.status === "PUBLISHED") {
+      if (statusFilter === "inactive" && experience.status !== "ARCHIVED" && experience.status !== "REJECTED" && experience.status !== "DRAFT") {
+        return false;
+      }
+      if (statusFilter === "pending" && experience.status !== "PENDING") {
         return false;
       }
       if (categoryFilter && experience.categoryId !== categoryFilter) {
@@ -183,8 +203,8 @@ export function ExperiencesPage() {
       return true;
     });
     return [...next].sort((left, right) => {
-      const leftTime = left.createdAt ? new Date(left.createdAt).getTime() : 0;
-      const rightTime = right.createdAt ? new Date(right.createdAt).getTime() : 0;
+      const leftTime = new Date(left.submittedAt || left.createdAt || 0).getTime();
+      const rightTime = new Date(right.submittedAt || right.createdAt || 0).getTime();
       return dateSort === "oldest" ? leftTime - rightTime : rightTime - leftTime;
     });
   }, [categoryFilter, dateSort, experiences, query, statusFilter]);
@@ -229,30 +249,51 @@ export function ExperiencesPage() {
         <section className="dash-split__panel" aria-label="Experiencias registradas">
           <div>
             <h2 className="dash-section__title">Experiencias registradas</h2>
-            <p className="dash-section__lead">Consulta, edita y publica las experiencias del catálogo.</p>
+            <p className="dash-section__lead">Consulta, edita y envía a revisión las experiencias del catálogo.</p>
           </div>
           <div className="dash-team-filters" role="toolbar" aria-label="Filtros de experiencias" ref={filtersRef}>
             <button
               type="button"
               className={`dash-team-filters__chip${statusFilter === "all" ? " is-active" : ""}`}
-              onClick={() => setStatusFilter("all")}
+              onClick={() => {
+                setStatusFilter("all");
+                setSearchParams({}, { replace: true });
+              }}
             >
               Ver todas
             </button>
             <button
               type="button"
               className={`dash-team-filters__chip${statusFilter === "active" ? " is-active" : ""}`}
-              onClick={() => setStatusFilter("active")}
+              onClick={() => {
+                setStatusFilter("active");
+                setSearchParams({}, { replace: true });
+              }}
             >
               Activas
             </button>
             <button
               type="button"
               className={`dash-team-filters__chip${statusFilter === "inactive" ? " is-active" : ""}`}
-              onClick={() => setStatusFilter("inactive")}
+              onClick={() => {
+                setStatusFilter("inactive");
+                setSearchParams({}, { replace: true });
+              }}
             >
               Inactivas
             </button>
+            {canReview ? (
+              <button
+                type="button"
+                className={`dash-team-filters__chip${statusFilter === "pending" ? " is-active" : ""}`}
+                onClick={() => {
+                  setStatusFilter("pending");
+                  setSearchParams({ vista: "pendientes" }, { replace: true });
+                }}
+              >
+                Pendientes de revisión
+              </button>
+            ) : null}
             <FilterMenu
               label={selectedCategoryName || "Categoría"}
               active={Boolean(categoryFilter) || openMenu === "category"}
@@ -313,7 +354,11 @@ export function ExperiencesPage() {
             </Panel>
           ) : visibleExperiences.length === 0 ? (
             <Panel className="dash-empty">
-              <p>No hay coincidencias con estos filtros.</p>
+              <p>
+                {statusFilter === "pending"
+                  ? "No hay experiencias pendientes de revisión."
+                  : "No hay coincidencias con estos filtros."}
+              </p>
             </Panel>
           ) : (
             <div className="dash-exps-catalog">
@@ -325,6 +370,7 @@ export function ExperiencesPage() {
                     experience={experience}
                     statusOpen={openMenu === statusMenu}
                     statusBusy={statusBusyId === experience.id}
+                    canReview={canReview}
                     onToggleStatus={() => setOpenMenu((current) => (current === statusMenu ? null : statusMenu))}
                     onChangeStatus={(status) => void onChangeStatus(experience, status)}
                     onDelete={() => setPendingDelete(experience)}

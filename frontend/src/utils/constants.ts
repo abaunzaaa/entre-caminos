@@ -1,1 +1,1 @@
-export const EXPERIENCE_STATUSES = ["DRAFT", "PENDING", "PUBLISHED", "ARCHIVED"] as const;
+export const EXPERIENCE_STATUSES = ["DRAFT", "PENDING", "PUBLISHED", "ARCHIVED", "REJECTED"] as const;

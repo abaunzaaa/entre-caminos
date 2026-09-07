@@ -69,10 +69,17 @@ const PERMISSION_COPY: Record<string, PermissionCopy> = {
   },
   "experiences.manage": {
     title: "Gestionar experiencias",
-    description: "Permite crear, editar y administrar experiencias.",
+    description: "Permite crear, editar y enviar experiencias a revisión.",
     capability: "Experiencias",
     group: "experiencias",
     icon: Compass,
+  },
+  "experiences.review": {
+    title: "Revisar y aprobar experiencias",
+    description: "Permite revisar, aprobar o rechazar experiencias enviadas por el equipo.",
+    capability: "Revisión de experiencias",
+    group: "experiencias",
+    icon: Shield,
   },
   "users.view": {
     title: "Consultar usuarios",

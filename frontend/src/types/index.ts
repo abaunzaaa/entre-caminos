@@ -21,7 +21,7 @@ export type Category = {
   _count?: { experiences: number };
 };
 
-export type ExperienceStatus = "DRAFT" | "PENDING" | "PUBLISHED" | "ARCHIVED";
+export type ExperienceStatus = "DRAFT" | "PENDING" | "PUBLISHED" | "ARCHIVED" | "REJECTED";
 
 export type Experience = {
   id: string;
@@ -36,8 +36,26 @@ export type Experience = {
   imageUrls?: string[];
   status: ExperienceStatus;
   createdBy: string;
+  submittedAt?: string | null;
+  rejectionReason?: string | null;
+  reviewedAt?: string | null;
+  reviewedById?: string | null;
   createdAt: string;
   category?: Category;
+  creator?: { id: string; name: string; email: string };
+  reviewedBy?: { id: string; name: string; email: string } | null;
+};
+
+export type AdminNotification = {
+  id: string;
+  type: string;
+  title: string;
+  body: string;
+  link: string | null;
+  entity: string | null;
+  entityId: string | null;
+  readAt: string | null;
+  createdAt: string;
 };
 
 export type Role = {
@@ -65,6 +83,7 @@ export type DashboardStats = {
   createdExperiences?: number;
   administrators?: PublicUser[];
   recentCategories?: Category[];
+  recentExperiences?: Experience[];
   recentLogs?: Array<{
     id: string;
     action: string;

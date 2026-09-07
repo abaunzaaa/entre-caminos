@@ -1,9 +1,10 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ChevronDown, ImagePlus, MapPin, X } from "lucide-react";
+import { ChevronDown, ImagePlus, MapPin, Plus, X } from "lucide-react";
 import { ExperienceLocationMap } from "../../components/admin/ExperienceLocationMap";
 import { Button } from "../../components/ui/Button";
 import { Input, Textarea } from "../../components/ui/Input";
+import { useAuth } from "../../hooks/useAuth";
 import {
   COLOMBIA_DEPARTMENTS,
   composeLocation,
@@ -14,6 +15,7 @@ import {
   createExperience,
   getAdminCategories,
   getAdminExperience,
+  submitExperience,
   updateExperience,
   uploadImage,
 } from "../../services/catalog.service";
@@ -23,15 +25,6 @@ import { geocodeColombia } from "../../utils/geocode";
 import type { Category, ExperienceStatus } from "../../types";
 import superadmIlus2 from "../../assets/superadm-ilus2.png";
 import "../../styles/admin-access.css";
-
-const STATUS_LABEL: Record<ExperienceStatus, string> = {
-  DRAFT: "Borrador",
-  PENDING: "En revisión",
-  PUBLISHED: "Publicada",
-  ARCHIVED: "Archivada",
-};
-
-const STATUSES = Object.keys(STATUS_LABEL) as ExperienceStatus[];
 
 function FieldPicker({
   label,
@@ -143,12 +136,15 @@ function FieldPicker({
 export function ExperienceFormPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { hasPermission } = useAuth();
+  const canReview = hasPermission("experiences.review");
   const [categories, setCategories] = useState<Category[]>([]);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
-  const [status, setStatus] = useState<ExperienceStatus>("DRAFT");
+  const [status, setStatus] = useState<ExperienceStatus>("PENDING");
+  const [rejectionReason, setRejectionReason] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [categoryId, setCategoryId] = useState("");
@@ -160,10 +156,10 @@ export function ExperienceFormPage() {
   const [longitude, setLongitude] = useState("");
   const [pinAdjusted, setPinAdjusted] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
+  const [overIndex, setOverIndex] = useState<number | null>(null);
   const [categoryOpen, setCategoryOpen] = useState(false);
-  const [statusOpen, setStatusOpen] = useState(false);
   const categoryRef = useRef<HTMLDivElement>(null);
-  const statusRef = useRef<HTMLDivElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
   const selectedDepartment = findDepartment(department);
@@ -198,6 +194,7 @@ export function ExperienceFormPage() {
           setLongitude(experience.longitude ? String(experience.longitude) : "");
           setImageUrls(experienceImages(experience));
           setStatus(experience.status);
+          setRejectionReason(experience.rejectionReason ?? "");
         })
         .catch((err) => setError(getApiErrorMessage(err, "No se pudo cargar")));
     }
@@ -208,9 +205,6 @@ export function ExperienceFormPage() {
       const target = event.target as Node;
       if (!categoryRef.current?.contains(target)) {
         setCategoryOpen(false);
-      }
-      if (!statusRef.current?.contains(target)) {
-        setStatusOpen(false);
       }
     }
     document.addEventListener("mousedown", onPointerDown);
@@ -262,8 +256,22 @@ export function ExperienceFormPage() {
     }
   }
 
-  async function onSubmit(event: FormEvent) {
-    event.preventDefault();
+  function moveImage(from: number, to: number) {
+    if (!Number.isInteger(from) || !Number.isInteger(to) || from === to) {
+      return;
+    }
+    setImageUrls((current) => {
+      if (from < 0 || to < 0 || from >= current.length || to >= current.length) {
+        return current;
+      }
+      const next = [...current];
+      const [item] = next.splice(from, 1);
+      next.splice(to, 0, item);
+      return next;
+    });
+  }
+
+  async function persist(submitToReview: boolean) {
     setError("");
     if (!categoryId) {
       setError("Selecciona una categoría.");
@@ -271,6 +279,10 @@ export function ExperienceFormPage() {
     }
     if (!department || !municipality || !address.trim()) {
       setError("Completa departamento, municipio y dirección.");
+      return;
+    }
+    if (!imageUrls.length) {
+      setError("Agrega al menos una imagen para enviar la experiencia a revisión.");
       return;
     }
     const payload = {
@@ -283,12 +295,14 @@ export function ExperienceFormPage() {
       longitude: longitude ? Number(longitude) : null,
       imageUrl: imageUrls[0] || null,
       imageUrls,
-      status,
     };
     try {
       setSaving(true);
       if (id) {
         await updateExperience(id, payload);
+        if (submitToReview && (status === "REJECTED" || status === "DRAFT" || status === "ARCHIVED")) {
+          await submitExperience(id);
+        }
       } else {
         await createExperience(payload);
       }
@@ -300,6 +314,11 @@ export function ExperienceFormPage() {
     }
   }
 
+  async function onSubmit(event: FormEvent) {
+    event.preventDefault();
+    await persist(!id || status === "REJECTED" || status === "DRAFT");
+  }
+
   return (
     <div className="dash dash--exps">
       <article className="dash-profile">
@@ -309,8 +328,8 @@ export function ExperienceFormPage() {
             <p className="dash-profile__row">
               <span>
                 {id
-                  ? "Actualiza los datos de esta experiencia en el catálogo."
-                  : "Completa la información para publicar un nuevo plan en Entre Caminos."}
+                  ? "Actualiza los datos de esta experiencia."
+                  : "Completa la información para enviarla a revisión."}
               </span>
             </p>
           </div>
@@ -428,10 +447,12 @@ export function ExperienceFormPage() {
               required
             />
             <div
-              className={`admin-dropzone dash-exps-dropzone${dragOver ? " is-over" : ""}${uploading ? " is-busy" : ""}`}
+              className={`admin-dropzone dash-exps-dropzone${imageUrls.length ? " is-gallery" : ""}${dragOver ? " is-over" : ""}${uploading ? " is-busy" : ""}`}
               onDragOver={(event) => {
                 event.preventDefault();
-                setDragOver(true);
+                if (event.dataTransfer.types.includes("Files")) {
+                  setDragOver(true);
+                }
               }}
               onDragLeave={(event) => {
                 if (!event.currentTarget.contains(event.relatedTarget as Node)) {
@@ -441,32 +462,116 @@ export function ExperienceFormPage() {
               onDrop={(event) => {
                 event.preventDefault();
                 setDragOver(false);
+                setDraggingIndex(null);
+                setOverIndex(null);
                 if (event.dataTransfer.files.length) {
                   void onFiles(event.dataTransfer.files);
                 }
               }}
             >
-              <button
-                type="button"
-                className="dash-exps-dropzone__hit"
-                disabled={uploading}
-                aria-label="Agregar imágenes de la experiencia"
-                onClick={() => imageInputRef.current?.click()}
-              >
-                <span className="dash-exps-dropzone__icon" aria-hidden="true">
-                  <ImagePlus size={22} strokeWidth={1.75} />
-                </span>
-                <span className="dash-exps-dropzone__copy">
-                  <span className="dash-exps-dropzone__title">Agrega imágenes de tu experiencia</span>
-                  <span className="dash-exps-dropzone__lead">
-                    Sube una o varias fotos para mostrar mejor esta experiencia
+              {imageUrls.length === 0 ? (
+                <button
+                  type="button"
+                  className="dash-exps-dropzone__hit"
+                  disabled={uploading}
+                  aria-label="Agregar imágenes"
+                  onClick={() => imageInputRef.current?.click()}
+                >
+                  <span className="dash-exps-dropzone__icon" aria-hidden="true">
+                    <ImagePlus size={22} strokeWidth={1.75} />
                   </span>
-                  <span className="dash-exps-dropzone__hint">
-                    Formatos permitidos: JPG, PNG o WebP · Máximo 5 MB cada una
+                  <span className="dash-exps-dropzone__copy">
+                    <span className="dash-exps-dropzone__title">Agrega imágenes</span>
+                    <span className="dash-exps-dropzone__lead">Sube fotos para mostrar tu experiencia</span>
+                    {uploading ? <span className="dash-exps-dropzone__status">Subiendo…</span> : null}
                   </span>
-                  {uploading ? <span className="dash-exps-dropzone__status">Subiendo…</span> : null}
-                </span>
-              </button>
+                </button>
+              ) : (
+                <ul className="dash-exps-thumbs">
+                  {imageUrls.map((url, index) => (
+                    <li
+                      key={url}
+                      aria-label={index === 0 ? "Imagen principal" : `Imagen ${index + 1}`}
+                      className={`dash-exps-thumbs__item${draggingIndex === index ? " is-dragging" : ""}${overIndex === index ? " is-over" : ""}`}
+                      draggable={!uploading}
+                      onDragStart={(event) => {
+                        event.dataTransfer.effectAllowed = "move";
+                        event.dataTransfer.setData("text/plain", String(index));
+                        setDraggingIndex(index);
+                      }}
+                      onDragOver={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        event.dataTransfer.dropEffect = "move";
+                        if (overIndex !== index) {
+                          setOverIndex(index);
+                        }
+                      }}
+                      onDragLeave={() => {
+                        setOverIndex((current) => (current === index ? null : current));
+                      }}
+                      onDrop={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        setDragOver(false);
+                        if (event.dataTransfer.files.length) {
+                          void onFiles(event.dataTransfer.files);
+                        } else {
+                          moveImage(Number(event.dataTransfer.getData("text/plain")), index);
+                        }
+                        setDraggingIndex(null);
+                        setOverIndex(null);
+                      }}
+                      onDragEnd={() => {
+                        setDraggingIndex(null);
+                        setOverIndex(null);
+                      }}
+                    >
+                      <img src={mediaUrl(url)} alt="" draggable={false} />
+                      {index === 0 ? <span className="dash-exps-thumbs__badge">Principal</span> : null}
+                      <button
+                        type="button"
+                        className="dash-exps-thumbs__remove"
+                        aria-label="Quitar imagen"
+                        onPointerDown={(event) => event.stopPropagation()}
+                        onClick={() => setImageUrls((current) => current.filter((_, itemIndex) => itemIndex !== index))}
+                      >
+                        <X size={12} strokeWidth={2.2} aria-hidden="true" />
+                      </button>
+                    </li>
+                  ))}
+                  {imageUrls.length < 12 ? (
+                    <li
+                      className="dash-exps-thumbs__item dash-exps-thumbs__add"
+                      onDragOver={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                      }}
+                      onDrop={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        setDragOver(false);
+                        if (event.dataTransfer.files.length) {
+                          void onFiles(event.dataTransfer.files);
+                        } else {
+                          moveImage(Number(event.dataTransfer.getData("text/plain")), imageUrls.length - 1);
+                        }
+                        setDraggingIndex(null);
+                        setOverIndex(null);
+                      }}
+                    >
+                      <button
+                        type="button"
+                        disabled={uploading}
+                        aria-label="Agregar más imágenes"
+                        onClick={() => imageInputRef.current?.click()}
+                      >
+                        {uploading ? "…" : <Plus size={22} strokeWidth={1.9} aria-hidden="true" />}
+                      </button>
+                    </li>
+                  ) : null}
+                </ul>
+              )}
               <input
                 ref={imageInputRef}
                 className="dash-exps-dropzone__input"
@@ -482,23 +587,6 @@ export function ExperienceFormPage() {
                   }
                 }}
               />
-              {imageUrls.length ? (
-                <ul className="dash-exps-thumbs">
-                  {imageUrls.map((url) => (
-                    <li key={url} className="dash-exps-thumbs__item">
-                      <img src={mediaUrl(url)} alt="" />
-                      <button
-                        type="button"
-                        className="dash-exps-thumbs__remove"
-                        aria-label="Quitar imagen"
-                        onClick={() => setImageUrls((current) => current.filter((item) => item !== url))}
-                      >
-                        <X size={12} strokeWidth={2.2} aria-hidden="true" />
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
             </div>
             <div className="dash-exps-form__grid">
               <Input
@@ -510,43 +598,34 @@ export function ExperienceFormPage() {
                 placeholder="0"
                 required
               />
-              <div className="dash-team-role" ref={statusRef}>
-                <span className="dash-team-role__label">Estado</span>
-                <button
-                  type="button"
-                  className={`dash-team-role__trigger${statusOpen ? " is-open" : ""}`}
-                  aria-haspopup="listbox"
-                  aria-expanded={statusOpen}
-                  onClick={() => setStatusOpen((open) => !open)}
-                >
-                  <span>{STATUS_LABEL[status]}</span>
-                  <ChevronDown size={18} strokeWidth={1.7} aria-hidden="true" />
-                </button>
-                <div className={`dash-team-role__menu${statusOpen ? " is-open" : ""}`} role="listbox">
-                  {STATUSES.map((item) => (
-                    <button
-                      key={item}
-                      type="button"
-                      role="option"
-                      aria-selected={status === item}
-                      className={`dash-team-role__option${status === item ? " is-active" : ""}`}
-                      onClick={() => {
-                        setStatus(item);
-                        setStatusOpen(false);
-                      }}
-                    >
-                      {STATUS_LABEL[item]}
-                    </button>
-                  ))}
-                </div>
-              </div>
             </div>
           </div>
+          {status === "REJECTED" && rejectionReason ? (
+            <p className="dash-exps-reject" role="status">
+              Esta experiencia fue rechazada. Motivo: {rejectionReason}
+            </p>
+          ) : null}
+          {status === "PENDING" ? (
+            <p className="dash-exps-reject" role="status">
+              Esta experiencia está pendiente de revisión. Aún no es visible en el catálogo público.
+            </p>
+          ) : null}
           {error && <p className="text-sm text-red-700">{error}</p>}
           <div className="dash-cats-actions">
-            <Button type="submit" disabled={saving || uploading}>
-              {saving ? "Guardando..." : id ? "Guardar cambios" : "Crear experiencia"}
-            </Button>
+            {id && (status === "REJECTED" || status === "DRAFT") ? (
+              <>
+                <Button type="button" variant="secondary" disabled={saving || uploading} onClick={() => void persist(false)}>
+                  {saving ? "Guardando..." : "Guardar cambios"}
+                </Button>
+                <Button type="submit" disabled={saving || uploading}>
+                  {saving ? "Enviando..." : "Enviar nuevamente a revisión"}
+                </Button>
+              </>
+            ) : (
+              <Button type="submit" disabled={saving || uploading || Boolean(id && status === "PUBLISHED" && !canReview)}>
+                {saving ? "Guardando..." : id ? "Guardar cambios" : "Enviar a revisión"}
+              </Button>
+            )}
             <Link
               to="/admin/experiencias"
               className="admin-cta-hover inline-flex items-center justify-center rounded-full border border-forest/15 bg-white px-[22px] py-2 font-poppins text-[13.5px] font-medium tracking-[0.03em] text-ink"
