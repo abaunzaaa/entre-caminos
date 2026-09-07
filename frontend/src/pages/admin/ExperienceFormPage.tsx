@@ -302,7 +302,7 @@ export function ExperienceFormPage() {
       setSaving(true);
       if (id) {
         await updateExperience(id, payload);
-        if (submitToReview && (status === "REJECTED" || status === "DRAFT" || status === "ARCHIVED")) {
+        if (submitToReview && (status === "REJECTED" || status === "DRAFT")) {
           await submitExperience(id);
         }
       } else {

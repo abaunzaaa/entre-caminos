@@ -185,3 +185,175 @@ describe("Revisión de experiencias", () => {
     expect(approvedNote).toBeTruthy();
   });
 });
+
+describe("Listado admin de experiencias publicadas", () => {
+  it("filtra PUBLICADAS, ordena por fecha descendente y limita en la consulta", async () => {
+    const superToken = (await loginAsAdmin()).body.data.accessToken as string;
+    const { adminToken } = await createAndLoginStaffAdmin();
+    const stamp = Date.now();
+    const category = await api()
+      .post("/api/admin/categories")
+      .set("Authorization", `Bearer ${superToken}`)
+      .send({ name: `Publicadas preview ${stamp}` });
+    const categoryId = category.body.data.category.id as string;
+
+    const createdIds: string[] = [];
+    for (let index = 0; index < 6; index += 1) {
+      const created = await api()
+        .post("/api/admin/experiences")
+        .set("Authorization", `Bearer ${superToken}`)
+        .send(experiencePayload(categoryId, `Publicada ${stamp} ${index}`));
+      expect(created.status).toBe(201);
+      expect(created.body.data.experience.status).toBe("PUBLISHED");
+      createdIds.push(created.body.data.experience.id as string);
+    }
+
+    const pending = await api()
+      .post("/api/admin/experiences")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send(experiencePayload(categoryId, `Pendiente ${stamp}`));
+    expect(pending.body.data.experience.status).toBe("PENDING");
+    const pendingId = pending.body.data.experience.id as string;
+
+    const listed = await api()
+      .get("/api/admin/experiences")
+      .query({ status: "PUBLISHED", limit: 3 })
+      .set("Authorization", `Bearer ${superToken}`);
+
+    expect(listed.status).toBe(200);
+    const experiences = listed.body.data.experiences as Array<{
+      id: string;
+      status: string;
+      createdAt: string;
+    }>;
+    expect(experiences.length).toBeLessThanOrEqual(3);
+    expect(experiences.every((item) => item.status === "PUBLISHED")).toBe(true);
+    expect(experiences.some((item) => item.id === pendingId)).toBe(false);
+    expect(experiences.some((item) => item.id === createdIds[createdIds.length - 1])).toBe(true);
+    expect(experiences.some((item) => item.id === createdIds[0])).toBe(false);
+
+    const times = experiences.map((item) => new Date(item.createdAt).getTime());
+    expect(times).toEqual([...times].sort((left, right) => right - left));
+
+    const pendingListed = await api()
+      .get("/api/admin/experiences")
+      .query({ status: "PENDING", limit: 3 })
+      .set("Authorization", `Bearer ${superToken}`);
+    expect(pendingListed.status).toBe(200);
+    const pendingExperiences = pendingListed.body.data.experiences as Array<{ id: string; status: string }>;
+    expect(pendingExperiences.length).toBeLessThanOrEqual(3);
+    expect(pendingExperiences.every((item) => item.status === "PENDING")).toBe(true);
+    expect(pendingExperiences.some((item) => item.id === pendingId)).toBe(true);
+    expect(pendingExperiences.some((item) => createdIds.includes(item.id))).toBe(false);
+  });
+});
+
+describe("Disponibilidad activa/inactiva", () => {
+  it("oculta una experiencia inactiva del catálogo público y la restaura al activarla", async () => {
+    const superToken = (await loginAsAdmin()).body.data.accessToken as string;
+    const stamp = Date.now();
+    const category = await api()
+      .post("/api/admin/categories")
+      .set("Authorization", `Bearer ${superToken}`)
+      .send({ name: `Disponibilidad ${stamp}` });
+    const categoryId = category.body.data.category.id as string;
+
+    const created = await api()
+      .post("/api/admin/experiences")
+      .set("Authorization", `Bearer ${superToken}`)
+      .send(experiencePayload(categoryId, `Activa pública ${stamp}`));
+    expect(created.status).toBe(201);
+    expect(created.body.data.experience.status).toBe("PUBLISHED");
+    const id = created.body.data.experience.id as string;
+
+    const publicBefore = await api().get("/api/experiences");
+    expect((publicBefore.body.data.experiences as Array<{ id: string }>).some((item) => item.id === id)).toBe(true);
+    const featuredBefore = await api().get("/api/experiences/featured");
+    expect((featuredBefore.body.data.experiences as Array<{ id: string }>).some((item) => item.id === id)).toBe(true);
+    expect((await api().get(`/api/experiences/${id}`)).status).toBe(200);
+
+    const deactivated = await api()
+      .patch(`/api/admin/experiences/${id}/status`)
+      .set("Authorization", `Bearer ${superToken}`)
+      .send({ status: "ARCHIVED" });
+    expect(deactivated.status).toBe(200);
+    expect(deactivated.body.data.experience.status).toBe("ARCHIVED");
+    expect(deactivated.body.data.experience.id).toBe(id);
+
+    const publicAfter = await api().get("/api/experiences");
+    expect((publicAfter.body.data.experiences as Array<{ id: string }>).some((item) => item.id === id)).toBe(false);
+    const featuredAfter = await api().get("/api/experiences/featured");
+    expect((featuredAfter.body.data.experiences as Array<{ id: string }>).some((item) => item.id === id)).toBe(false);
+    expect((await api().get(`/api/experiences/${id}`)).status).toBe(404);
+
+    const adminList = await api().get("/api/admin/experiences").set("Authorization", `Bearer ${superToken}`);
+    expect((adminList.body.data.experiences as Array<{ id: string; status: string }>).some((item) => item.id === id && item.status === "ARCHIVED")).toBe(true);
+
+    const publicCategory = await api().get("/api/categories");
+    const publicCat = (publicCategory.body.data.categories as Array<{ id: string; _count?: { experiences: number } }>).find(
+      (item) => item.id === categoryId,
+    );
+    expect(publicCat?._count?.experiences ?? 0).toBe(0);
+
+    const restored = await api()
+      .patch(`/api/admin/experiences/${id}/status`)
+      .set("Authorization", `Bearer ${superToken}`)
+      .send({ status: "PUBLISHED" });
+    expect(restored.status).toBe(200);
+    expect(restored.body.data.experience.status).toBe("PUBLISHED");
+    expect((await api().get(`/api/experiences/${id}`)).status).toBe(200);
+    expect(
+      ((await api().get("/api/experiences")).body.data.experiences as Array<{ id: string }>).some((item) => item.id === id),
+    ).toBe(true);
+  });
+
+  it("no permite desactivar una experiencia en revisión y sí permite que el administrador desactive la suya ya publicada", async () => {
+    const { adminToken, superToken } = await createAndLoginStaffAdmin();
+    const stamp = Date.now();
+    const category = await api()
+      .post("/api/admin/categories")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ name: `Revisión disponibilidad ${stamp}` });
+    const categoryId = category.body.data.category.id as string;
+
+    const pending = await api()
+      .post("/api/admin/experiences")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send(experiencePayload(categoryId, `Pendiente disponibilidad ${stamp}`));
+    expect(pending.body.data.experience.status).toBe("PENDING");
+    const pendingId = pending.body.data.experience.id as string;
+
+    const blockedArchive = await api()
+      .patch(`/api/admin/experiences/${pendingId}/status`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ status: "ARCHIVED" });
+    expect(blockedArchive.status).toBe(400);
+
+    const blockedPublish = await api()
+      .patch(`/api/admin/experiences/${pendingId}/status`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ status: "PUBLISHED" });
+    expect(blockedPublish.status).toBe(403);
+
+    const approved = await api()
+      .post(`/api/admin/experiences/${pendingId}/approve`)
+      .set("Authorization", `Bearer ${superToken}`);
+    expect(approved.body.data.experience.status).toBe("PUBLISHED");
+
+    const deactivated = await api()
+      .patch(`/api/admin/experiences/${pendingId}/status`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ status: "ARCHIVED" });
+    expect(deactivated.status).toBe(200);
+    expect(deactivated.body.data.experience.status).toBe("ARCHIVED");
+    expect((await api().get(`/api/experiences/${pendingId}`)).status).toBe(404);
+
+    const reactivated = await api()
+      .patch(`/api/admin/experiences/${pendingId}/status`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ status: "PUBLISHED" });
+    expect(reactivated.status).toBe(200);
+    expect(reactivated.body.data.experience.status).toBe("PUBLISHED");
+    expect((await api().get(`/api/experiences/${pendingId}`)).status).toBe(200);
+  });
+});

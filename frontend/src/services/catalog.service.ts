@@ -126,9 +126,16 @@ export async function deleteCategory(id: string) {
   await api.delete(`/admin/categories/${id}`);
 }
 
-export async function getAdminExperiences(options?: { limit?: number }) {
+export async function getAdminExperiences(options?: { limit?: number; status?: Experience["status"] }) {
+  const params: { limit?: number; status?: Experience["status"] } = {};
+  if (options?.limit) {
+    params.limit = options.limit;
+  }
+  if (options?.status) {
+    params.status = options.status;
+  }
   const { data } = await api.get<ApiResponse<{ experiences: Experience[] }>>("/admin/experiences", {
-    params: options?.limit ? { limit: options.limit } : undefined,
+    params: Object.keys(params).length ? params : undefined,
   });
   return data.data.experiences;
 }

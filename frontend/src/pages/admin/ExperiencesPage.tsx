@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { ChevronDown, Clock, Compass, Plus, Search } from "lucide-react";
-import { CountUp } from "../../components/admin/CountUp";
 import { Button } from "../../components/ui/Button";
 import { ExperienceCatalogCard } from "../../components/admin/ExperienceCatalogCard";
 import { Panel } from "../../components/admin/Panel";
@@ -67,22 +66,22 @@ function FilterMenu<T extends string>({
   );
 }
 
-function pendingReviewTime(experience: Experience) {
-  return new Date(experience.submittedAt || experience.createdAt || 0).getTime();
-}
+const SUMMARY_PREVIEW_LIMIT = 3;
 
-function PendingPreviewCard({ experience }: { experience: Experience }) {
+function SummaryPreviewCard({ experience, meta }: { experience: Experience; meta: string }) {
   const photo = mediaUrl(experienceImages(experience)[0] ?? null);
   return (
     <Link
       to={`/admin/experiencias/${experience.id}/ver`}
-      className="dash-exp-card dash-exps-pending-mini"
-      aria-label={`${experience.title}. En revisión`}
+      className="dash-team-card"
+      aria-label={`${experience.title}. ${meta}`}
     >
-      <img src={photo} alt="" />
-      <div className="dash-exp-card__body">
+      <span className="dash-team-card__avatar">
+        <img src={photo} alt="" />
+      </span>
+      <div className="dash-team-card__info">
         <h3>{experience.title}</h3>
-        <p className="dash-exp-card__meta">En revisión</p>
+        <p>{meta}</p>
       </div>
     </Link>
   );
@@ -93,6 +92,8 @@ export function ExperiencesPage() {
   const canReview = hasPermission("experiences.review");
   const [searchParams, setSearchParams] = useSearchParams();
   const [experiences, setExperiences] = useState<Experience[]>([]);
+  const [pendingPreview, setPendingPreview] = useState<Experience[]>([]);
+  const [publishedPreview, setPublishedPreview] = useState<Experience[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [error, setError] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive" | "pending">(
@@ -103,19 +104,33 @@ export function ExperiencesPage() {
   const [query, setQuery] = useState("");
   const [openMenu, setOpenMenu] = useState<"category" | "sort" | string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<Experience | null>(null);
+  const [pendingDeactivate, setPendingDeactivate] = useState<Experience | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [statusBusyId, setStatusBusyId] = useState("");
   const [toast, setToast] = useState<{ text: string; tone: "success" | "error" } | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const filtersRef = useRef<HTMLDivElement>(null);
 
+  async function refreshSummaryPreviews() {
+    const [pending, published] = await Promise.all([
+      getAdminExperiences({ status: "PENDING", limit: SUMMARY_PREVIEW_LIMIT }),
+      getAdminExperiences({ status: "PUBLISHED", limit: SUMMARY_PREVIEW_LIMIT }),
+    ]);
+    setPendingPreview(pending);
+    setPublishedPreview(published);
+  }
+
   async function load() {
-    const [nextExperiences, nextCategories] = await Promise.all([
+    const [nextExperiences, nextCategories, nextPendingPreview, nextPublishedPreview] = await Promise.all([
       getAdminExperiences(),
       getAdminCategories().catch(() => [] as Category[]),
+      getAdminExperiences({ status: "PENDING", limit: SUMMARY_PREVIEW_LIMIT }),
+      getAdminExperiences({ status: "PUBLISHED", limit: SUMMARY_PREVIEW_LIMIT }),
     ]);
     setExperiences(nextExperiences);
     setCategories(nextCategories);
+    setPendingPreview(nextPendingPreview);
+    setPublishedPreview(nextPublishedPreview);
   }
 
   useEffect(() => {
@@ -154,12 +169,13 @@ export function ExperiencesPage() {
   }, [toast]);
 
   useEffect(() => {
-    if (!pendingDelete) {
+    if (!pendingDelete && !pendingDeactivate) {
       return;
     }
     function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape" && !deleting) {
+      if (event.key === "Escape" && !deleting && !statusBusyId) {
         setPendingDelete(null);
+        setPendingDeactivate(null);
       }
     }
     document.addEventListener("keydown", onKeyDown);
@@ -169,23 +185,50 @@ export function ExperiencesPage() {
       document.removeEventListener("keydown", onKeyDown);
       document.body.style.overflow = previousOverflow;
     };
-  }, [pendingDelete, deleting]);
+  }, [pendingDelete, pendingDeactivate, deleting, statusBusyId]);
 
-  async function onChangeStatus(experience: Experience, status: ExperienceStatus) {
+  async function applyStatusChange(experience: Experience, status: ExperienceStatus) {
     setError("");
     setOpenMenu(null);
     try {
       setStatusBusyId(experience.id);
       const updated = await changeExperienceStatus(experience.id, status);
       setExperiences((current) => current.map((item) => (item.id === updated.id ? { ...item, ...updated } : item)));
-      setToast({ tone: "success", text: "Estado actualizado." });
+      setToast({
+        tone: "success",
+        text:
+          status === "ARCHIVED"
+            ? "Experiencia desactivada. Ya no aparece en el catálogo público."
+            : "Experiencia activada. Ya está visible en el catálogo público.",
+      });
+      setPendingDeactivate(null);
+      await refreshSummaryPreviews().catch(() => undefined);
     } catch (err) {
-      const message = getApiErrorMessage(err, "Para publicar hace falta imagen y ubicación.");
+      const message = getApiErrorMessage(err, "No se pudo actualizar el estado.");
       setError(message);
       setToast({ tone: "error", text: message });
     } finally {
       setStatusBusyId("");
     }
+  }
+
+  function onChangeStatus(experience: Experience, status: ExperienceStatus) {
+    setOpenMenu(null);
+    if (status === experience.status) {
+      return;
+    }
+    if (status === "ARCHIVED") {
+      setPendingDeactivate(experience);
+      return;
+    }
+    void applyStatusChange(experience, status);
+  }
+
+  async function confirmDeactivate() {
+    if (!pendingDeactivate) {
+      return;
+    }
+    await applyStatusChange(pendingDeactivate, "ARCHIVED");
   }
 
   async function confirmDelete() {
@@ -198,6 +241,7 @@ export function ExperiencesPage() {
       await deleteExperience(pendingDelete.id);
       setExperiences((current) => current.filter((item) => item.id !== pendingDelete.id));
       setPendingDelete(null);
+      await refreshSummaryPreviews().catch(() => undefined);
       setToast({ tone: "success", text: "Experiencia eliminada." });
     } catch (err) {
       const message = getApiErrorMessage(err, "No se pudo eliminar");
@@ -207,20 +251,6 @@ export function ExperiencesPage() {
       setDeleting(false);
     }
   }
-
-  const pendingExperiences = useMemo(
-    () =>
-      experiences
-        .filter((experience) => experience.status === "PENDING")
-        .sort((left, right) => pendingReviewTime(right) - pendingReviewTime(left)),
-    [experiences],
-  );
-  const pendingCount = pendingExperiences.length;
-  const pendingPreview = pendingExperiences.slice(0, 3);
-  const publishedCount = useMemo(
-    () => experiences.filter((experience) => experience.status === "PUBLISHED").length,
-    [experiences],
-  );
 
   function scrollToCatalog() {
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -236,7 +266,7 @@ export function ExperiencesPage() {
       if (statusFilter === "active" && experience.status !== "PUBLISHED") {
         return false;
       }
-      if (statusFilter === "inactive" && experience.status !== "ARCHIVED" && experience.status !== "REJECTED" && experience.status !== "DRAFT") {
+      if (statusFilter === "inactive" && experience.status !== "ARCHIVED") {
         return false;
       }
       if (statusFilter === "pending" && experience.status !== "PENDING") {
@@ -287,30 +317,32 @@ export function ExperiencesPage() {
         <article className={`admin-kpi-card dash-exps-summary__pending${pendingPreview.length ? "" : " is-empty"}`}>
           {pendingPreview.length ? (
             <>
-              <p className="admin-kpi-card__label">Pendientes de revisión</p>
-              <p className="dash-exps-summary__lead">Esperando a ser aprobadas</p>
-              <div className="dash-exps-pending-preview" aria-label="Últimas experiencias pendientes de revisión">
+              <div className="dash-exps-pending-empty__head">
+                <span className="dash-kpi__icon" aria-hidden="true">
+                  <Clock size={18} strokeWidth={1.7} />
+                </span>
+                <div className="dash-exps-pending-empty__copy">
+                  <p className="admin-kpi-card__label">Pendientes de revisión</p>
+                  <p className="dash-exps-summary__lead">Últimas en revisión</p>
+                </div>
+              </div>
+              <div className="dash-exps-summary__preview" aria-label="Últimas experiencias pendientes de revisión">
                 {pendingPreview.map((experience) => (
-                  <PendingPreviewCard key={experience.id} experience={experience} />
+                  <SummaryPreviewCard key={experience.id} experience={experience} meta="En revisión" />
                 ))}
               </div>
-              <div className="dash-exps-summary__foot">
-                <p className="admin-kpi-card__value">
-                  <CountUp value={pendingCount} />
-                </p>
-                <div className="dash-exps-summary__action">
-                  {canReview ? (
-                    <Link
-                      to="/admin/experiencias?vista=pendientes"
-                      className="dash-section__glass"
-                      onClick={() => {
-                        window.setTimeout(scrollToCatalog, 40);
-                      }}
-                    >
-                      Gestionar
-                    </Link>
-                  ) : null}
-                </div>
+              <div className="dash-exps-summary__action dash-exps-pending-empty__action">
+                {canReview ? (
+                  <Link
+                    to="/admin/experiencias?vista=pendientes"
+                    className="dash-section__glass"
+                    onClick={() => {
+                      window.setTimeout(scrollToCatalog, 40);
+                    }}
+                  >
+                    Gestionar
+                  </Link>
+                ) : null}
               </div>
             </>
           ) : (
@@ -321,11 +353,8 @@ export function ExperiencesPage() {
                 </span>
                 <div className="dash-exps-pending-empty__copy">
                   <p className="admin-kpi-card__label">Pendientes de revisión</p>
-                  <p className="dash-exps-summary__lead">Esperando a ser aprobadas</p>
+                  <p className="dash-exps-summary__lead">Últimas en revisión</p>
                 </div>
-                <p className="admin-kpi-card__value dash-exps-pending-empty__count">
-                  <CountUp value={pendingCount} />
-                </p>
               </div>
               <div className="dash-exps-pending-empty__body">
                 <div className="dash-exps-pending-empty__visual">
@@ -353,55 +382,83 @@ export function ExperiencesPage() {
         <article className="admin-kpi-card dash-exps-summary__visual" aria-label="Crear experiencia">
           <img src={crearExp} alt="" className="dash-exps-summary__visual-img" />
           <div className="dash-exps-summary__visual-info">
-            <span className="dash-kpi__icon" aria-hidden="true">
-              <Plus size={18} strokeWidth={1.7} />
-            </span>
+            <Link
+              to="/admin/experiencias/nueva"
+              className="dash-section__glass dash-exps-summary__visual-add"
+              aria-label="Añadir experiencia"
+            >
+              <Plus size={18} strokeWidth={1.7} aria-hidden="true" />
+            </Link>
             <div className="dash-exps-summary__visual-info-copy">
               <p className="admin-kpi-card__label">Crear experiencia</p>
-              <p className="dash-exps-summary__lead">Añade un nuevo plan al catálogo de Entre Caminos.</p>
+              <p className="dash-exps-summary__lead">Añade un nuevo plan al catálogo.</p>
             </div>
-          </div>
-          <div className="dash-exps-summary__action dash-exps-summary__visual-action">
-            <Link to="/admin/experiencias/nueva" className="dash-section__glass">
-              Añadir experiencia
-            </Link>
           </div>
         </article>
 
-        <article className="admin-kpi-card dash-exps-summary__published">
-          <div className="dash-exps-pending-empty__head">
-            <span className="dash-kpi__icon" aria-hidden="true">
-              <Compass size={18} strokeWidth={1.7} />
-            </span>
-            <div className="dash-exps-pending-empty__copy">
-              <p className="admin-kpi-card__label">Publicadas</p>
-              <p className="dash-exps-summary__lead">Experiencias disponibles en el catálogo</p>
-            </div>
-            <p className="admin-kpi-card__value dash-exps-pending-empty__count">
-              <CountUp value={publishedCount} />
-            </p>
-          </div>
-          <div className="dash-exps-pending-empty__body">
-            <div className="dash-exps-pending-empty__visual">
-              <img src={sinRevisar2} alt="" />
-            </div>
-            {publishedCount === 0 ? (
-              <p className="dash-exps-pending-empty__msg">No hay experiencias publicadas.</p>
-            ) : null}
-          </div>
-          <div className="dash-exps-summary__action dash-exps-pending-empty__action">
-            <button
-              type="button"
-              className="dash-section__glass"
-              onClick={() => {
-                setStatusFilter("all");
-                setSearchParams({}, { replace: true });
-                window.setTimeout(scrollToCatalog, 40);
-              }}
-            >
-              Ver catálogo
-            </button>
-          </div>
+        <article className={`admin-kpi-card dash-exps-summary__published${publishedPreview.length ? "" : " is-empty"}`}>
+          {publishedPreview.length ? (
+            <>
+              <div className="dash-exps-pending-empty__head">
+                <span className="dash-kpi__icon" aria-hidden="true">
+                  <Compass size={18} strokeWidth={1.7} />
+                </span>
+                <div className="dash-exps-pending-empty__copy">
+                  <p className="admin-kpi-card__label">Publicadas</p>
+                  <p className="dash-exps-summary__lead">Últimas publicadas</p>
+                </div>
+              </div>
+              <div className="dash-exps-summary__preview" aria-label="Últimas experiencias publicadas">
+                {publishedPreview.map((experience) => (
+                  <SummaryPreviewCard key={experience.id} experience={experience} meta="Publicada" />
+                ))}
+              </div>
+              <div className="dash-exps-summary__action dash-exps-pending-empty__action">
+                <button
+                  type="button"
+                  className="dash-section__glass"
+                  onClick={() => {
+                    setStatusFilter("all");
+                    setSearchParams({}, { replace: true });
+                    window.setTimeout(scrollToCatalog, 40);
+                  }}
+                >
+                  Ver catálogo
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="dash-exps-pending-empty__head">
+                <span className="dash-kpi__icon" aria-hidden="true">
+                  <Compass size={18} strokeWidth={1.7} />
+                </span>
+                <div className="dash-exps-pending-empty__copy">
+                  <p className="admin-kpi-card__label">Publicadas</p>
+                  <p className="dash-exps-summary__lead">Últimas publicadas</p>
+                </div>
+              </div>
+              <div className="dash-exps-pending-empty__body">
+                <div className="dash-exps-pending-empty__visual">
+                  <img src={sinRevisar2} alt="" />
+                </div>
+                <p className="dash-exps-pending-empty__msg">No hay experiencias publicadas.</p>
+              </div>
+              <div className="dash-exps-summary__action dash-exps-pending-empty__action">
+                <button
+                  type="button"
+                  className="dash-section__glass"
+                  onClick={() => {
+                    setStatusFilter("all");
+                    setSearchParams({}, { replace: true });
+                    window.setTimeout(scrollToCatalog, 40);
+                  }}
+                >
+                  Ver catálogo
+                </button>
+              </div>
+            </>
+          )}
         </article>
       </section>
 
@@ -541,6 +598,47 @@ export function ExperiencesPage() {
           )}
         </section>
       </section>
+
+      {pendingDeactivate ? (
+        <div
+          className="dash-team-confirm"
+          role="presentation"
+          onClick={() => {
+            if (!statusBusyId) {
+              setPendingDeactivate(null);
+            }
+          }}
+        >
+          <div
+            className="dash-team-confirm__card"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="exp-deactivate-title"
+            aria-describedby="exp-deactivate-copy"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h2 id="exp-deactivate-title" className="dash-team-confirm__title">
+              ¿Seguro que quieres desactivar esta experiencia?
+            </h2>
+            <p id="exp-deactivate-copy" className="dash-team-confirm__lead">
+              Al desactivarla, dejará de estar visible en el catálogo público de Entre Caminos.
+            </p>
+            <div className="dash-team-confirm__actions">
+              <Button
+                type="button"
+                variant="secondary"
+                disabled={Boolean(statusBusyId)}
+                onClick={() => setPendingDeactivate(null)}
+              >
+                Cancelar
+              </Button>
+              <Button type="button" disabled={Boolean(statusBusyId)} onClick={() => void confirmDeactivate()}>
+                {statusBusyId ? "Desactivando..." : "Desactivar"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {pendingDelete ? (
         <div

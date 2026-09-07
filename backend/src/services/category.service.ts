@@ -4,9 +4,16 @@ import { ApiError } from "../utils/api-error.js";
 import { recordAudit } from "./audit.service.js";
 
 export async function listCategories(options?: { includeInactive?: boolean; take?: number }) {
+  const countPublishedOnly = !options?.includeInactive;
   return prisma.category.findMany({
     where: options?.includeInactive ? undefined : { status: "ACTIVE" },
-    include: { _count: { select: { experiences: true } } },
+    include: {
+      _count: {
+        select: {
+          experiences: countPublishedOnly ? { where: { status: "PUBLISHED" } } : true,
+        },
+      },
+    },
     orderBy: options?.take ? { createdAt: "desc" } : { name: "asc" },
     take: options?.take,
   });
@@ -15,7 +22,13 @@ export async function listCategories(options?: { includeInactive?: boolean; take
 export async function getCategory(id: string) {
   const category = await prisma.category.findUnique({
     where: { id },
-    include: { _count: { select: { experiences: true } } },
+    include: {
+      _count: {
+        select: {
+          experiences: { where: { status: "PUBLISHED" } },
+        },
+      },
+    },
   });
 
   if (!category) {

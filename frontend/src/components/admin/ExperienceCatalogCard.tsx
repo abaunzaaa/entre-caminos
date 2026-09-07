@@ -10,12 +10,12 @@ import { TeamInviteCarousel } from "./TeamInviteCarousel";
 const STATUS_LABEL: Record<ExperienceStatus, string> = {
   DRAFT: "Borrador",
   PENDING: "Pendiente de revisión",
-  PUBLISHED: "Publicada",
-  ARCHIVED: "Archivada",
+  PUBLISHED: "Activa",
+  ARCHIVED: "Inactiva",
   REJECTED: "Rechazada",
 };
 
-const REVIEWER_STATUSES: ExperienceStatus[] = ["PUBLISHED", "ARCHIVED"];
+const AVAILABILITY_STATUSES: ExperienceStatus[] = ["PUBLISHED", "ARCHIVED"];
 
 function isCatalogActive(status: ExperienceStatus) {
   return status === "PUBLISHED";
@@ -76,7 +76,7 @@ export function ExperienceCatalogCard({
   const viewLabel = pending && canReview ? "Revisar" : "Ver";
   const canEdit =
     canReview || experience.status === "PENDING" || experience.status === "REJECTED" || experience.status === "DRAFT";
-  const canChangeStatus = canReview && (experience.status === "PUBLISHED" || experience.status === "ARCHIVED");
+  const canChangeStatus = experience.status === "PUBLISHED" || experience.status === "ARCHIVED";
 
   return (
     <article className="dash-exps-tile">
@@ -128,7 +128,7 @@ export function ExperienceCatalogCard({
                   {statusBusy ? "Actualizando..." : "Cambiar estado"}
                 </button>
                 <div className={`dash-team-filters__menu dash-exps-status__menu${statusOpen ? " is-open" : ""}`} role="listbox">
-                  {REVIEWER_STATUSES.map((status) => (
+                  {AVAILABILITY_STATUSES.map((status) => (
                     <button
                       key={status}
                       type="button"

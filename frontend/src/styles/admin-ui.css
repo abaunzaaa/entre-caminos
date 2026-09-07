@@ -1632,49 +1632,56 @@
   pointer-events: none;
 }
 
-.dash-exps-summary__visual-action {
-  position: relative;
-  z-index: 2;
-  justify-content: center;
-  margin-top: auto;
-  padding: 16px 20px 22px;
-}
-
 .dash-exps-summary__visual-info {
   position: absolute;
   z-index: 1;
-  top: 46%;
+  top: 42%;
   left: 50%;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 10px;
-  width: min(20rem, calc(100% - 48px));
-  max-width: calc(100% - 48px);
-  padding: 12px 14px;
+  justify-content: center;
+  gap: 14px;
+  width: min(10.5rem, calc(100% - 56px));
+  max-width: calc(100% - 56px);
+  padding: 0;
+  margin: 0;
   pointer-events: none;
   transform: translate(-50%, -50%);
-  border: 1px solid rgba(255, 255, 255, 0.78);
-  border-radius: 16px;
-  background: rgba(236, 238, 235, 0.58);
-  box-shadow:
-    0 8px 22px rgba(28, 51, 46, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(16px) saturate(1.08);
-  -webkit-backdrop-filter: blur(16px) saturate(1.08);
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
-.dash-exps-summary__visual-info .dash-kpi__icon {
-  background: rgba(255, 255, 255, 0.7);
-  box-shadow: inset 0 0 0 1px rgba(41, 73, 66, 0.06);
+.dash-exps-summary__visual-add {
+  position: relative;
+  z-index: 2;
+  flex: 0 0 auto;
+  width: 36px;
+  min-width: 36px;
+  height: 36px;
+  min-height: 36px;
+  padding: 0;
+  pointer-events: auto;
+  border-radius: 12px;
 }
 
 .dash-exps-summary__visual-info-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   min-width: 0;
+  width: 100%;
+  text-align: center;
 }
 
 .dash-exps-summary__visual-info .admin-kpi-card__label,
 .dash-exps-summary__visual-info .dash-exps-summary__lead {
   min-height: 0;
+  text-align: center;
 }
 
 .dash-exps-summary__visual-info .admin-kpi-card__label {
@@ -1682,16 +1689,13 @@
 }
 
 .dash-exps-summary__visual-info .dash-exps-summary__lead {
-  margin-top: 2px;
+  margin-top: 6px;
 }
 
-.dash-exps-summary__pending {
-  min-width: 0;
-  overflow-x: clip;
-}
-
+.dash-exps-summary__pending,
 .dash-exps-summary__published {
   min-width: 0;
+  overflow-x: clip;
 }
 
 .dash-exps-pending-preview::-webkit-scrollbar {
@@ -1770,7 +1774,7 @@
 }
 
 .dash-exps-summary__pending.is-empty,
-.dash-exps-summary__published {
+.dash-exps-summary__published.is-empty {
   overflow: hidden;
 }
 
@@ -1798,14 +1802,14 @@
   line-height: 1;
 }
 
-.dash-exps-summary__pending.is-empty .admin-kpi-card__label,
-.dash-exps-summary__pending.is-empty .dash-exps-summary__lead,
+.dash-exps-summary__pending .admin-kpi-card__label,
+.dash-exps-summary__pending .dash-exps-summary__lead,
 .dash-exps-summary__published .admin-kpi-card__label,
 .dash-exps-summary__published .dash-exps-summary__lead {
   min-height: 0;
 }
 
-.dash-exps-summary__pending.is-empty .dash-exps-summary__lead,
+.dash-exps-summary__pending .dash-exps-summary__lead,
 .dash-exps-summary__published .dash-exps-summary__lead {
   margin-top: 2px;
 }
@@ -1856,7 +1860,58 @@
 
 .dash-exps-pending-empty__action {
   justify-content: center;
-  margin-top: 4px;
+  margin-top: auto;
+}
+
+.dash-exps-summary__preview {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 8px;
+  min-width: 0;
+  min-height: 0;
+  margin-top: 12px;
+  overflow: hidden;
+}
+
+.dash-exps-summary__pending .dash-team-card,
+.dash-exps-summary__published .dash-team-card {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  min-height: 52px;
+  max-height: 76px;
+  padding: 8px 12px;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 6px 16px rgba(28, 51, 46, 0.05);
+  text-decoration: none;
+  color: inherit;
+}
+
+.dash-exps-summary__pending .dash-team-card__avatar,
+.dash-exps-summary__published .dash-team-card__avatar {
+  width: 42px;
+  height: 42px;
+}
+
+.dash-exps-summary__pending .dash-team-card h3,
+.dash-exps-summary__published .dash-team-card h3 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dash-exps-summary__pending .dash-team-card p,
+.dash-exps-summary__published .dash-team-card p {
+  margin: 3px 0 0;
+  line-height: 1.35;
 }
 
 .dash-exps-summary__foot {
@@ -3298,6 +3353,11 @@
 
   .dash--exps .dash-team-card {
     flex-wrap: wrap;
+  }
+
+  .dash-exps-summary__pending .dash-team-card,
+  .dash-exps-summary__published .dash-team-card {
+    flex-wrap: nowrap;
   }
 
   .dash-team-gallery,

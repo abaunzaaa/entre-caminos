@@ -40,15 +40,21 @@ const experienceListSelect = {
   reviewedBy: { select: { id: true, name: true, email: true } },
 } as const;
 
+const publicCatalogWhere = { status: "PUBLISHED" as const };
+
 function assertCanAccess(experience: { createdBy: string }, actor: AuthUser) {
   if (!canReviewExperiences(actor) && experience.createdBy !== actor.id) {
     throw ApiError.forbidden("Solo puedes consultar tus propias experiencias");
   }
 }
 
+function canManageAvailability(actor: AuthUser, experience: { createdBy: string }) {
+  return canReviewExperiences(actor) || experience.createdBy === actor.id;
+}
+
 export async function listPublicExperiences() {
   return prisma.experience.findMany({
-    where: { status: "PUBLISHED" },
+    where: publicCatalogWhere,
     include: { category: true },
     orderBy: { createdAt: "desc" },
   });
@@ -56,7 +62,7 @@ export async function listPublicExperiences() {
 
 export async function listFeaturedExperiences() {
   return prisma.experience.findMany({
-    where: { status: "PUBLISHED" },
+    where: publicCatalogWhere,
     include: { category: true },
     orderBy: { createdAt: "desc" },
     take: 6,
@@ -75,7 +81,12 @@ export async function listAdminExperiences(
       ...(reviewer ? {} : { createdBy: actor.id }),
     },
     select: experienceListSelect,
-    orderBy: filters?.take ? { createdAt: "desc" } : [{ submittedAt: "desc" }, { createdAt: "desc" }],
+    orderBy:
+      filters?.take && filters.status === "PENDING"
+        ? [{ submittedAt: "desc" }, { createdAt: "desc" }]
+        : filters?.take
+          ? { createdAt: "desc" }
+          : [{ submittedAt: "desc" }, { createdAt: "desc" }],
     take: filters?.take,
   });
 }
@@ -90,7 +101,7 @@ export async function getExperience(id: string, opts?: { publishedOnly?: boolean
     throw ApiError.notFound("Experiencia no encontrada");
   }
 
-  if (opts?.publishedOnly && experience.status !== "PUBLISHED") {
+  if (opts?.publishedOnly && experience.status !== publicCatalogWhere.status) {
     throw ApiError.notFound("Experiencia no encontrada");
   }
 
@@ -265,10 +276,13 @@ export async function submitExperienceForReview(actor: AuthUser, id: string) {
   if (current.status === "PUBLISHED") {
     throw ApiError.badRequest("Esta experiencia ya está publicada");
   }
+  if (current.status === "ARCHIVED") {
+    throw ApiError.badRequest("Reactiva esta experiencia desde Cambiar estado; no la envíes a revisión");
+  }
   if (current.status === "PENDING") {
     return current;
   }
-  if (current.status !== "REJECTED" && current.status !== "DRAFT" && current.status !== "ARCHIVED") {
+  if (current.status !== "REJECTED" && current.status !== "DRAFT") {
     throw ApiError.badRequest("Esta experiencia no se puede enviar a revisión");
   }
 
@@ -411,35 +425,34 @@ export async function changeExperienceStatus(actor: AuthUser, id: string, status
   if (status === "PENDING") {
     return submitExperienceForReview(actor, id);
   }
-  if (status === "PUBLISHED") {
-    if (!canReviewExperiences(actor)) {
-      throw ApiError.forbidden("Las experiencias se publican al aprobarlas, no cambiando el estado manualmente");
-    }
-    const current = await getExperience(id);
-    if (current.status !== "ARCHIVED") {
-      throw ApiError.forbidden("Las experiencias se publican al aprobarlas, no cambiando el estado manualmente");
-    }
-    requirePublishFields(current.imageUrl, current.location);
-    const experience = await prisma.experience.update({
-      where: { id },
-      data: { status: "PUBLISHED" },
-      include: experienceInclude,
-    });
-    await recordAudit({
-      userId: actor.id,
-      action: "EXPERIENCE_STATUS_RESTORED",
-      entity: "Experience",
-      entityId: experience.id,
-    });
-    return experience;
-  }
-  if (status === "ARCHIVED") {
-    if (!canReviewExperiences(actor)) {
-      throw ApiError.forbidden("No puedes archivar experiencias");
-    }
-    const current = await getExperience(id);
+  if (status === "PUBLISHED" || status === "ARCHIVED") {
+    const current = await getExperience(id, { actor });
     if (current.status !== "PUBLISHED" && current.status !== "ARCHIVED") {
-      throw ApiError.badRequest("Solo se pueden archivar experiencias publicadas");
+      if (status === "PUBLISHED") {
+        throw ApiError.forbidden("Las experiencias se publican al aprobarlas, no cambiando el estado manualmente");
+      }
+      throw ApiError.badRequest("Solo se puede desactivar una experiencia ya publicada");
+    }
+    if (!canManageAvailability(actor, current)) {
+      throw ApiError.forbidden("No puedes cambiar la disponibilidad de esta experiencia");
+    }
+    if (status === current.status) {
+      return current;
+    }
+    if (status === "PUBLISHED") {
+      requirePublishFields(current.imageUrl, current.location);
+      const experience = await prisma.experience.update({
+        where: { id },
+        data: { status: "PUBLISHED" },
+        include: experienceInclude,
+      });
+      await recordAudit({
+        userId: actor.id,
+        action: "EXPERIENCE_STATUS_RESTORED",
+        entity: "Experience",
+        entityId: experience.id,
+      });
+      return experience;
     }
     const experience = await prisma.experience.update({
       where: { id },

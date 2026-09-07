@@ -17,8 +17,8 @@ import "../../styles/admin-access.css";
 const STATUS_LABEL: Record<ExperienceStatus, string> = {
   DRAFT: "Borrador",
   PENDING: "Pendiente de revisión",
-  PUBLISHED: "Publicada",
-  ARCHIVED: "Archivada",
+  PUBLISHED: "Activa",
+  ARCHIVED: "Inactiva",
   REJECTED: "Rechazada",
 };
 
@@ -153,8 +153,7 @@ export function ExperiencePreviewPage() {
                 <StatusDot active={Boolean(experience.category?.name)}>
                   {experience.category?.name || "Sin categoría"}
                 </StatusDot>
-                <StatusDot active={active}>{active ? "Activa" : STATUS_LABEL[experience.status]}</StatusDot>
-                <StatusDot>{STATUS_LABEL[experience.status]}</StatusDot>
+                <StatusDot active={active}>{STATUS_LABEL[experience.status]}</StatusDot>
               </div>
               <h2>{experience.title}</h2>
               <p className="dash-exps-preview-hero__price">{formatPrice(experience.price)}</p>
