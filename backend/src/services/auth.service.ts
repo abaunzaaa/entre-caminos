@@ -1,5 +1,5 @@
 import { prisma } from "../database/prisma.js";
-import { ROLES } from "../config/constants.js";
+import { PASSWORD_RESET_TTL_LABEL, PASSWORD_RESET_TTL_MS, ROLES } from "../config/constants.js";
 import { env } from "../config/env.js";
 import { ACCOUNT_REMOVED_MESSAGE, isAccountRemoved } from "../utils/account.js";
 import { ApiError } from "../utils/api-error.js";
@@ -33,7 +33,7 @@ export async function registerUser(input: { name: string; email: string; passwor
   const passwordHash = await hashPassword(input.password);
   const { raw, hash } = createRawToken();
 
-  let user: Awaited<ReturnType<typeof prisma.user.create>> | undefined;
+  let user: Prisma.UserGetPayload<{ include: typeof userInclude }> | undefined;
   try {
     user = await prisma.user.create({
       data: {
@@ -172,23 +172,43 @@ export async function getProfile(userId: string) {
 }
 
 export async function requestPasswordReset(email: string) {
-  const user = await prisma.user.findUnique({ where: { email } });
+  const normalized = email.trim().toLowerCase();
+  const user = await prisma.user.findUnique({ where: { email: normalized } });
+
   if (!user || isAccountRemoved(user)) {
-    return { accepted: true };
+    return genericResetResult();
   }
 
   const { raw, hash } = createRawToken();
-  await prisma.passwordResetToken.create({
-    data: {
-      userId: user.id,
-      tokenHash: hash,
-      expiresAt: new Date(Date.now() + 60 * 60 * 1000),
-    },
-  });
+  const expiresAt = new Date(Date.now() + PASSWORD_RESET_TTL_MS);
 
-  const resetUrl = `${env.FRONTEND_URL}/reset-password?token=${raw}`;
-  await sendPasswordResetEmail(user.email, resetUrl);
-  return { accepted: true, ...(env.NODE_ENV !== "production" ? { devToken: raw } : {}) };
+  await prisma.$transaction([
+    prisma.passwordResetToken.updateMany({
+      where: { userId: user.id, usedAt: null },
+      data: { usedAt: new Date() },
+    }),
+    prisma.passwordResetToken.create({
+      data: {
+        userId: user.id,
+        tokenHash: hash,
+        expiresAt,
+      },
+    }),
+  ]);
+
+  const frontendUrl = env.FRONTEND_URL.replace(/\/$/, "");
+  const resetUrl = `${frontendUrl}/reset-password?token=${encodeURIComponent(raw)}`;
+
+  const sent = await sendPasswordResetEmail(user.email, resetUrl, PASSWORD_RESET_TTL_LABEL);
+  if (!sent && env.SENDGRID_API_KEY) {
+    throw new ApiError(500, "No pudimos enviar el correo. Inténtalo de nuevo.", "EMAIL_UNAVAILABLE");
+  }
+
+  if (!sent && env.NODE_ENV !== "production") {
+    logger.info("SendGrid no envió el correo. Enlace de recuperación (solo no-producción)", { resetUrl });
+  }
+
+  return genericResetResult(raw);
 }
 
 export async function resetPassword(token: string, password: string) {
@@ -197,8 +217,14 @@ export async function resetPassword(token: string, password: string) {
     where: { tokenHash },
   });
 
-  if (!record || record.usedAt || record.expiresAt < new Date()) {
-    throw ApiError.badRequest("El enlace de recuperación no es válido o expiró");
+  if (!record) {
+    throw ApiError.badRequest("El enlace de recuperación no es válido.");
+  }
+  if (record.usedAt) {
+    throw ApiError.badRequest("Este enlace ya fue utilizado. Solicita uno nuevo.");
+  }
+  if (record.expiresAt < new Date()) {
+    throw ApiError.badRequest("El enlace de recuperación expiró. Solicita uno nuevo.");
   }
 
   const owner = await prisma.user.findUnique({
@@ -206,7 +232,7 @@ export async function resetPassword(token: string, password: string) {
     select: { deletedAt: true },
   });
   if (!owner || isAccountRemoved(owner)) {
-    throw ApiError.badRequest("El enlace de recuperación no es válido o expiró");
+    throw ApiError.badRequest("El enlace de recuperación no es válido.");
   }
 
   const passwordHash = await hashPassword(password);
@@ -228,6 +254,13 @@ export async function resetPassword(token: string, password: string) {
     entity: "User",
     entityId: record.userId,
   });
+}
+
+function genericResetResult(rawToken?: string) {
+  return {
+    accepted: true as const,
+    ...(env.NODE_ENV === "test" && rawToken ? { devToken: rawToken } : {}),
+  };
 }
 
 export async function verifyEmail(token: string) {

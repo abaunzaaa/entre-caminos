@@ -49,15 +49,24 @@ export async function sendMail(payload: MailPayload): Promise<boolean> {
   }
 }
 
-export async function sendPasswordResetEmail(to: string, resetUrl: string) {
+export async function sendPasswordResetEmail(to: string, resetUrl: string, ttlLabel: string) {
   return sendMail({
     to,
     subject: "Restablece tu contraseña — Entre Caminos",
-    text: `Usa este enlace para restablecer tu contraseña: ${resetUrl}`,
+    text: [
+      "Hola,",
+      "",
+      "Recibimos una solicitud para restablecer tu contraseña en Entre Caminos.",
+      `Abre este enlace para crear una nueva: ${resetUrl}`,
+      `El enlace es válido por ${ttlLabel}.`,
+      "",
+      "Si no fuiste tú, ignora este mensaje.",
+    ].join("\n"),
     html: `
       <p>Hola,</p>
       <p>Recibimos una solicitud para restablecer tu contraseña en <strong>Entre Caminos</strong>.</p>
       <p><a href="${resetUrl}">Restablecer contraseña</a></p>
+      <p>Este enlace es válido por ${ttlLabel}.</p>
       <p>Si no fuiste tú, ignora este mensaje.</p>
     `,
   });

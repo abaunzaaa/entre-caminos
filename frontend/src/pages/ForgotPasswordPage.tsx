@@ -1,67 +1,83 @@
 import { FormEvent, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Mail } from "lucide-react";
-import { IllustrationPanel } from "../components/auth/IllustrationPanel";
-import { IconField } from "../components/auth/IconField";
+import { Link } from "react-router-dom";
+import { AuthRecoveryLayout } from "../components/auth/AuthRecoveryLayout";
+import { AuthTextField } from "../components/auth/AuthTextField";
 import { forgotPassword } from "../services/auth.service";
 import { getApiErrorMessage } from "../utils/api-error";
-import panelLogin from "../assets/panel-login.png";
+import { validateEmailFormat } from "../utils/register-validation";
+
+const GENERIC_MESSAGE =
+  "Si el correo está registrado, recibirás un enlace para restablecer tu contraseña";
 
 export function ForgotPasswordPage() {
-  const navigate = useNavigate();
+  const [emailError, setEmailError] = useState("");
+  const [formError, setFormError] = useState("");
   const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setError("");
+    if (loading) {
+      return;
+    }
+
+    setEmailError("");
+    setFormError("");
     setMessage("");
+
     const form = new FormData(event.currentTarget);
+    const email = String(form.get("email") ?? "").trim().toLowerCase();
+    const invalidEmail = validateEmailFormat(email);
+    if (invalidEmail) {
+      setEmailError(invalidEmail);
+      return;
+    }
+
     try {
       setLoading(true);
-      const result = await forgotPassword(String(form.get("email")));
-      const token = result.data?.devToken;
-      setMessage(
-        result.message ??
-          "Si el correo existe, enviaremos instrucciones. En desarrollo te llevamos al enlace.",
-      );
-      if (token) {
-        window.setTimeout(() => {
-          navigate(`/reset-password?token=${encodeURIComponent(token)}`);
-        }, 900);
-      }
+      const result = await forgotPassword(email);
+      setMessage(result.message || GENERIC_MESSAGE);
     } catch (err) {
-      setError(getApiErrorMessage(err, "No pudimos enviar el correo"));
+      setFormError(getApiErrorMessage(err, "No pudimos enviar el correo. Inténtalo de nuevo."));
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="grid min-h-screen bg-white lg:grid-cols-[42%_58%]">
-      <IllustrationPanel image={panelLogin} variant="login" showBack onBack={() => navigate("/login")} />
-      <main className="flex items-center justify-center px-6 py-12 lg:rounded-tl-[72px]">
-        <div className="w-full max-w-md">
-          <h1 className="text-center font-serif text-4xl italic">Recuperar contraseña</h1>
-          <p className="mt-3 text-center text-sm text-neutral-500">
-            Escribe el correo de tu cuenta. Te enviaremos un enlace seguro para crear una nueva clave.
+    <AuthRecoveryLayout>
+      <div className="auth-form">
+        <header className="auth-form__header">
+          <h1 className="auth-form__title">Recuperar contraseña</h1>
+          <p className="auth-form__lead">
+            Escribe el correo de tu cuenta. Te enviaremos un enlace para crear una nueva.
           </p>
-          <form className="mt-10 space-y-4" onSubmit={onSubmit}>
-            <IconField name="email" type="email" placeholder="Correo electrónico" icon={<Mail size={18} />} required />
-            {error && <p className="text-sm text-red-600">{error}</p>}
-            {message && <p className="text-sm text-forest">{message}</p>}
-            <button className="w-full rounded-full bg-charcoal py-3.5 text-white disabled:opacity-60" disabled={loading}>
-              {loading ? "Enviando..." : "Enviar instrucciones"}
-            </button>
-          </form>
-          <p className="mt-8 text-center text-sm">
-            <Link to="/login" className="underline">
-              Volver a iniciar sesión
-            </Link>
-          </p>
-        </div>
-      </main>
-    </div>
+        </header>
+        <form className="auth-form__stack" onSubmit={onSubmit} noValidate>
+          <AuthTextField
+            name="email"
+            type="email"
+            label="Correo electrónico"
+            placeholder="Correo electrónico"
+            autoComplete="email"
+            error={emailError}
+          />
+          {formError && (
+            <p className="auth-error" role="alert">
+              {formError}
+            </p>
+          )}
+          {message && <p className="auth-notice">{message}</p>}
+          <button type="submit" className="auth-submit" disabled={loading}>
+            {loading ? "Enviando..." : "Enviar enlace"}
+          </button>
+        </form>
+        <footer className="auth-form__footer">
+          <div className="auth-row">
+            <Link to="/login">Volver a iniciar sesión</Link>
+          </div>
+        </footer>
+      </div>
+    </AuthRecoveryLayout>
   );
 }

@@ -38,3 +38,8 @@ export const COOKIE_NAMES = {
 
 export const PASSWORD_POLICY =
   "Mínimo 8 caracteres, una mayúscula, una minúscula, un número y un símbolo.";
+
+export const PASSWORD_RESET_TTL_MS = 60 * 60 * 1000;
+export const PASSWORD_RESET_TTL_LABEL = "1 hora";
+export const PASSWORD_RESET_GENERIC_MESSAGE =
+  "Si el correo está registrado, recibirás un enlace para restablecer tu contraseña";

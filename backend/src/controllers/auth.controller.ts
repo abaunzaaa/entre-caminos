@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { prisma } from "../database/prisma.js";
-import { COOKIE_NAMES, type RoleName } from "../config/constants.js";
+import { COOKIE_NAMES, PASSWORD_RESET_GENERIC_MESSAGE, type RoleName } from "../config/constants.js";
 import { ACCOUNT_REMOVED_MESSAGE, isAccountRemoved } from "../utils/account.js";
 import * as authService from "../services/auth.service.js";
 import { clearAuthCookies, setAuthCookies } from "../services/token.service.js";
@@ -98,14 +98,17 @@ export async function forgotPassword(req: Request, res: Response) {
   const result = await authService.requestPasswordReset(req.body.email);
   return res.json({
     success: true,
-    message: "Si el correo existe, enviaremos instrucciones de recuperación.",
+    message: PASSWORD_RESET_GENERIC_MESSAGE,
     data: result,
   });
 }
 
 export async function resetPassword(req: Request, res: Response) {
   await authService.resetPassword(req.body.token, req.body.password);
-  return res.json({ success: true, message: "Contraseña actualizada. Ya puedes iniciar sesión." });
+  return res.json({
+    success: true,
+    message: "Tu contraseña se actualizó correctamente. Ya puedes iniciar sesión.",
+  });
 }
 
 export async function verifyEmail(req: Request, res: Response) {
