@@ -5,7 +5,7 @@
   "type": "module",
   "description": "API Entre Caminos — Node.js, Express, TypeScript, Prisma",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "prisma generate && prisma migrate dev && tsx watch src/index.ts",
     "build": "tsc -p tsconfig.build.json",
     "start": "node dist/index.js",
     "prisma:generate": "prisma generate",
@@ -15,7 +15,8 @@
     "prisma:studio": "prisma studio",
     "db:verify": "tsx scripts/verify-db.ts",
     "test": "vitest run --reporter=verbose",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "dev:fast": "tsx watch src/index.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

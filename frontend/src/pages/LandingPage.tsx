@@ -251,10 +251,12 @@ export function LandingPage() {
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
-          entry.target.classList.toggle("is-inview", entry.isIntersecting);
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-inview");
+          }
         }
       },
-      { threshold: 0.16, rootMargin: "0px 0px -6% 0px" },
+      { threshold: 0.12, rootMargin: "0px" },
     );
 
     for (const section of sections) {
@@ -274,7 +276,7 @@ export function LandingPage() {
 
   return (
     <div className="landing bg-white text-black">
-      <section className="landing-hero" ref={heroRef} aria-label="Encabezado">
+      <section className="landing-hero is-inview" ref={heroRef} aria-label="Encabezado">
         <div
           className="landing-hero__bg"
           style={{ backgroundImage: `url(${encabezado})` }}
