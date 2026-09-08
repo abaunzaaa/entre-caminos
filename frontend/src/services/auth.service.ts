@@ -70,7 +70,7 @@ export async function forgotPassword(email: string) {
   return data;
 }
 
-export async function resetPassword(token: string, password: string) {
-  const { data } = await api.post("/auth/reset-password", { token, password });
+export async function resetPassword(token: string, password: string, confirmPassword: string) {
+  const { data } = await api.post("/auth/reset-password", { token, password, confirmPassword });
   return data;
 }
