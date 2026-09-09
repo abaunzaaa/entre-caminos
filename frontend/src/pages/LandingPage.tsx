@@ -289,7 +289,7 @@ export function LandingPage() {
         <nav className="landing-hero__nav" aria-label="Principal">
           <div className="landing-hero__links landing-hero__links--left">
             <Link to="/">INICIO</Link>
-            <a href="#como-funciona">DETALLES</a>
+            <a href="#experiencias-destacadas">EXPERIENCIAS</a>
           </div>
           <Link to="/" className="landing-hero__mark" aria-label="Entre Caminos">
             <img src={keyIcon} alt="" className="landing-hero__key" />
@@ -455,6 +455,11 @@ export function LandingPage() {
           >
             ›
           </button>
+        </div>
+        <div className="landing-featured__cta-wrap">
+          <Link to={user ? "/explorar" : "/register"} className="landing-hero__cta landing-featured__cta">
+            Descubrir más
+          </Link>
         </div>
       </section>
 
