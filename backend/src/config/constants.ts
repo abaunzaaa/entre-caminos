@@ -50,3 +50,41 @@ export const EMAIL_UNVERIFIED_LOGIN_MESSAGE = "Debes verificar tu correo antes d
 
 export const MIN_EXPERIENCE_IMAGES = 5;
 export const MIN_EXPERIENCE_IMAGES_MESSAGE = "Agrega al menos 5 imágenes para continuar.";
+
+export const CONTACT_KINDS = {
+  POSIBLE_USUARIO: "POSIBLE_USUARIO",
+  ALIADO: "ALIADO",
+} as const;
+
+export type ContactKindName = (typeof CONTACT_KINDS)[keyof typeof CONTACT_KINDS];
+
+export const CONTACT_INBOX_EMAIL = "entrecaminos.e@gmail.com";
+
+export const CONTACT_SUBJECTS = {
+  POSIBLE_USUARIO: "Nuevo contacto de posible usuario - Entre Caminos",
+  ALIADO: "Nueva solicitud de aliado - Entre Caminos",
+} as const;
+
+export const CONTACT_KIND_LABELS = {
+  POSIBLE_USUARIO: "Posible usuario",
+  ALIADO: "Aliado",
+} as const;
+
+export const CONTACT_MESSAGE_MAX = 2000;
+export const CONTACT_NAME_MAX = 80;
+export const CONTACT_COMPANY_MAX = 120;
+
+export const CONTACT_DISCOVER_REASONS = [
+  "Quiero conocer más experiencias",
+  "Necesito ayuda para elegir un plan",
+  "Tengo una sugerencia",
+  "Otro",
+] as const;
+
+export const CONTACT_ALLY_TYPES = [
+  "Turística",
+  "Cultural",
+  "Artística",
+  "Recreativa",
+  "Otra",
+] as const;

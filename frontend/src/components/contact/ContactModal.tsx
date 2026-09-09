@@ -1,6 +1,11 @@
 import { FormEvent, useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
+import axios from "axios";
+import { X } from "lucide-react";
 import contactoImg from "../../assets/contacto.png";
+import contactSuccessEmailIcon from "../../assets/contact-success-email-no-heart.png";
+import { sendContact } from "../../services/contact.service";
+import { getApiErrorMessage } from "../../utils/api-error";
 import "../../styles/contact-modal.css";
 
 type ContactIntent = "discover" | "ally";
@@ -21,20 +26,40 @@ const allyTypes = [
 ] as const;
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MESSAGE_MAX = 2000;
+const NAME_MAX = 80;
+const COMPANY_MAX = 120;
 
 type DiscoverForm = {
+  name: string;
   email: string;
   reason: string;
+  message: string;
 };
 
 type AllyForm = {
+  name: string;
   company: string;
   email: string;
   type: string;
+  message: string;
 };
 
-const emptyDiscover: DiscoverForm = { email: "", reason: "" };
-const emptyAlly: AllyForm = { company: "", email: "", type: "" };
+const emptyDiscover: DiscoverForm = { name: "", email: "", reason: "", message: "" };
+const emptyAlly: AllyForm = { name: "", company: "", email: "", type: "", message: "" };
+
+function readFieldDetails(error: unknown) {
+  if (!axios.isAxiosError(error)) {
+    return [];
+  }
+  const details = error.response?.data?.error?.details;
+  if (!Array.isArray(details)) {
+    return [];
+  }
+  return details.filter(
+    (item): item is { field?: string; message?: string } => Boolean(item) && typeof item === "object",
+  );
+}
 
 function ContactSelect({
   value,
@@ -163,6 +188,90 @@ function ContactSelect({
   );
 }
 
+function ContactSuccessConfirm({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
+  const titleId = useId();
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    closeRef.current?.focus();
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.stopImmediatePropagation();
+        onClose();
+        return;
+      }
+      if (event.key !== "Tab" || !dialogRef.current) return;
+      const focusable = [...dialogRef.current.querySelectorAll<HTMLElement>("button:not([disabled])")];
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+        return;
+      }
+      if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown, true);
+    return () => window.removeEventListener("keydown", onKeyDown, true);
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  return createPortal(
+    <div className="contact-success" role="presentation" onClick={onClose}>
+      <div
+        ref={dialogRef}
+        className="contact-success__dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        aria-describedby={`${titleId}-copy`}
+        onClick={(event) => event.stopPropagation()}
+      >
+        <button
+          ref={closeRef}
+          type="button"
+          className="contact-success__close"
+          aria-label="Cerrar"
+          onClick={onClose}
+        >
+          <X strokeWidth={1.5} aria-hidden="true" />
+        </button>
+        <img
+          src={contactSuccessEmailIcon}
+          alt=""
+          className="contact-success__icon"
+          aria-hidden="true"
+        />
+        <h2 id={titleId} className="contact-success__title">
+          ¡Mensaje enviado!
+        </h2>
+        <p id={`${titleId}-copy`} className="contact-success__text">
+          Hemos recibido tu mensaje correctamente. Pronto nos pondremos en contacto contigo.
+        </p>
+        <button type="button" className="contact-success__action admin-cta" onClick={onClose}>
+          Entendido
+        </button>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
 export function ContactModal({
   open,
   onClose,
@@ -172,12 +281,19 @@ export function ContactModal({
 }) {
   const titleId = useId();
   const closeRef = useRef<HTMLButtonElement>(null);
+  const submitRef = useRef<HTMLButtonElement>(null);
+  const openRef = useRef(open);
+  const inFlight = useRef(false);
   const [intent, setIntent] = useState<ContactIntent>("discover");
   const [discover, setDiscover] = useState(emptyDiscover);
   const [ally, setAlly] = useState(emptyAlly);
   const [discoverErrors, setDiscoverErrors] = useState<Partial<DiscoverForm>>({});
   const [allyErrors, setAllyErrors] = useState<Partial<AllyForm>>({});
-  const [submitted, setSubmitted] = useState(false);
+  const [successOpen, setSuccessOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+
+  openRef.current = open;
 
   useEffect(() => {
     if (!open) return;
@@ -189,6 +305,7 @@ export function ContactModal({
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
       if (document.querySelector(".contact-modal__select.is-open")) return;
+      if (document.querySelector(".contact-success")) return;
       onClose();
     };
 
@@ -206,40 +323,149 @@ export function ContactModal({
     setAlly(emptyAlly);
     setDiscoverErrors({});
     setAllyErrors({});
-    setSubmitted(false);
+    setSuccessOpen(false);
+    setSubmitError("");
+    if (!inFlight.current) {
+      setLoading(false);
+    }
   }, [open]);
+
+  const successWasOpen = useRef(false);
+
+  useEffect(() => {
+    if (successWasOpen.current && !successOpen && open) {
+      submitRef.current?.focus();
+    }
+    successWasOpen.current = successOpen;
+  }, [successOpen, open]);
 
   if (!open) return null;
 
-  const submitDiscover = (event: FormEvent<HTMLFormElement>) => {
+  const resetForm = () => {
+    setIntent("discover");
+    setDiscover(emptyDiscover);
+    setAlly(emptyAlly);
+    setDiscoverErrors({});
+    setAllyErrors({});
+    setSubmitError("");
+  };
+
+  const closeSuccess = () => {
+    setSuccessOpen(false);
+  };
+
+  const chooseIntent = (next: ContactIntent) => {
+    if (loading) return;
+    setIntent(next);
+    setSubmitError("");
+  };
+
+  const submitDiscover = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (inFlight.current || loading || successOpen) return;
+
     const errors: Partial<DiscoverForm> = {};
+    if (!discover.name.trim()) errors.name = "Ingresa tu nombre";
     if (!discover.email.trim()) errors.email = "Ingresa tu correo electrónico";
     else if (!emailPattern.test(discover.email.trim())) errors.email = "Ingresa un correo válido";
     if (!discover.reason) errors.reason = "Selecciona un motivo de contacto";
+    if (!discover.message.trim()) errors.message = "Escribe tus dudas o comentarios";
+    else if (discover.message.trim().length > MESSAGE_MAX) errors.message = "El comentario es demasiado largo";
     setDiscoverErrors(errors);
+    setSubmitError("");
     if (Object.keys(errors).length) return;
-    setSubmitted(true);
+
+    inFlight.current = true;
+    setLoading(true);
+    try {
+      await sendContact({
+        kind: "POSIBLE_USUARIO",
+        name: discover.name.trim(),
+        email: discover.email.trim(),
+        reason: discover.reason,
+        message: discover.message.trim(),
+      });
+      if (!openRef.current) return;
+      resetForm();
+      setSuccessOpen(true);
+    } catch (error) {
+      if (!openRef.current) return;
+      const details = readFieldDetails(error);
+      const nextErrors: Partial<DiscoverForm> = {};
+      for (const detail of details) {
+        if (detail.field === "name" && detail.message) nextErrors.name = detail.message;
+        if (detail.field === "email" && detail.message) nextErrors.email = detail.message;
+        if (detail.field === "reason" && detail.message) nextErrors.reason = detail.message;
+        if (detail.field === "message" && detail.message) nextErrors.message = detail.message;
+      }
+      setDiscoverErrors(nextErrors);
+      setSubmitError(getApiErrorMessage(error, "No pudimos enviar tu mensaje. Inténtalo de nuevo."));
+    } finally {
+      inFlight.current = false;
+      if (openRef.current) {
+        setLoading(false);
+      }
+    }
   };
 
-  const submitAlly = (event: FormEvent<HTMLFormElement>) => {
+  const submitAlly = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (inFlight.current || loading || successOpen) return;
+
     const errors: Partial<AllyForm> = {};
+    if (!ally.name.trim()) errors.name = "Ingresa tu nombre";
     if (!ally.company.trim()) errors.company = "Ingresa el nombre de la empresa o experiencia";
     if (!ally.email.trim()) errors.email = "Ingresa tu correo electrónico";
     else if (!emailPattern.test(ally.email.trim())) errors.email = "Ingresa un correo válido";
     if (!ally.type) errors.type = "Selecciona el tipo de experiencia";
+    if (!ally.message.trim()) errors.message = "Escribe tu propuesta, duda o comentario";
+    else if (ally.message.trim().length > MESSAGE_MAX) errors.message = "El comentario es demasiado largo";
     setAllyErrors(errors);
+    setSubmitError("");
     if (Object.keys(errors).length) return;
-    setSubmitted(true);
+
+    inFlight.current = true;
+    setLoading(true);
+    try {
+      await sendContact({
+        kind: "ALIADO",
+        name: ally.name.trim(),
+        email: ally.email.trim(),
+        company: ally.company.trim(),
+        allyType: ally.type,
+        message: ally.message.trim(),
+      });
+      if (!openRef.current) return;
+      resetForm();
+      setSuccessOpen(true);
+    } catch (error) {
+      if (!openRef.current) return;
+      const details = readFieldDetails(error);
+      const nextErrors: Partial<AllyForm> = {};
+      for (const detail of details) {
+        if (detail.field === "name" && detail.message) nextErrors.name = detail.message;
+        if (detail.field === "company" && detail.message) nextErrors.company = detail.message;
+        if (detail.field === "email" && detail.message) nextErrors.email = detail.message;
+        if ((detail.field === "allyType" || detail.field === "type") && detail.message) nextErrors.type = detail.message;
+        if (detail.field === "message" && detail.message) nextErrors.message = detail.message;
+      }
+      setAllyErrors(nextErrors);
+      setSubmitError(getApiErrorMessage(error, "No pudimos enviar tu mensaje. Inténtalo de nuevo."));
+    } finally {
+      inFlight.current = false;
+      if (openRef.current) {
+        setLoading(false);
+      }
+    }
   };
 
   return (
-    <div className="contact-modal" role="presentation" onClick={onClose}>
+    <>
+    <div className="contact-modal" role="presentation" aria-hidden={successOpen} inert={successOpen} onClick={onClose}>
       <div
         className="contact-modal__dialog"
         role="dialog"
-        aria-modal="true"
+        aria-modal={!successOpen}
         aria-labelledby={titleId}
         onClick={(event) => event.stopPropagation()}
       >
@@ -256,20 +482,14 @@ export function ContactModal({
         <div className="contact-modal__form-pane">
           <p className="contact-modal__kicker">¿Quieres conectar?</p>
           <h2 id={titleId} className="contact-modal__title">
-            HABLEMOS DE NUEVAS EXPERIENCIAS
+            {intent === "ally" ? "HABLEMOS DE NUEVAS ALIANZAS" : "HABLEMOS DE NUEVAS EXPERIENCIAS"}
           </h2>
 
-          {submitted ? (
-            <p className="contact-modal__thanks">
-              Gracias por escribirnos. Pronto estaremos en contacto contigo.
-            </p>
-          ) : (
-            <>
               <div className="contact-modal__options">
                 <button
                   type="button"
                   className={`contact-modal__option${intent === "discover" ? " is-active" : ""}`}
-                  onClick={() => setIntent("discover")}
+                  onClick={() => chooseIntent("discover")}
                   aria-pressed={intent === "discover"}
                 >
                   <span className="contact-modal__option-title">Quiero ser usuario</span>
@@ -277,7 +497,7 @@ export function ContactModal({
                 <button
                   type="button"
                   className={`contact-modal__option${intent === "ally" ? " is-active" : ""}`}
-                  onClick={() => setIntent("ally")}
+                  onClick={() => chooseIntent("ally")}
                   aria-pressed={intent === "ally"}
                 >
                   <span className="contact-modal__option-title">Quiero ser aliado</span>
@@ -285,7 +505,30 @@ export function ContactModal({
               </div>
 
               {intent === "discover" ? (
-                <form className="contact-modal__fields" onSubmit={submitDiscover} noValidate>
+                <form className="contact-modal__fields" onSubmit={(event) => void submitDiscover(event)} noValidate aria-busy={loading}>
+                  <div className="contact-modal__row">
+                    <label className="contact-modal__field">
+                      <span>Nombre</span>
+                      <input
+                        type="text"
+                        name="name"
+                        autoComplete="name"
+                        maxLength={NAME_MAX}
+                        value={discover.name}
+                        onChange={(event) => setDiscover({ ...discover, name: event.target.value })}
+                      />
+                      {discoverErrors.name ? <em>{discoverErrors.name}</em> : null}
+                    </label>
+                    <label className="contact-modal__field">
+                      <span>Motivo de contacto</span>
+                      <ContactSelect
+                        value={discover.reason}
+                        options={discoverReasons}
+                        onChange={(reason) => setDiscover({ ...discover, reason })}
+                      />
+                      {discoverErrors.reason ? <em>{discoverErrors.reason}</em> : null}
+                    </label>
+                  </div>
                   <label className="contact-modal__field">
                     <span>Correo electrónico</span>
                     <input
@@ -298,57 +541,87 @@ export function ContactModal({
                     {discoverErrors.email ? <em>{discoverErrors.email}</em> : null}
                   </label>
                   <label className="contact-modal__field">
-                    <span>Motivo de contacto</span>
-                    <ContactSelect
-                      value={discover.reason}
-                      options={discoverReasons}
-                      onChange={(reason) => setDiscover({ ...discover, reason })}
+                    <span>Dudas o comentarios</span>
+                    <textarea
+                      name="message"
+                      rows={4}
+                      maxLength={MESSAGE_MAX}
+                      value={discover.message}
+                      onChange={(event) => setDiscover({ ...discover, message: event.target.value })}
                     />
-                    {discoverErrors.reason ? <em>{discoverErrors.reason}</em> : null}
+                    {discoverErrors.message ? <em>{discoverErrors.message}</em> : null}
                   </label>
-                  <button type="submit" className="contact-modal__submit admin-cta">
-                    Enviar
+                  {submitError ? <em role="alert">{submitError}</em> : null}
+                  <button ref={submitRef} type="submit" className="contact-modal__submit admin-cta" disabled={loading}>
+                    {loading ? "Enviando..." : "Enviar"}
                   </button>
                 </form>
               ) : (
-                <form className="contact-modal__fields" onSubmit={submitAlly} noValidate>
+                <form className="contact-modal__fields" onSubmit={(event) => void submitAlly(event)} noValidate aria-busy={loading}>
+                  <div className="contact-modal__row">
+                    <label className="contact-modal__field">
+                      <span>Nombre</span>
+                      <input
+                        type="text"
+                        name="ally-name"
+                        autoComplete="name"
+                        maxLength={NAME_MAX}
+                        value={ally.name}
+                        onChange={(event) => setAlly({ ...ally, name: event.target.value })}
+                      />
+                      {allyErrors.name ? <em>{allyErrors.name}</em> : null}
+                    </label>
+                    <label className="contact-modal__field">
+                      <span>Tipo de experiencia</span>
+                      <ContactSelect
+                        value={ally.type}
+                        options={allyTypes}
+                        onChange={(type) => setAlly({ ...ally, type })}
+                      />
+                      {allyErrors.type ? <em>{allyErrors.type}</em> : null}
+                    </label>
+                  </div>
+                  <div className="contact-modal__row">
+                    <label className="contact-modal__field">
+                      <span>Nombre de la empresa o experiencia</span>
+                      <input
+                        type="text"
+                        name="company"
+                        maxLength={COMPANY_MAX}
+                        value={ally.company}
+                        onChange={(event) => setAlly({ ...ally, company: event.target.value })}
+                      />
+                      {allyErrors.company ? <em>{allyErrors.company}</em> : null}
+                    </label>
+                    <label className="contact-modal__field">
+                      <span>Correo electrónico</span>
+                      <input
+                        type="email"
+                        name="ally-email"
+                        autoComplete="email"
+                        value={ally.email}
+                        onChange={(event) => setAlly({ ...ally, email: event.target.value })}
+                      />
+                      {allyErrors.email ? <em>{allyErrors.email}</em> : null}
+                    </label>
+                  </div>
                   <label className="contact-modal__field">
-                    <span>Nombre de la empresa o experiencia</span>
-                    <input
-                      type="text"
-                      name="company"
-                      value={ally.company}
-                      onChange={(event) => setAlly({ ...ally, company: event.target.value })}
+                    <span>Propuesta o comentario</span>
+                    <textarea
+                      name="ally-message"
+                      rows={4}
+                      maxLength={MESSAGE_MAX}
+                      value={ally.message}
+                      onChange={(event) => setAlly({ ...ally, message: event.target.value })}
                     />
-                    {allyErrors.company ? <em>{allyErrors.company}</em> : null}
+                    {allyErrors.message ? <em>{allyErrors.message}</em> : null}
                   </label>
-                  <label className="contact-modal__field">
-                    <span>Correo electrónico</span>
-                    <input
-                      type="email"
-                      name="ally-email"
-                      autoComplete="email"
-                      value={ally.email}
-                      onChange={(event) => setAlly({ ...ally, email: event.target.value })}
-                    />
-                    {allyErrors.email ? <em>{allyErrors.email}</em> : null}
-                  </label>
-                  <label className="contact-modal__field">
-                    <span>Tipo de experiencia</span>
-                    <ContactSelect
-                      value={ally.type}
-                      options={allyTypes}
-                      onChange={(type) => setAlly({ ...ally, type })}
-                    />
-                    {allyErrors.type ? <em>{allyErrors.type}</em> : null}
-                  </label>
-                  <button type="submit" className="contact-modal__submit admin-cta">
-                    Enviar
+                  {submitError ? <em role="alert">{submitError}</em> : null}
+                  <button ref={submitRef} type="submit" className="contact-modal__submit admin-cta" disabled={loading}>
+                    {loading ? "Enviando..." : "Enviar"}
                   </button>
                 </form>
               )}
-            </>
-          )}
         </div>
 
         <aside className="contact-modal__visual" aria-hidden="true">
@@ -356,5 +629,7 @@ export function ContactModal({
         </aside>
       </div>
     </div>
+    <ContactSuccessConfirm open={successOpen} onClose={closeSuccess} />
+    </>
   );
 }

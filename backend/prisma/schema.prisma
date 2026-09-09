@@ -32,6 +32,17 @@ enum ExperienceReviewDecision {
   REJECTED
 }
 
+enum ContactStatus {
+  NEW
+  READ
+  CLOSED
+}
+
+enum ContactType {
+  POSIBLE_USUARIO
+  ALIADO
+}
+
 model Role {
   id          String           @id @default(uuid())
   name        String           @unique
@@ -214,4 +225,21 @@ model EmailVerificationToken {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("email_verification_tokens")
+}
+
+model Contact {
+  id        String        @id @default(uuid())
+  name      String
+  email     String
+  phone     String?
+  message   String
+  type      ContactType
+  status    ContactStatus @default(NEW)
+  createdAt DateTime      @default(now()) @map("created_at")
+  updatedAt DateTime      @updatedAt @map("updated_at")
+
+  @@index([createdAt])
+  @@index([status])
+  @@index([type])
+  @@map("contacts")
 }
