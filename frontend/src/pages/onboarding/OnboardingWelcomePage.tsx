@@ -1,8 +1,9 @@
 import { FormEvent, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { ImagePlus, MapPin } from "lucide-react";
 import { IllustrationPanel } from "../../components/auth/IllustrationPanel";
 import { Button } from "../../components/ui/Button";
+import { useAuth } from "../../hooks/useAuth";
 import { getOnboarding, saveOnboarding } from "../../utils/onboarding";
 import panelOnboarding from "../../assets/panel-onboarding.png";
 import "../../styles/auth-interactive.css";
@@ -28,11 +29,16 @@ const cities = [
 ];
 
 export function OnboardingWelcomePage() {
+  const { user } = useAuth();
   const navigate = useNavigate();
   const draft = getOnboarding();
   const [location, setLocation] = useState(draft.location);
   const [mode, setMode] = useState<"upload" | "avatar">(draft.photoMode);
   const [avatar, setAvatar] = useState(draft.avatar);
+
+  if (user && !user.emailVerified) {
+    return <Navigate to="/verify-email" replace state={{ email: user.email }} />;
+  }
 
   function onSubmit(event: FormEvent) {
     event.preventDefault();

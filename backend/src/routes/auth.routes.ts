@@ -8,6 +8,7 @@ import {
   forgotPasswordSchema,
   loginSchema,
   registerSchema,
+  resendVerificationSchema,
   resetPasswordSchema,
   verifyEmailSchema,
 } from "../validators/auth.validator.js";
@@ -48,6 +49,14 @@ authRouter.post(
 
 authRouter.post(
   "/verify-email",
+  authRateLimiter,
   validate(verifyEmailSchema),
   asyncHandler(authController.verifyEmail),
+);
+
+authRouter.post(
+  "/resend-verification-code",
+  authRateLimiter,
+  validate(resendVerificationSchema),
+  asyncHandler(authController.resendVerificationCode),
 );

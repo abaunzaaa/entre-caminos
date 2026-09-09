@@ -10,7 +10,7 @@ import { ApiError } from "../utils/api-error.js";
 import { publicUser } from "../utils/serializers.js";
 
 export async function register(req: Request, res: Response) {
-  const { user, verificationEmailSent } = await authService.registerUser(req.body);
+  const { user, verificationEmailSent, devCode } = await authService.registerUser(req.body);
   const tokens = setAuthCookies(res, {
     id: user.id,
     email: user.email,
@@ -24,6 +24,7 @@ export async function register(req: Request, res: Response) {
       user,
       accessToken: tokens.accessToken,
       verificationEmailSent,
+      ...(devCode ? { devCode } : {}),
     },
   });
 }
@@ -112,6 +113,25 @@ export async function resetPassword(req: Request, res: Response) {
 }
 
 export async function verifyEmail(req: Request, res: Response) {
-  await authService.verifyEmail(req.body.token);
-  return res.json({ success: true, message: "Correo verificado" });
+  const user = await authService.verifyEmail(req.body.email, req.body.code);
+  const tokens = setAuthCookies(res, {
+    id: user.id,
+    email: user.email,
+    role: user.role as RoleName,
+  });
+
+  return res.json({
+    success: true,
+    message: "Correo verificado. Continúa con tu perfil.",
+    data: { user, accessToken: tokens.accessToken },
+  });
+}
+
+export async function resendVerificationCode(req: Request, res: Response) {
+  const result = await authService.resendVerificationCode(req.body.email);
+  return res.json({
+    success: true,
+    message: "Si el correo está registrado, enviaremos un nuevo código.",
+    data: result,
+  });
 }

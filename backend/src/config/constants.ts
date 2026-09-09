@@ -42,4 +42,8 @@ export const PASSWORD_POLICY =
 export const PASSWORD_RESET_TTL_MS = 60 * 60 * 1000;
 export const PASSWORD_RESET_TTL_LABEL = "1 hora";
 export const PASSWORD_RESET_GENERIC_MESSAGE =
-  "Si el correo está registrado, recibirás un enlace para restablecer tu contraseña";
+  "Si el correo está registrado, recibirás un enlace para restablecer tu contraseña. Si no encuentras el correo en tu bandeja de entrada, revisa la carpeta de spam o correo no deseado.";
+
+export const EMAIL_VERIFICATION_TTL_MS = 10 * 60 * 1000;
+export const EMAIL_VERIFICATION_TTL_LABEL = "10 minutos";
+export const EMAIL_UNVERIFIED_LOGIN_MESSAGE = "Debes verificar tu correo antes de iniciar sesión.";

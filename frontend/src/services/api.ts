@@ -12,7 +12,7 @@ declare module "axios" {
 const TOKEN_KEY = "ec_access_token";
 const USER_KEY = "ec_auth_user";
 const SESSION_FLAG = "ec_session_expired";
-const AUTH_EXEMPT = /\/auth\/(login|register|refresh|logout|forgot-password|reset-password|verify-email)(?:\?|$)/;
+const AUTH_EXEMPT = /\/auth\/(login|register|refresh|logout|forgot-password|reset-password|verify-email|resend-verification-code)(?:\?|$)/;
 
 type RetryConfig = InternalAxiosRequestConfig & {
   skipAuthRefresh?: boolean;

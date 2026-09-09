@@ -4,6 +4,7 @@ import { AuthTextField } from "../components/auth/AuthTextField";
 import { SocialButtons } from "../components/auth/SocialButtons";
 import { saveOnboarding } from "../utils/onboarding";
 import { getApiErrorMessage } from "../utils/api-error";
+import { setPendingVerificationEmail } from "../utils/pending-verification";
 import { validateRegisterForm, type RegisterFieldErrors } from "../utils/register-validation";
 import { useAuth } from "../hooks/useAuth";
 
@@ -16,7 +17,6 @@ export function RegisterForm() {
   const [fieldErrors, setFieldErrors] = useState<RegisterFieldErrors>({});
   const [formError, setFormError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState<{ email: string; verificationEmailSent: boolean } | null>(null);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -49,10 +49,8 @@ export function RegisterForm() {
         termsAccepted: true,
       });
       saveOnboarding({ name: payload.name.trim(), preferences: [] });
-      setSuccess({
-        email: result.user.email,
-        verificationEmailSent: result.verificationEmailSent,
-      });
+      setPendingVerificationEmail(result.user.email);
+      navigate("/verify-email", { replace: true, state: { email: result.user.email } });
     } catch (err) {
       const mapped = mapRegisterError(err);
       setFieldErrors(mapped.fields);
@@ -60,26 +58,6 @@ export function RegisterForm() {
     } finally {
       setLoading(false);
     }
-  }
-
-  if (success) {
-    return (
-      <div className="auth-form auth-success">
-        <h1 className="auth-form__title">¡Cuenta creada correctamente!</h1>
-        <p className="auth-form__lead">
-          {success.verificationEmailSent
-            ? `Enviamos un enlace a ${success.email} para confirmar tu correo.`
-            : `Tu cuenta ${success.email} ya está guardada. El correo de verificación se enviará cuando SendGrid esté configurado; por ahora puedes continuar.`}
-        </p>
-        <button
-          type="button"
-          className="auth-submit"
-          onClick={() => navigate("/onboarding", { replace: true })}
-        >
-          Continuar
-        </button>
-      </div>
-    );
   }
 
   return (

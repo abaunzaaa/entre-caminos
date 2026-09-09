@@ -74,3 +74,25 @@ export async function resetPassword(token: string, password: string, confirmPass
   const { data } = await api.post("/auth/reset-password", { token, password, confirmPassword });
   return data;
 }
+
+export async function verifyEmailAccount(payload: { email: string; code: string }) {
+  const { data } = await api.post<ApiResponse<{ user: PublicUser; accessToken?: string }>>(
+    "/auth/verify-email",
+    payload,
+  );
+  if (data.data.accessToken) {
+    setAccessToken(data.data.accessToken);
+  }
+  if (data.data.user) {
+    setStoredUser(data.data.user);
+  }
+  return data.data;
+}
+
+export async function resendVerificationCode(email: string) {
+  const { data } = await api.post<ApiResponse<{ accepted: boolean; devCode?: string }>>(
+    "/auth/resend-verification-code",
+    { email },
+  );
+  return data;
+}
