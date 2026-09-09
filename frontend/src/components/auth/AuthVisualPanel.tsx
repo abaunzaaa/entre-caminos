@@ -1,53 +1,41 @@
 import type { AuthMode } from "./authArt";
 
-const copy: Record<
-  AuthMode,
-  {
-    title: string;
-    description: string;
-    action: string;
-    artAlt: string;
-  }
-> = {
-  register: {
-    title: "¿Ya tienes una cuenta?",
-    description: "Continúa tu camino con nosotros.",
-    action: "Iniciar sesión",
-    artAlt: "Ilustración de una viajera planificando experiencias",
+const copy = {
+  title: "Cada camino guarda una historia",
+  description:
+    "Descubre experiencias que te conectan con nuevos lugares, personas y recuerdos.",
+  artAlt: "Colinas verdes de Antioquia, un paisaje para recorrer",
+  actions: {
+    login: "Crear cuenta",
+    register: "Iniciar sesión",
   },
-  login: {
-    title: "¿Primera vez por aquí?",
-    description: "Crea tu cuenta y empieza a descubrir experiencias para ti.",
-    action: "Crear cuenta",
-    artAlt: "Ilustración de inicio de sesión",
-  },
-};
+} as const;
 
 export function AuthVisualPanel({
   mode,
-  illustration,
+  photo,
   onAction,
 }: {
   mode: AuthMode;
-  illustration: string | null;
-  onAction: () => void;
+  photo: string;
+  onAction?: () => void;
 }) {
-  const content = copy[mode];
-
   return (
     <div className={`auth-visual auth-visual--${mode}`}>
+      <img src={photo} alt={copy.artAlt} className="auth-visual__photo" />
+      <div className="auth-visual__veil" aria-hidden="true" />
+      <svg className="auth-visual__wave" viewBox="0 0 180 900" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M180 0C70 70 10 160 90 280c80 120-20 170-70 280-52 114 48 210 10 340h150V0Z" />
+      </svg>
       <div className="auth-visual__content">
-        <div className="auth-visual__art-slot" data-has-art={illustration ? "true" : "false"}>
-          {illustration ? (
-            <img src={illustration} alt={content.artAlt} className="auth-visual__art" />
-          ) : null}
-        </div>
         <div className="auth-visual__copy">
-          <h2 className="auth-visual__title">{content.title}</h2>
-          <p className="auth-visual__text">{content.description}</p>
-          <button type="button" className="auth-panel-btn" onClick={onAction}>
-            {content.action}
-          </button>
+          <h2 className="auth-visual__title">{copy.title}</h2>
+          <p className="auth-visual__text">{copy.description}</p>
+          {onAction ? (
+            <button type="button" className="auth-panel-btn" onClick={onAction}>
+              {copy.actions[mode]}
+            </button>
+          ) : null}
         </div>
       </div>
     </div>
