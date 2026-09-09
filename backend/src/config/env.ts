@@ -29,6 +29,10 @@ const envSchema = z.object({
   SEED_ADMIN_NAME: z.preprocess(emptyToUndefined, z.string().optional()),
   SENDGRID_API_KEY: z.string().optional().default(""),
   SENDGRID_FROM_EMAIL: z.string().default("Entre Caminos <hola@entrecaminos.com>"),
+  CONTACT_TO_EMAIL: z.preprocess(
+    emptyToUndefined,
+    z.string().email().default("entrecaminos.e@gmail.com"),
+  ),
   CLOUDINARY_CLOUD_NAME: z.string().optional().default(""),
   CLOUDINARY_API_KEY: z.string().optional().default(""),
   CLOUDINARY_API_SECRET: z.string().optional().default(""),

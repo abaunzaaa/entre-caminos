@@ -79,7 +79,7 @@ export function LoginForm() {
     <div className="auth-form">
       <header className="auth-form__header">
         <AuthFormBrand />
-        <h1 className="auth-form__title">Bienvenido de nuevo</h1>
+        <h1 className="auth-form__title">Acceder</h1>
         <p className="auth-form__lead">Continúa descubriendo experiencias para recordar.</p>
         {registered && <p className="auth-notice">Cuenta creada. Ya puedes entrar.</p>}
       </header>

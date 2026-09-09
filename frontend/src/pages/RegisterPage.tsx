@@ -68,7 +68,7 @@ export function RegisterForm() {
     <div className="auth-form">
       <header className="auth-form__header">
         <AuthFormBrand />
-        <h1 className="auth-form__title">Crea tu cuenta</h1>
+        <h1 className="auth-form__title">Registrarse</h1>
         <p className="auth-form__lead">Empieza a descubrir experiencias hechas para ti.</p>
       </header>
       <form className="auth-form__stack" onSubmit={onSubmit} noValidate>
