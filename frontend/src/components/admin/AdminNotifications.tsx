@@ -1,12 +1,109 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell } from "lucide-react";
+import { Bell, Check, Compass, Trash2, X } from "lucide-react";
 import {
   getNotifications,
   markAllNotificationsRead,
   markNotificationRead,
 } from "../../services/notifications.service";
 import type { AdminNotification } from "../../types";
+
+const META_LABELS = new Set(["administrador", "estado", "motivo"]);
+const DISMISSED_KEY = "entre-caminos.admin-notify.dismissed";
+
+function parseNotificationBody(body: string) {
+  const rawLines = body.split("\n").map((line) => line.trim());
+  const fields: Array<{ label: string; value: string }> = [];
+  const prose: string[] = [];
+
+  for (let i = 0; i < rawLines.length; i += 1) {
+    const line = rawLines[i];
+    if (!line) continue;
+    const match = line.match(/^([^:]{2,24}):\s*(.*)$/);
+    if (match && META_LABELS.has(match[1].toLowerCase())) {
+      let value = match[2].trim();
+      if (!value) {
+        while (i + 1 < rawLines.length && !rawLines[i + 1].trim()) i += 1;
+        if (i + 1 < rawLines.length) {
+          i += 1;
+          value = rawLines[i].trim();
+        }
+      }
+      fields.push({
+        label: match[1],
+        value: value.replace(/^["“]|["”]$/g, ""),
+      });
+      continue;
+    }
+    prose.push(line);
+  }
+
+  let lead = prose.join(" ").replace(/\s+/g, " ").trim();
+  let highlight = "";
+  const quoted = lead.match(/[«"“]([^"”»]+)[»"”]/);
+  if (quoted) {
+    highlight = quoted[1];
+    lead = lead.replace(quoted[0], "").replace(/\s{2,}/g, " ").replace(/\s+([.,])/g, "$1").trim();
+  } else {
+    const split = lead.match(/^(.+?):\s*(.+)$/);
+    if (split) {
+      lead = split[1].trim();
+      highlight = split[2].replace(/\.$/, "").trim();
+    }
+  }
+
+  return { highlight, lead, fields };
+}
+
+function fieldValue(fields: Array<{ label: string; value: string }>, label: string) {
+  return fields.find((field) => field.label.toLowerCase() === label)?.value ?? "";
+}
+
+function notificationPreview(body: string) {
+  const parsed = parseNotificationBody(body);
+  const admin = fieldValue(parsed.fields, "administrador");
+  return {
+    name: parsed.highlight,
+    sender: admin ? `Enviada por ${admin}` : "",
+  };
+}
+
+function readDismissed() {
+  try {
+    const raw = window.localStorage.getItem(DISMISSED_KEY);
+    return new Set(raw ? (JSON.parse(raw) as string[]) : []);
+  } catch {
+    return new Set<string>();
+  }
+}
+
+function writeDismissed(ids: Set<string>) {
+  window.localStorage.setItem(DISMISSED_KEY, JSON.stringify([...ids]));
+}
+
+function NotificationIcon({ type }: { type: string }) {
+  if (type === "EXPERIENCE_APPROVED") {
+    return <Check size={14} strokeWidth={1.8} />;
+  }
+  if (type === "EXPERIENCE_REJECTED") {
+    return <X size={14} strokeWidth={1.8} />;
+  }
+  return <Compass size={14} strokeWidth={1.7} />;
+}
+
+function NotificationDetails({ body }: { body: string }) {
+  const preview = notificationPreview(body);
+  if (!preview.name && !preview.sender) {
+    return <span className="admin-notify__body">{body}</span>;
+  }
+
+  return (
+    <span className="admin-notify__details">
+      {preview.name ? <span className="admin-notify__highlight">{preview.name}</span> : null}
+      {preview.sender ? <span className="admin-notify__lead">{preview.sender}</span> : null}
+    </span>
+  );
+}
 
 function formatWhen(value: string) {
   const date = new Date(value);
@@ -31,8 +128,11 @@ export function AdminNotifications() {
   async function load() {
     try {
       const data = await getNotifications();
-      setItems(data.items);
-      setUnreadCount(data.unreadCount);
+      const dismissed = readDismissed();
+      const visible = data.items.filter((item) => !dismissed.has(item.id));
+      const hiddenUnread = data.items.filter((item) => dismissed.has(item.id) && !item.readAt).length;
+      setItems(visible);
+      setUnreadCount(Math.max(0, data.unreadCount - hiddenUnread));
     } catch {
       /* keep last known list */
     }
@@ -81,6 +181,24 @@ export function AdminNotifications() {
     setUnreadCount(0);
   }
 
+  function dismissOne(item: AdminNotification) {
+    const dismissed = readDismissed();
+    dismissed.add(item.id);
+    writeDismissed(dismissed);
+    setItems((current) => current.filter((row) => row.id !== item.id));
+    if (!item.readAt) {
+      setUnreadCount((count) => Math.max(0, count - 1));
+    }
+  }
+
+  function dismissAll() {
+    const dismissed = readDismissed();
+    items.forEach((item) => dismissed.add(item.id));
+    writeDismissed(dismissed);
+    setItems([]);
+    setUnreadCount(0);
+  }
+
   return (
     <div className="admin-notify" ref={rootRef}>
       <button
@@ -108,11 +226,20 @@ export function AdminNotifications() {
       >
         <div className="admin-notify__head">
           <p>Notificaciones</p>
-          {unreadCount > 0 ? (
-            <button type="button" onClick={() => void markAll()}>
-              Marcar leídas
-            </button>
-          ) : null}
+          <div className="admin-notify__actions">
+            {items.length > 0 ? (
+              <button type="button" title="Marcar todas como leídas" onClick={() => void markAll()}>
+                <Check size={13} strokeWidth={2} />
+                Marcar todas como leídas
+              </button>
+            ) : null}
+            {items.length > 0 ? (
+              <button type="button" className="admin-notify__clear-all" title="Eliminar todas" onClick={dismissAll}>
+                <Trash2 size={13} strokeWidth={1.8} />
+                Eliminar todas
+              </button>
+            ) : null}
+          </div>
         </div>
         {items.length === 0 ? (
           <p className="admin-notify__empty">No tienes notificaciones por ahora.</p>
@@ -120,15 +247,33 @@ export function AdminNotifications() {
           <ul className="admin-notify__list">
             {items.map((item) => (
               <li key={item.id}>
-                <button
-                  type="button"
-                  className={`admin-notify__item${item.readAt ? "" : " is-unread"}`}
-                  onClick={() => void openItem(item)}
-                >
-                  <span className="admin-notify__title">{item.title}</span>
-                  <span className="admin-notify__body">{item.body}</span>
-                  <span className="admin-notify__time">{formatWhen(item.createdAt)}</span>
-                </button>
+                <div className={`admin-notify__item${item.readAt ? "" : " is-unread"}`}>
+                  <button
+                    type="button"
+                    className="admin-notify__open"
+                    onClick={() => void openItem(item)}
+                  >
+                    <span className="admin-notify__icon" aria-hidden="true">
+                      <NotificationIcon type={item.type} />
+                    </span>
+                    <span className="admin-notify__content">
+                      <span className="admin-notify__heading">
+                        <span className="admin-notify__title">{item.title}</span>
+                        {item.readAt ? null : <span className="admin-notify__dot" />}
+                      </span>
+                      <NotificationDetails body={item.body} />
+                      <span className="admin-notify__time">{formatWhen(item.createdAt)}</span>
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    className="admin-notify__remove"
+                    aria-label="Eliminar notificación"
+                    onClick={() => dismissOne(item)}
+                  >
+                    <Trash2 size={14} strokeWidth={1.8} />
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
