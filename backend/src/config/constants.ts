@@ -47,3 +47,6 @@ export const PASSWORD_RESET_GENERIC_MESSAGE =
 export const EMAIL_VERIFICATION_TTL_MS = 10 * 60 * 1000;
 export const EMAIL_VERIFICATION_TTL_LABEL = "10 minutos";
 export const EMAIL_UNVERIFIED_LOGIN_MESSAGE = "Debes verificar tu correo antes de iniciar sesión.";
+
+export const MIN_EXPERIENCE_IMAGES = 5;
+export const MIN_EXPERIENCE_IMAGES_MESSAGE = "Agrega al menos 5 imágenes para continuar.";

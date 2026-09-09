@@ -2552,6 +2552,35 @@
   color: var(--admin-forest, #294942);
 }
 
+.dash-exps-dropzone__count {
+  margin: 2px 0 0;
+  color: #8a938e;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.dash-exps-dropzone__count.is-ready {
+  color: var(--admin-forest, #294942);
+}
+
+.dash-exps-dropzone__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 6px 8px 4px;
+  text-align: center;
+}
+
+.admin-dropzone.dash-exps-dropzone.is-ready {
+  border-color: rgba(41, 73, 66, 0.42);
+}
+
+.admin-dropzone.dash-exps-dropzone.is-gallery.is-ready {
+  border-color: rgba(41, 73, 66, 0.28);
+  background: #f1f5f1;
+}
+
 .dash-exps-dropzone__input {
   position: absolute;
   width: 1px;

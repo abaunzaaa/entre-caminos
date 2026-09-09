@@ -1,19 +1,82 @@
 import { describe, expect, it } from "vitest";
-import { api, createAndLoginStaffAdmin, loginAsAdmin } from "./helpers.js";
+import { MIN_EXPERIENCE_IMAGES_MESSAGE } from "../src/config/constants.js";
+import { api, createAndLoginStaffAdmin, loginAsAdmin, prisma, sampleExperienceImages } from "./helpers.js";
 
 function experiencePayload(categoryId: string, title: string, extra?: Record<string, unknown>) {
+  const imageUrls = sampleExperienceImages();
   return {
     title,
     description: "Una experiencia creativa para aprender a elaborar velas con aroma local.",
     categoryId,
     price: 90000,
     location: "Cadmiel, Envigado, Antioquia",
-    imageUrl: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1200&q=80",
+    imageUrl: imageUrls[0],
+    imageUrls,
     ...extra,
   };
 }
 
 describe("Revisión de experiencias", () => {
+  it("impide crear o enviar una experiencia con menos de 5 imágenes", async () => {
+    const { adminToken, email } = await createAndLoginStaffAdmin();
+    const category = await api()
+      .post("/api/admin/categories")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ name: `Mínimo fotos ${Date.now()}` });
+    const categoryId = category.body.data.category.id as string;
+
+    const created = await api()
+      .post("/api/admin/experiences")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send(experiencePayload(categoryId, "Ruta con pocas fotos", { imageUrls: sampleExperienceImages(2) }));
+
+    expect(created.status).toBe(422);
+    expect(
+      (created.body.error.details as Array<{ message?: string }>).some(
+        (item) => item.message === MIN_EXPERIENCE_IMAGES_MESSAGE,
+      ),
+    ).toBe(true);
+
+    const actor = await prisma.user.findUnique({ where: { email } });
+    expect(actor).toBeTruthy();
+    const draft = await prisma.experience.create({
+      data: {
+        title: "Borrador con una foto",
+        description: "Descripción suficientemente larga para validar el envío a revisión.",
+        categoryId,
+        price: 45000,
+        location: "Medellín, Antioquia",
+        imageUrl: sampleExperienceImages(1)[0],
+        imageUrls: sampleExperienceImages(1),
+        status: "DRAFT",
+        createdBy: actor!.id,
+      },
+    });
+
+    const submitted = await api()
+      .post(`/api/admin/experiences/${draft.id}/submit`)
+      .set("Authorization", `Bearer ${adminToken}`);
+    expect(submitted.status).toBe(422);
+    expect(submitted.body.error.message).toBe(MIN_EXPERIENCE_IMAGES_MESSAGE);
+
+    const valid = await api()
+      .post("/api/admin/experiences")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send(experiencePayload(categoryId, "Ruta con galería completa"));
+    expect(valid.status).toBe(201);
+
+    const reduced = await api()
+      .put(`/api/admin/experiences/${valid.body.data.experience.id}`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ imageUrls: sampleExperienceImages(4) });
+    expect(reduced.status).toBe(422);
+    expect(
+      (reduced.body.error.details as Array<{ message?: string }>).some(
+        (item) => item.message === MIN_EXPERIENCE_IMAGES_MESSAGE,
+      ),
+    ).toBe(true);
+  });
+
   it("deja pendiente la experiencia de un administrador e ignora un intento de publicar directo", async () => {
     const { adminToken } = await createAndLoginStaffAdmin();
     const category = await api()

@@ -1,4 +1,5 @@
 import type { ExperienceStatus, Prisma } from "@prisma/client";
+import { MIN_EXPERIENCE_IMAGES, MIN_EXPERIENCE_IMAGES_MESSAGE } from "../config/constants.js";
 import { prisma } from "../database/prisma.js";
 import type { AuthUser } from "../models/auth-user.js";
 import { ApiError } from "../utils/api-error.js";
@@ -124,10 +125,28 @@ function normalizeExperienceImages(input: { imageUrl?: string | null; imageUrls?
   return { imageUrl: urls[0] ?? null, imageUrls: urls };
 }
 
-function requirePublishFields(imageUrl?: string | null, location?: string | null) {
-  if (!imageUrl) {
-    throw ApiError.unprocessable("Una experiencia publicada debe tener imagen");
+function countExperienceImages(input: { imageUrl?: string | null; imageUrls?: string[] | null }) {
+  const listed = Array.isArray(input.imageUrls)
+    ? input.imageUrls.map((url) => url.trim()).filter(Boolean)
+    : [];
+  if (listed.length) {
+    return listed.length;
   }
+  const single = typeof input.imageUrl === "string" ? input.imageUrl.trim() : "";
+  return single ? 1 : 0;
+}
+
+function requireMinExperienceImages(input: { imageUrl?: string | null; imageUrls?: string[] | null }) {
+  if (countExperienceImages(input) < MIN_EXPERIENCE_IMAGES) {
+    throw ApiError.unprocessable(MIN_EXPERIENCE_IMAGES_MESSAGE);
+  }
+}
+
+function requirePublishFields(
+  images: { imageUrl?: string | null; imageUrls?: string[] | null },
+  location?: string | null,
+) {
+  requireMinExperienceImages(images);
   if (!location) {
     throw ApiError.unprocessable("Una experiencia publicada debe tener ubicación");
   }
@@ -157,7 +176,7 @@ export async function createExperience(
   }
 
   const gallery = normalizeExperienceImages(input);
-  requirePublishFields(gallery.imageUrl, input.location);
+  requirePublishFields(gallery, input.location);
   void input.status;
 
   const publishesDirectly = publishesExperiencesDirectly(actor);
@@ -252,6 +271,8 @@ export async function updateExperience(
       })
     : { imageUrl: current.imageUrl, imageUrls: current.imageUrls };
 
+  requireMinExperienceImages(gallery);
+
   const experience = await prisma.experience.update({
     where: { id },
     data: hasGalleryUpdate ? { ...data, imageUrl: gallery.imageUrl, imageUrls: gallery.imageUrls } : data,
@@ -286,7 +307,7 @@ export async function submitExperienceForReview(actor: AuthUser, id: string) {
     throw ApiError.badRequest("Esta experiencia no se puede enviar a revisión");
   }
 
-  requirePublishFields(current.imageUrl, current.location);
+  requirePublishFields(current, current.location);
 
   const experience = await prisma.experience.update({
     where: { id },
@@ -325,7 +346,7 @@ export async function approveExperience(actor: AuthUser, id: string) {
     throw ApiError.badRequest("Solo se pueden aprobar experiencias pendientes de revisión");
   }
 
-  requirePublishFields(current.imageUrl, current.location);
+  requirePublishFields(current, current.location);
 
   const reviewedAt = new Date();
   const [experience] = await prisma.$transaction([
@@ -440,7 +461,7 @@ export async function changeExperienceStatus(actor: AuthUser, id: string, status
       return current;
     }
     if (status === "PUBLISHED") {
-      requirePublishFields(current.imageUrl, current.location);
+      requirePublishFields(current, current.location);
       const experience = await prisma.experience.update({
         where: { id },
         data: { status: "PUBLISHED" },

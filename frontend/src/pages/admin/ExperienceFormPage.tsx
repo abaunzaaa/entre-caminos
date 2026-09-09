@@ -26,6 +26,18 @@ import type { Category, ExperienceStatus } from "../../types";
 import superadmIlus2 from "../../assets/superadm-ilus2.png";
 import "../../styles/admin-access.css";
 
+const MIN_EXPERIENCE_IMAGES = 5;
+const MIN_EXPERIENCE_IMAGES_MESSAGE = "Agrega al menos 5 imágenes para continuar.";
+
+function ExperienceImagesHint({ uploading }: { uploading?: boolean }) {
+  return (
+    <>
+      <span className="dash-exps-dropzone__hint">Mínimo 5 imágenes</span>
+      {uploading ? <span className="dash-exps-dropzone__status">Subiendo…</span> : null}
+    </>
+  );
+}
+
 function FieldPicker({
   label,
   value,
@@ -283,8 +295,8 @@ export function ExperienceFormPage() {
       setError("Completa departamento, municipio y dirección.");
       return;
     }
-    if (!imageUrls.length) {
-      setError("Agrega al menos una imagen para enviar la experiencia a revisión.");
+    if (imageUrls.length < MIN_EXPERIENCE_IMAGES) {
+      setError(MIN_EXPERIENCE_IMAGES_MESSAGE);
       return;
     }
     const payload = {
@@ -486,11 +498,12 @@ export function ExperienceFormPage() {
                   </span>
                   <span className="dash-exps-dropzone__copy">
                     <span className="dash-exps-dropzone__title">Agrega imágenes</span>
-                    <span className="dash-exps-dropzone__lead">Sube fotos para mostrar tu experiencia</span>
-                    {uploading ? <span className="dash-exps-dropzone__status">Subiendo…</span> : null}
+                    <span className="dash-exps-dropzone__lead">Las mejores experiencias tienen 5 fotos o más.</span>
+                    <ExperienceImagesHint uploading={uploading} />
                   </span>
                 </button>
               ) : (
+                <>
                 <ul className="dash-exps-thumbs">
                   {imageUrls.map((url, index) => (
                     <li
@@ -575,6 +588,10 @@ export function ExperienceFormPage() {
                     </li>
                   ) : null}
                 </ul>
+                <div className="dash-exps-dropzone__meta">
+                  <ExperienceImagesHint uploading={uploading} />
+                </div>
+              </>
               )}
               <input
                 ref={imageInputRef}
