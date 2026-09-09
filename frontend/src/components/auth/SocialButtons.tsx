@@ -1,3 +1,5 @@
+type SocialProvider = "google" | "apple" | "microsoft";
+
 function GoogleIcon() {
   return (
     <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden>
@@ -17,7 +19,12 @@ function MicrosoftIcon() {
   );
 }
 
-export function SocialButtons({ label }: { label: string }) {
+function startSocialLogin(provider: SocialProvider, remember: boolean) {
+  const params = new URLSearchParams({ remember: remember ? "1" : "0" });
+  window.location.assign(`/api/auth/${provider}?${params.toString()}`);
+}
+
+export function SocialButtons({ label, remember = true }: { label: string; remember?: boolean }) {
   return (
     <div className="auth-social">
       <div className="flex items-center gap-3 text-xs text-neutral-400">
@@ -27,25 +34,24 @@ export function SocialButtons({ label }: { label: string }) {
       </div>
       <div className="flex justify-center gap-4">
         {[
-          { name: "Google", icon: <GoogleIcon /> },
+          { name: "Google", provider: "google" as const, icon: <GoogleIcon /> },
           {
             name: "Apple",
+            provider: "apple" as const,
             icon: (
               <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden>
                 <path d="M16.4 12.6c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.2-2.8.9-3.5.9s-1.8-.8-3-.8c-1.5 0-3 .9-3.8 2.3-1.6 2.8-.4 7 1.2 9.3.8 1.1 1.7 2.3 3 2.3 1.2 0 1.6-.7 3-.7s1.8.7 3 .7 2-1.1 2.8-2.2c.9-1.3 1.3-2.5 1.3-2.6-.1 0-2.6-1-2.6-3.9zM14.6 5.8c.6-.8 1.1-1.9.9-3-1 .1-2.2.7-2.9 1.5-.6.7-1.2 1.9-1 3 1.1.1 2.3-.5 3-1.5z" />
               </svg>
             ),
           },
-          { name: "Microsoft", icon: <MicrosoftIcon /> },
+          { name: "Microsoft", provider: "microsoft" as const, icon: <MicrosoftIcon /> },
         ].map((item) => (
           <button
             key={item.name}
             type="button"
             className="grid h-12 w-12 place-items-center rounded-full border border-neutral-200"
             aria-label={item.name}
-            onClick={() =>
-              window.alert("Por ahora crea la cuenta con correo y contraseña. Google, Apple y Microsoft llegan después.")
-            }
+            onClick={() => startSocialLogin(item.provider, remember)}
           >
             {item.icon}
           </button>

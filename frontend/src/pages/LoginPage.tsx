@@ -1,5 +1,5 @@
 import { FormEvent, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { AuthFormBrand } from "../components/auth/AuthFormBrand";
 import { AuthTextField } from "../components/auth/AuthTextField";
 import { SocialButtons } from "../components/auth/SocialButtons";
@@ -16,7 +16,14 @@ export function LoginForm() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [error, setError] = useState(() => consumeSessionExpiredMessage());
+  const [searchParams] = useSearchParams();
+  const [remember, setRemember] = useState(false);
+  const [error, setError] = useState(
+    () =>
+      searchParams.get("oauthError") ||
+      (location.state as { oauthError?: string } | null)?.oauthError ||
+      consumeSessionExpiredMessage(),
+  );
   const [pendingEmail, setPendingEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
@@ -34,7 +41,7 @@ export function LoginForm() {
 
     try {
       setLoading(true);
-      const user = await login(email, String(form.get("password")));
+      const user = await login(email, String(form.get("password")), remember);
       navigate(user.role === "USER" ? "/explorar" : "/admin", { replace: true });
     } catch (err) {
       const message = getApiErrorMessage(err, "Credenciales incorrectas");
@@ -95,7 +102,12 @@ export function LoginForm() {
         />
         <div className="auth-row">
           <label className="auth-check">
-            <input type="checkbox" name="remember" />
+            <input
+              type="checkbox"
+              name="remember"
+              checked={remember}
+              onChange={(event) => setRemember(event.target.checked)}
+            />
             Recuérdame
           </label>
           <Link to="/forgot-password">¿Olvidaste tu contraseña?</Link>
@@ -128,7 +140,7 @@ export function LoginForm() {
           <Link to="/register">Crear cuenta</Link>
         </p>
         <div className="auth-alt">
-          <SocialButtons label="O inicia sesión con" />
+          <SocialButtons label="O inicia sesión con" remember={remember} />
         </div>
       </footer>
     </div>

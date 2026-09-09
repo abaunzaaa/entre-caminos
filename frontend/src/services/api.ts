@@ -11,8 +11,10 @@ declare module "axios" {
 
 const TOKEN_KEY = "ec_access_token";
 const USER_KEY = "ec_auth_user";
+const REMEMBER_KEY = "ec_remember";
 const SESSION_FLAG = "ec_session_expired";
-const AUTH_EXEMPT = /\/auth\/(login|register|refresh|logout|forgot-password|reset-password|verify-email|resend-verification-code)(?:\?|$)/;
+const AUTH_EXEMPT =
+  /\/auth\/(login|register|refresh|logout|forgot-password|reset-password|verify-email|resend-verification-code|google|apple|microsoft)(?:\/callback)?(?:\?|$)/;
 
 type RetryConfig = InternalAxiosRequestConfig & {
   skipAuthRefresh?: boolean;
@@ -49,27 +51,53 @@ function writeStorage(store: Storage, key: string, value: string | null) {
   }
 }
 
+export function syncRememberFromLocation() {
+  try {
+    const remember = new URLSearchParams(window.location.search).get("remember");
+    if (remember === "1" || remember === "true") {
+      setRememberSession(true);
+    } else if (remember === "0" || remember === "false") {
+      setRememberSession(false);
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
+export function setRememberSession(remember: boolean) {
+  writeStorage(window.localStorage, REMEMBER_KEY, remember ? "1" : "0");
+}
+
+export function shouldRememberSession() {
+  const value = readStorage(window.localStorage, REMEMBER_KEY);
+  if (value === "0") {
+    return false;
+  }
+  if (value === "1") {
+    return true;
+  }
+  return Boolean(readStorage(window.localStorage, TOKEN_KEY) || readStorage(window.localStorage, USER_KEY));
+}
+
+function persistStore() {
+  return shouldRememberSession() ? window.localStorage : window.sessionStorage;
+}
+
+function otherStore() {
+  return shouldRememberSession() ? window.sessionStorage : window.localStorage;
+}
+
 export function getAccessToken() {
-  const local = readStorage(window.localStorage, TOKEN_KEY);
-  if (local) {
-    return local;
-  }
-  const session = readStorage(window.sessionStorage, TOKEN_KEY);
-  if (session) {
-    writeStorage(window.localStorage, TOKEN_KEY, session);
-    writeStorage(window.sessionStorage, TOKEN_KEY, null);
-    return session;
-  }
-  return null;
+  return readStorage(window.localStorage, TOKEN_KEY) ?? readStorage(window.sessionStorage, TOKEN_KEY);
 }
 
 export function setAccessToken(token: string | null) {
-  writeStorage(window.localStorage, TOKEN_KEY, token);
-  writeStorage(window.sessionStorage, TOKEN_KEY, null);
+  writeStorage(persistStore(), TOKEN_KEY, token);
+  writeStorage(otherStore(), TOKEN_KEY, null);
 }
 
 export function getStoredUser(): PublicUser | null {
-  const raw = readStorage(window.localStorage, USER_KEY);
+  const raw = readStorage(window.localStorage, USER_KEY) ?? readStorage(window.sessionStorage, USER_KEY);
   if (!raw) {
     return null;
   }
@@ -85,12 +113,16 @@ export function getStoredUser(): PublicUser | null {
 }
 
 export function setStoredUser(user: PublicUser | null) {
-  writeStorage(window.localStorage, USER_KEY, user ? JSON.stringify(user) : null);
+  writeStorage(persistStore(), USER_KEY, user ? JSON.stringify(user) : null);
+  writeStorage(otherStore(), USER_KEY, null);
 }
 
 export function clearSession() {
-  setAccessToken(null);
-  setStoredUser(null);
+  writeStorage(window.localStorage, TOKEN_KEY, null);
+  writeStorage(window.sessionStorage, TOKEN_KEY, null);
+  writeStorage(window.localStorage, USER_KEY, null);
+  writeStorage(window.sessionStorage, USER_KEY, null);
+  writeStorage(window.localStorage, REMEMBER_KEY, null);
 }
 
 export function subscribeSessionLoss(listener: SessionListener) {
@@ -151,6 +183,7 @@ export async function refreshAccessToken(options?: { silent?: boolean }) {
         if (!token) {
           throw new Error("missing access token");
         }
+        syncRememberFromLocation();
         setAccessToken(token);
         const user = data?.data?.user as PublicUser | undefined;
         if (user) {

@@ -6,6 +6,7 @@ import { AuthPage } from "../pages/AuthPage";
 import { ForgotPasswordPage } from "../pages/ForgotPasswordPage";
 import { ResetPasswordPage } from "../pages/ResetPasswordPage";
 import { VerifyEmailPage } from "../pages/VerifyEmailPage";
+import { OAuthCallbackPage } from "../pages/OAuthCallbackPage";
 import { OnboardingWelcomePage } from "../pages/onboarding/OnboardingWelcomePage";
 import { OnboardingPreferencesPage } from "../pages/onboarding/OnboardingPreferencesPage";
 import { OnboardingReadyPage } from "../pages/onboarding/OnboardingReadyPage";
@@ -33,6 +34,7 @@ export function AppRoutes() {
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/verify-email" element={<VerifyEmailPage />} />
+        <Route path="/auth/callback" element={<OAuthCallbackPage />} />
         <Route element={<ProtectedRoute />}>
           <Route path="/onboarding" element={<OnboardingWelcomePage />} />
           <Route path="/onboarding/preferencias" element={<OnboardingPreferencesPage />} />
