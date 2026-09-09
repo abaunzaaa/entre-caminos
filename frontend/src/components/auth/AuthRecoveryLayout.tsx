@@ -4,7 +4,13 @@ import { AuthVisualPanel } from "./AuthVisualPanel";
 import { authScenicPhoto } from "./authArt";
 import "../../styles/auth-interactive.css";
 
-export function AuthRecoveryLayout({ children }: { children: ReactNode }) {
+export function AuthRecoveryLayout({
+  children,
+  onBack,
+}: {
+  children: ReactNode;
+  onBack?: () => void;
+}) {
   return (
     <div className="auth-stage">
       <div className="auth-stage__frame">
@@ -14,7 +20,7 @@ export function AuthRecoveryLayout({ children }: { children: ReactNode }) {
             <AuthVisualPanel mode="login" photo={authScenicPhoto} />
           </div>
         </div>
-        <AuthBackLink />
+        <AuthBackLink onBack={onBack} />
       </div>
     </div>
   );

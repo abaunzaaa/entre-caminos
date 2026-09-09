@@ -33,9 +33,11 @@ export function AppRoutes() {
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/verify-email" element={<VerifyEmailPage />} />
-        <Route path="/onboarding" element={<OnboardingWelcomePage />} />
-        <Route path="/onboarding/preferencias" element={<OnboardingPreferencesPage />} />
-        <Route path="/onboarding/listo" element={<OnboardingReadyPage />} />
+        <Route element={<ProtectedRoute />}>
+          <Route path="/onboarding" element={<OnboardingWelcomePage />} />
+          <Route path="/onboarding/preferencias" element={<OnboardingPreferencesPage />} />
+          <Route path="/onboarding/listo" element={<OnboardingReadyPage />} />
+        </Route>
         <Route element={<PublicLayout />}>
           <Route path="/explorar" element={<ExplorePage />} />
           <Route path="/explorar/:id" element={<ExperienceDetailPage />} />
