@@ -14,7 +14,7 @@ const USER_KEY = "ec_auth_user";
 const REMEMBER_KEY = "ec_remember";
 const SESSION_FLAG = "ec_session_expired";
 const AUTH_EXEMPT =
-  /\/auth\/(login|register|refresh|logout|forgot-password|reset-password|verify-email|resend-verification-code|google|apple|microsoft)(?:\/callback)?(?:\?|$)/;
+  /\/auth\/(login|register|refresh|logout|forgot-password|reset-password|verify-email|resend-verification-code|google)(?:\/callback)?(?:\?|$)/;
 
 type RetryConfig = InternalAxiosRequestConfig & {
   skipAuthRefresh?: boolean;

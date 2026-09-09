@@ -62,13 +62,11 @@ authRouter.post(
   asyncHandler(authController.resendVerificationCode),
 );
 
-(["google", "apple", "microsoft"] as const).forEach((provider) => {
-  const setProvider: RequestHandler = (req, _res, next) => {
-    req.params.provider = provider;
-    next();
-  };
+const setGoogleProvider: RequestHandler = (req, _res, next) => {
+  req.params.provider = "google";
+  next();
+};
 
-  authRouter.get(`/${provider}`, authRateLimiter, setProvider, asyncHandler(authController.oauthStart));
-  authRouter.get(`/${provider}/callback`, authRateLimiter, setProvider, asyncHandler(authController.oauthCallback));
-  authRouter.post(`/${provider}/callback`, authRateLimiter, setProvider, asyncHandler(authController.oauthCallback));
-});
+authRouter.get("/google", authRateLimiter, setGoogleProvider, asyncHandler(authController.oauthStart));
+authRouter.get("/google/callback", authRateLimiter, setGoogleProvider, asyncHandler(authController.oauthCallback));
+authRouter.post("/google/callback", authRateLimiter, setGoogleProvider, asyncHandler(authController.oauthCallback));

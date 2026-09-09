@@ -10,7 +10,6 @@ import {
   exchangeOAuthCode,
   isOAuthConfigured,
   loginOrRegisterOAuth,
-  parseAppleUserName,
   readOAuthState,
   signOAuthState,
   type OAuthProviderSlug,
@@ -170,7 +169,7 @@ function oauthFrontendRedirect(path: string, params?: Record<string, string>) {
 
 export async function oauthStart(req: Request, res: Response) {
   const provider = req.params.provider as OAuthProviderSlug;
-  if (!["google", "apple", "microsoft"].includes(provider)) {
+  if (provider !== "google") {
     return res.redirect(oauthFrontendRedirect("/login", { oauthError: "Proveedor no válido." }));
   }
   if (!isOAuthConfigured(provider)) {
@@ -187,7 +186,7 @@ export async function oauthStart(req: Request, res: Response) {
 
 export async function oauthCallback(req: Request, res: Response) {
   const provider = req.params.provider as OAuthProviderSlug;
-  if (!["google", "apple", "microsoft"].includes(provider)) {
+  if (provider !== "google") {
     return res.redirect(oauthFrontendRedirect("/login", { oauthError: "Proveedor no válido." }));
   }
 
@@ -204,8 +203,7 @@ export async function oauthCallback(req: Request, res: Response) {
 
   try {
     const { remember } = readOAuthState(state);
-    const appleName = parseAppleUserName(req.body?.user);
-    const profile = await exchangeOAuthCode(provider, code, appleName);
+    const profile = await exchangeOAuthCode(provider, code);
     const result = await loginOrRegisterOAuth(profile);
     setAuthCookies(
       res,

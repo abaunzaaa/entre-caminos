@@ -143,7 +143,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       async logout() {
         await logoutAccount();
-        setUser(null);
+        window.location.replace("/");
       },
       hasPermission(permission) {
         if (user?.role === "SUPER_ADMIN") {

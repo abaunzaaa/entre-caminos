@@ -336,7 +336,7 @@ export function AdminUserMenu({ user }: { user: PublicUser | null }) {
             type="button"
             className="admin-usermenu__item admin-usermenu__item--logout"
             role="menuitem"
-            onClick={() => logout().then(() => window.location.replace("/"))}
+            onClick={() => void logout()}
           >
             <LogOut size={18} strokeWidth={1.7} />
             Cerrar sesión

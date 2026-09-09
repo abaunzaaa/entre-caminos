@@ -37,6 +37,14 @@ describe("Recordarme y OAuth", () => {
     expect(String(response.headers.location)).toMatch(/oauthError=/);
   });
 
+  it("ya no expone Apple ni Microsoft", async () => {
+    const apple = await api().get("/api/auth/apple").redirects(0);
+    const microsoft = await api().get("/api/auth/microsoft").redirects(0);
+
+    expect(apple.status).toBe(404);
+    expect(microsoft.status).toBe(404);
+  });
+
   it("crea un usuario nuevo con proveedor externo y reutiliza el existente", async () => {
     const email = uniqueEmail("oauth");
     const first = await loginOrRegisterOAuth({
@@ -72,8 +80,8 @@ describe("Recordarme y OAuth", () => {
     const adminEmail = adminCredentials.email;
 
     const linked = await loginOrRegisterOAuth({
-      provider: "MICROSOFT",
-      providerAccountId: `ms-${adminEmail}`,
+      provider: "GOOGLE",
+      providerAccountId: `google-${adminEmail}`,
       email: adminEmail,
       name: "Admin Entre Caminos",
     });
