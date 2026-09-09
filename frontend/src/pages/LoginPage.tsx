@@ -1,6 +1,5 @@
 import { FormEvent, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { AuthFormBrand } from "../components/auth/AuthFormBrand";
 import { AuthTextField } from "../components/auth/AuthTextField";
 import { SocialButtons } from "../components/auth/SocialButtons";
 import { useAuth } from "../hooks/useAuth";
@@ -71,7 +70,6 @@ export function LoginForm() {
   return (
     <div className="auth-form">
       <header className="auth-form__header">
-        <AuthFormBrand />
         <h1 className="auth-form__title">Acceder</h1>
         <p className="auth-form__lead">Continúa descubriendo experiencias para recordar.</p>
         {registered && <p className="auth-notice">Cuenta creada. Ya puedes entrar.</p>}

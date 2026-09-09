@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { AuthBackLink } from "./AuthBackLink";
 import { AuthVisualPanel } from "./AuthVisualPanel";
 import { authScenicPhoto, type AuthMode } from "./authArt";
 import { cn } from "../../utils/cn";
@@ -80,6 +81,7 @@ export function AuthInteractiveCard({
       <div className="auth-visual-pane" aria-hidden="true">
         <AuthVisualPanel mode={mode} photo={authScenicPhoto} />
       </div>
+      {loginActive ? <AuthBackLink variant="icon" /> : null}
     </div>
   );
 }
