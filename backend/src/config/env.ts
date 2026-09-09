@@ -39,6 +39,16 @@ const envSchema = z.object({
   MAPBOX_ACCESS_TOKEN: z.string().optional().default(""),
   OPENAI_API_KEY: z.string().optional().default(""),
   OPENAI_MODEL: z.string().optional().default("gpt-4o-mini"),
+  GOOGLE_CLIENT_ID: z.preprocess(emptyToUndefined, z.string().optional()),
+  GOOGLE_CLIENT_SECRET: z.preprocess(emptyToUndefined, z.string().optional()),
+  MICROSOFT_CLIENT_ID: z.preprocess(emptyToUndefined, z.string().optional()),
+  MICROSOFT_CLIENT_SECRET: z.preprocess(emptyToUndefined, z.string().optional()),
+  MICROSOFT_TENANT_ID: z.preprocess(emptyToUndefined, z.string().optional()),
+  APPLE_CLIENT_ID: z.preprocess(emptyToUndefined, z.string().optional()),
+  APPLE_TEAM_ID: z.preprocess(emptyToUndefined, z.string().optional()),
+  APPLE_KEY_ID: z.preprocess(emptyToUndefined, z.string().optional()),
+  APPLE_PRIVATE_KEY: z.preprocess(emptyToUndefined, z.string().optional()),
+  OAUTH_REDIRECT_BASE: z.preprocess(emptyToUndefined, z.string().url().optional()),
 });
 
 const parsed = envSchema.safeParse(process.env);

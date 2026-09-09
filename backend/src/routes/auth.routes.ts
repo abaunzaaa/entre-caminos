@@ -1,4 +1,5 @@
-import { Router } from "express";
+import type { RequestHandler } from "express";
+import { Router as createRouter } from "express";
 import { authRateLimiter } from "../middleware/rate-limit.middleware.js";
 import { validate } from "../middleware/validate.middleware.js";
 import { authMiddleware } from "../middleware/auth.middleware.js";
@@ -13,7 +14,7 @@ import {
   verifyEmailSchema,
 } from "../validators/auth.validator.js";
 
-export const authRouter = Router();
+export const authRouter = createRouter();
 
 authRouter.post(
   "/register",
@@ -60,3 +61,14 @@ authRouter.post(
   validate(resendVerificationSchema),
   asyncHandler(authController.resendVerificationCode),
 );
+
+(["google", "apple", "microsoft"] as const).forEach((provider) => {
+  const setProvider: RequestHandler = (req, _res, next) => {
+    req.params.provider = provider;
+    next();
+  };
+
+  authRouter.get(`/${provider}`, authRateLimiter, setProvider, asyncHandler(authController.oauthStart));
+  authRouter.get(`/${provider}/callback`, authRateLimiter, setProvider, asyncHandler(authController.oauthCallback));
+  authRouter.post(`/${provider}/callback`, authRateLimiter, setProvider, asyncHandler(authController.oauthCallback));
+});
