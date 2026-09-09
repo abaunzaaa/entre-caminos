@@ -1,5 +1,6 @@
 import { FormEvent, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { AuthFormBrand } from "../components/auth/AuthFormBrand";
 import { AuthTextField } from "../components/auth/AuthTextField";
 import { SocialButtons } from "../components/auth/SocialButtons";
 import { saveOnboarding } from "../utils/onboarding";
@@ -63,8 +64,9 @@ export function RegisterForm() {
   return (
     <div className="auth-form">
       <header className="auth-form__header">
+        <AuthFormBrand />
         <h1 className="auth-form__title">Crea tu cuenta</h1>
-        <p className="auth-form__lead">Empieza a descubrir experiencias que van contigo.</p>
+        <p className="auth-form__lead">Empieza a descubrir experiencias hechas para ti.</p>
       </header>
       <form className="auth-form__stack" onSubmit={onSubmit} noValidate>
         <AuthTextField
@@ -121,6 +123,10 @@ export function RegisterForm() {
         </button>
       </form>
       <footer className="auth-form__footer">
+        <p className="auth-switch">
+          ¿Ya tienes cuenta?{" "}
+          <Link to="/login">Iniciar sesión</Link>
+        </p>
         <div className="auth-alt">
           <SocialButtons label="O regístrate con" />
         </div>

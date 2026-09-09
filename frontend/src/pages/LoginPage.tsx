@@ -1,5 +1,6 @@
 import { FormEvent, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { AuthFormBrand } from "../components/auth/AuthFormBrand";
 import { AuthTextField } from "../components/auth/AuthTextField";
 import { SocialButtons } from "../components/auth/SocialButtons";
 import { useAuth } from "../hooks/useAuth";
@@ -70,8 +71,9 @@ export function LoginForm() {
   return (
     <div className="auth-form">
       <header className="auth-form__header">
+        <AuthFormBrand />
         <h1 className="auth-form__title">Bienvenido de nuevo</h1>
-        <p className="auth-form__lead">Continúa descubriendo nuevos caminos y experiencias.</p>
+        <p className="auth-form__lead">Continúa descubriendo experiencias para recordar.</p>
         {registered && <p className="auth-notice">Cuenta creada. Ya puedes entrar.</p>}
       </header>
       <form className="auth-form__stack" onSubmit={onSubmit}>
@@ -92,7 +94,7 @@ export function LoginForm() {
           required
         />
         <div className="auth-row">
-          <label className="auth-check" style={{ margin: 0 }}>
+          <label className="auth-check">
             <input type="checkbox" name="remember" />
             Recuérdame
           </label>
@@ -121,6 +123,10 @@ export function LoginForm() {
         </button>
       </form>
       <footer className="auth-form__footer">
+        <p className="auth-switch">
+          ¿No tienes cuenta?{" "}
+          <Link to="/register">Crear cuenta</Link>
+        </p>
         <div className="auth-alt">
           <SocialButtons label="O inicia sesión con" />
         </div>

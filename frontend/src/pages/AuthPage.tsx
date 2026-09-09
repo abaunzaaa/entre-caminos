@@ -1,11 +1,11 @@
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+import { AuthBackLink } from "../components/auth/AuthBackLink";
 import { AuthInteractiveCard } from "../components/auth/AuthInteractiveCard";
 import { LoginForm } from "./LoginPage";
 import { RegisterForm } from "./RegisterPage";
 
 export function AuthPage() {
   const location = useLocation();
-  const navigate = useNavigate();
   const mode = location.pathname.startsWith("/login") ? "login" : "register";
 
   return (
@@ -15,9 +15,8 @@ export function AuthPage() {
           mode={mode}
           registerForm={<RegisterForm />}
           loginForm={<LoginForm />}
-          onGoLogin={() => navigate("/login")}
-          onGoRegister={() => navigate("/register")}
         />
+        <AuthBackLink />
       </div>
     </div>
   );
