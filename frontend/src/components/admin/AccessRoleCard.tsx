@@ -1,6 +1,6 @@
-import { Check, Users } from "lucide-react";
+import { Users } from "lucide-react";
 import type { Role } from "../../types";
-import { isExplorerRole, peopleLabel, roleCapabilities, roleCopy } from "../../utils/access-copy";
+import { isExplorerRole, peopleLabel, roleCopy } from "../../utils/access-copy";
 
 export function AccessRoleCard({
   role,
@@ -14,7 +14,6 @@ export function AccessRoleCard({
   const copy = roleCopy(role.name);
   const Icon = copy.icon;
   const people = role._count?.users ?? 0;
-  const capabilities = roleCapabilities(role);
   const explorer = isExplorerRole(role.name);
 
   return (
@@ -33,16 +32,6 @@ export function AccessRoleCard({
         <Users size={15} strokeWidth={1.8} aria-hidden="true" />
         <span>{peopleLabel(people)}</span>
       </p>
-      <p className="dash-access-role__can">{copy.canLabel}</p>
-      <ul className="dash-access-role__list">
-        {capabilities.map((item, index) => (
-          <li key={`${item.capability}-${index}`}>
-            <Check size={14} strokeWidth={2.2} aria-hidden="true" />
-            <span>{item.capability}</span>
-          </li>
-        ))}
-      </ul>
-      {explorer ? <p className="dash-access-role__note">Sin acceso administrativo.</p> : null}
     </button>
   );
 }

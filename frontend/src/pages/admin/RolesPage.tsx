@@ -16,6 +16,7 @@ import {
   sortRoles,
 } from "../../utils/access-copy";
 import accesosIlus from "../../assets/accesos-ilus.png";
+import tourist2 from "../../assets/tourist2.jpg";
 import "../../styles/admin-access.css";
 
 export function RolesPage() {
@@ -149,37 +150,47 @@ export function RolesPage() {
       </section>
 
       {selectedRole ? (
-        <section className="dash-access-section" aria-label={`Permisos de ${roleCopy(selectedRole.name).title}`}>
-          <div>
-            <h2 className="dash-section__title">Permisos de {roleCopy(selectedRole.name).title}</h2>
-            <p className="dash-section__lead">
-              {explorer
-                ? "Este rol usa la plataforma pública y no tiene acceso al panel administrativo."
-                : "Activa o desactiva lo que las personas con este rol pueden hacer."}
-            </p>
+        <section
+          className="dash-access-section dash-access-section--detail"
+          aria-label={`Permisos de ${roleCopy(selectedRole.name).title}`}
+        >
+          <div className="dash-access-detail" key={selectedRole.id}>
+            <div className="dash-access-detail__main">
+              <div className="dash-access-detail__intro">
+                <h2 className="dash-section__title">Permisos de {roleCopy(selectedRole.name).title}</h2>
+                <p className="dash-section__lead">
+                  {explorer
+                    ? "Este rol usa la plataforma pública y no tiene acceso al panel administrativo."
+                    : "Activa o desactiva lo que las personas con este rol pueden hacer."}
+                </p>
+              </div>
+              {explorer ? (
+                <div className="dash-access-perms">
+                  {EXPLORER_CAPABILITIES.map((copy) => (
+                    <AccessPermissionCard key={copy.title} copy={copy} active disabled />
+                  ))}
+                </div>
+              ) : (
+                <div className="dash-access-perms">
+                  {orderedPermissions.map((permission) => {
+                    const active = selectedRole.permissions.some((item) => item.permission.id === permission.id);
+                    return (
+                      <AccessPermissionCard
+                        key={permission.id}
+                        copy={permissionCopy(permission.name)}
+                        active={active}
+                        busy={busyId === permission.id}
+                        onToggle={() => requestToggle(selectedRole, permission.id)}
+                      />
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+            <aside className="dash-access-detail__art" aria-hidden="true">
+              <img src={tourist2} alt="" />
+            </aside>
           </div>
-          {explorer ? (
-            <div className="dash-access-perms">
-              {EXPLORER_CAPABILITIES.map((copy) => (
-                <AccessPermissionCard key={copy.title} copy={copy} active disabled />
-              ))}
-            </div>
-          ) : (
-            <div className="dash-access-perms">
-              {orderedPermissions.map((permission) => {
-                const active = selectedRole.permissions.some((item) => item.permission.id === permission.id);
-                return (
-                  <AccessPermissionCard
-                    key={permission.id}
-                    copy={permissionCopy(permission.name)}
-                    active={active}
-                    busy={busyId === permission.id}
-                    onToggle={() => requestToggle(selectedRole, permission.id)}
-                  />
-                );
-              })}
-            </div>
-          )}
         </section>
       ) : null}
 
