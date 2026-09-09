@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown, Search } from "lucide-react";
 import { Button } from "../../components/ui/Button";
 import { Input, Textarea } from "../../components/ui/Input";
@@ -21,6 +21,9 @@ import carrusel6 from "../../assets/carrusel6.jpg";
 import "../../styles/admin-access.css";
 
 const CATEGORY_CAROUSEL_SLIDES = [carrusel4, carrusel5, carrusel6] as const;
+
+/** Visible window for Categorías registradas. The filtered list still renders in full; this size caps the scroll viewport and is the future pagination page size. */
+const CATEGORY_DIRECTORY_PAGE_SIZE = 5;
 
 type FilterMenuOption<T extends string> = { value: T; label: string };
 
@@ -232,6 +235,48 @@ export function CategoriesPage() {
     });
   }, [categories, dateSort, query, statusFilter]);
 
+  const directoryRef = useRef<HTMLDivElement>(null);
+  const directoryScrollable = visibleCategories.length > CATEGORY_DIRECTORY_PAGE_SIZE;
+
+  useLayoutEffect(() => {
+    const node = directoryRef.current;
+    if (!node) {
+      return;
+    }
+    if (!directoryScrollable) {
+      node.style.removeProperty("--team-list-max");
+      return;
+    }
+
+    const list = node.querySelector<HTMLElement>(".dash-team-board__people");
+
+    function applyViewportHeight() {
+      const cards = node.querySelectorAll<HTMLElement>(".dash-cats-card");
+      const first = cards[0];
+      const last = cards[CATEGORY_DIRECTORY_PAGE_SIZE - 1];
+      if (!first || !last) {
+        return;
+      }
+      const height = Math.ceil(last.getBoundingClientRect().bottom - first.getBoundingClientRect().top);
+      const next = `${height}px`;
+      if (node.style.getPropertyValue("--team-list-max") !== next) {
+        node.style.setProperty("--team-list-max", next);
+      }
+    }
+
+    applyViewportHeight();
+    const observer = new ResizeObserver(applyViewportHeight);
+    observer.observe(node);
+    if (list) {
+      observer.observe(list);
+    }
+    window.addEventListener("resize", applyViewportHeight);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", applyViewportHeight);
+    };
+  }, [directoryScrollable, visibleCategories]);
+
   return (
     <div className="dash dash--cats">
       {toast ? (
@@ -341,11 +386,14 @@ export function CategoriesPage() {
           />
         </div>
 
-        <section className="dash-split__panel" aria-label="Categorías registradas">
-          <div>
+        <section
+          className={`dash-split__panel dash-cats-roster${directoryScrollable ? " is-scrollable" : ""}`}
+          aria-label="Categorías registradas"
+        >
+          <header className="dash-cats-roster__head">
             <h2 className="dash-section__title">Categorías registradas</h2>
             <p className="dash-section__lead">Gestiona las categorías disponibles para clasificar experiencias.</p>
-          </div>
+          </header>
           <div className="dash-team-filters" role="toolbar" aria-label="Filtros de categorías" ref={filtersRef}>
             <button
               type="button"
@@ -417,7 +465,21 @@ export function CategoriesPage() {
               <p>No hay coincidencias con estos filtros.</p>
             </Panel>
           ) : (
-            <div className="dash-team-board__people">
+            <div
+              ref={directoryRef}
+              className={`dash-cats-roster__viewport${directoryScrollable ? " is-scrollable" : ""}`}
+              tabIndex={directoryScrollable ? 0 : undefined}
+              role="region"
+              aria-label="Listado de categorías"
+              aria-describedby={directoryScrollable ? "cat-directory-scroll-hint" : undefined}
+              data-page-size={CATEGORY_DIRECTORY_PAGE_SIZE}
+            >
+              {directoryScrollable ? (
+                <p id="cat-directory-scroll-hint" className="sr-only">
+                  Desplázate para ver más categorías.
+                </p>
+              ) : null}
+              <div className="dash-team-board__people">
               {visibleCategories.map((category) => {
                 const count = category._count?.experiences ?? 0;
                 const Icon = getCategoryIcon(category.icon);
@@ -445,6 +507,7 @@ export function CategoriesPage() {
                   </article>
                 );
               })}
+              </div>
             </div>
           )}
         </section>

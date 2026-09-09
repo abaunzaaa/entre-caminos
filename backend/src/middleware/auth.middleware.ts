@@ -62,6 +62,10 @@ export async function authMiddleware(req: Request, _res: Response, next: NextFun
       throw ApiError.unauthorized("Sesión inválida o usuario inactivo");
     }
 
+    if (!user.emailVerified) {
+      throw ApiError.unauthorized("Debes verificar tu correo antes de iniciar sesión.");
+    }
+
     const permissions = user.role.permissions.map((item) => item.permission.name);
     const authUser: AuthUser = {
       id: user.id,

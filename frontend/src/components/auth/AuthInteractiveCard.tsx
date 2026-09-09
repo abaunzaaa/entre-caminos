@@ -1,15 +1,15 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { AuthBackLink } from "./AuthBackLink";
 import { AuthVisualPanel } from "./AuthVisualPanel";
-import { authArt, type AuthMode } from "./authArt";
+import { authScenicPhoto, type AuthMode } from "./authArt";
 import { cn } from "../../utils/cn";
 import "../../styles/auth-interactive.css";
 
-const ANIMATION_MS = 850;
+const ANIMATION_MS = 720;
 
 function usePrefersReducedMotion() {
-  const [reduced, setReduced] = useState(() =>
-    typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+  const [reduced, setReduced] = useState(
+    () =>
+      typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches,
   );
 
   useEffect(() => {
@@ -26,14 +26,10 @@ export function AuthInteractiveCard({
   mode,
   registerForm,
   loginForm,
-  onGoLogin,
-  onGoRegister,
 }: {
   mode: AuthMode;
   registerForm: ReactNode;
   loginForm: ReactNode;
-  onGoLogin: () => void;
-  onGoRegister: () => void;
 }) {
   const reducedMotion = usePrefersReducedMotion();
   const previousMode = useRef(mode);
@@ -66,27 +62,6 @@ export function AuthInteractiveCard({
       data-mode={mode}
       data-motion={reducedMotion ? "reduce" : "full"}
     >
-      <div className="auth-toggle" aria-hidden="true" />
-
-      <div
-        className="auth-visual-pane auth-visual-pane--register"
-        aria-hidden={!registerActive}
-        {...(registerInteractive ? {} : { inert: true })}
-      >
-        <AuthVisualPanel
-          mode="register"
-          illustration={authArt.register}
-          onAction={onGoLogin}
-        />
-      </div>
-      <div
-        className="auth-visual-pane auth-visual-pane--login"
-        aria-hidden={!loginActive}
-        {...(loginInteractive ? {} : { inert: true })}
-      >
-        <AuthVisualPanel mode="login" illustration={authArt.login} onAction={onGoRegister} />
-      </div>
-
       <div
         className="auth-form-pane auth-form-pane--register"
         aria-hidden={!registerActive}
@@ -102,7 +77,9 @@ export function AuthInteractiveCard({
         {loginForm}
       </div>
 
-      <AuthBackLink />
+      <div className="auth-visual-pane" aria-hidden="true">
+        <AuthVisualPanel mode={mode} photo={authScenicPhoto} />
+      </div>
     </div>
   );
 }

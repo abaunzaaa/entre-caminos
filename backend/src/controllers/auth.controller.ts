@@ -10,20 +10,15 @@ import { ApiError } from "../utils/api-error.js";
 import { publicUser } from "../utils/serializers.js";
 
 export async function register(req: Request, res: Response) {
-  const { user, verificationEmailSent } = await authService.registerUser(req.body);
-  const tokens = setAuthCookies(res, {
-    id: user.id,
-    email: user.email,
-    role: user.role as RoleName,
-  });
+  const { user, verificationEmailSent, devCode } = await authService.registerUser(req.body);
 
   return res.status(201).json({
     success: true,
     message: "Cuenta creada correctamente",
     data: {
       user,
-      accessToken: tokens.accessToken,
       verificationEmailSent,
+      ...(devCode ? { devCode } : {}),
     },
   });
 }
@@ -81,6 +76,11 @@ export async function refresh(req: Request, res: Response) {
     throw ApiError.unauthorized("Sesión inválida");
   }
 
+  if (!user.emailVerified) {
+    clearAuthCookies(res);
+    throw ApiError.unauthorized("Debes verificar tu correo antes de iniciar sesión.");
+  }
+
   const serialized = publicUser(user);
   const tokens = setAuthCookies(res, {
     id: serialized.id,
@@ -112,6 +112,25 @@ export async function resetPassword(req: Request, res: Response) {
 }
 
 export async function verifyEmail(req: Request, res: Response) {
-  await authService.verifyEmail(req.body.token);
-  return res.json({ success: true, message: "Correo verificado" });
+  const user = await authService.verifyEmail(req.body.email, req.body.code);
+  const tokens = setAuthCookies(res, {
+    id: user.id,
+    email: user.email,
+    role: user.role as RoleName,
+  });
+
+  return res.json({
+    success: true,
+    message: "Correo verificado. Continúa con tu perfil.",
+    data: { user, accessToken: tokens.accessToken },
+  });
+}
+
+export async function resendVerificationCode(req: Request, res: Response) {
+  const result = await authService.resendVerificationCode(req.body.email);
+  return res.json({
+    success: true,
+    message: "Si el correo está registrado, enviaremos un nuevo código.",
+    data: result,
+  });
 }

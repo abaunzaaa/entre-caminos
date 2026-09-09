@@ -1,13 +1,16 @@
-import crearCuentaArt from "../../assets/crear_cuenta.png";
+import scenicPhoto from "../../assets/encabezado.png";
 
 export type AuthMode = "register" | "login";
 
+/** Paisaje local reutilizado en el panel visual de autenticación. */
+export const authScenicPhoto = scenicPhoto;
+
 /**
- * Ilustraciones del panel visual.
- * `login` queda en null a propósito: otra integrante añadirá iniciar_sesion.png
- * sin reconstruir la animación ni este contenedor.
+ * Fotografía del panel visual.
+ * La misma imagen se usa en login y registro para que el panel
+ * se desplace como una sola pieza, sin cruzar ilustraciones.
  */
-export const authArt: Record<AuthMode, string | null> = {
-  register: crearCuentaArt,
-  login: null,
+export const authArt: Record<AuthMode, string> = {
+  register: scenicPhoto,
+  login: scenicPhoto,
 };

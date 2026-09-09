@@ -276,14 +276,44 @@
   text-transform: none;
 }
 
+.landing-featured__cta-wrap {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  margin-top: 0.15rem;
+  opacity: 0;
+  transform: translateY(40px);
+}
+
+.landing-featured__cta {
+  position: relative;
+  top: auto;
+  left: auto;
+  margin-top: 0;
+  opacity: 1;
+  transform: none;
+}
+
+.landing-featured__cta:hover,
+.landing-featured__cta:focus-visible {
+  transform: translateY(-2px);
+}
+
+.landing-featured__cta:active {
+  transform: scale(0.985);
+}
+
 .landing-featured__title,
-.landing-featured__carousel {
+.landing-featured__carousel,
+.landing-featured__cta-wrap {
   opacity: 0;
   transform: translateY(40px);
 }
 
 .landing-featured.is-inview .landing-featured__title,
-.landing-featured.is-inview .landing-featured__carousel {
+.landing-featured.is-inview .landing-featured__carousel,
+.landing-featured.is-inview .landing-featured__cta-wrap {
   animation: landing-featured-rise 0.9s ease-out forwards;
 }
 
@@ -293,6 +323,10 @@
 
 .landing-featured.is-inview .landing-featured__carousel {
   animation-delay: 0.38s;
+}
+
+.landing-featured.is-inview .landing-featured__cta-wrap {
+  animation-delay: 0.58s;
 }
 
 @keyframes landing-featured-rise {
@@ -392,7 +426,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .landing-featured__title,
-  .landing-featured__carousel {
+  .landing-featured__carousel,
+  .landing-featured__cta-wrap {
     opacity: 1;
     transform: none;
     animation: none;

@@ -349,7 +349,7 @@
   position: relative;
   min-height: 100%;
   overflow: hidden;
-  background: rgba(232, 176, 186, 0.28);
+  background: #bcbb90;
   border-radius: 0 1.35rem 1.35rem 0;
 }
 

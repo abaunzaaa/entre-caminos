@@ -23,6 +23,8 @@ import carroExp from "../assets/carro-exp.jpg";
 import padelExp from "../assets/padel-exp.jpg";
 import golfExp from "../assets/golf-exp.jpg";
 import { ContactModal } from "../components/contact/ContactModal";
+import { HowItWorksModal } from "../components/how-it-works/HowItWorksModal";
+import { TermsModal } from "../components/legal/TermsModal";
 import "../styles/landing-hero.css";
 import "../styles/landing-intro.css";
 import "../styles/landing-featured.css";
@@ -229,6 +231,8 @@ export function LandingPage() {
   const [flippedCard, setFlippedCard] = useState<number | null>(null);
   const [activeFeatured, setActiveFeatured] = useState(0);
   const [contactOpen, setContactOpen] = useState(false);
+  const [howItWorksOpen, setHowItWorksOpen] = useState(false);
+  const [legalDocument, setLegalDocument] = useState<"terms" | "privacy" | null>(null);
 
   useEffect(() => {
     const sections = [heroRef.current, introRef.current, featuredRef.current, valuesRef.current].filter(
@@ -275,7 +279,7 @@ export function LandingPage() {
         <nav className="landing-hero__nav" aria-label="Principal">
           <div className="landing-hero__links landing-hero__links--left">
             <Link to="/">INICIO</Link>
-            <a href="#como-funciona">DETALLES</a>
+            <a href="#experiencias-destacadas">EXPERIENCIAS</a>
           </div>
           <Link to="/" className="landing-hero__mark" aria-label="Entre Caminos">
             <img src={keyIcon} alt="" className="landing-hero__key" />
@@ -442,6 +446,11 @@ export function LandingPage() {
             ›
           </button>
         </div>
+        <div className="landing-featured__cta-wrap">
+          <Link to={user ? "/explorar" : "/register"} className="landing-hero__cta landing-featured__cta">
+            Descubrir más
+          </Link>
+        </div>
       </section>
 
       <section ref={valuesRef} className="landing-values" aria-label="Valores de Entre Caminos">
@@ -473,7 +482,15 @@ export function LandingPage() {
               <h3 className="landing-footer__col-title">Entre Caminos</h3>
               <ul className="landing-footer__links">
                 <li>
-                  <a href="#como-funciona">Cómo funciona</a>
+                  <a
+                    href="#como-funciona"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      setHowItWorksOpen(true);
+                    }}
+                  >
+                    Cómo funciona
+                  </a>
                 </li>
                 <li>
                   <a
@@ -492,10 +509,26 @@ export function LandingPage() {
               <h3 className="landing-footer__col-title">Legal</h3>
               <ul className="landing-footer__links">
                 <li>
-                  <a href="#contacto">Términos y condiciones</a>
+                  <a
+                    href="#contacto"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      setLegalDocument("terms");
+                    }}
+                  >
+                    Términos y condiciones
+                  </a>
                 </li>
                 <li>
-                  <a href="#contacto">Tratamiento de datos personales</a>
+                  <a
+                    href="#contacto"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      setLegalDocument("privacy");
+                    }}
+                  >
+                    Tratamiento de datos personales
+                  </a>
                 </li>
               </ul>
             </div>
@@ -504,6 +537,12 @@ export function LandingPage() {
         </div>
       </footer>
       <ContactModal open={contactOpen} onClose={() => setContactOpen(false)} />
+      <HowItWorksModal open={howItWorksOpen} onClose={() => setHowItWorksOpen(false)} />
+      <TermsModal
+        open={legalDocument !== null}
+        kind={legalDocument ?? "terms"}
+        onClose={() => setLegalDocument(null)}
+      />
     </div>
   );
 }

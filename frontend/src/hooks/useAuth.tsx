@@ -7,7 +7,14 @@ import {
   setStoredUser,
   subscribeSessionLoss,
 } from "../services/api";
-import { getMe, loginAccount, logoutAccount, registerAccount, restoreSession } from "../services/auth.service";
+import {
+  getMe,
+  loginAccount,
+  logoutAccount,
+  registerAccount,
+  restoreSession,
+  verifyEmailAccount,
+} from "../services/auth.service";
 import type { PublicUser } from "../types";
 
 type AuthContextValue = {
@@ -21,6 +28,7 @@ type AuthContextValue = {
     confirmPassword: string;
     termsAccepted: boolean;
   }) => Promise<{ user: PublicUser; verificationEmailSent: boolean }>;
+  verifyEmail: (email: string, code: string) => Promise<PublicUser>;
   logout: () => Promise<void>;
   hasPermission: (permission: string) => boolean;
   isAdmin: boolean;
@@ -31,7 +39,10 @@ const REFRESH_SKEW_MS = 45_000;
 const REFRESH_POLL_MS = 20_000;
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<PublicUser | null>(() => getStoredUser());
+  const [user, setUser] = useState<PublicUser | null>(() => {
+    const stored = getStoredUser();
+    return stored?.emailVerified ? stored : null;
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -105,6 +116,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       async register(payload) {
         const result = await registerAccount(payload);
+        if (!result.user.emailVerified) {
+          setUser(null);
+          return {
+            user: result.user,
+            verificationEmailSent: Boolean(result.verificationEmailSent),
+          };
+        }
         setUser(result.user);
         const profile = await getMe().catch(() => result.user);
         setStoredUser(profile);
@@ -113,6 +131,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           user: profile,
           verificationEmailSent: Boolean(result.verificationEmailSent),
         };
+      },
+      async verifyEmail(email, code) {
+        const result = await verifyEmailAccount({ email, code });
+        const profile = await getMe().catch(() => result.user);
+        setStoredUser(profile);
+        setUser(profile);
+        return profile;
       },
       async logout() {
         await logoutAccount();

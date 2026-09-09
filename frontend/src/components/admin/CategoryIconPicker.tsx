@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import {
   CATEGORY_ICON_OPTIONS,
@@ -41,6 +41,42 @@ export function CategoryIconPicker({
       document.removeEventListener("keydown", onKeyDown);
     };
   }, []);
+
+  useLayoutEffect(() => {
+    if (!open) {
+      return;
+    }
+    const host = rootRef.current;
+    const panel = host?.querySelector<HTMLElement>(".dash-cats-iconpick__menu");
+    if (!host || !panel) {
+      return;
+    }
+
+    function applyMaxHeight() {
+      const styles = getComputedStyle(host);
+      const gap = parseFloat(styles.getPropertyValue("--iconpick-gap")) || 8;
+      const rows = parseFloat(styles.getPropertyValue("--iconpick-visible-rows")) || 4;
+      const pad = parseFloat(styles.getPropertyValue("--iconpick-menu-pad")) || 24;
+      const option = host.querySelector<HTMLElement>(".dash-cats-iconpick__option");
+      const cell =
+        option?.getBoundingClientRect().height ||
+        parseFloat(styles.getPropertyValue("--iconpick-cell")) ||
+        52;
+      const preferred = Math.ceil(pad + cell * rows + gap * Math.max(0, rows - 1) + 2);
+      const available = Math.floor(window.innerHeight - panel.getBoundingClientRect().top - 16);
+      const next = `${Math.max(Math.ceil(pad + cell * 2 + gap), Math.min(preferred, available))}px`;
+      if (host.style.getPropertyValue("--iconpick-max") !== next) {
+        host.style.setProperty("--iconpick-max", next);
+      }
+    }
+
+    applyMaxHeight();
+    window.addEventListener("resize", applyMaxHeight);
+    return () => {
+      window.removeEventListener("resize", applyMaxHeight);
+      host.style.removeProperty("--iconpick-max");
+    };
+  }, [open]);
 
   return (
     <div className="dash-team-role dash-cats-iconpick" ref={rootRef}>

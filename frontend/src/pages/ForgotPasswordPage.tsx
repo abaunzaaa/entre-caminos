@@ -7,7 +7,7 @@ import { getApiErrorMessage } from "../utils/api-error";
 import { validateEmailFormat } from "../utils/register-validation";
 
 const GENERIC_MESSAGE =
-  "Si el correo está registrado, recibirás un enlace para restablecer tu contraseña";
+  "Si el correo está registrado, recibirás un enlace para restablecer tu contraseña. Si no encuentras el correo en tu bandeja de entrada, revisa la carpeta de spam o correo no deseado.";
 
 export function ForgotPasswordPage() {
   const [emailError, setEmailError] = useState("");

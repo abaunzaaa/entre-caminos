@@ -29,6 +29,10 @@ describe("HU-02 Registro", () => {
     expect(stored).not.toBeNull();
     expect(stored?.passwordHash).not.toBe(validPassword);
     expect(stored?.passwordHash.startsWith("$2")).toBe(true);
+    expect(stored?.emailVerified).toBe(false);
+    expect(stored?.verificationCode).toBeTruthy();
+    expect(stored?.verificationCode).not.toBe(response.body.data.devCode);
+    expect(stored?.verificationCodeExpires).toBeTruthy();
   });
 
   it("rechaza un correo repetido", async () => {

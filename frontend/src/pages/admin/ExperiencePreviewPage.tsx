@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ExperienceLocationMap } from "../../components/admin/ExperienceLocationMap";
-import { StatusDot } from "../../components/admin/Panel";
-import { TeamInviteCarousel } from "../../components/admin/TeamInviteCarousel";
+import { Heart } from "lucide-react";
+import { ExperienceEditorialNearby } from "../../components/admin/ExperienceEditorialNearby";
+import { ExperienceEditorialPlace } from "../../components/admin/ExperienceEditorialPlace";
+import { ExperienceEditorialDossier } from "../../components/admin/ExperienceEditorialDossier";
+import { ExperienceEditorialGallery } from "../../components/admin/ExperienceEditorialGallery";
 import { Button } from "../../components/ui/Button";
-import { parseStoredLocation } from "../../data/colombia-locations";
+import { formatDepartmentMunicipality } from "../../data/colombia-locations";
 import { useAuth } from "../../hooks/useAuth";
 import { approveExperience, getAdminExperience, rejectExperience } from "../../services/catalog.service";
 import { getApiErrorMessage } from "../../utils/api-error";
@@ -13,6 +15,10 @@ import { experienceImages, mediaUrl } from "../../utils/media";
 import type { Experience, ExperienceStatus } from "../../types";
 import superadmIlus2 from "../../assets/superadm-ilus2.png";
 import "../../styles/admin-access.css";
+import "../../styles/experience-editorial-gallery.css";
+import "../../styles/experience-editorial-dossier.css";
+import "../../styles/experience-editorial-map.css";
+import "../../styles/experience-editorial-nearby.css";
 
 const STATUS_LABEL: Record<ExperienceStatus, string> = {
   DRAFT: "Borrador",
@@ -22,11 +28,7 @@ const STATUS_LABEL: Record<ExperienceStatus, string> = {
   REJECTED: "Rechazada",
 };
 
-function isCatalogActive(status: ExperienceStatus) {
-  return status === "PUBLISHED";
-}
-
-function formatCreatedAt(value?: string | null) {
+function formatPublishedDate(value?: string | null) {
   if (!value) {
     return "";
   }
@@ -38,8 +40,6 @@ function formatCreatedAt(value?: string | null) {
     day: "2-digit",
     month: "long",
     year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
   }).format(date);
 }
 
@@ -53,24 +53,63 @@ export function ExperiencePreviewPage() {
   const [busy, setBusy] = useState(false);
   const [rejectOpen, setRejectOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
+  const [toast, setToast] = useState("");
+  const [favoriteOn, setFavoriteOn] = useState(false);
 
   useEffect(() => {
     if (!id) {
       return;
     }
+    setFavoriteOn(false);
+    setToast("");
     getAdminExperience(id)
       .then(setExperience)
       .catch((err) => setError(getApiErrorMessage(err, "No se pudo cargar la experiencia")));
   }, [id]);
 
-  const parsed = experience ? parseStoredLocation(experience.location) : null;
+  useEffect(() => {
+    if (!toast) {
+      return;
+    }
+    const timer = window.setTimeout(() => setToast(""), 4200);
+    return () => window.clearTimeout(timer);
+  }, [toast]);
+
+  const locationByline = experience ? formatDepartmentMunicipality(experience.location) : "";
   const lat = experience?.latitude ? Number(experience.latitude) : null;
   const lng = experience?.longitude ? Number(experience.longitude) : null;
   const hasPoint = Number.isFinite(lat) && Number.isFinite(lng);
-  const active = experience ? isCatalogActive(experience.status) : false;
-  const created = experience ? formatCreatedAt(experience.createdAt) : "";
-  const submitted = experience ? formatCreatedAt(experience.submittedAt) : "";
+  const published =
+    experience?.status === "PUBLISHED"
+      ? formatPublishedDate(experience.reviewedAt || experience.createdAt)
+      : "";
   const pending = experience?.status === "PENDING";
+  const photos = experience ? experienceImages(experience) : [];
+  const mainPhoto = photos[0] ? mediaUrl(photos[0]) : null;
+  const noteFacts = experience
+    ? [
+        ...(experience.creator?.name ? [{ label: "Creada por", value: experience.creator.name }] : []),
+        ...(experience.creator?.email ? [{ label: "Contacto", value: experience.creator.email }] : []),
+        ...(published ? [{ label: "Fecha de publicación", value: published }] : []),
+      ]
+    : [];
+  const detailFacts = experience
+    ? [
+        ...(experience.description.trim() ? [{ label: "Descripción", value: experience.description }] : []),
+        { label: "Precio", value: formatPrice(experience.price) },
+        { label: "Categoría", value: experience.category?.name || "Sin categoría" },
+        { label: "Estado", value: STATUS_LABEL[experience.status] },
+        { label: "Ubicación", value: experience.location || "—" },
+        ...(experience.rejectionReason
+          ? [{ label: "Motivo del rechazo", value: experience.rejectionReason }]
+          : []),
+      ]
+    : [];
+
+  function onPreviewFavorite() {
+    setFavoriteOn((on) => !on);
+    setToast("Los turistas pueden guardar esta experiencia en favoritos.");
+  }
 
   async function onApprove() {
     if (!experience) {
@@ -111,7 +150,16 @@ export function ExperiencePreviewPage() {
   }
 
   return (
-    <div className="dash dash--exps">
+    <div
+      className="dash dash--exps dash--exps-preview"
+      style={mainPhoto ? ({ "--preview-glow": `url(${JSON.stringify(mainPhoto)})` } as CSSProperties) : undefined}
+    >
+      {toast ? (
+        <p className="dash-team-toast" role="status">
+          {toast}
+        </p>
+      ) : null}
+
       <article className="dash-profile">
         <div className="dash-profile__top">
           <div className="dash-profile__identity">
@@ -136,98 +184,55 @@ export function ExperiencePreviewPage() {
 
       {experience ? (
         <section className="dash-exps-preview-page" aria-label="Detalle de la experiencia">
-          <article className="dash-split__panel dash-exps-preview-hero">
-            <div className="dash-exps-preview-hero__media">
-              {experienceImages(experience).length ? (
-                <TeamInviteCarousel
-                  className="dash-exps-preview-hero__gallery"
-                  slides={experienceImages(experience).map((url) => mediaUrl(url))}
-                  label={experience.title}
-                />
-              ) : (
-                <div className="dash-exps-preview-hero__empty">Sin imagen</div>
-              )}
+          <section className="dash-exps-editorial" aria-label="Galería de la experiencia">
+            <div className="dash-exps-editorial__hero">
+              <button
+                type="button"
+                className={`dash-exps-preview-fav${favoriteOn ? " is-on" : ""}`}
+                aria-label="Guardar en favoritos"
+                aria-pressed={favoriteOn}
+                onClick={onPreviewFavorite}
+              >
+                <Heart size={18} strokeWidth={1.7} fill={favoriteOn ? "currentColor" : "none"} aria-hidden="true" />
+              </button>
+              <ExperienceEditorialGallery
+                slides={experienceImages(experience).map((url) => mediaUrl(url))}
+                label={experience.title}
+              />
             </div>
-            <div className="dash-exps-preview-hero__body">
-              <div className="dash-team-card__facts">
-                <StatusDot active={Boolean(experience.category?.name)}>
-                  {experience.category?.name || "Sin categoría"}
-                </StatusDot>
-                <StatusDot active={active}>{STATUS_LABEL[experience.status]}</StatusDot>
-              </div>
-              <h2>{experience.title}</h2>
-              <p className="dash-exps-preview-hero__price">{formatPrice(experience.price)}</p>
-              <p className="dash-exps-preview-hero__copy">{experience.description}</p>
-              {experience.rejectionReason ? (
-                <p className="dash-exps-reject">Motivo del rechazo: {experience.rejectionReason}</p>
-              ) : null}
-              <dl className="dash-exps-preview-facts">
-                <div>
-                  <dt>Ubicación</dt>
-                  <dd>{experience.location || "—"}</dd>
-                </div>
-                <div>
-                  <dt>Departamento</dt>
-                  <dd>{parsed?.department || "—"}</dd>
-                </div>
-                <div>
-                  <dt>Municipio</dt>
-                  <dd>{parsed?.municipality || "—"}</dd>
-                </div>
-                <div>
-                  <dt>Dirección</dt>
-                  <dd>{parsed?.address || "—"}</dd>
-                </div>
-                {experience.creator?.name ? (
-                  <div>
-                    <dt>Creada por</dt>
-                    <dd>
-                      {experience.creator.name}
-                      {experience.creator.email ? ` · ${experience.creator.email}` : ""}
-                    </dd>
-                  </div>
-                ) : null}
-                {submitted ? (
-                  <div>
-                    <dt>Enviada a revisión</dt>
-                    <dd>{submitted}</dd>
-                  </div>
-                ) : created ? (
-                  <div>
-                    <dt>Fecha de creación</dt>
-                    <dd>{created}</dd>
-                  </div>
-                ) : null}
-              </dl>
-            </div>
-          </article>
-
-          <section className="dash-split__panel dash-exps-preview-map" aria-label="Mapa de la experiencia">
-            <h3 className="dash-section__title">Ubicación en el mapa</h3>
-            {hasPoint ? (
-              <div className="dash-exps-preview-map__frame">
-                <ExperienceLocationMap latitude={lat} longitude={lng} zoom={15} interactive={false} />
-              </div>
-            ) : (
-              <p className="dash-section__lead">Esta experiencia aún no tiene un punto geográfico registrado.</p>
-            )}
+            <h2 className="dash-exps-editorial__title">{experience.title}</h2>
+            {locationByline ? <p className="dash-exps-editorial__byline">{locationByline}</p> : null}
           </section>
 
-          <div className="dash-cats-actions">
-            {pending && canReview ? (
-              <>
-                <Button type="button" disabled={busy} onClick={() => void onApprove()}>
-                  {busy ? "Procesando..." : "Aprobar y publicar"}
-                </Button>
-                <Button type="button" variant="secondary" disabled={busy} onClick={() => setRejectOpen(true)}>
-                  Rechazar
-                </Button>
-              </>
-            ) : null}
-            <Link to="/admin/experiencias" className="admin-cta inline-flex items-center justify-center">
-              Volver al listado
-            </Link>
-          </div>
+          <ExperienceEditorialDossier
+            photoUrl={mainPhoto}
+            photoLabel={experience.title}
+            noteFacts={noteFacts}
+            facts={detailFacts}
+          />
+
+          <ExperienceEditorialPlace experience={experience} latitude={lat} longitude={lng} hasPoint={hasPoint} />
+
+          <ExperienceEditorialNearby
+            experience={experience}
+            footer={
+              <div className="dash-cats-actions">
+                {pending && canReview ? (
+                  <>
+                    <Button type="button" disabled={busy} onClick={() => void onApprove()}>
+                      {busy ? "Procesando..." : "Aprobar y publicar"}
+                    </Button>
+                    <Button type="button" variant="secondary" disabled={busy} onClick={() => setRejectOpen(true)}>
+                      Rechazar
+                    </Button>
+                  </>
+                ) : null}
+                <Link to="/admin/experiencias" className="admin-cta inline-flex items-center justify-center">
+                  Volver al listado
+                </Link>
+              </div>
+            }
+          />
         </section>
       ) : !error ? (
         <p className="dash-section__lead">Cargando experiencia…</p>

@@ -1,44 +1,142 @@
-import { useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
-import { api } from "../services/api";
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { AuthRecoveryLayout } from "../components/auth/AuthRecoveryLayout";
+import { AuthTextField } from "../components/auth/AuthTextField";
+import { useAuth } from "../hooks/useAuth";
+import { resendVerificationCode } from "../services/auth.service";
 import { getApiErrorMessage } from "../utils/api-error";
+import {
+  clearPendingVerificationEmail,
+  getPendingVerificationEmail,
+  setPendingVerificationEmail,
+} from "../utils/pending-verification";
+
+const SPAM_HINT =
+  "Si no encuentras el correo en tu bandeja de entrada, revisa la carpeta de spam o correo no deseado.";
+const RESENT_CODE_NOTICE = "Te enviamos un nuevo código de verificación a tu correo.";
 
 export function VerifyEmailPage() {
-  const [params] = useSearchParams();
-  const token = params.get("token") ?? "";
-  const [status, setStatus] = useState<"loading" | "ok" | "error">("loading");
-  const [message, setMessage] = useState("Confirmando tu correo…");
+  const { user, verifyEmail, logout } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const locationState = location.state as { email?: string; resent?: boolean; notice?: string } | null;
+  const email = useMemo(() => {
+    return (locationState?.email ?? user?.email ?? getPendingVerificationEmail()).trim().toLowerCase();
+  }, [locationState?.email, user?.email]);
 
   useEffect(() => {
-    if (!token) {
-      setStatus("error");
-      setMessage("El enlace de verificación no es válido.");
+    if (email) {
+      setPendingVerificationEmail(email);
+    }
+  }, [email]);
+
+  const [code, setCode] = useState("");
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState(() =>
+    locationState?.resent ? locationState.notice || RESENT_CODE_NOTICE : "",
+  );
+  const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
+
+  async function onSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (loading) {
+      return;
+    }
+    setError("");
+    setNotice("");
+
+    if (!email) {
+      setError("Falta el correo a verificar. Inicia sesión para continuar la verificación.");
+      return;
+    }
+    if (!/^\d{6}$/.test(code.trim())) {
+      setError("El código debe tener 6 dígitos.");
       return;
     }
 
-    api
-      .post("/auth/verify-email", { token })
-      .then(() => {
-        setStatus("ok");
-        setMessage("Correo verificado. Ya puedes iniciar sesión.");
-      })
-      .catch((err) => {
-        setStatus("error");
-        setMessage(getApiErrorMessage(err, "No pudimos verificar el correo."));
-      });
-  }, [token]);
+    try {
+      setLoading(true);
+      await verifyEmail(email, code.trim());
+      clearPendingVerificationEmail();
+      navigate("/onboarding", { replace: true });
+    } catch (err) {
+      setError(getApiErrorMessage(err, "No pudimos verificar el código."));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function goHome() {
+    await logout().catch(() => undefined);
+    navigate("/", { replace: true });
+  }
+
+  async function onResend() {
+    if (resending || !email) {
+      return;
+    }
+    setError("");
+    setNotice("");
+    try {
+      setResending(true);
+      await resendVerificationCode(email);
+      setNotice(RESENT_CODE_NOTICE);
+    } catch (err) {
+      setError(getApiErrorMessage(err, "No pudimos reenviar el código."));
+    } finally {
+      setResending(false);
+    }
+  }
 
   return (
-    <main className="grid min-h-screen place-items-center bg-white px-6">
-      <div className="max-w-md text-center">
-        <h1 className="font-serif text-4xl italic">
-          {status === "ok" ? "Listo" : status === "error" ? "No se pudo verificar" : "Un momento"}
-        </h1>
-        <p className="mt-4 text-sm text-neutral-600">{message}</p>
-        <Link to="/login" className="mt-8 inline-flex rounded-full bg-charcoal px-8 py-3 text-white">
-          Ir a iniciar sesión
-        </Link>
+    <AuthRecoveryLayout onBack={() => void goHome()}>
+      <div className="auth-form">
+        <header className="auth-form__header">
+          <h1 className="auth-form__title">Verifica tu correo</h1>
+          <p className="auth-form__lead">
+            {email
+              ? `Ingresa el código de 6 dígitos que enviamos a ${email}.`
+              : "Ingresa el código de 6 dígitos que enviamos a tu correo."}
+          </p>
+          <p className="auth-form__lead">{SPAM_HINT}</p>
+        </header>
+        <form className="auth-form__stack" onSubmit={onSubmit} noValidate>
+          <AuthTextField
+            name="code"
+            label="Código de verificación"
+            placeholder="000000"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            maxLength={6}
+            value={code}
+            onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
+          />
+          {error && (
+            <p className="auth-error" role="alert">
+              {error}
+            </p>
+          )}
+          {notice && <p className="auth-notice">{notice}</p>}
+          <button type="submit" className="auth-submit" disabled={loading || !email}>
+            {loading ? "Verificando..." : "Verificar"}
+          </button>
+        </form>
+        <footer className="auth-form__footer">
+          <div className="auth-row">
+            <a
+              href="#reenviar-codigo"
+              onClick={(event) => {
+                event.preventDefault();
+                void onResend();
+              }}
+              aria-disabled={resending || !email}
+            >
+              {resending ? "Reenviando..." : "¿No recibiste el código? Reenviar código"}
+            </a>
+          </div>
+        </footer>
       </div>
-    </main>
+    </AuthRecoveryLayout>
   );
 }

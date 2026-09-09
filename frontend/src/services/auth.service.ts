@@ -12,10 +12,10 @@ export async function registerAccount(payload: {
   const { data } = await api.post<
     ApiResponse<{ user: PublicUser; accessToken?: string; verificationEmailSent?: boolean }>
   >("/auth/register", payload);
-  if (data.data.accessToken) {
-    setAccessToken(data.data.accessToken);
-  }
-  if (data.data.user) {
+  if (data.data.user?.emailVerified) {
+    if (data.data.accessToken) {
+      setAccessToken(data.data.accessToken);
+    }
     setStoredUser(data.data.user);
   }
   return data.data;
@@ -53,9 +53,15 @@ export async function restoreSession() {
     return null;
   }
   try {
-    return await getMe();
+    const profile = await getMe();
+    if (profile && !profile.emailVerified) {
+      clearSession();
+      return null;
+    }
+    return profile;
   } catch (error) {
     if (axios.isAxiosError(error) && error.response?.status === 401) {
+      clearSession();
       return null;
     }
     throw error;
@@ -72,5 +78,27 @@ export async function forgotPassword(email: string) {
 
 export async function resetPassword(token: string, password: string, confirmPassword: string) {
   const { data } = await api.post("/auth/reset-password", { token, password, confirmPassword });
+  return data;
+}
+
+export async function verifyEmailAccount(payload: { email: string; code: string }) {
+  const { data } = await api.post<ApiResponse<{ user: PublicUser; accessToken?: string }>>(
+    "/auth/verify-email",
+    payload,
+  );
+  if (data.data.accessToken) {
+    setAccessToken(data.data.accessToken);
+  }
+  if (data.data.user) {
+    setStoredUser(data.data.user);
+  }
+  return data.data;
+}
+
+export async function resendVerificationCode(email: string) {
+  const { data } = await api.post<ApiResponse<{ accepted: boolean; devCode?: string }>>(
+    "/auth/resend-verification-code",
+    { email },
+  );
   return data;
 }
