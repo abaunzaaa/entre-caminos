@@ -28,7 +28,7 @@ export function PublicLayout() {
             ) : (
               <>
                 <Link to="/login">Acceder</Link>
-                <Link to="/register">Registrarte</Link>
+                <Link to="/register">Registrate</Link>
               </>
             )}
           </div>

@@ -290,7 +290,7 @@ export function LandingPage() {
             ) : (
               <>
                 <Link to="/login">ACCEDER</Link>
-                <Link to="/register">REGISTRARTE</Link>
+                <Link to="/register">REGISTRATE</Link>
               </>
             )}
           </div>
