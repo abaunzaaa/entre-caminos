@@ -49,7 +49,7 @@
   border: 0;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.92);
-  color: #294942;
+  color: #3a665c;
   font-family: inherit;
   font-size: 1.45rem;
   line-height: 1;
@@ -61,7 +61,7 @@
 .how-it-works-modal__close:focus-visible {
   outline: none;
   background: #ffffff;
-  color: #1c332e;
+  color: #3a665c;
 }
 
 .how-it-works-modal__pane {
@@ -88,7 +88,7 @@
 
 .how-it-works-modal__title {
   margin: 0.7rem 0 0;
-  color: #1c332e;
+  color: #3a665c;
   font-family: inherit;
   font-size: clamp(1.45rem, 2.4vw, 2rem);
   font-weight: 600;
@@ -152,9 +152,9 @@
   height: 2.2rem;
   border: 1px solid rgba(41, 73, 66, 0.08);
   border-radius: 999px;
-  background: #f6f6f3;
+  background: #3a665c;
   box-shadow: 0 4px 14px rgba(28, 51, 46, 0.04);
-  color: #294942;
+  color: #f6f6f3;
 }
 
 .how-it-works-modal__node svg {
@@ -179,7 +179,7 @@
 }
 
 .how-it-works-modal__step:nth-child(5) .how-it-works-modal__node {
-  color: #294942;
+  color: #f6f6f3;
 }
 
 .how-it-works-modal__line {
@@ -205,7 +205,7 @@
   align-items: baseline;
   gap: 0.35rem 0.55rem;
   margin: 0;
-  color: #1c332e;
+  color: #3a665c;
   font-family: inherit;
   font-size: 1.02rem;
   font-weight: 600;
@@ -227,7 +227,7 @@
 
 .how-it-works-modal__lead {
   margin: 0.28rem 0 0;
-  color: #294942;
+  color: #3a665c;
   font-family: inherit;
   font-size: 0.9rem;
   font-weight: 500;

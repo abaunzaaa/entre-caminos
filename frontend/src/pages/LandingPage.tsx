@@ -14,11 +14,9 @@ import meditacionExp from "../assets/meditacion-exp.jpg";
 import meditacion2Exp from "../assets/meditacion2-exp.jpg";
 import expDestacada from "../assets/exp-destacada.png";
 import ceramicaExpd from "../assets/ceramica-expd.jpg";
-import castilloExpd from "../assets/castillo-expd.jpg";
 import pilatesExpd from "../assets/pilates-expd.jpg";
 import pinturaExpd from "../assets/pintura-expd.jpg";
 import floresExpd from "../assets/flores-expd.jpg";
-import boteroExpd from "../assets/botero-expd.jpg";
 import cafetourExpd from "../assets/cafetour-expd.jpg";
 import billarExp from "../assets/billar-exp.jpg";
 import carroExp from "../assets/carro-exp.jpg";
@@ -44,13 +42,13 @@ const featuredShowcase = [
     duration: "2 horas",
   },
   {
-    image: castilloExpd,
-    title: "Historia y encanto: Museo El Castillo",
-    description: "Arquitectura, jardines e historia en un rincón emblemático de Medellín.",
-    place: "Museo El Castillo, Medellín",
-    price: "Desde $12.000 COP",
-    available: "Martes a domingo",
-    duration: "2 a 3 horas",
+    image: golfExp,
+    title: "Golf: Una experiencia tranquila y exclusiva",
+    description: "Juego, paisaje y calma en escenarios exclusivos.",
+    place: "Antioquia",
+    price: "Desde $70.000 COP",
+    available: "Reservas programadas",
+    duration: "2 a 4 horas",
   },
   {
     image: pilatesExpd,
@@ -62,6 +60,15 @@ const featuredShowcase = [
     duration: "50 a 60 minutos",
   },
   {
+    image: padelExp,
+    title: "Pádel: Deporte y conexión",
+    description: "Deporte, energía y compañía en un mismo plan.",
+    place: "Medellín, Antioquia",
+    price: "Desde $25.000 COP",
+    available: "Lunes a domingo",
+    duration: "1 hora",
+  },
+  {
     image: pinturaExpd,
     title: "Pinta una historia: Taller artístico",
     description: "Crea una obra propia en un espacio pensado para tu creatividad.",
@@ -69,6 +76,15 @@ const featuredShowcase = [
     price: "Desde $80.000 COP",
     available: "Fechas programadas",
     duration: "2 horas",
+  },
+  {
+    image: carroExp,
+    title: "Diversión y adrenalina: Parque de experiencias",
+    description: "Atracciones y adrenalina para un día fuera de lo cotidiano.",
+    place: "Antioquia",
+    price: "Desde $30.000 COP",
+    available: "Fines de semana y festivos",
+    duration: "Medio día o día completo",
   },
   {
     image: floresExpd,
@@ -80,12 +96,13 @@ const featuredShowcase = [
     duration: "2 horas",
   },
   {
-    image: boteroExpd,
-    title: "Ruta de arte con Botero",
-    description: "El legado de Botero y la identidad de Medellín, a pie de plaza.",
-    place: "Plaza Botero, Medellín",
-    price: "Gratis o ingreso al museo",
-    available: "Todos los días",
+    image: bicicletaExp,
+    title: "Pedalea entre paisajes: Ruta en bicicleta",
+    description: "Recorre caminos junto al agua y el verde de Antioquia, a tu ritmo.",
+    place: "Antioquia",
+    price: "Desde $40.000 COP",
+    available: "Lunes a domingo",
+    duration: "2 a 4 horas",
   },
   {
     image: cafetourExpd,
@@ -104,33 +121,6 @@ const featuredShowcase = [
     price: "Desde $20.000 COP",
     available: "Todos los días",
     duration: "1 a 2 horas",
-  },
-  {
-    image: carroExp,
-    title: "Diversión y adrenalina: Parque de experiencias",
-    description: "Atracciones y adrenalina para un día fuera de lo cotidiano.",
-    place: "Antioquia",
-    price: "Desde $30.000 COP",
-    available: "Fines de semana y festivos",
-    duration: "Medio día o día completo",
-  },
-  {
-    image: padelExp,
-    title: "Pádel: Deporte y conexión",
-    description: "Deporte, energía y compañía en un mismo plan.",
-    place: "Medellín, Antioquia",
-    price: "Desde $25.000 COP",
-    available: "Lunes a domingo",
-    duration: "1 hora",
-  },
-  {
-    image: golfExp,
-    title: "Golf: Una experiencia tranquila y exclusiva",
-    description: "Juego, paisaje y calma en escenarios exclusivos.",
-    place: "Antioquia",
-    price: "Desde $70.000 COP",
-    available: "Reservas programadas",
-    duration: "2 a 4 horas",
   },
 ];
 
@@ -299,8 +289,8 @@ export function LandingPage() {
               <Link to={isAdmin ? "/admin" : "/explorar"}>{isAdmin ? "Panel" : user.name}</Link>
             ) : (
               <>
-                <Link to="/login">INICIAR SESIÓN</Link>
-                <Link to="/register">CREAR CUENTA</Link>
+                <Link to="/login">ACCEDER</Link>
+                <Link to="/register">REGISTRARTE</Link>
               </>
             )}
           </div>
@@ -489,7 +479,7 @@ export function LandingPage() {
         <div className="landing-footer__inner">
           <div className="landing-footer__columns">
             <div className="landing-footer__col landing-footer__col--left">
-              <h3 className="landing-footer__col-title">Entre Caminos</h3>
+              <h3 className="landing-footer__col-title">ACERCA DE</h3>
               <ul className="landing-footer__links">
                 <li>
                   <a
@@ -516,7 +506,7 @@ export function LandingPage() {
               </ul>
             </div>
             <div className="landing-footer__col landing-footer__col--right">
-              <h3 className="landing-footer__col-title">Legal</h3>
+              <h3 className="landing-footer__col-title">LEGAL</h3>
               <ul className="landing-footer__links">
                 <li>
                   <a

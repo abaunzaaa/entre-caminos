@@ -21,6 +21,7 @@ export async function resetDatabase() {
   await prisma.auditLog.deleteMany();
   await prisma.passwordResetToken.deleteMany();
   await prisma.emailVerificationToken.deleteMany();
+  await prisma.contact.deleteMany();
   await prisma.notification.deleteMany();
   await prisma.experienceReview.deleteMany();
   await prisma.experience.deleteMany();
