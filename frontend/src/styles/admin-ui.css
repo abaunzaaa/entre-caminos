@@ -436,9 +436,25 @@
   field-sizing: fixed;
 }
 
+.dash--cats .dash-team-board,
 .dash--cats .dash-team-compose {
+  overflow: visible;
+}
+
+.dash--cats .dash-team-compose {
+  position: relative;
+  z-index: 4;
   align-items: start;
   grid-template-columns: minmax(0, 1fr) minmax(280px, 25.5rem);
+}
+
+.dash--cats .dash-cats-roster {
+  position: relative;
+  z-index: 1;
+}
+
+.dash--cats:has(.dash-cats-iconpick__menu.is-open) .dash-team-compose {
+  z-index: 8;
 }
 
 .dash--cats .dash-team-gallery {
@@ -654,6 +670,125 @@
 .dash-team-role__option.is-active {
   background: var(--admin-forest, #294942);
   color: #ffffff;
+}
+
+.dash-team-roster,
+.dash-cats-roster {
+  --team-list-visible: 5;
+  --team-row-gap: 12px;
+  --team-row-height: 6.5rem;
+  min-height: 0;
+}
+
+.dash-team-roster__head,
+.dash-cats-roster__head,
+.dash-exps-roster__head {
+  flex-shrink: 0;
+  margin: 0;
+}
+
+.dash-team-roster .dash-team-filters,
+.dash-cats-roster .dash-team-filters,
+.dash-exps-roster .dash-team-filters {
+  position: relative;
+  z-index: 3;
+  flex-shrink: 0;
+}
+
+.dash-team-roster__viewport,
+.dash-cats-roster__viewport,
+.dash-exps-roster__viewport {
+  min-width: 0;
+  min-height: 0;
+}
+
+.dash-exps-roster {
+  --exps-list-rows: 2;
+  --exps-row-gap: 24px;
+  --exps-row-height: 28rem;
+  min-height: 0;
+}
+
+.dash-team-roster__viewport.is-scrollable,
+.dash-cats-roster__viewport.is-scrollable,
+.dash-exps-roster__viewport.is-scrollable {
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 6px;
+  border-radius: 0 0 8px 8px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(41, 73, 66, 0.22) transparent;
+}
+
+.dash-team-roster__viewport.is-scrollable,
+.dash-cats-roster__viewport.is-scrollable {
+  max-height: var(
+    --team-list-max,
+    calc(
+      (var(--team-list-visible) * var(--team-row-height)) + ((var(--team-list-visible) - 1) * var(--team-row-gap))
+    )
+  );
+}
+
+.dash-exps-roster__viewport.is-scrollable {
+  max-height: var(
+    --exps-list-max,
+    calc(
+      (var(--exps-list-rows) * var(--exps-row-height)) + ((var(--exps-list-rows) - 1) * var(--exps-row-gap))
+    )
+  );
+}
+
+.dash-team-roster__viewport.is-scrollable:focus-visible,
+.dash-cats-roster__viewport.is-scrollable:focus-visible,
+.dash-exps-roster__viewport.is-scrollable:focus-visible {
+  outline: 2px solid rgba(41, 73, 66, 0.28);
+  outline-offset: 2px;
+  border-radius: 16px;
+}
+
+.dash-team-roster__viewport.is-scrollable::-webkit-scrollbar,
+.dash-cats-roster__viewport.is-scrollable::-webkit-scrollbar,
+.dash-exps-roster__viewport.is-scrollable::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dash-team-roster__viewport.is-scrollable::-webkit-scrollbar-track,
+.dash-cats-roster__viewport.is-scrollable::-webkit-scrollbar-track,
+.dash-exps-roster__viewport.is-scrollable::-webkit-scrollbar-track {
+  margin: 10px 0 16px;
+  background: transparent;
+}
+
+.dash-team-roster__viewport.is-scrollable::-webkit-scrollbar-thumb,
+.dash-cats-roster__viewport.is-scrollable::-webkit-scrollbar-thumb,
+.dash-exps-roster__viewport.is-scrollable::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(41, 73, 66, 0.22);
+}
+
+.dash-team-roster__viewport.is-scrollable::-webkit-scrollbar-thumb:hover,
+.dash-cats-roster__viewport.is-scrollable::-webkit-scrollbar-thumb:hover,
+.dash-exps-roster__viewport.is-scrollable::-webkit-scrollbar-thumb:hover {
+  background: rgba(41, 73, 66, 0.38);
+}
+
+.dash-team-roster__viewport.is-scrollable::after,
+.dash-cats-roster__viewport.is-scrollable::after {
+  content: "";
+  position: sticky;
+  bottom: 0;
+  display: block;
+  height: 0.9rem;
+  margin-top: -0.9rem;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, #ffffff 82%);
+}
+
+.dash-team-roster__viewport .dash-team-card,
+.dash-cats-roster__viewport .dash-team-card {
+  flex-shrink: 0;
 }
 
 .dash-team-board__people {
@@ -1417,11 +1552,17 @@
 }
 
 .dash-cats-iconpick {
+  --iconpick-cell: 52px;
+  --iconpick-gap: 8px;
+  --iconpick-visible-rows: 4;
+  --iconpick-menu-pad: 24px;
+  position: relative;
   z-index: 5;
+  overflow: visible;
 }
 
-.dash-cats-iconpick:has(.is-open) {
-  z-index: 30;
+.dash-cats-iconpick:has(.dash-cats-iconpick__menu.is-open) {
+  z-index: 40;
 }
 
 .dash-cats-iconpick__trigger {
@@ -1472,11 +1613,45 @@
 }
 
 .dash-cats-iconpick__menu {
+  z-index: 50;
   width: min(100%, 22.5rem);
   padding: 12px;
   border-radius: 18px;
   background: #ffffff;
   box-shadow: 0 16px 40px rgba(28, 51, 46, 0.12), 0 2px 8px rgba(28, 51, 46, 0.06);
+}
+
+.dash-cats-iconpick__menu.is-open {
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  max-height: min(
+    calc(
+      var(--iconpick-menu-pad) + (var(--iconpick-visible-rows) * var(--iconpick-cell)) +
+        ((var(--iconpick-visible-rows) - 1) * var(--iconpick-gap))
+    ),
+    var(--iconpick-max, calc(100dvh - 8rem))
+  );
+  scrollbar-width: thin;
+  scrollbar-color: rgba(41, 73, 66, 0.22) transparent;
+}
+
+.dash-cats-iconpick__menu.is-open::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dash-cats-iconpick__menu.is-open::-webkit-scrollbar-track {
+  margin: 4px 0;
+  background: transparent;
+}
+
+.dash-cats-iconpick__menu.is-open::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(41, 73, 66, 0.22);
+}
+
+.dash-cats-iconpick__menu.is-open::-webkit-scrollbar-thumb:hover {
+  background: rgba(41, 73, 66, 0.38);
 }
 
 .dash-cats-iconpick__grid {
@@ -3378,6 +3553,11 @@
   .dash-team-invite {
     grid-template-columns: 1fr;
     max-width: none;
+  }
+
+  .dash-team-roster,
+  .dash-cats-roster {
+    --team-row-height: 9rem;
   }
 
   .dash-team-board__people .dash-team-card {
