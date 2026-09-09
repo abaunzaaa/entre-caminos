@@ -11,18 +11,12 @@ import { publicUser } from "../utils/serializers.js";
 
 export async function register(req: Request, res: Response) {
   const { user, verificationEmailSent, devCode } = await authService.registerUser(req.body);
-  const tokens = setAuthCookies(res, {
-    id: user.id,
-    email: user.email,
-    role: user.role as RoleName,
-  });
 
   return res.status(201).json({
     success: true,
     message: "Cuenta creada correctamente",
     data: {
       user,
-      accessToken: tokens.accessToken,
       verificationEmailSent,
       ...(devCode ? { devCode } : {}),
     },
@@ -80,6 +74,11 @@ export async function refresh(req: Request, res: Response) {
 
   if (user.status !== "ACTIVE") {
     throw ApiError.unauthorized("Sesión inválida");
+  }
+
+  if (!user.emailVerified) {
+    clearAuthCookies(res);
+    throw ApiError.unauthorized("Debes verificar tu correo antes de iniciar sesión.");
   }
 
   const serialized = publicUser(user);

@@ -13,6 +13,10 @@ export function ProtectedRoute({ admin = false }: { admin?: boolean }) {
     return <Navigate to="/login" replace />;
   }
 
+  if (!user.emailVerified) {
+    return <Navigate to="/verify-email" replace state={{ email: user.email }} />;
+  }
+
   if (admin && !isAdmin) {
     return <Navigate to="/" replace />;
   }

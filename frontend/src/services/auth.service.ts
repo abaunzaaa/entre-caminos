@@ -12,10 +12,10 @@ export async function registerAccount(payload: {
   const { data } = await api.post<
     ApiResponse<{ user: PublicUser; accessToken?: string; verificationEmailSent?: boolean }>
   >("/auth/register", payload);
-  if (data.data.accessToken) {
-    setAccessToken(data.data.accessToken);
-  }
-  if (data.data.user) {
+  if (data.data.user?.emailVerified) {
+    if (data.data.accessToken) {
+      setAccessToken(data.data.accessToken);
+    }
     setStoredUser(data.data.user);
   }
   return data.data;
@@ -53,9 +53,15 @@ export async function restoreSession() {
     return null;
   }
   try {
-    return await getMe();
+    const profile = await getMe();
+    if (profile && !profile.emailVerified) {
+      clearSession();
+      return null;
+    }
+    return profile;
   } catch (error) {
     if (axios.isAxiosError(error) && error.response?.status === 401) {
+      clearSession();
       return null;
     }
     throw error;

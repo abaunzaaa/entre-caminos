@@ -16,7 +16,7 @@ const SPAM_HINT =
 const RESENT_CODE_NOTICE = "Te enviamos un nuevo código de verificación a tu correo.";
 
 export function VerifyEmailPage() {
-  const { user, verifyEmail } = useAuth();
+  const { user, verifyEmail, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const locationState = location.state as { email?: string; resent?: boolean; notice?: string } | null;
@@ -67,6 +67,11 @@ export function VerifyEmailPage() {
     }
   }
 
+  async function goHome() {
+    await logout().catch(() => undefined);
+    navigate("/", { replace: true });
+  }
+
   async function onResend() {
     if (resending || !email) {
       return;
@@ -85,7 +90,7 @@ export function VerifyEmailPage() {
   }
 
   return (
-    <AuthRecoveryLayout>
+    <AuthRecoveryLayout onBack={() => void goHome()}>
       <div className="auth-form">
         <header className="auth-form__header">
           <h1 className="auth-form__title">Verifica tu correo</h1>
