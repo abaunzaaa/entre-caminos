@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { PERMISSIONS, ROLES } from "../src/config/constants.js";
 import { ACCOUNT_REMOVED_MESSAGE } from "../src/utils/account.js";
-import { api, loginAs, loginAsAdmin, prisma, registerUser, uniqueEmail } from "./helpers.js";
+import { api, loginAs, loginAsAdmin, prisma, registerUser, uniqueEmail, sampleExperienceImages } from "./helpers.js";
 
 async function countActiveAdministratorsInDb() {
   return prisma.user.count({
@@ -150,7 +150,8 @@ describe("HU-21 Administración", () => {
         categoryId: activeCat.body.data.category.id,
         price: 10000,
         location: "Medellín, Antioquia",
-        imageUrl: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1200&q=80",
+        imageUrl: sampleExperienceImages()[0],
+        imageUrls: sampleExperienceImages(),
       });
     expect(pending.status).toBe(201);
 
@@ -166,7 +167,8 @@ describe("HU-21 Administración", () => {
         categoryId: activeCat.body.data.category.id,
         price: 20000,
         location: "Guatapé, Antioquia",
-        imageUrl: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1200&q=80",
+        imageUrl: sampleExperienceImages()[0],
+        imageUrls: sampleExperienceImages(),
       });
     expect(published.status).toBe(201);
     const publishedId = published.body.data.experience.id as string;

@@ -1,5 +1,5 @@
 import { prisma } from "../database/prisma.js";
-import { ROLES } from "../config/constants.js";
+import { ROLES, type RoleName } from "../config/constants.js";
 import type { AuthUser } from "../models/auth-user.js";
 import { livingUserWhere } from "../utils/account.js";
 import { ApiError } from "../utils/api-error.js";
@@ -26,10 +26,11 @@ export async function countActiveAdministrators() {
   });
 }
 
-export async function listAdministrators(options?: { take?: number }) {
+export async function listAdministrators(options?: { take?: number; roles?: RoleName[] }) {
+  const roles = options?.roles?.length ? options.roles : adminRoles;
   const users = await prisma.user.findMany({
     where: {
-      ...administratorRoleWhere,
+      role: { name: { in: roles } },
       ...livingUserWhere,
     },
     select: {
@@ -230,7 +231,10 @@ export async function getDashboardMetrics(actor: AuthUser) {
         status: { in: ["PUBLISHED", "ARCHIVED"] },
       },
     }),
-    listAdministrators({ take: 3 }),
+    listAdministrators({
+      take: 3,
+      ...(actor.role === ROLES.ADMIN ? { roles: [ROLES.SUPER_ADMIN] } : {}),
+    }),
     prisma.auditLog.findMany({
       take: 8,
       orderBy: { createdAt: "desc" },

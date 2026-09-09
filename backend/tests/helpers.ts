@@ -60,3 +60,10 @@ export async function registerUser(overrides?: { email?: string; password?: stri
 }
 
 export { prisma };
+
+export const SAMPLE_EXPERIENCE_IMAGE =
+  "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1200&q=80";
+
+export function sampleExperienceImages(count = 5) {
+  return Array.from({ length: count }, (_, index) => `${SAMPLE_EXPERIENCE_IMAGE}&n=${index + 1}`);
+}

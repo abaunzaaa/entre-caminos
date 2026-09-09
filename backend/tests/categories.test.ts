@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { api, loginAsAdmin } from "./helpers.js";
+import { api, loginAsAdmin, sampleExperienceImages } from "./helpers.js";
 
 describe("HU-20 Categorías", () => {
   it("crea una categoría", async () => {
@@ -82,7 +82,8 @@ describe("HU-20 Categorías", () => {
         categoryId,
         price: 50000,
         location: "Bogotá",
-        imageUrl: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1200&q=80",
+        imageUrl: sampleExperienceImages()[0],
+        imageUrls: sampleExperienceImages(),
       });
 
     const deleted = await api()

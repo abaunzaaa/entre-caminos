@@ -65,6 +65,17 @@ function asAdministratorList(value: unknown): PublicUser[] {
   return value.filter(isAdministrator);
 }
 
+function asDashboardAdministratorList(
+  value: unknown,
+  viewerRole: PublicUser["role"] | undefined,
+): PublicUser[] {
+  const list = asAdministratorList(value);
+  if (readRole(viewerRole) === "ADMIN") {
+    return list.filter((item) => readRole(item.role) === "SUPER_ADMIN");
+  }
+  return list;
+}
+
 function countActiveTeam(users: PublicUser[]): number {
   const ids = new Set<string>();
   for (const user of users) {
@@ -132,6 +143,7 @@ const KPI: Array<{
 export function DashboardPage() {
   const { user, hasPermission } = useAuth();
   const canReview = hasPermission("experiences.review");
+  const isStaffAdmin = user?.role === "ADMIN";
   const [metrics, setMetrics] = useState<DashboardStats | null>(null);
   const [experiences, setExperiences] = useState<Experience[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -174,7 +186,7 @@ export function DashboardPage() {
 
       if (dash && typeof dash.admins === "number") {
         setMetrics(dash);
-        setAdmins(newestFirst(asAdministratorList(dash.administrators)));
+        setAdmins(newestFirst(asDashboardAdministratorList(dash.administrators, user?.role)));
         setAdminsLoading(false);
         setAdminsError("");
         setCategories(newestFirst(Array.isArray(dash.recentCategories) ? dash.recentCategories : []));
@@ -187,7 +199,7 @@ export function DashboardPage() {
       }
 
       const [adminsResult, categoriesResult, experiencesResult] = await Promise.allSettled([
-        getAdministrators({ limit: SUMMARY_LIMIT }),
+        getAdministrators(user?.role === "ADMIN" ? undefined : { limit: SUMMARY_LIMIT }),
         getAdminCategories({ limit: SUMMARY_LIMIT }),
         getAdminExperiences({ limit: 10 }),
       ]);
@@ -195,7 +207,8 @@ export function DashboardPage() {
         return;
       }
 
-      const fromEndpoint = adminsResult.status === "fulfilled" ? asAdministratorList(adminsResult.value) : [];
+      const fromEndpoint =
+        adminsResult.status === "fulfilled" ? asDashboardAdministratorList(adminsResult.value, user?.role) : [];
       const allAdmins = fromEndpoint;
       setMetrics({
         users: 0,
@@ -236,7 +249,7 @@ export function DashboardPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [user?.role]);
 
   const fullName = user?.name?.trim() || "Administrador";
   const initial = fullName.charAt(0).toUpperCase() || "A";
@@ -318,7 +331,9 @@ export function DashboardPage() {
         <div className="dash-split__cards">
           <article className="dash-split__panel">
             <div className="dash-split__intro">
-              <h2 className="dash-section__title">Administradores</h2>
+              <h2 className="dash-section__title">
+                {isStaffAdmin ? "Super administradores" : "Administradores"}
+              </h2>
               <p className="dash-section__lead">Últimos registrados</p>
             </div>
             {adminsLoading ? (
@@ -331,7 +346,11 @@ export function DashboardPage() {
               </Panel>
             ) : admins.length === 0 ? (
               <Panel className="dash-empty">
-                <p>No hay administradores registrados.</p>
+                <p>
+                  {isStaffAdmin
+                    ? "No hay super administradores registrados."
+                    : "No hay administradores registrados."}
+                </p>
               </Panel>
             ) : (
               <div className="dash-split__list">

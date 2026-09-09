@@ -242,15 +242,19 @@ export function LandingPage() {
       return;
     }
 
+    const enterRatio = 0.32;
+    const leaveRatio = 0.08;
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
-          if (entry.isIntersecting) {
+          if (entry.intersectionRatio >= enterRatio) {
             entry.target.classList.add("is-inview");
+          } else if (entry.intersectionRatio <= leaveRatio) {
+            entry.target.classList.remove("is-inview");
           }
         }
       },
-      { threshold: 0.12, rootMargin: "0px" },
+      { threshold: [0, 0.08, 0.32, 0.4], rootMargin: "0px" },
     );
 
     for (const section of sections) {
@@ -270,7 +274,7 @@ export function LandingPage() {
 
   return (
     <div className="landing bg-white text-black">
-      <section className="landing-hero is-inview" ref={heroRef} aria-label="Encabezado">
+      <section className="landing-hero" ref={heroRef} aria-label="Encabezado">
         <div
           className="landing-hero__bg"
           style={{ backgroundImage: `url(${encabezado})` }}
