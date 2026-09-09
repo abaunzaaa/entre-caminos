@@ -27,8 +27,8 @@ export function PublicLayout() {
               </>
             ) : (
               <>
-                <Link to="/login">Iniciar sesión</Link>
-                <Link to="/register">Crear cuenta</Link>
+                <Link to="/login">Acceder</Link>
+                <Link to="/register">Registrarte</Link>
               </>
             )}
           </div>

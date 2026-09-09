@@ -289,8 +289,8 @@ export function LandingPage() {
               <Link to={isAdmin ? "/admin" : "/explorar"}>{isAdmin ? "Panel" : user.name}</Link>
             ) : (
               <>
-                <Link to="/login">INICIAR SESIÓN</Link>
-                <Link to="/register">CREAR CUENTA</Link>
+                <Link to="/login">ACCEDER</Link>
+                <Link to="/register">REGISTRARTE</Link>
               </>
             )}
           </div>
@@ -479,7 +479,7 @@ export function LandingPage() {
         <div className="landing-footer__inner">
           <div className="landing-footer__columns">
             <div className="landing-footer__col landing-footer__col--left">
-              <h3 className="landing-footer__col-title">Entre Caminos</h3>
+              <h3 className="landing-footer__col-title">ACERCA DE</h3>
               <ul className="landing-footer__links">
                 <li>
                   <a
@@ -506,7 +506,7 @@ export function LandingPage() {
               </ul>
             </div>
             <div className="landing-footer__col landing-footer__col--right">
-              <h3 className="landing-footer__col-title">Legal</h3>
+              <h3 className="landing-footer__col-title">LEGAL</h3>
               <ul className="landing-footer__links">
                 <li>
                   <a

@@ -24,3 +24,18 @@ export const apiRateLimiter = rateLimit({
   legacyHeaders: false,
   skip: skipInTest,
 });
+
+export const contactRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 8,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: skipInTest,
+  message: {
+    success: false,
+    error: {
+      code: "TOO_MANY_REQUESTS",
+      message: "Demasiados intentos. Espera unos minutos e inténtalo de nuevo.",
+    },
+  },
+});
