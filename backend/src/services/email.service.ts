@@ -72,14 +72,24 @@ export async function sendPasswordResetEmail(to: string, resetUrl: string, ttlLa
   });
 }
 
-export async function sendVerificationEmail(to: string, verifyUrl: string) {
+export async function sendVerificationEmail(to: string, code: string, ttlLabel: string) {
   return sendMail({
     to,
-    subject: "Confirma tu correo — Entre Caminos",
-    text: `Confirma tu cuenta: ${verifyUrl}`,
+    subject: "Tu código de verificación — Entre Caminos",
+    text: [
+      "Bienvenido a Entre Caminos.",
+      "",
+      `Tu código de verificación es: ${code}`,
+      `Este código caduca en ${ttlLabel}.`,
+      "",
+      "Si no creaste una cuenta, ignora este mensaje.",
+    ].join("\n"),
     html: `
-      <p>Bienvenido a Entre Caminos.</p>
-      <p><a href="${verifyUrl}">Confirmar correo electrónico</a></p>
+      <p>Bienvenido a <strong>Entre Caminos</strong>.</p>
+      <p>Tu código de verificación es:</p>
+      <p style="font-size:24px;letter-spacing:4px;font-weight:700">${code}</p>
+      <p>Este código caduca en ${ttlLabel}.</p>
+      <p>Si no creaste una cuenta, ignora este mensaje.</p>
     `,
   });
 }

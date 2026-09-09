@@ -53,5 +53,13 @@ export const resetPasswordSchema = z
   });
 
 export const verifyEmailSchema = z.object({
-  token: z.string().min(20, "Token inválido"),
+  email: z.string().trim().email("Correo electrónico inválido").toLowerCase(),
+  code: z
+    .string({ required_error: "El código es obligatorio" })
+    .trim()
+    .regex(/^\d{6}$/, "El código debe tener 6 dígitos"),
+});
+
+export const resendVerificationSchema = z.object({
+  email: z.string().trim().email("Correo electrónico inválido").toLowerCase(),
 });

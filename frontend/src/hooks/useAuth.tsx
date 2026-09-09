@@ -7,7 +7,14 @@ import {
   setStoredUser,
   subscribeSessionLoss,
 } from "../services/api";
-import { getMe, loginAccount, logoutAccount, registerAccount, restoreSession } from "../services/auth.service";
+import {
+  getMe,
+  loginAccount,
+  logoutAccount,
+  registerAccount,
+  restoreSession,
+  verifyEmailAccount,
+} from "../services/auth.service";
 import type { PublicUser } from "../types";
 
 type AuthContextValue = {
@@ -21,6 +28,7 @@ type AuthContextValue = {
     confirmPassword: string;
     termsAccepted: boolean;
   }) => Promise<{ user: PublicUser; verificationEmailSent: boolean }>;
+  verifyEmail: (email: string, code: string) => Promise<PublicUser>;
   logout: () => Promise<void>;
   hasPermission: (permission: string) => boolean;
   isAdmin: boolean;
@@ -113,6 +121,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           user: profile,
           verificationEmailSent: Boolean(result.verificationEmailSent),
         };
+      },
+      async verifyEmail(email, code) {
+        const result = await verifyEmailAccount({ email, code });
+        const profile = await getMe().catch(() => result.user);
+        setStoredUser(profile);
+        setUser(profile);
+        return profile;
       },
       async logout() {
         await logoutAccount();

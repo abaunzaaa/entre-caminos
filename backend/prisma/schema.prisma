@@ -61,16 +61,18 @@ model RolePermission {
 }
 
 model User {
-  id            String     @id @default(uuid())
-  name          String
-  email         String     @unique
-  passwordHash  String     @map("password_hash")
-  roleId        String     @map("role_id")
-  emailVerified Boolean    @default(false) @map("email_verified")
-  status        UserStatus @default(ACTIVE)
-  deletedAt     DateTime?  @map("deleted_at")
-  createdAt     DateTime   @default(now()) @map("created_at")
-  updatedAt     DateTime   @updatedAt @map("updated_at")
+  id                      String     @id @default(uuid())
+  name                    String
+  email                   String     @unique
+  passwordHash            String     @map("password_hash")
+  roleId                  String     @map("role_id")
+  emailVerified           Boolean    @default(false) @map("email_verified")
+  verificationCode        String?    @map("verification_code")
+  verificationCodeExpires DateTime?  @map("verification_code_expires")
+  status                  UserStatus @default(ACTIVE)
+  deletedAt               DateTime?  @map("deleted_at")
+  createdAt               DateTime   @default(now()) @map("created_at")
+  updatedAt               DateTime   @updatedAt @map("updated_at")
 
   role                  Role                   @relation(fields: [roleId], references: [id])
   experiences             Experience[]

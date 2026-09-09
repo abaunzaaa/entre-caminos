@@ -1,16 +1,24 @@
 import { prisma } from "../database/prisma.js";
-import { PASSWORD_RESET_TTL_LABEL, PASSWORD_RESET_TTL_MS, ROLES } from "../config/constants.js";
+import {
+  EMAIL_UNVERIFIED_LOGIN_MESSAGE,
+  EMAIL_VERIFICATION_TTL_LABEL,
+  EMAIL_VERIFICATION_TTL_MS,
+  PASSWORD_RESET_TTL_LABEL,
+  PASSWORD_RESET_TTL_MS,
+  ROLES,
+} from "../config/constants.js";
 import { env } from "../config/env.js";
 import { ACCOUNT_REMOVED_MESSAGE, isAccountRemoved } from "../utils/account.js";
 import { ApiError } from "../utils/api-error.js";
 import { hashPassword, verifyPassword } from "../utils/password.js";
 import { publicUser } from "../utils/serializers.js";
-import { getCachedProfile } from "../utils/auth-cache.js";
+import { clearAuthUserCache, getCachedProfile } from "../utils/auth-cache.js";
 import { recordAudit } from "./audit.service.js";
 import { sendPasswordResetEmail, sendVerificationEmail } from "./email.service.js";
 import { createRawToken, hashToken } from "./token.service.js";
 import { Prisma } from "@prisma/client";
 import { logger } from "../utils/logger.js";
+import crypto from "node:crypto";
 
 const userInclude = { role: true } as const;
 const DUPLICATE_EMAIL = "Ya existe una cuenta asociada a este correo electrónico.";
@@ -31,7 +39,7 @@ export async function registerUser(input: { name: string; email: string; passwor
   }
 
   const passwordHash = await hashPassword(input.password);
-  const { raw, hash } = createRawToken();
+  const { code, hash } = createVerificationCode();
 
   let user: Prisma.UserGetPayload<{ include: typeof userInclude }> | undefined;
   try {
@@ -42,16 +50,11 @@ export async function registerUser(input: { name: string; email: string; passwor
         passwordHash,
         roleId: userRole.id,
         status: "ACTIVE",
+        emailVerified: false,
+        verificationCode: hash,
+        verificationCodeExpires: new Date(Date.now() + EMAIL_VERIFICATION_TTL_MS),
       },
       include: userInclude,
-    });
-
-    await prisma.emailVerificationToken.create({
-      data: {
-        userId: user.id,
-        tokenHash: hash,
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-      },
     });
   } catch (error) {
     if (user) {
@@ -66,12 +69,19 @@ export async function registerUser(input: { name: string; email: string; passwor
     throw new ApiError(500, "No pudimos crear tu cuenta. Inténtalo de nuevo.", "INTERNAL_ERROR");
   }
 
-  const verifyUrl = `${env.FRONTEND_URL}/verify-email?token=${raw}`;
   let verificationEmailSent = false;
   try {
-    verificationEmailSent = await sendVerificationEmail(user.email, verifyUrl);
+    verificationEmailSent = await sendVerificationEmail(
+      user.email,
+      code,
+      EMAIL_VERIFICATION_TTL_LABEL,
+    );
   } catch {
     logger.error("El correo de verificación no se envió", { userId: user.id });
+  }
+
+  if (!verificationEmailSent && env.NODE_ENV !== "production") {
+    logger.info("Código de verificación (solo no-producción)", { code });
   }
 
   try {
@@ -91,6 +101,7 @@ export async function registerUser(input: { name: string; email: string; passwor
       permissions: [] as string[],
     },
     verificationEmailSent,
+    ...(env.NODE_ENV === "test" ? { devCode: code } : {}),
   };
 }
 
@@ -115,6 +126,10 @@ export async function loginUser(input: { email: string; password: string }) {
   const valid = await verifyPassword(input.password, user.passwordHash);
   if (!valid) {
     throw ApiError.unauthorized("Credenciales incorrectas");
+  }
+
+  if (!user.emailVerified) {
+    throw ApiError.forbidden(EMAIL_UNVERIFIED_LOGIN_MESSAGE);
   }
 
   await recordAudit({
@@ -263,24 +278,108 @@ function genericResetResult(rawToken?: string) {
   };
 }
 
-export async function verifyEmail(token: string) {
-  const tokenHash = hashToken(token);
-  const record = await prisma.emailVerificationToken.findUnique({
-    where: { tokenHash },
+export async function verifyEmail(email: string, code: string) {
+  const normalized = email.trim().toLowerCase();
+  const user = await prisma.user.findUnique({
+    where: { email: normalized },
+    include: userInclude,
   });
 
-  if (!record || record.usedAt || record.expiresAt < new Date()) {
-    throw ApiError.badRequest("El enlace de verificación no es válido o expiró");
+  if (!user || isAccountRemoved(user)) {
+    throw ApiError.notFound("No encontramos una cuenta con ese correo electrónico.");
   }
 
-  await prisma.$transaction([
-    prisma.user.update({
-      where: { id: record.userId },
-      data: { emailVerified: true },
-    }),
-    prisma.emailVerificationToken.update({
-      where: { id: record.id },
-      data: { usedAt: new Date() },
-    }),
-  ]);
+  if (user.emailVerified) {
+    return {
+      ...publicUser(user),
+      permissions: [] as string[],
+    };
+  }
+
+  if (!user.verificationCode || !user.verificationCodeExpires) {
+    throw ApiError.badRequest("No hay un código de verificación pendiente. Solicita uno nuevo.");
+  }
+
+  if (user.verificationCodeExpires < new Date()) {
+    throw ApiError.badRequest("El código de verificación expiró. Solicita uno nuevo.");
+  }
+
+  const incomingHash = hashToken(code.trim());
+  if (!codesMatch(user.verificationCode, incomingHash)) {
+    throw ApiError.badRequest("El código de verificación es incorrecto.");
+  }
+
+  const updated = await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      emailVerified: true,
+      verificationCode: null,
+      verificationCodeExpires: null,
+    },
+    include: userInclude,
+  });
+
+  clearAuthUserCache(user.id);
+
+  await recordAudit({
+    userId: user.id,
+    action: "EMAIL_VERIFIED",
+    entity: "User",
+    entityId: user.id,
+  });
+
+  return {
+    ...publicUser(updated),
+    permissions: [] as string[],
+  };
+}
+
+export async function resendVerificationCode(email: string) {
+  const normalized = email.trim().toLowerCase();
+  const user = await prisma.user.findUnique({ where: { email: normalized } });
+
+  if (!user || isAccountRemoved(user)) {
+    throw ApiError.notFound("No encontramos una cuenta con ese correo electrónico.");
+  }
+
+  if (user.emailVerified) {
+    throw ApiError.badRequest("Este correo ya está verificado.");
+  }
+
+  const { code, hash } = createVerificationCode();
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      verificationCode: hash,
+      verificationCodeExpires: new Date(Date.now() + EMAIL_VERIFICATION_TTL_MS),
+    },
+  });
+
+  const sent = await sendVerificationEmail(user.email, code, EMAIL_VERIFICATION_TTL_LABEL);
+  if (!sent && env.SENDGRID_API_KEY) {
+    throw new ApiError(500, "No pudimos enviar el correo. Inténtalo de nuevo.", "EMAIL_UNAVAILABLE");
+  }
+
+  if (!sent && env.NODE_ENV !== "production") {
+    logger.info("Código de verificación reenviado (solo no-producción)", { code });
+  }
+
+  return {
+    accepted: true as const,
+    ...(env.NODE_ENV === "test" ? { devCode: code } : {}),
+  };
+}
+
+function createVerificationCode() {
+  const code = crypto.randomInt(0, 1_000_000).toString().padStart(6, "0");
+  return { code, hash: hashToken(code) };
+}
+
+function codesMatch(storedHash: string, incomingHash: string) {
+  const stored = Buffer.from(storedHash);
+  const incoming = Buffer.from(incomingHash);
+  if (stored.length !== incoming.length) {
+    return false;
+  }
+  return crypto.timingSafeEqual(stored, incoming);
 }
