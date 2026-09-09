@@ -1,9 +1,19 @@
 import type { Request, Response } from "express";
 import { prisma } from "../database/prisma.js";
 import { COOKIE_NAMES, PASSWORD_RESET_GENERIC_MESSAGE, type RoleName } from "../config/constants.js";
+import { env } from "../config/env.js";
 import { ACCOUNT_REMOVED_MESSAGE, isAccountRemoved } from "../utils/account.js";
 import * as authService from "../services/auth.service.js";
 import { clearAuthCookies, setAuthCookies } from "../services/token.service.js";
+import {
+  buildAuthorizationUrl,
+  exchangeOAuthCode,
+  isOAuthConfigured,
+  loginOrRegisterOAuth,
+  readOAuthState,
+  signOAuthState,
+  type OAuthProviderSlug,
+} from "../services/oauth.service.js";
 import { isAuthRevoked } from "../utils/auth-cache.js";
 import { verifyRefreshToken } from "../utils/jwt.js";
 import { ApiError } from "../utils/api-error.js";
@@ -25,11 +35,16 @@ export async function register(req: Request, res: Response) {
 
 export async function login(req: Request, res: Response) {
   const user = await authService.loginUser(req.body);
-  const tokens = setAuthCookies(res, {
-    id: user.id,
-    email: user.email,
-    role: user.role as RoleName,
-  });
+  const remember = Boolean(req.body.remember);
+  const tokens = setAuthCookies(
+    res,
+    {
+      id: user.id,
+      email: user.email,
+      role: user.role as RoleName,
+    },
+    { remember },
+  );
 
   return res.json({
     success: true,
@@ -82,11 +97,16 @@ export async function refresh(req: Request, res: Response) {
   }
 
   const serialized = publicUser(user);
-  const tokens = setAuthCookies(res, {
-    id: serialized.id,
-    email: serialized.email,
-    role: serialized.role as RoleName,
-  });
+  const remember = payload.remember !== false;
+  const tokens = setAuthCookies(
+    res,
+    {
+      id: serialized.id,
+      email: serialized.email,
+      role: serialized.role as RoleName,
+    },
+    { remember },
+  );
 
   return res.json({
     success: true,
@@ -113,11 +133,15 @@ export async function resetPassword(req: Request, res: Response) {
 
 export async function verifyEmail(req: Request, res: Response) {
   const user = await authService.verifyEmail(req.body.email, req.body.code);
-  const tokens = setAuthCookies(res, {
-    id: user.id,
-    email: user.email,
-    role: user.role as RoleName,
-  });
+  const tokens = setAuthCookies(
+    res,
+    {
+      id: user.id,
+      email: user.email,
+      role: user.role as RoleName,
+    },
+    { remember: true },
+  );
 
   return res.json({
     success: true,
@@ -133,4 +157,72 @@ export async function resendVerificationCode(req: Request, res: Response) {
     message: "Si el correo está registrado, enviaremos un nuevo código.",
     data: result,
   });
+}
+
+function oauthFrontendRedirect(path: string, params?: Record<string, string>) {
+  const url = new URL(path, env.FRONTEND_URL);
+  for (const [key, value] of Object.entries(params ?? {})) {
+    url.searchParams.set(key, value);
+  }
+  return url.toString();
+}
+
+export async function oauthStart(req: Request, res: Response) {
+  const provider = req.params.provider as OAuthProviderSlug;
+  if (provider !== "google") {
+    return res.redirect(oauthFrontendRedirect("/login", { oauthError: "Proveedor no válido." }));
+  }
+  if (!isOAuthConfigured(provider)) {
+    return res.redirect(
+      oauthFrontendRedirect("/login", {
+        oauthError: "Este inicio de sesión no está configurado todavía.",
+      }),
+    );
+  }
+  const remember = req.query.remember === "1" || req.query.remember === "true";
+  const state = signOAuthState(remember);
+  return res.redirect(buildAuthorizationUrl(provider, state));
+}
+
+export async function oauthCallback(req: Request, res: Response) {
+  const provider = req.params.provider as OAuthProviderSlug;
+  if (provider !== "google") {
+    return res.redirect(oauthFrontendRedirect("/login", { oauthError: "Proveedor no válido." }));
+  }
+
+  const code = String(req.body?.code ?? req.query.code ?? "");
+  const state = String(req.body?.state ?? req.query.state ?? "");
+  const oauthError = String(req.body?.error ?? req.query.error ?? "");
+  if (oauthError || !code) {
+    return res.redirect(
+      oauthFrontendRedirect("/login", {
+        oauthError: "No pudimos completar el inicio de sesión.",
+      }),
+    );
+  }
+
+  try {
+    const { remember } = readOAuthState(state);
+    const profile = await exchangeOAuthCode(provider, code);
+    const result = await loginOrRegisterOAuth(profile);
+    setAuthCookies(
+      res,
+      {
+        id: result.user.id,
+        email: result.user.email,
+        role: result.user.role as RoleName,
+      },
+      { remember },
+    );
+    return res.redirect(
+      oauthFrontendRedirect("/auth/callback", {
+        remember: remember ? "1" : "0",
+        next: result.created ? "onboarding" : "app",
+      }),
+    );
+  } catch (error) {
+    const message =
+      error instanceof ApiError ? error.message : "No pudimos completar el inicio de sesión.";
+    return res.redirect(oauthFrontendRedirect("/login", { oauthError: message }));
+  }
 }

@@ -1,5 +1,5 @@
 import axios from "axios";
-import { api, clearSession, getAccessToken, refreshAccessToken, setAccessToken, setStoredUser } from "./api";
+import { api, clearSession, getAccessToken, refreshAccessToken, setAccessToken, setRememberSession, setStoredUser } from "./api";
 import type { ApiResponse, PublicUser } from "../types";
 
 export async function registerAccount(payload: {
@@ -21,11 +21,12 @@ export async function registerAccount(payload: {
   return data.data;
 }
 
-export async function loginAccount(payload: { email: string; password: string }) {
+export async function loginAccount(payload: { email: string; password: string; remember?: boolean }) {
   const { data } = await api.post<ApiResponse<{ user: PublicUser; accessToken: string }>>(
     "/auth/login",
     payload,
   );
+  setRememberSession(Boolean(payload.remember));
   setAccessToken(data.data.accessToken);
   setStoredUser(data.data.user);
   return data.data;

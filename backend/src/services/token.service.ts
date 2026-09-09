@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import type { Response } from "express";
+import type { CookieOptions, Response } from "express";
 import { COOKIE_NAMES } from "../config/constants.js";
 import { env, isProduction } from "../config/env.js";
 import { durationToMs } from "../utils/duration.js";
@@ -9,9 +9,9 @@ import type { RoleName } from "../config/constants.js";
 const ACCESS_MAX_AGE_MS = durationToMs(env.JWT_ACCESS_EXPIRES_IN, 15 * 60 * 1000);
 const REFRESH_MAX_AGE_MS = durationToMs(env.JWT_REFRESH_EXPIRES_IN, 7 * 24 * 60 * 60 * 1000);
 
-const cookieBase = {
+const cookieBase: CookieOptions = {
   httpOnly: true,
-  sameSite: "lax" as const,
+  sameSite: "lax",
   secure: env.COOKIE_SECURE || isProduction,
   path: "/",
 };
@@ -19,21 +19,23 @@ const cookieBase = {
 export function setAuthCookies(
   res: Response,
   user: { id: string; email: string; role: RoleName },
+  options?: { remember?: boolean },
 ) {
+  const remember = options?.remember !== false;
   const accessToken = signAccessToken({
     sub: user.id,
     email: user.email,
     role: user.role,
   });
-  const refreshToken = signRefreshToken(user.id);
+  const refreshToken = signRefreshToken(user.id, remember);
 
   res.cookie(COOKIE_NAMES.ACCESS, accessToken, {
     ...cookieBase,
-    maxAge: ACCESS_MAX_AGE_MS,
+    ...(remember ? { maxAge: ACCESS_MAX_AGE_MS } : {}),
   });
   res.cookie(COOKIE_NAMES.REFRESH, refreshToken, {
     ...cookieBase,
-    maxAge: REFRESH_MAX_AGE_MS,
+    ...(remember ? { maxAge: REFRESH_MAX_AGE_MS } : {}),
   });
 
   return { accessToken, refreshToken };
