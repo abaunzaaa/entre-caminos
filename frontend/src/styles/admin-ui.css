@@ -1625,12 +1625,15 @@
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
-  max-height: min(
-    calc(
-      var(--iconpick-menu-pad) + (var(--iconpick-visible-rows) * var(--iconpick-cell)) +
-        ((var(--iconpick-visible-rows) - 1) * var(--iconpick-gap))
-    ),
-    var(--iconpick-max, calc(100dvh - 8rem))
+  max-height: var(
+    --iconpick-max,
+    min(
+      calc(
+        var(--iconpick-menu-pad) + (var(--iconpick-visible-rows) * var(--iconpick-cell)) +
+          ((var(--iconpick-visible-rows) - 1) * var(--iconpick-gap))
+      ),
+      calc(100dvh - 8rem)
+    )
   );
   scrollbar-width: thin;
   scrollbar-color: rgba(41, 73, 66, 0.22) transparent;

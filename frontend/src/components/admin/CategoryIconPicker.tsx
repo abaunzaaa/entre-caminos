@@ -54,13 +54,17 @@ export function CategoryIconPicker({
 
     function applyMaxHeight() {
       const styles = getComputedStyle(host);
-      const cell = parseFloat(styles.getPropertyValue("--iconpick-cell")) || 52;
       const gap = parseFloat(styles.getPropertyValue("--iconpick-gap")) || 8;
       const rows = parseFloat(styles.getPropertyValue("--iconpick-visible-rows")) || 4;
       const pad = parseFloat(styles.getPropertyValue("--iconpick-menu-pad")) || 24;
-      const preferred = pad + cell * rows + gap * Math.max(0, rows - 1);
+      const option = host.querySelector<HTMLElement>(".dash-cats-iconpick__option");
+      const cell =
+        option?.getBoundingClientRect().height ||
+        parseFloat(styles.getPropertyValue("--iconpick-cell")) ||
+        52;
+      const preferred = Math.ceil(pad + cell * rows + gap * Math.max(0, rows - 1) + 2);
       const available = Math.floor(window.innerHeight - panel.getBoundingClientRect().top - 16);
-      const next = `${Math.max(pad + cell * 2 + gap, Math.min(preferred, available))}px`;
+      const next = `${Math.max(Math.ceil(pad + cell * 2 + gap), Math.min(preferred, available))}px`;
       if (host.style.getPropertyValue("--iconpick-max") !== next) {
         host.style.setProperty("--iconpick-max", next);
       }
