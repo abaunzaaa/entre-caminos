@@ -27,6 +27,12 @@ enum ExperienceStatus {
   REJECTED
 }
 
+enum DurationUnit {
+  MINUTES
+  HOURS
+  DAYS
+}
+
 enum ExperienceReviewDecision {
   APPROVED
   REJECTED
@@ -127,6 +133,12 @@ model Experience {
   location        String
   latitude        Decimal?         @db.Decimal(10, 7)
   longitude       Decimal?         @db.Decimal(10, 7)
+  externalUrl     String?          @map("external_url")
+  duration        String?
+  durationValue   Int?             @map("duration_value")
+  durationUnit    DurationUnit?    @map("duration_unit")
+  availability    Json?
+  howToGetThere   String?          @map("how_to_get_there")
   imageUrl        String?          @map("image_url")
   imageUrls       String[]         @default([]) @map("image_urls")
   status          ExperienceStatus @default(PENDING)

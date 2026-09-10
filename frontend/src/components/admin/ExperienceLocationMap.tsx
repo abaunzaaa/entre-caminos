@@ -6,6 +6,7 @@ type ExperienceLocationMapProps = {
   zoom?: number;
   interactive?: boolean;
   onChange?: (latitude: number, longitude: number) => void;
+  onMoveEnd?: (latitude: number, longitude: number) => void;
 };
 
 const TILE_SIZE = 256;
@@ -32,19 +33,37 @@ function worldToLatLng(x: number, y: number, zoom: number) {
   return { lat: clampLat(lat), lng: ((lng + 540) % 360) - 180 };
 }
 
+function LocationPinIcon() {
+  return (
+    <svg className="dash-exps-map__pin-icon" viewBox="0 0 28 40" aria-hidden="true">
+      <path d="M14 0C6.268 0 0 6.268 0 14c0 10.5 14 26 14 26s14-15.5 14-26C28 6.268 21.732 0 14 0z" />
+      <circle cx="14" cy="14" r="5.4" />
+    </svg>
+  );
+}
+
 export function ExperienceLocationMap({
   latitude,
   longitude,
   zoom = 13,
   interactive = true,
   onChange,
+  onMoveEnd,
 }: ExperienceLocationMapProps) {
   const viewportRef = useRef<HTMLDivElement>(null);
+  const onChangeRef = useRef(onChange);
+  const onMoveEndRef = useRef(onMoveEnd);
+  const worldRef = useRef({ x: 0, y: 0 });
+  const viewZoomRef = useRef(zoom);
+  const draggingRef = useRef(false);
+  onChangeRef.current = onChange;
+  onMoveEndRef.current = onMoveEnd;
   const [size, setSize] = useState({ width: 0, height: 420 });
   const [viewZoom, setViewZoom] = useState(zoom);
   const [pinOffset, setPinOffset] = useState({ x: 0, y: 0 });
   const dragRef = useRef<{
     mode: "map" | "pin";
+    pointerId: number;
     startX: number;
     startY: number;
     originX: number;
@@ -54,8 +73,13 @@ export function ExperienceLocationMap({
   const lat = latitude ?? 4.570868;
   const lng = longitude ?? -74.297333;
   const world = useMemo(() => latLngToWorld(lat, lng, viewZoom), [lat, lng, viewZoom]);
+  worldRef.current = world;
+  viewZoomRef.current = viewZoom;
 
   useEffect(() => {
+    if (draggingRef.current) {
+      return;
+    }
     setViewZoom(Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom)));
   }, [zoom]);
 
@@ -65,7 +89,11 @@ export function ExperienceLocationMap({
       return;
     }
     function measure() {
-      const rect = node.getBoundingClientRect();
+      const current = viewportRef.current;
+      if (!current) {
+        return;
+      }
+      const rect = current.getBoundingClientRect();
       setSize({ width: rect.width, height: rect.height });
     }
     measure();
@@ -103,56 +131,78 @@ export function ExperienceLocationMap({
     return next;
   }, [size.height, size.width, viewZoom, world.x, world.y]);
 
-  const commitWorld = useCallback(
-    (x: number, y: number) => {
-      if (!onChange) {
-        return;
-      }
-      const point = worldToLatLng(x, y, viewZoom);
-      onChange(Number(point.lat.toFixed(6)), Number(point.lng.toFixed(6)));
-    },
-    [onChange, viewZoom],
-  );
+  const emitPoint = useCallback((x: number, y: number, ended: boolean) => {
+    const point = worldToLatLng(x, y, viewZoomRef.current);
+    const nextLat = Number(point.lat.toFixed(6));
+    const nextLng = Number(point.lng.toFixed(6));
+    onChangeRef.current?.(nextLat, nextLng);
+    if (ended) {
+      onMoveEndRef.current?.(nextLat, nextLng);
+    }
+  }, []);
 
-  function onPointerDown(event: React.PointerEvent<HTMLElement>, mode: "map" | "pin") {
-    event.preventDefault();
-    event.currentTarget.setPointerCapture(event.pointerId);
-    dragRef.current = {
-      mode,
-      startX: event.clientX,
-      startY: event.clientY,
-      originX: world.x,
-      originY: world.y,
-    };
-  }
-
-  function onPointerMove(event: React.PointerEvent<HTMLElement>) {
+  const onWindowPointerMove = useCallback((event: PointerEvent) => {
     const drag = dragRef.current;
-    if (!drag) {
+    if (!drag || event.pointerId !== drag.pointerId) {
       return;
     }
     const dx = event.clientX - drag.startX;
     const dy = event.clientY - drag.startY;
     if (drag.mode === "map") {
-      commitWorld(drag.originX - dx, drag.originY - dy);
+      emitPoint(drag.originX - dx, drag.originY - dy, false);
       return;
     }
     setPinOffset({ x: dx, y: dy });
-  }
+  }, [emitPoint]);
 
-  function onPointerUp(event: React.PointerEvent<HTMLElement>) {
+  const onWindowPointerUp = useCallback((event: PointerEvent) => {
     const drag = dragRef.current;
-    if (drag?.mode === "pin") {
-      const dx = event.clientX - drag.startX;
-      const dy = event.clientY - drag.startY;
-      commitWorld(drag.originX + dx, drag.originY + dy);
+    if (!drag || event.pointerId !== drag.pointerId) {
+      return;
+    }
+    const dx = event.clientX - drag.startX;
+    const dy = event.clientY - drag.startY;
+    const moved = Math.hypot(dx, dy) >= 3;
+    if (drag.mode === "pin") {
+      emitPoint(drag.originX + dx, drag.originY + dy, moved);
       setPinOffset({ x: 0, y: 0 });
+    } else if (moved) {
+      emitPoint(drag.originX - dx, drag.originY - dy, true);
     }
     dragRef.current = null;
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-      event.currentTarget.releasePointerCapture(event.pointerId);
-    }
+    draggingRef.current = false;
+    window.removeEventListener("pointermove", onWindowPointerMove);
+    window.removeEventListener("pointerup", onWindowPointerUp);
+    window.removeEventListener("pointercancel", onWindowPointerUp);
+  }, [emitPoint, onWindowPointerMove]);
+
+  function onPointerDown(event: React.PointerEvent<HTMLElement>, mode: "map" | "pin") {
+    event.preventDefault();
+    event.stopPropagation();
+    window.removeEventListener("pointermove", onWindowPointerMove);
+    window.removeEventListener("pointerup", onWindowPointerUp);
+    window.removeEventListener("pointercancel", onWindowPointerUp);
+    draggingRef.current = true;
+    dragRef.current = {
+      mode,
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      originX: worldRef.current.x,
+      originY: worldRef.current.y,
+    };
+    window.addEventListener("pointermove", onWindowPointerMove);
+    window.addEventListener("pointerup", onWindowPointerUp);
+    window.addEventListener("pointercancel", onWindowPointerUp);
   }
+
+  useEffect(() => {
+    return () => {
+      window.removeEventListener("pointermove", onWindowPointerMove);
+      window.removeEventListener("pointerup", onWindowPointerUp);
+      window.removeEventListener("pointercancel", onWindowPointerUp);
+    };
+  }, [onWindowPointerMove, onWindowPointerUp]);
 
   function shiftZoom(delta: number) {
     const nextZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, viewZoom + delta));
@@ -165,9 +215,6 @@ export function ExperienceLocationMap({
         ref={viewportRef}
         className="dash-exps-map__viewport"
         onPointerDown={interactive ? (event) => onPointerDown(event, "map") : undefined}
-        onPointerMove={interactive ? onPointerMove : undefined}
-        onPointerUp={interactive ? onPointerUp : undefined}
-        onPointerCancel={interactive ? onPointerUp : undefined}
       >
         {tiles.map((tile) => (
           <img
@@ -185,21 +232,15 @@ export function ExperienceLocationMap({
               type="button"
               className="dash-exps-map__pin"
               aria-label="Mover el marcador de ubicación"
-              onPointerDown={(event) => {
-                event.stopPropagation();
-                onPointerDown(event, "pin");
-              }}
-              onPointerMove={onPointerMove}
-              onPointerUp={onPointerUp}
-              onPointerCancel={onPointerUp}
+              onPointerDown={(event) => onPointerDown(event, "pin")}
             >
               <span className="dash-exps-map__halo" aria-hidden="true" />
-              <span className="dash-exps-map__dot" aria-hidden="true" />
+              <LocationPinIcon />
             </button>
           ) : (
             <span className="dash-exps-map__pin">
               <span className="dash-exps-map__halo" aria-hidden="true" />
-              <span className="dash-exps-map__dot" aria-hidden="true" />
+              <LocationPinIcon />
             </span>
           )}
         </div>
