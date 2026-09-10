@@ -21,7 +21,7 @@ export function PublicLayout() {
             {user ? (
               <>
                 <Link to={isAdmin ? "/admin" : "/explorar"}>{isAdmin ? "Atelier" : user.name}</Link>
-                <button type="button" onClick={() => logout().then(() => window.location.replace("/"))}>
+                <button type="button" onClick={() => void logout()}>
                   Salir
                 </button>
               </>

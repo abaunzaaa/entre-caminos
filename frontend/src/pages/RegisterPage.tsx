@@ -1,8 +1,10 @@
 import { FormEvent, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthFormBrand } from "../components/auth/AuthFormBrand";
 import { AuthTextField } from "../components/auth/AuthTextField";
 import { SocialButtons } from "../components/auth/SocialButtons";
+import { TermsModal, type LegalDocument } from "../components/legal/TermsModal";
 import { saveOnboarding } from "../utils/onboarding";
 import { getApiErrorMessage } from "../utils/api-error";
 import { setPendingVerificationEmail } from "../utils/pending-verification";
@@ -18,6 +20,7 @@ export function RegisterForm() {
   const [fieldErrors, setFieldErrors] = useState<RegisterFieldErrors>({});
   const [formError, setFormError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [legalDocument, setLegalDocument] = useState<LegalDocument | null>(null);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -104,8 +107,42 @@ export function RegisterForm() {
         <label className="auth-check">
           <input type="checkbox" name="terms" />
           <span>
-            Acepto los <span className="underline">términos de servicio</span> y la{" "}
-            <span className="underline">política de privacidad</span>
+            Acepto los{" "}
+            <span
+              className="underline"
+              role="link"
+              tabIndex={0}
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                setLegalDocument("terms");
+              }}
+              onKeyDown={(event) => {
+                if (event.key !== "Enter" && event.key !== " ") return;
+                event.preventDefault();
+                setLegalDocument("terms");
+              }}
+            >
+              términos de servicio
+            </span>{" "}
+            y la{" "}
+            <span
+              className="underline"
+              role="link"
+              tabIndex={0}
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                setLegalDocument("privacy");
+              }}
+              onKeyDown={(event) => {
+                if (event.key !== "Enter" && event.key !== " ") return;
+                event.preventDefault();
+                setLegalDocument("privacy");
+              }}
+            >
+              política de privacidad
+            </span>
           </span>
         </label>
         {fieldErrors.termsAccepted && (
@@ -128,9 +165,17 @@ export function RegisterForm() {
           <Link to="/login">Iniciar sesión</Link>
         </p>
         <div className="auth-alt">
-          <SocialButtons label="O regístrate con" />
+          <SocialButtons label="O regístrate con" remember />
         </div>
       </footer>
+      {createPortal(
+        <TermsModal
+          open={legalDocument !== null}
+          kind={legalDocument ?? "terms"}
+          onClose={() => setLegalDocument(null)}
+        />,
+        document.body,
+      )}
     </div>
   );
 }

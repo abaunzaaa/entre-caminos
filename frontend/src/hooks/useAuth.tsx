@@ -6,6 +6,7 @@ import {
   refreshAccessToken,
   setStoredUser,
   subscribeSessionLoss,
+  syncRememberFromLocation,
 } from "../services/api";
 import {
   getMe,
@@ -22,7 +23,7 @@ import type { PublicUser } from "../types";
 type AuthContextValue = {
   user: PublicUser | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<PublicUser>;
+  login: (email: string, password: string, remember?: boolean) => Promise<PublicUser>;
   register: (payload: {
     name: string;
     email: string;
@@ -52,6 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let cancelled = false;
 
+    syncRememberFromLocation();
     restoreSession()
       .then((profile) => {
         if (cancelled) {
@@ -122,10 +124,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     () => ({
       user,
       loading,
-      refreshUser,
-      updateProfile,
-      async login(email, password) {
-        const result = await loginAccount({ email, password });
+      async login(email, password, remember = false) {
+        const result = await loginAccount({ email, password, remember });
         setUser(result.user);
         const profile = await getMe().catch(() => result.user);
         setStoredUser(profile);
@@ -159,7 +159,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       async logout() {
         await logoutAccount();
-        setUser(null);
+        window.location.replace("/");
       },
       hasPermission(permission) {
         if (user?.role === "SUPER_ADMIN") {

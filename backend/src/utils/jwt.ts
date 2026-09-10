@@ -15,6 +15,7 @@ export type AccessTokenPayload = {
 export type RefreshTokenPayload = {
   sub: string;
   type: "refresh";
+  remember?: boolean;
   iat?: number;
 };
 
@@ -25,11 +26,11 @@ export function signAccessToken(payload: { sub: string; email: string; role: str
   return jwt.sign({ ...payload, type: "access" }, env.JWT_ACCESS_SECRET, options);
 }
 
-export function signRefreshToken(userId: string): string {
+export function signRefreshToken(userId: string, remember = true): string {
   const options: SignOptions = {
     expiresIn: env.JWT_REFRESH_EXPIRES_IN as SignOptions["expiresIn"],
   };
-  return jwt.sign({ sub: userId, type: "refresh" }, env.JWT_REFRESH_SECRET, options);
+  return jwt.sign({ sub: userId, type: "refresh", remember }, env.JWT_REFRESH_SECRET, options);
 }
 
 export function verifyAccessToken(token: string): AccessTokenPayload {
