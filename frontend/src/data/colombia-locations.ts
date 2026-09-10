@@ -14,29 +14,129 @@ export const COLOMBIA_DEPARTMENTS: ColombiaDepartment[] = [
     cities: [
       "Medellín",
       "Abejorral",
+      "Abriaquí",
+      "Alejandría",
+      "Amagá",
+      "Amalfi",
       "Andes",
+      "Angelópolis",
+      "Angostura",
+      "Anorí",
+      "Anzá",
       "Apartadó",
+      "Arboletes",
+      "Argelia",
+      "Armenia",
       "Barbosa",
       "Bello",
+      "Belmira",
+      "Betania",
+      "Betulia",
+      "Briceño",
+      "Buriticá",
+      "Cáceres",
+      "Caicedo",
       "Caldas",
+      "Campamento",
+      "Cañasgordas",
+      "Caracolí",
+      "Caramanta",
       "Carepa",
-      "Carmen de Viboral",
+      "Carolina del Príncipe",
+      "Caucasia",
+      "Chigorodó",
+      "Cisneros",
+      "Ciudad Bolívar",
+      "Cocorná",
+      "Concepción",
+      "Concordia",
       "Copacabana",
-      "El Retiro",
+      "Dabeiba",
+      "Donmatías",
+      "Ebéjico",
+      "El Bagre",
+      "El Carmen de Viboral",
+      "El Santuario",
+      "Entrerríos",
       "Envigado",
+      "Fredonia",
+      "Frontino",
+      "Giraldo",
       "Girardota",
+      "Gómez Plata",
+      "Granada",
+      "Guadalupe",
+      "Guarne",
       "Guatapé",
+      "Heliconia",
+      "Hispania",
       "Itagüí",
+      "Ituango",
       "Jardín",
       "Jericó",
       "La Ceja",
       "La Estrella",
+      "La Pintada",
+      "La Unión",
+      "Liborina",
+      "Maceo",
       "Marinilla",
+      "Montebello",
+      "Murindó",
+      "Mutatá",
+      "Nariño",
+      "Nechí",
+      "Necoclí",
+      "Olaya",
+      "Peñol",
+      "Peque",
+      "Pueblorrico",
+      "Puerto Berrío",
+      "Puerto Nare",
+      "Puerto Triunfo",
+      "Remedios",
+      "Retiro",
       "Rionegro",
+      "Sabanalarga",
       "Sabaneta",
+      "Salgar",
+      "San Andrés de Cuerquia",
+      "San Carlos",
+      "San Francisco",
+      "San Jerónimo",
+      "San José de la Montaña",
+      "San Juan de Urabá",
+      "San Luis",
+      "San Pedro de los Milagros",
+      "San Pedro de Urabá",
+      "San Rafael",
+      "San Roque",
+      "San Vicente Ferrer",
+      "Santa Bárbara",
       "Santa Fe de Antioquia",
+      "Santa Rosa de Osos",
+      "Santo Domingo",
+      "Segovia",
+      "Sonsón",
+      "Sopetrán",
+      "Támesis",
+      "Tarazá",
+      "Tarso",
+      "Titiribí",
+      "Toledo",
       "Turbo",
+      "Uramita",
       "Urrao",
+      "Valdivia",
+      "Valparaíso",
+      "Vegachí",
+      "Venecia",
+      "Vigía del Fuerte",
+      "Yalí",
+      "Yarumal",
+      "Yolombó",
+      "Yondó",
+      "Zaragoza",
     ],
   },
   { name: "Arauca", lat: 7.0903, lng: -70.7617, cities: ["Arauca", "Arauquita", "Saravena", "Tame"] },
@@ -190,9 +290,49 @@ export const COLOMBIA_DEPARTMENTS: ColombiaDepartment[] = [
   { name: "Vichada", lat: 6.1847, lng: -67.4858, cities: ["Puerto Carreño", "Cumaribo"] },
 ];
 
+function foldPlaceName(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/^(el|la|los|las)\s+/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export function findDepartment(name: string) {
-  const needle = name.trim().toLowerCase();
-  return COLOMBIA_DEPARTMENTS.find((item) => item.name.toLowerCase() === needle);
+  const needle = foldPlaceName(name);
+  return COLOMBIA_DEPARTMENTS.find((item) => foldPlaceName(item.name) === needle);
+}
+
+export function findMunicipality(departmentName: string, municipalityName: string) {
+  const department = findDepartment(departmentName);
+  const needle = foldPlaceName(municipalityName);
+  if (!department || !needle) {
+    return "";
+  }
+  const aliases: Record<string, string> = {
+    carolina: "carolina del principe",
+    "carmen de viboral": "carmen de viboral",
+    "el carmen de viboral": "carmen de viboral",
+    "el retiro": "retiro",
+    "don matias": "donmatias",
+    "san pedro": "san pedro de los milagros",
+    "san vicente": "san vicente ferrer",
+    santafedeantioquia: "santa fe de antioquia",
+    "santa fe de antioquia": "santa fe de antioquia",
+  };
+  const target = aliases[needle] ?? needle;
+  return (
+    department.cities.find((city) => {
+      const folded = foldPlaceName(city);
+      return folded === target || folded === needle;
+    }) ?? ""
+  );
+}
+
+export function isValidDepartmentMunicipality(departmentName: string, municipalityName: string) {
+  return Boolean(findMunicipality(departmentName, municipalityName));
 }
 
 export function parseStoredLocation(location: string) {

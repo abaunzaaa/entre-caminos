@@ -32,6 +32,12 @@ export type Experience = {
   location: string;
   latitude: string | number | null;
   longitude: string | number | null;
+  externalUrl?: string | null;
+  duration?: string | null;
+  durationValue?: number | null;
+  durationUnit?: "MINUTES" | "HOURS" | "DAYS" | null;
+  availability?: unknown;
+  howToGetThere?: string | null;
   imageUrl: string | null;
   imageUrls?: string[];
   status: ExperienceStatus;

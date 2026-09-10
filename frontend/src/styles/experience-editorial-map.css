@@ -73,13 +73,15 @@
   border-radius: 1.25rem;
 }
 
-.dash-exps-place .dash-exps-map__dot {
-  background: #294942;
-  box-shadow: 0 0 0 3px #ffffff, 0 8px 16px rgba(41, 73, 66, 0.28);
+.dash-exps-place .dash-exps-map__pin-icon path {
+  fill: #294942;
 }
 
 .dash-exps-place .dash-exps-map__halo {
-  background: rgba(41, 73, 66, 0.2);
+  width: 18px;
+  height: 18px;
+  margin: -9px 0 0 -9px;
+  background: rgba(41, 73, 66, 0.22);
   box-shadow: none;
   transform-origin: 50% 50%;
   animation: dash-exps-place-pulse 2.8s ease-in-out infinite;
