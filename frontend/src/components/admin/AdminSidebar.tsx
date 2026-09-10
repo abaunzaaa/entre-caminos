@@ -7,6 +7,7 @@ import {
   Tags,
   Users,
   ExternalLink,
+  UserRoundPen,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "../../utils/cn";
@@ -27,6 +28,13 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     icon: LayoutDashboard,
     permission: null,
     end: true,
+  },
+  {
+    to: "/admin/perfil",
+    label: "Editar perfil",
+    icon: UserRoundPen,
+    permission: null,
+    match: ["/admin/perfil", "/admin/profile"],
   },
   {
     to: "/admin/administradores",

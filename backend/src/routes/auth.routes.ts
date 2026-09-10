@@ -10,6 +10,7 @@ import {
   registerSchema,
   resendVerificationSchema,
   resetPasswordSchema,
+  updateProfileSchema,
   verifyEmailSchema,
 } from "../validators/auth.validator.js";
 
@@ -32,6 +33,12 @@ authRouter.post(
 authRouter.post("/logout", asyncHandler(authController.logout));
 authRouter.post("/refresh", asyncHandler(authController.refresh));
 authRouter.get("/me", authMiddleware, asyncHandler(authController.me));
+authRouter.patch(
+  "/me",
+  authMiddleware,
+  validate(updateProfileSchema),
+  asyncHandler(authController.updateMe),
+);
 
 authRouter.post(
   "/forgot-password",

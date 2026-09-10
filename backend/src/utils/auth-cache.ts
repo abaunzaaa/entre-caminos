@@ -11,6 +11,12 @@ export type CachedProfile = {
   role: string;
   createdAt: Date;
   permissions: string[];
+  phone?: string | null;
+  country?: string | null;
+  department?: string | null;
+  city?: string | null;
+  address?: string | null;
+  avatarUrl?: string | null;
 };
 
 const cache = new Map<string, CacheEntry>();

@@ -1,9 +1,9 @@
 import { FormEvent, useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import axios from "axios";
-import { X } from "lucide-react";
 import contactoImg from "../../assets/contacto.png";
 import contactSuccessEmailIcon from "../../assets/contact-success-email-no-heart.png";
+import { SuccessConfirmDialog } from "../ui/SuccessConfirmDialog";
 import { sendContact } from "../../services/contact.service";
 import { getApiErrorMessage } from "../../utils/api-error";
 import "../../styles/contact-modal.css";
@@ -185,90 +185,6 @@ function ContactSelect({
           )
         : null}
     </div>
-  );
-}
-
-function ContactSuccessConfirm({
-  open,
-  onClose,
-}: {
-  open: boolean;
-  onClose: () => void;
-}) {
-  const titleId = useId();
-  const dialogRef = useRef<HTMLDivElement>(null);
-  const closeRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    closeRef.current?.focus();
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        event.stopImmediatePropagation();
-        onClose();
-        return;
-      }
-      if (event.key !== "Tab" || !dialogRef.current) return;
-      const focusable = [...dialogRef.current.querySelectorAll<HTMLElement>("button:not([disabled])")];
-      if (!focusable.length) return;
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-        return;
-      }
-      if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-
-    window.addEventListener("keydown", onKeyDown, true);
-    return () => window.removeEventListener("keydown", onKeyDown, true);
-  }, [open, onClose]);
-
-  if (!open) return null;
-
-  return createPortal(
-    <div className="contact-success" role="presentation" onClick={onClose}>
-      <div
-        ref={dialogRef}
-        className="contact-success__dialog"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-        aria-describedby={`${titleId}-copy`}
-        onClick={(event) => event.stopPropagation()}
-      >
-        <button
-          ref={closeRef}
-          type="button"
-          className="contact-success__close"
-          aria-label="Cerrar"
-          onClick={onClose}
-        >
-          <X strokeWidth={1.5} aria-hidden="true" />
-        </button>
-        <img
-          src={contactSuccessEmailIcon}
-          alt=""
-          className="contact-success__icon"
-          aria-hidden="true"
-        />
-        <h2 id={titleId} className="contact-success__title">
-          ¡Mensaje enviado!
-        </h2>
-        <p id={`${titleId}-copy`} className="contact-success__text">
-          Hemos recibido tu mensaje correctamente. Pronto nos pondremos en contacto contigo.
-        </p>
-        <button type="button" className="contact-success__action admin-cta" onClick={onClose}>
-          Entendido
-        </button>
-      </div>
-    </div>,
-    document.body,
   );
 }
 
@@ -629,7 +545,22 @@ export function ContactModal({
         </aside>
       </div>
     </div>
-    <ContactSuccessConfirm open={successOpen} onClose={closeSuccess} />
+    <SuccessConfirmDialog
+      open={successOpen}
+      onClose={closeSuccess}
+      title="¡Mensaje enviado!"
+      description="Hemos recibido tu mensaje correctamente. Pronto nos pondremos en contacto contigo."
+      actionLabel="Entendido"
+      closeLabel="Cerrar"
+      initialFocus="close"
+      icon={
+        <img
+          src={contactSuccessEmailIcon}
+          alt=""
+          className="contact-success__icon"
+        />
+      }
+    />
     </>
   );
 }

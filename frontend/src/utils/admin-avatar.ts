@@ -16,6 +16,48 @@ export function readAdminAvatar(userId: string | undefined | null) {
   }
 }
 
+export function resolveAvatarUrl(user?: { id?: string; avatarUrl?: string | null } | null) {
+  const url = user?.avatarUrl?.trim();
+  if (url) {
+    if (url.startsWith("data:") || url.startsWith("blob:") || /^https?:\/\//i.test(url)) {
+      return url;
+    }
+    if (url.startsWith("/")) {
+      const api = import.meta.env.VITE_API_URL as string | undefined;
+      if (api) {
+        try {
+          return `${new URL(api).origin}${url}`;
+        } catch {
+          return url;
+        }
+      }
+      return url;
+    }
+  }
+  return readAdminAvatar(user?.id);
+}
+
+export function toAvatarPayload(photo: string | null) {
+  if (!photo) {
+    return null;
+  }
+  if (photo.startsWith("data:image/")) {
+    return photo;
+  }
+  if (photo.startsWith("/uploads/avatars/")) {
+    return photo;
+  }
+  try {
+    const path = new URL(photo, window.location.origin).pathname;
+    if (path.startsWith("/uploads/avatars/")) {
+      return path;
+    }
+  } catch {
+    /* ignore */
+  }
+  return photo;
+}
+
 export const ADMIN_AVATAR_EVENT = "ec-admin-avatar-change";
 
 export function saveAdminAvatar(userId: string, dataUrl: string) {

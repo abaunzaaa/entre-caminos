@@ -40,6 +40,7 @@ export async function listAdministrators(options?: { take?: number; roles?: Role
       emailVerified: true,
       status: true,
       createdAt: true,
+      avatarUrl: true,
       role: { select: { name: true } },
     },
     orderBy: { createdAt: "desc" },

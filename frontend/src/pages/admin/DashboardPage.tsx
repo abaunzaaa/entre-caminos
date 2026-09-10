@@ -16,7 +16,7 @@ import {
   getAdministrators,
   getDashboard,
 } from "../../services/catalog.service";
-import { ADMIN_AVATAR_EVENT, readAdminAvatar } from "../../utils/admin-avatar";
+import { ADMIN_AVATAR_EVENT, resolveAvatarUrl } from "../../utils/admin-avatar";
 import { CountUp } from "../../components/admin/CountUp";
 import { DashCardRail } from "../../components/admin/DashCardRail";
 import { ExperienceCatalogCard } from "../../components/admin/ExperienceCatalogCard";
@@ -152,15 +152,15 @@ export function DashboardPage() {
   const [adminsError, setAdminsError] = useState("");
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [categoriesError, setCategoriesError] = useState("");
-  const [photo, setPhoto] = useState<string | null>(() => readAdminAvatar(user?.id));
+  const [photo, setPhoto] = useState<string | null>(() => resolveAvatarUrl(user));
 
   useEffect(() => {
-    setPhoto(readAdminAvatar(user?.id));
-  }, [user?.id]);
+    setPhoto(resolveAvatarUrl(user));
+  }, [user, user?.id, user?.avatarUrl]);
 
   useEffect(() => {
     function syncPhoto() {
-      setPhoto(readAdminAvatar(user?.id));
+      setPhoto(resolveAvatarUrl(user));
     }
     window.addEventListener(ADMIN_AVATAR_EVENT, syncPhoto);
     window.addEventListener("storage", syncPhoto);
@@ -168,7 +168,7 @@ export function DashboardPage() {
       window.removeEventListener(ADMIN_AVATAR_EVENT, syncPhoto);
       window.removeEventListener("storage", syncPhoto);
     };
-  }, [user?.id]);
+  }, [user, user?.id, user?.avatarUrl]);
 
   useEffect(() => {
     let cancelled = false;
@@ -355,7 +355,7 @@ export function DashboardPage() {
             ) : (
               <div className="dash-split__list">
                 {admins.map((admin) => {
-                  const avatar = readAdminAvatar(admin.id);
+                  const avatar = resolveAvatarUrl(admin);
                   const initial = admin.name.trim().charAt(0).toUpperCase() || "A";
                   return (
                     <article key={admin.id} className="dash-team-card">

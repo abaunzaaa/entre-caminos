@@ -84,6 +84,7 @@ export function AdminLayout() {
     (link) => !link.permission || hasPermission(link.permission),
   );
   const isDashboard = location.pathname === "/admin";
+  const isProfilePage = location.pathname === "/admin/perfil" || location.pathname === "/admin/profile";
   const isTeamPage =
     location.pathname === "/admin/administradores" || location.pathname === "/admin/administrators";
   const isAccessPage = location.pathname === "/admin/roles";
@@ -95,7 +96,13 @@ export function AdminLayout() {
     !isExperiencesList &&
     (location.pathname.includes("/experiencias/") || location.pathname.includes("/experiences/"));
   const useDashCanvas =
-    isDashboard || isTeamPage || isAccessPage || isCategoriesPage || isExperiencesList || isExperienceStudio;
+    isDashboard ||
+    isProfilePage ||
+    isTeamPage ||
+    isAccessPage ||
+    isCategoriesPage ||
+    isExperiencesList ||
+    isExperienceStudio;
   const heading = useDashCanvas
     ? null
     : (titles[location.pathname] ??

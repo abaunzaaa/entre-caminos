@@ -45,6 +45,32 @@ export async function getMe() {
   return data.data.user;
 }
 
+export type UpdateProfileInput = {
+  name: string;
+  phone?: string | null;
+  country?: string | null;
+  department?: string | null;
+  city?: string | null;
+  address?: string | null;
+  avatarUrl?: string | null;
+};
+
+export async function updateMyProfile(payload: UpdateProfileInput) {
+  const body: UpdateProfileInput = {
+    name: payload.name.trim(),
+  };
+  if (payload.phone !== undefined) body.phone = payload.phone;
+  if (payload.country !== undefined) body.country = payload.country;
+  if (payload.department !== undefined) body.department = payload.department;
+  if (payload.city !== undefined) body.city = payload.city;
+  if (payload.address !== undefined) body.address = payload.address;
+  if (payload.avatarUrl !== undefined) body.avatarUrl = payload.avatarUrl;
+
+  const { data } = await api.patch<ApiResponse<{ user: PublicUser }>>("/auth/me", body);
+  setStoredUser(data.data.user);
+  return data.data.user;
+}
+
 export async function restoreSession() {
   if (!getAccessToken()) {
     await refreshAccessToken({ silent: true });

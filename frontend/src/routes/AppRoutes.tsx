@@ -12,6 +12,7 @@ import { OnboardingReadyPage } from "../pages/onboarding/OnboardingReadyPage";
 import { ExplorePage } from "../pages/ExplorePage";
 import { ExperienceDetailPage } from "../pages/ExperienceDetailPage";
 import { DashboardPage } from "../pages/admin/DashboardPage";
+import { AdminProfilePage } from "../pages/admin/AdminProfilePage";
 import { AdministratorsPage } from "../pages/admin/AdministratorsPage";
 import { RolesPage } from "../pages/admin/RolesPage";
 import { PermissionsPage } from "../pages/admin/PermissionsPage";
@@ -45,6 +46,8 @@ export function AppRoutes() {
         <Route element={<ProtectedRoute admin />}>
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<DashboardPage />} />
+            <Route path="perfil" element={<AdminProfilePage />} />
+            <Route path="profile" element={<AdminProfilePage />} />
             <Route path="administrators" element={<AdministratorsPage />} />
             <Route path="administradores" element={<AdministratorsPage />} />
             <Route path="roles" element={<RolesPage />} />

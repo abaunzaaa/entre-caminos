@@ -14,7 +14,7 @@ import { Panel, StatusDot } from "../../components/admin/Panel";
 import { TeamInviteCarousel } from "../../components/admin/TeamInviteCarousel";
 import { useAuth } from "../../hooks/useAuth";
 import { getApiErrorMessage } from "../../utils/api-error";
-import { readAdminAvatar } from "../../utils/admin-avatar";
+import { resolveAvatarUrl } from "../../utils/admin-avatar";
 import adminIlus from "../../assets/admin-ilus.png";
 import superadmIlus from "../../assets/superadm-ilus.png";
 
@@ -512,7 +512,7 @@ export function AdministratorsPage() {
               ) : null}
               <div className="dash-team-board__people">
               {visibleAdmins.map((admin) => {
-                const avatar = readAdminAvatar(admin.id);
+                const avatar = resolveAvatarUrl(admin);
                 const initial = admin.name.trim().charAt(0).toUpperCase() || "A";
                 return (
                   <article key={admin.id} className="dash-team-card">

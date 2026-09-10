@@ -76,3 +76,151 @@
   min-height: 40px;
   padding: 10px 26px;
 }
+
+.contact-success {
+  --contact-font: Poppins, Nunito, system-ui, sans-serif;
+  position: fixed;
+  inset: 0;
+  z-index: 91;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(28, 51, 46, 0.38);
+  font-family: var(--contact-font);
+  animation: contact-modal-fade 0.32s ease;
+}
+
+.contact-success button,
+.contact-success h2,
+.contact-success p { font-family: inherit; }
+
+.contact-success__dialog {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(25.25rem, 100%);
+  padding: 1.85rem 1.7rem 1.5rem;
+  background: #ffffff;
+  border-radius: 1.35rem;
+  box-shadow: 0 28px 80px rgba(28, 51, 46, 0.22);
+  text-align: center;
+  animation: contact-modal-rise 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.contact-success__close {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.55rem;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #5a7c75;
+  cursor: pointer;
+}
+
+.contact-success__close:hover,
+.contact-success__close:focus-visible {
+  outline: none;
+  background: #eef3ef;
+  color: #294942;
+}
+
+.contact-success__close svg { display: block; width: 1rem; height: 1rem; }
+.contact-success__media { display: flex; align-items: center; justify-content: center; }
+.contact-success__icon {
+  display: block;
+  width: 74px;
+  height: auto;
+  margin: 0 auto;
+  object-fit: contain;
+  object-position: center;
+  background: none;
+  border: 0;
+  box-shadow: none;
+  pointer-events: none;
+}
+
+.contact-success__media > svg { width: 48px; height: 48px; color: #294942; }
+.contact-success__title {
+  margin: 12px 0 0;
+  max-width: 18rem;
+  color: #1c332e;
+  font-size: clamp(1.35rem, 2.2vw, 1.75rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+.contact-success__text {
+  margin: 10px 0 0;
+  max-width: 20.5rem;
+  color: #5a7c75;
+  font-size: clamp(0.92rem, 1.15vw, 1.02rem);
+  line-height: 1.55;
+}
+.contact-success__action { margin-top: 22px; }
+.contact-success--subtle { animation: contact-success-fade 220ms ease; }
+.contact-success--subtle .contact-success__dialog {
+  width: min(26.5rem, 100%);
+  max-height: min(100%, calc(100vh - 2.5rem));
+  overflow-y: auto;
+  background: #fcfbf8;
+  animation: contact-success-rise 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.contact-success--subtle .contact-success__media { animation: profile-success-icon-in 200ms ease both; }
+.contact-success--subtle .contact-success__icon--profile {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  background: none;
+  border: 0;
+  box-shadow: none;
+}
+.contact-success--subtle .contact-success__title { margin-top: 16px; }
+
+@keyframes contact-modal-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes contact-modal-rise {
+  from { opacity: 0; transform: translateY(22px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes contact-success-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes contact-success-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes profile-success-icon-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 860px) {
+  .contact-success { padding: 0.85rem; }
+  .contact-success__dialog { padding: 1.7rem 1.25rem 1.35rem; }
+  .contact-success__icon { width: 64px; }
+  .contact-success--subtle { padding: 20px; }
+  .contact-success--subtle .contact-success__icon--profile { width: 56px; height: 56px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contact-success,
+  .contact-success__dialog,
+  .contact-success--subtle,
+  .contact-success--subtle .contact-success__dialog,
+  .contact-success--subtle .contact-success__media {
+    animation: none;
+    transition: none;
+  }
+}

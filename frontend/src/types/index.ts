@@ -9,6 +9,12 @@ export type PublicUser = {
   role: RoleName;
   createdAt: string;
   permissions?: string[];
+  phone?: string | null;
+  country?: string | null;
+  department?: string | null;
+  city?: string | null;
+  address?: string | null;
+  avatarUrl?: string | null;
 };
 
 export type Category = {
