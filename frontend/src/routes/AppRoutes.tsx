@@ -1,4 +1,5 @@
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { useEffect } from "react";
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { AdminLayout } from "../layouts/AdminLayout";
 import { PublicLayout } from "../layouts/PublicLayout";
 import { LandingPage } from "../pages/LandingPage";
@@ -22,9 +23,28 @@ import { ExperienceFormPage } from "../pages/admin/ExperienceFormPage";
 import { ExperiencePreviewPage } from "../pages/admin/ExperiencePreviewPage";
 import { ProtectedRoute } from "./ProtectedRoute";
 
+const PAGE_TITLES: Record<string, string> = {
+  "/login": "Iniciar sesión | Entre Caminos",
+  "/register": "Registrarse | Entre Caminos",
+  "/forgot-password": "Recuperar contraseña | Entre Caminos",
+  "/reset-password": "Restablecer contraseña | Entre Caminos",
+  "/verify-email": "Verificar correo | Entre Caminos",
+};
+
+function DocumentTitle() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    document.title = PAGE_TITLES[pathname] ?? "Entre Caminos";
+  }, [pathname]);
+
+  return null;
+}
+
 export function AppRoutes() {
   return (
     <BrowserRouter>
+      <DocumentTitle />
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route element={<AuthPage />}>
