@@ -102,6 +102,7 @@ model User {
   passwordResetTokens     PasswordResetToken[]
   emailVerificationTokens EmailVerificationToken[]
   oauthAccounts           OAuthAccount[]
+  profile                 UserProfile?
 
   @@index([roleId])
   @@index([status])
@@ -247,10 +248,46 @@ model EmailVerificationToken {
   @@map("email_verification_tokens")
 }
 
+enum ProfileImageType {
+  PHOTO
+  AVATAR
+}
+
 enum AuthProvider {
   GOOGLE
   APPLE
   MICROSOFT
+}
+
+model UserProfile {
+  id                    String           @id @default(uuid())
+  userId                String           @unique @map("user_id")
+  country               String?
+  department            String?
+  city                  String?
+  neighborhood          String?
+  addressReference      String?          @map("address_reference")
+  latitude              Decimal?         @db.Decimal(10, 7)
+  longitude             Decimal?         @db.Decimal(10, 7)
+  profileImageUrl       String?          @map("profile_image_url")
+  profileImagePublicId  String?          @map("profile_image_public_id")
+  profileImageType      ProfileImageType @default(AVATAR) @map("profile_image_type")
+  avatarConfig          Json?            @map("avatar_config")
+  interests             String[]         @default([])
+  companions            String[]         @default([])
+  places                String[]         @default([])
+  music                 String[]         @default([])
+  budget                String[]         @default([])
+  climate               String[]         @default([])
+  onboardingCompleted   Boolean          @default(false) @map("onboarding_completed")
+  onboardingCompletedAt DateTime?        @map("onboarding_completed_at")
+  createdAt             DateTime         @default(now()) @map("created_at")
+  updatedAt             DateTime         @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([onboardingCompleted])
+  @@map("user_profiles")
 }
 
 model OAuthAccount {

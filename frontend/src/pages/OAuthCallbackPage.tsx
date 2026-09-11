@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Spinner } from "../components/ui/Spinner";
 import { useAuth } from "../hooks/useAuth";
 import { setRememberSession, syncRememberFromLocation } from "../services/api";
+import { needsOnboarding } from "../utils/onboarding";
 
 export function OAuthCallbackPage() {
   const { user, loading } = useAuth();
@@ -25,7 +26,7 @@ export function OAuthCallbackPage() {
       });
       return;
     }
-    if (params.get("next") === "onboarding" && user.role === "USER") {
+    if (user.role === "USER" && (params.get("next") === "onboarding" || needsOnboarding(user))) {
       navigate("/onboarding", { replace: true });
       return;
     }

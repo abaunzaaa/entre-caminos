@@ -31,6 +31,7 @@ type AuthContextValue = {
   }) => Promise<{ user: PublicUser; verificationEmailSent: boolean }>;
   verifyEmail: (email: string, code: string) => Promise<PublicUser>;
   logout: () => Promise<void>;
+  refresh: () => Promise<PublicUser | null>;
   hasPermission: (permission: string) => boolean;
   isAdmin: boolean;
 };
@@ -144,6 +145,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       async logout() {
         await logoutAccount();
         window.location.replace("/");
+      },
+      async refresh() {
+        const profile = await getMe();
+        setStoredUser(profile);
+        setUser(profile);
+        return profile;
       },
       hasPermission(permission) {
         if (user?.role === "SUPER_ADMIN") {
