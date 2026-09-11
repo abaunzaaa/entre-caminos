@@ -5,7 +5,7 @@
   "type": "module",
   "description": "API Entre Caminos — Node.js, Express, TypeScript, Prisma",
   "scripts": {
-    "dev": "prisma generate && prisma migrate dev && tsx watch src/index.ts",
+    "dev": "tsx watch src/index.ts",
     "build": "tsc -p tsconfig.build.json",
     "start": "node dist/index.js",
     "prisma:generate": "prisma generate",

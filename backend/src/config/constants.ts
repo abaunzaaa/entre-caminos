@@ -47,6 +47,7 @@ export const PASSWORD_RESET_GENERIC_MESSAGE =
 export const EMAIL_VERIFICATION_TTL_MS = 10 * 60 * 1000;
 export const EMAIL_VERIFICATION_TTL_LABEL = "10 minutos";
 export const EMAIL_UNVERIFIED_LOGIN_MESSAGE = "Debes verificar tu correo antes de iniciar sesión.";
+export const EMAIL_INACTIVE_LOGIN_MESSAGE = "Tu cuenta está inactiva. Contacta a soporte.";
 
 export const MIN_EXPERIENCE_IMAGES = 5;
 export const MIN_EXPERIENCE_IMAGES_MESSAGE = "Agrega al menos 5 imágenes para continuar.";
@@ -77,6 +78,7 @@ export const CONTACT_COMPANY_MAX = 120;
 export const CONTACT_DISCOVER_REASONS = [
   "Quiero conocer más experiencias",
   "Necesito ayuda para elegir un plan",
+  "Mi cuenta está inactiva",
   "Tengo una sugerencia",
   "Otro",
 ] as const;
