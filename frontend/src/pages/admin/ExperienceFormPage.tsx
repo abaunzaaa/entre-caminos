@@ -2,6 +2,7 @@ import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "re
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ChevronDown, Clock, ImagePlus, MapPin, Plus, X } from "lucide-react";
 import { ExperienceLocationMap } from "../../components/admin/ExperienceLocationMap";
+import { SuccessConfirm } from "../../components/feedback/SuccessConfirm";
 import { Button } from "../../components/ui/Button";
 import { Input, Textarea } from "../../components/ui/Input";
 import { useAuth } from "../../hooks/useAuth";
@@ -15,8 +16,8 @@ import {
 } from "../../data/colombia-locations";
 import {
   createExperience,
-  getAdminCategories,
   getAdminExperience,
+  getPublicCategories,
   submitExperience,
   updateExperience,
   uploadImage,
@@ -177,6 +178,8 @@ export function ExperienceFormPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [createdOpen, setCreatedOpen] = useState(false);
+  const [createdPendingReview, setCreatedPendingReview] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [status, setStatus] = useState<ExperienceStatus>("PENDING");
@@ -201,8 +204,6 @@ export function ExperienceFormPage() {
   const [dragOver, setDragOver] = useState(false);
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
   const [overIndex, setOverIndex] = useState<number | null>(null);
-  const [categoryOpen, setCategoryOpen] = useState(false);
-  const categoryRef = useRef<HTMLDivElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const reverseSeq = useRef(0);
   const geocodeTrigger = useRef<"user" | "pin" | "load">("user");
@@ -217,15 +218,38 @@ export function ExperienceFormPage() {
   const hasMapPoint = Number.isFinite(latNumber) && Number.isFinite(lngNumber);
   const mapZoom = geocodeStatus === "exact" || geocodeStatus === "manual" ? 17 : address.trim() ? 16 : municipality.trim() ? 13 : department ? 8 : 6;
 
-  const categoryName = useMemo(
-    () => categories.find((item) => item.id === categoryId)?.name ?? "",
+  const selectableCategories = useMemo(
+    () => categories.filter((item) => item.status === "APPROVED" || item.id === categoryId),
     [categories, categoryId],
+  );
+  const categoryName = useMemo(
+    () => selectableCategories.find((item) => item.id === categoryId)?.name ?? "",
+    [selectableCategories, categoryId],
+  );
+  const categoryOptions = useMemo(
+    () => selectableCategories.map((item) => item.name),
+    [selectableCategories],
   );
 
   useEffect(() => {
-    getAdminCategories()
-      .then(setCategories)
-      .catch(() => setCategories([]));
+    let cancelled = false;
+    getPublicCategories()
+      .then((items) => {
+        if (!cancelled) {
+          setCategories(Array.isArray(items) ? items : []);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setCategories([]);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
     if (id) {
       getAdminExperience(id)
         .then((experience) => {
@@ -259,17 +283,6 @@ export function ExperienceFormPage() {
         .catch((err) => setError(getApiErrorMessage(err, "No se pudo cargar")));
     }
   }, [id]);
-
-  useEffect(() => {
-    function onPointerDown(event: MouseEvent) {
-      const target = event.target as Node;
-      if (!categoryRef.current?.contains(target)) {
-        setCategoryOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", onPointerDown);
-    return () => document.removeEventListener("mousedown", onPointerDown);
-  }, []);
 
   const applyReverseGeocode = useCallback(async (nextLat: number, nextLng: number) => {
     geocodeTrigger.current = "pin";
@@ -460,7 +473,10 @@ export function ExperienceFormPage() {
           await submitExperience(id);
         }
       } else {
-        await createExperience(payload);
+        const created = await createExperience(payload);
+        setCreatedPendingReview(created.status === "PENDING");
+        setCreatedOpen(true);
+        return;
       }
       navigate("/admin/experiencias");
     } catch (err) {
@@ -548,36 +564,17 @@ export function ExperienceFormPage() {
                 placeholder="Nombre de la experiencia"
                 required
               />
-              <div className={`dash-team-role${categoryOpen ? " is-open" : ""}`} ref={categoryRef}>
-                <span className="dash-team-role__label">Categoría</span>
-                <button
-                  type="button"
-                  className={`dash-team-role__trigger${categoryOpen ? " is-open" : ""}`}
-                  aria-haspopup="listbox"
-                  aria-expanded={categoryOpen}
-                  onClick={() => setCategoryOpen((open) => !open)}
-                >
-                  <span>{categoryName || "Seleccionar categoría"}</span>
-                  <ChevronDown size={18} strokeWidth={1.7} aria-hidden="true" />
-                </button>
-                <div className={`dash-team-role__menu${categoryOpen ? " is-open" : ""}`} role="listbox">
-                  {categories.map((category) => (
-                    <button
-                      key={category.id}
-                      type="button"
-                      role="option"
-                      aria-selected={categoryId === category.id}
-                      className={`dash-team-role__option${categoryId === category.id ? " is-active" : ""}`}
-                      onClick={() => {
-                        setCategoryId(category.id);
-                        setCategoryOpen(false);
-                      }}
-                    >
-                      {category.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
+              <FieldPicker
+                label="Categoría"
+                value={categoryName}
+                placeholder="Seleccionar categoría"
+                options={categoryOptions}
+                searchable
+                onChange={(value) => {
+                  const selected = selectableCategories.find((item) => item.name === value);
+                  setCategoryId(selected?.id ?? "");
+                }}
+              />
               <FieldPicker
                 label="Departamento"
                 value={department}
@@ -994,6 +991,21 @@ export function ExperienceFormPage() {
           </div>
         </form>
       </section>
+
+      <SuccessConfirm
+        open={createdOpen}
+        variant="experience"
+        title="Experiencia creada correctamente"
+        text={
+          createdPendingReview
+            ? "La experiencia quedó pendiente de revisión."
+            : "La experiencia ya está publicada en el catálogo."
+        }
+        onClose={() => {
+          setCreatedOpen(false);
+          navigate("/admin/experiencias");
+        }}
+      />
     </div>
   );
 }

@@ -71,6 +71,7 @@ export function AppRoutes() {
             <Route path="administradores" element={<AdministratorsPage />} />
             <Route path="roles" element={<RolesPage />} />
             <Route path="permissions" element={<PermissionsPage />} />
+            <Route path="permisos" element={<PermissionsPage />} />
             <Route path="categories" element={<CategoriesPage />} />
             <Route path="categorias" element={<CategoriesPage />} />
             <Route path="experiences" element={<ExperiencesPage />} />

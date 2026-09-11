@@ -111,7 +111,6 @@ export async function createCategory(payload: {
   name: string;
   description?: string;
   icon?: string;
-  status?: "ACTIVE" | "INACTIVE";
 }) {
   const { data } = await api.post("/admin/categories", payload);
   return data.data.category as Category;
@@ -119,6 +118,16 @@ export async function createCategory(payload: {
 
 export async function updateCategory(id: string, payload: Partial<Category>) {
   const { data } = await api.put(`/admin/categories/${id}`, payload);
+  return data.data.category as Category;
+}
+
+export async function approveCategory(id: string) {
+  const { data } = await api.post(`/admin/categories/${id}/approve`);
+  return data.data.category as Category;
+}
+
+export async function rejectCategory(id: string, reason: string) {
+  const { data } = await api.post(`/admin/categories/${id}/reject`, { reason });
   return data.data.category as Category;
 }
 

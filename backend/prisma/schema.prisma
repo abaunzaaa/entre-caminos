@@ -15,8 +15,9 @@ enum UserStatus {
 }
 
 enum CategoryStatus {
-  ACTIVE
-  INACTIVE
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 enum ExperienceStatus {
@@ -94,6 +95,7 @@ model User {
   role                  Role                   @relation(fields: [roleId], references: [id])
   experiences             Experience[]
   reviewedExperiences     Experience[]         @relation("ExperienceReviewedBy")
+  reviewedCategories      Category[]           @relation("CategoryReviewedBy")
   experienceReviews       ExperienceReview[]
   notifications           Notification[]
   auditLogs               AuditLog[]
@@ -109,18 +111,23 @@ model User {
 }
 
 model Category {
-  id          String         @id @default(uuid())
-  name        String         @unique
-  description String?
-  icon        String         @default("tags")
-  status      CategoryStatus @default(ACTIVE)
-  createdAt   DateTime       @default(now()) @map("created_at")
-  updatedAt   DateTime       @updatedAt @map("updated_at")
+  id              String         @id @default(uuid())
+  name            String         @unique
+  description     String?
+  icon            String         @default("tags")
+  status          CategoryStatus @default(PENDING)
+  rejectionReason String?        @map("rejection_reason")
+  reviewedAt      DateTime?      @map("reviewed_at")
+  reviewedById    String?        @map("reviewed_by")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
 
   experiences Experience[]
+  reviewedBy  User?        @relation("CategoryReviewedBy", fields: [reviewedById], references: [id])
 
   @@index([status])
   @@index([createdAt])
+  @@index([reviewedById])
   @@map("categories")
 }
 

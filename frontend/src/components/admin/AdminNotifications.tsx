@@ -82,16 +82,19 @@ function writeDismissed(ids: Set<string>) {
 }
 
 function NotificationIcon({ type }: { type: string }) {
-  if (type === "EXPERIENCE_APPROVED") {
+  if (type === "EXPERIENCE_APPROVED" || type === "CATEGORY_APPROVED") {
     return <Check size={14} strokeWidth={1.8} />;
   }
-  if (type === "EXPERIENCE_REJECTED") {
+  if (type === "EXPERIENCE_REJECTED" || type === "CATEGORY_REJECTED") {
     return <X size={14} strokeWidth={1.8} />;
   }
   return <Compass size={14} strokeWidth={1.7} />;
 }
 
-function NotificationDetails({ body }: { body: string }) {
+function NotificationDetails({ type, body }: { type: string; body: string }) {
+  if (type === "CATEGORY_PENDING" || type === "CATEGORY_REJECTED") {
+    return <span className="admin-notify__body">{body}</span>;
+  }
   const preview = notificationPreview(body);
   if (!preview.name && !preview.sender) {
     return <span className="admin-notify__body">{body}</span>;
@@ -261,7 +264,7 @@ export function AdminNotifications() {
                         <span className="admin-notify__title">{item.title}</span>
                         {item.readAt ? null : <span className="admin-notify__dot" />}
                       </span>
-                      <NotificationDetails body={item.body} />
+                      <NotificationDetails type={item.type} body={item.body} />
                       <span className="admin-notify__time">{formatWhen(item.createdAt)}</span>
                     </span>
                   </button>

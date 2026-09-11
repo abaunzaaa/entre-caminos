@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
+import { Navigate } from "react-router-dom";
 import { assignRolePermissions, getPermissions, getRoles } from "../../services/catalog.service";
 import type { Permission, Role } from "../../types";
 import { Button } from "../../components/ui/Button";
 import { AccessPermissionCard } from "../../components/admin/AccessPermissionCard";
 import { AccessRoleCard } from "../../components/admin/AccessRoleCard";
 import { getApiErrorMessage } from "../../utils/api-error";
+import { useAuth } from "../../hooks/useAuth";
 import {
   CRITICAL_PERMISSIONS,
   EXPLORER_CAPABILITIES,
@@ -20,6 +22,7 @@ import tourist2 from "../../assets/tourist2.jpg";
 import "../../styles/admin-access.css";
 
 export function RolesPage() {
+  const { user } = useAuth();
   const [roles, setRoles] = useState<Role[]>([]);
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [selectedId, setSelectedId] = useState("");
@@ -105,6 +108,10 @@ export function RolesPage() {
   }
 
   const pendingRole = pendingOff ? roles.find((role) => role.id === pendingOff.roleId) : null;
+
+  if (user?.role !== "SUPER_ADMIN") {
+    return <Navigate to="/admin" replace />;
+  }
 
   return (
     <div className="dash dash--access">

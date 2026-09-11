@@ -1,11 +1,14 @@
 import { FormEvent, useEffect, useState } from "react";
+import { Navigate } from "react-router-dom";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
 import { Panel } from "../../components/admin/Panel";
 import { createPermission, getPermissions } from "../../services/catalog.service";
+import { useAuth } from "../../hooks/useAuth";
 import type { Permission } from "../../types";
 
 export function PermissionsPage() {
+  const { user } = useAuth();
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [error, setError] = useState("");
 
@@ -28,6 +31,10 @@ export function PermissionsPage() {
     } catch {
       setError("No se pudo crear el permiso.");
     }
+  }
+
+  if (user?.role !== "SUPER_ADMIN") {
+    return <Navigate to="/admin" replace />;
   }
 
   return (

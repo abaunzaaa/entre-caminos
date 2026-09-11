@@ -891,6 +891,7 @@
   display: grid;
   place-items: center;
   padding: 24px;
+  overflow: hidden;
   background: rgba(28, 51, 46, 0.32);
   animation: dash-team-confirm-fade 220ms ease;
 }
@@ -902,6 +903,37 @@
   background: #ffffff;
   box-shadow: var(--admin-card-shadow, 0 8px 28px rgba(28, 51, 46, 0.07), 0 1px 3px rgba(28, 51, 46, 0.04));
   animation: dash-team-confirm-rise 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dash-team-confirm__card--scroll {
+  display: flex;
+  flex-direction: column;
+  max-height: min(36rem, calc(100dvh - 48px));
+  overflow: hidden;
+}
+
+.dash-team-confirm__card--scroll .dash-team-confirm__title,
+.dash-team-confirm__card--scroll .dash-team-confirm__actions {
+  flex-shrink: 0;
+}
+
+.dash-team-confirm__scroll {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  margin-top: 10px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.dash-team-confirm__scroll .dash-team-confirm__lead {
+  margin-top: 0;
+}
+
+.dash-team-confirm__scroll .dash-exps-review-reason {
+  margin-top: 10px;
 }
 
 .dash-team-confirm__title {
@@ -2988,6 +3020,12 @@
   overflow: hidden;
 }
 
+.dash--exps .dash-team-role__menu.is-open .dash-exps-picker__list {
+  flex: 0 1 auto;
+  min-height: 2.5rem;
+  max-height: 16.5rem;
+}
+
 .dash-exps-picker__search {
   display: block;
   flex: 0 0 auto;
@@ -3007,6 +3045,7 @@
   min-height: 0;
   overflow-x: hidden;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .dash-exps-picker__empty {
