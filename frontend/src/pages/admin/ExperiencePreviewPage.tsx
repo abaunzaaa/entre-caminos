@@ -11,6 +11,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { approveExperience, getAdminExperience, rejectExperience } from "../../services/catalog.service";
 import { getApiErrorMessage } from "../../utils/api-error";
 import { formatPrice } from "../../utils/cn";
+import { formatAvailability, displayExternalUrl, durationParts, formatDuration } from "../../utils/experience-details";
 import { experienceImages, mediaUrl } from "../../utils/media";
 import type { Experience, ExperienceStatus } from "../../types";
 import superadmIlus2 from "../../assets/superadm-ilus2.png";
@@ -93,6 +94,14 @@ export function ExperiencePreviewPage() {
         ...(published ? [{ label: "Fecha de publicación", value: published }] : []),
       ]
     : [];
+  const durationChoice = experience
+    ? durationParts(experience.durationValue, experience.durationUnit)
+    : null;
+  const durationText = durationChoice
+    ? `${durationChoice.value} ${durationChoice.unitLabel}`
+    : experience
+      ? formatDuration(experience.durationValue, experience.durationUnit, experience.duration)
+      : "";
   const detailFacts = experience
     ? [
         ...(experience.description.trim() ? [{ label: "Descripción", value: experience.description }] : []),
@@ -100,6 +109,16 @@ export function ExperiencePreviewPage() {
         { label: "Categoría", value: experience.category?.name || "Sin categoría" },
         { label: "Estado", value: STATUS_LABEL[experience.status] },
         { label: "Ubicación", value: experience.location || "—" },
+        ...(durationText ? [{ label: "Duración", value: durationText }] : []),
+        ...(formatAvailability(experience.availability)
+          ? [{ label: "Disponibilidad", value: formatAvailability(experience.availability) }]
+          : []),
+        ...(experience.howToGetThere?.trim()
+          ? [{ label: "Cómo llegar", value: experience.howToGetThere.trim() }]
+          : []),
+        ...(experience.externalUrl
+          ? [{ label: "Enlace", value: displayExternalUrl(experience.externalUrl) }]
+          : []),
         ...(experience.rejectionReason
           ? [{ label: "Motivo del rechazo", value: experience.rejectionReason }]
           : []),

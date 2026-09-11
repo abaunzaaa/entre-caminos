@@ -11,6 +11,7 @@ export type CachedProfile = {
   role: string;
   createdAt: Date;
   permissions: string[];
+  profile?: unknown;
 };
 
 const cache = new Map<string, CacheEntry>();

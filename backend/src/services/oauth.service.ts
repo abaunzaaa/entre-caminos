@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import type { Request } from "express";
 import jwt from "jsonwebtoken";
 import type { AuthProvider } from "@prisma/client";
 import { env } from "../config/env.js";
@@ -16,6 +17,7 @@ export type OAuthProviderSlug = "google";
 type OAuthState = {
   remember: boolean;
   type: "oauth_state";
+  redirectBase: string;
 };
 
 type OAuthProfile = {
@@ -25,22 +27,36 @@ type OAuthProfile = {
   name: string;
 };
 
-function oauthRedirectBase() {
+function allowedOauthOrigins() {
+  const origins = new Set([
+    env.FRONTEND_URL.replace(/\/$/, ""),
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+  ]);
+  if (env.OAUTH_REDIRECT_BASE) {
+    origins.add(env.OAUTH_REDIRECT_BASE.replace(/\/$/, ""));
+  }
+  return origins;
+}
+
+export function resolveOauthRedirectBase(_req: Request) {
   return (env.OAUTH_REDIRECT_BASE || env.FRONTEND_URL).replace(/\/$/, "");
 }
 
-export function oauthCallbackUrl(provider: OAuthProviderSlug = "google") {
-  return `${oauthRedirectBase()}/api/auth/${provider}/callback`;
+export function oauthCallbackUrl(redirectBase: string, provider: OAuthProviderSlug = "google") {
+  return `${redirectBase.replace(/\/$/, "")}/api/auth/${provider}/callback`;
 }
 
 export function isOAuthConfigured(provider: OAuthProviderSlug = "google") {
   return provider === "google" && Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET);
 }
 
-export function signOAuthState(remember: boolean) {
-  return jwt.sign({ remember, type: "oauth_state" } satisfies OAuthState, env.JWT_ACCESS_SECRET, {
-    expiresIn: "10m",
-  });
+export function signOAuthState(remember: boolean, redirectBase: string) {
+  return jwt.sign(
+    { remember, redirectBase, type: "oauth_state" } satisfies OAuthState,
+    env.JWT_ACCESS_SECRET,
+    { expiresIn: "10m" },
+  );
 }
 
 export function readOAuthState(state: string | undefined) {
@@ -52,7 +68,10 @@ export function readOAuthState(state: string | undefined) {
     if (payload.type !== "oauth_state") {
       throw ApiError.unauthorized("Sesión de autenticación inválida");
     }
-    return { remember: Boolean(payload.remember) };
+    const redirectBase = allowedOauthOrigins().has(payload.redirectBase)
+      ? payload.redirectBase
+      : env.FRONTEND_URL.replace(/\/$/, "");
+    return { remember: Boolean(payload.remember), redirectBase };
   } catch (error) {
     if (error instanceof ApiError) {
       throw error;
@@ -61,10 +80,14 @@ export function readOAuthState(state: string | undefined) {
   }
 }
 
-export function buildAuthorizationUrl(_provider: OAuthProviderSlug, state: string) {
+export function buildAuthorizationUrl(
+  _provider: OAuthProviderSlug,
+  state: string,
+  redirectBase: string,
+) {
   const url = new URL("https://accounts.google.com/o/oauth2/v2/auth");
   url.searchParams.set("client_id", env.GOOGLE_CLIENT_ID!);
-  url.searchParams.set("redirect_uri", oauthCallbackUrl("google"));
+  url.searchParams.set("redirect_uri", oauthCallbackUrl(redirectBase, "google"));
   url.searchParams.set("response_type", "code");
   url.searchParams.set("scope", "openid email profile");
   url.searchParams.set("state", state);
@@ -72,7 +95,7 @@ export function buildAuthorizationUrl(_provider: OAuthProviderSlug, state: strin
   return url.toString();
 }
 
-async function exchangeGoogle(code: string): Promise<OAuthProfile> {
+async function exchangeGoogle(code: string, redirectUri: string): Promise<OAuthProfile> {
   const response = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -80,7 +103,7 @@ async function exchangeGoogle(code: string): Promise<OAuthProfile> {
       code,
       client_id: env.GOOGLE_CLIENT_ID!,
       client_secret: env.GOOGLE_CLIENT_SECRET!,
-      redirect_uri: oauthCallbackUrl("google"),
+      redirect_uri: redirectUri,
       grant_type: "authorization_code",
     }),
   });
@@ -103,8 +126,12 @@ async function exchangeGoogle(code: string): Promise<OAuthProfile> {
   };
 }
 
-export async function exchangeOAuthCode(_provider: OAuthProviderSlug, code: string) {
-  return exchangeGoogle(code);
+export async function exchangeOAuthCode(
+  _provider: OAuthProviderSlug,
+  code: string,
+  redirectUri: string,
+) {
+  return exchangeGoogle(code, redirectUri);
 }
 
 export async function loginOrRegisterOAuth(profile: OAuthProfile) {
@@ -199,13 +226,14 @@ export async function loginOrRegisterOAuth(profile: OAuthProfile) {
       roleId: userRole.id,
       status: "ACTIVE",
       emailVerified: true,
-      oauthAccounts: {
-        create: {
-          provider: profile.provider,
-          providerAccountId: profile.providerAccountId,
+        oauthAccounts: {
+          create: {
+            provider: profile.provider,
+            providerAccountId: profile.providerAccountId,
+          },
         },
+        profile: { create: {} },
       },
-    },
     include: { role: true },
   });
 

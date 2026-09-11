@@ -1,8 +1,9 @@
-import type { ExperienceStatus, Prisma } from "@prisma/client";
+import { Prisma, type DurationUnit, type ExperienceStatus } from "@prisma/client";
 import { MIN_EXPERIENCE_IMAGES, MIN_EXPERIENCE_IMAGES_MESSAGE } from "../config/constants.js";
 import { prisma } from "../database/prisma.js";
 import type { AuthUser } from "../models/auth-user.js";
 import { ApiError } from "../utils/api-error.js";
+import { resolveExperienceDuration } from "../utils/experience-duration.js";
 import { canReviewExperiences, publishesExperiencesDirectly } from "../utils/permissions.js";
 import { recordAudit } from "./audit.service.js";
 import {
@@ -26,6 +27,12 @@ const experienceListSelect = {
   location: true,
   latitude: true,
   longitude: true,
+  externalUrl: true,
+  duration: true,
+  durationValue: true,
+  durationUnit: true,
+  availability: true,
+  howToGetThere: true,
   imageUrl: true,
   imageUrls: true,
   status: true,
@@ -162,6 +169,12 @@ export async function createExperience(
     location: string;
     latitude?: number | null;
     longitude?: number | null;
+    externalUrl?: string | null;
+    duration?: string | null;
+    durationValue?: number | null;
+    durationUnit?: DurationUnit | null;
+    availability?: Prisma.InputJsonValue | null;
+    howToGetThere?: string | null;
     imageUrl?: string | null;
     imageUrls?: string[];
     status?: ExperienceStatus;
@@ -171,13 +184,18 @@ export async function createExperience(
   if (!category) {
     throw ApiError.badRequest("La categoría no existe");
   }
-  if (category.status !== "ACTIVE") {
-    throw ApiError.badRequest("La categoría está inactiva");
+  if (category.status !== "APPROVED") {
+    throw ApiError.badRequest("La categoría aún no está aprobada");
   }
 
   const gallery = normalizeExperienceImages(input);
   requirePublishFields(gallery, input.location);
   void input.status;
+  const durationFields = resolveExperienceDuration(input) ?? {
+    duration: null,
+    durationValue: null,
+    durationUnit: null,
+  };
 
   const publishesDirectly = publishesExperiencesDirectly(actor);
   const status: ExperienceStatus = publishesDirectly ? "PUBLISHED" : "PENDING";
@@ -191,6 +209,12 @@ export async function createExperience(
       location: input.location,
       latitude: input.latitude ?? null,
       longitude: input.longitude ?? null,
+      externalUrl: input.externalUrl ?? null,
+      duration: durationFields.duration,
+      durationValue: durationFields.durationValue,
+      durationUnit: durationFields.durationUnit,
+      availability: input.availability === undefined || input.availability === null ? undefined : input.availability,
+      howToGetThere: input.howToGetThere ?? null,
       imageUrl: gallery.imageUrl,
       imageUrls: gallery.imageUrls,
       status,
@@ -231,12 +255,22 @@ function pickExperienceUpdate(input: Prisma.ExperienceUncheckedUpdateInput) {
     "location",
     "latitude",
     "longitude",
+    "externalUrl",
+    "duration",
+    "durationValue",
+    "durationUnit",
+    "availability",
+    "howToGetThere",
     "imageUrl",
     "imageUrls",
   ] as const;
   for (const key of keys) {
     if (input[key] !== undefined) {
-      data[key] = input[key] as never;
+      if (key === "availability" && input[key] === null) {
+        data.availability = Prisma.DbNull;
+      } else {
+        data[key] = input[key] as never;
+      }
     }
   }
   return data;
@@ -259,10 +293,21 @@ export async function updateExperience(
     if (!category) {
       throw ApiError.badRequest("La categoría no existe");
     }
+    if (category.status !== "APPROVED") {
+      throw ApiError.badRequest("La categoría aún no está aprobada");
+    }
   }
 
   const data = pickExperienceUpdate(input);
   delete data.status;
+  const durationPatch = resolveExperienceDuration({
+    duration: input.duration === undefined ? undefined : ((input.duration as string | null) ?? null),
+    durationValue: input.durationValue === undefined ? undefined : (input.durationValue as number | null),
+    durationUnit: input.durationUnit === undefined ? undefined : (input.durationUnit as DurationUnit | null),
+  });
+  if (durationPatch) {
+    Object.assign(data, durationPatch);
+  }
   const hasGalleryUpdate = data.imageUrl !== undefined || data.imageUrls !== undefined;
   const gallery = hasGalleryUpdate
     ? normalizeExperienceImages({

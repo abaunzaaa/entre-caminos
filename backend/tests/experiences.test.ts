@@ -18,10 +18,10 @@ function experiencePayload(categoryId: string, title: string, extra?: Record<str
 
 describe("Revisión de experiencias", () => {
   it("impide crear o enviar una experiencia con menos de 5 imágenes", async () => {
-    const { adminToken, email } = await createAndLoginStaffAdmin();
+    const { adminToken, superToken, email } = await createAndLoginStaffAdmin();
     const category = await api()
       .post("/api/admin/categories")
-      .set("Authorization", `Bearer ${adminToken}`)
+      .set("Authorization", `Bearer ${superToken}`)
       .send({ name: `Mínimo fotos ${Date.now()}` });
     const categoryId = category.body.data.category.id as string;
 
@@ -78,10 +78,10 @@ describe("Revisión de experiencias", () => {
   });
 
   it("deja pendiente la experiencia de un administrador e ignora un intento de publicar directo", async () => {
-    const { adminToken } = await createAndLoginStaffAdmin();
+    const { adminToken, superToken } = await createAndLoginStaffAdmin();
     const category = await api()
       .post("/api/admin/categories")
-      .set("Authorization", `Bearer ${adminToken}`)
+      .set("Authorization", `Bearer ${superToken}`)
       .send({ name: `Revisión ${Date.now()}` });
 
     const created = await api()
@@ -152,7 +152,7 @@ describe("Revisión de experiencias", () => {
     const { adminToken, superToken } = await createAndLoginStaffAdmin();
     const category = await api()
       .post("/api/admin/categories")
-      .set("Authorization", `Bearer ${adminToken}`)
+      .set("Authorization", `Bearer ${superToken}`)
       .send({ name: `Aprobar ${Date.now()}` });
 
     const created = await api()
@@ -208,7 +208,7 @@ describe("Revisión de experiencias", () => {
     const { adminToken, superToken } = await createAndLoginStaffAdmin({ name: "Admin Revisor" });
     const category = await api()
       .post("/api/admin/categories")
-      .set("Authorization", `Bearer ${adminToken}`)
+      .set("Authorization", `Bearer ${superToken}`)
       .send({ name: `Notificar ${Date.now()}` });
 
     const created = await api()
@@ -375,7 +375,7 @@ describe("Disponibilidad activa/inactiva", () => {
     const stamp = Date.now();
     const category = await api()
       .post("/api/admin/categories")
-      .set("Authorization", `Bearer ${adminToken}`)
+      .set("Authorization", `Bearer ${superToken}`)
       .send({ name: `Revisión disponibilidad ${stamp}` });
     const categoryId = category.body.data.category.id as string;
 
@@ -418,5 +418,80 @@ describe("Disponibilidad activa/inactiva", () => {
     expect(reactivated.status).toBe(200);
     expect(reactivated.body.data.experience.status).toBe("PUBLISHED");
     expect((await api().get(`/api/experiences/${pendingId}`)).status).toBe(200);
+  });
+});
+
+describe("Detalles de visita de experiencias", () => {
+  it("guarda enlace, duración, disponibilidad y cómo llegar", async () => {
+    const superToken = (await loginAsAdmin()).body.data.accessToken as string;
+    const category = await api()
+      .post("/api/admin/categories")
+      .set("Authorization", `Bearer ${superToken}`)
+      .send({ name: `Visita ${Date.now()}` });
+
+    const created = await api()
+      .post("/api/admin/experiences")
+      .set("Authorization", `Bearer ${superToken}`)
+      .send(
+        experiencePayload(category.body.data.category.id, "Taller de cerámica en El Carmen", {
+          latitude: 6.0889,
+          longitude: -75.3361,
+          externalUrl: "wa.me/573001112233",
+          durationValue: 3,
+          durationUnit: "HOURS",
+          availability: { type: "WEEKDAYS", days: ["Sábado", "Domingo"] },
+          howToGetThere: "Desde Medellín toma la vía a El Carmen de Viboral. Punto de encuentro: parque principal.",
+        }),
+      );
+
+    expect(created.status).toBe(201);
+    const experience = created.body.data.experience as {
+      id: string;
+      externalUrl: string;
+      duration: string;
+      durationValue: number;
+      durationUnit: string;
+      availability: { type: string; days: string[] };
+      howToGetThere: string;
+      latitude: string | number;
+      longitude: string | number;
+    };
+    expect(experience.externalUrl).toBe("https://wa.me/573001112233");
+    expect(experience.duration).toBe("3 horas");
+    expect(experience.durationValue).toBe(3);
+    expect(experience.durationUnit).toBe("HOURS");
+    expect(experience.availability).toEqual({ type: "WEEKDAYS", days: ["Sábado", "Domingo"] });
+    expect(experience.howToGetThere).toContain("parque principal");
+    expect(Number(experience.latitude)).toBeCloseTo(6.0889, 4);
+    expect(Number(experience.longitude)).toBeCloseTo(-75.3361, 4);
+
+    const publicItem = await api().get(`/api/experiences/${experience.id}`);
+    expect(publicItem.status).toBe(200);
+    expect(publicItem.body.data.experience.duration).toBe("3 horas");
+    expect(publicItem.body.data.experience.durationValue).toBe(3);
+    expect(publicItem.body.data.experience.durationUnit).toBe("HOURS");
+    expect(publicItem.body.data.experience.howToGetThere).toContain("parque principal");
+
+    const invalidLink = await api()
+      .put(`/api/admin/experiences/${experience.id}`)
+      .set("Authorization", `Bearer ${superToken}`)
+      .send({ externalUrl: "no es un enlace" });
+    expect(invalidLink.status).toBe(422);
+
+    const updated = await api()
+      .put(`/api/admin/experiences/${experience.id}`)
+      .set("Authorization", `Bearer ${superToken}`)
+      .send({
+        availability: { type: "DATES", dates: ["2026-10-12", "2026-10-19"] },
+        latitude: 6.0901,
+        longitude: -75.3388,
+      });
+    expect(updated.status).toBe(200);
+    expect(updated.body.data.experience.availability).toEqual({
+      type: "DATES",
+      dates: ["2026-10-12", "2026-10-19"],
+    });
+    expect(Number(updated.body.data.experience.latitude)).toBeCloseTo(6.0901, 4);
+    expect(Number(updated.body.data.experience.longitude)).toBeCloseTo(-75.3388, 4);
   });
 });

@@ -80,9 +80,23 @@ export function AdminLayout() {
     return <Navigate to="/login" replace />;
   }
 
-  const visibleLinks = ADMIN_NAV_ITEMS.filter(
-    (link) => !link.permission || hasPermission(link.permission),
-  );
+  if (
+    user?.role !== "SUPER_ADMIN" &&
+    (
+      location.pathname === "/admin/roles" ||
+      location.pathname === "/admin/permissions" ||
+      location.pathname === "/admin/permisos"
+    )
+  ) {
+    return <Navigate to="/admin" replace />;
+  }
+
+  const visibleLinks = ADMIN_NAV_ITEMS.filter((link) => {
+    if (link.to === "/admin/roles" && user?.role !== "SUPER_ADMIN") {
+      return false;
+    }
+    return !link.permission || hasPermission(link.permission);
+  });
   const isDashboard = location.pathname === "/admin";
   const isTeamPage =
     location.pathname === "/admin/administradores" || location.pathname === "/admin/administrators";

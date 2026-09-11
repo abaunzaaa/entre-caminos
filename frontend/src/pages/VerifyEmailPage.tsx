@@ -58,7 +58,11 @@ export function VerifyEmailPage() {
 
     try {
       setLoading(true);
-      await verifyEmail(email, code.trim());
+      const verified = await verifyEmail(email, code.trim());
+      if (!verified.emailVerified) {
+        setError("No pudimos verificar el código.");
+        return;
+      }
       clearPendingVerificationEmail();
       navigate("/onboarding", { replace: true });
     } catch (err) {

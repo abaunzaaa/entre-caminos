@@ -10,7 +10,9 @@ import {
   exchangeOAuthCode,
   isOAuthConfigured,
   loginOrRegisterOAuth,
+  oauthCallbackUrl,
   readOAuthState,
+  resolveOauthRedirectBase,
   signOAuthState,
   type OAuthProviderSlug,
 } from "../services/oauth.service.js";
@@ -159,8 +161,8 @@ export async function resendVerificationCode(req: Request, res: Response) {
   });
 }
 
-function oauthFrontendRedirect(path: string, params?: Record<string, string>) {
-  const url = new URL(path, env.FRONTEND_URL);
+function oauthFrontendRedirect(path: string, params?: Record<string, string>, base = env.FRONTEND_URL) {
+  const url = new URL(path, base.endsWith("/") ? base : `${base}/`);
   for (const [key, value] of Object.entries(params ?? {})) {
     url.searchParams.set(key, value);
   }
@@ -169,25 +171,30 @@ function oauthFrontendRedirect(path: string, params?: Record<string, string>) {
 
 export async function oauthStart(req: Request, res: Response) {
   const provider = req.params.provider as OAuthProviderSlug;
+  const redirectBase = resolveOauthRedirectBase(req);
   if (provider !== "google") {
-    return res.redirect(oauthFrontendRedirect("/login", { oauthError: "Proveedor no válido." }));
+    return res.redirect(oauthFrontendRedirect("/login", { oauthError: "Proveedor no válido." }, redirectBase));
   }
   if (!isOAuthConfigured(provider)) {
     return res.redirect(
-      oauthFrontendRedirect("/login", {
-        oauthError: "Este inicio de sesión no está configurado todavía.",
-      }),
+      oauthFrontendRedirect(
+        "/login",
+        { oauthError: "Este inicio de sesión no está configurado todavía." },
+        redirectBase,
+      ),
     );
   }
   const remember = req.query.remember === "1" || req.query.remember === "true";
-  const state = signOAuthState(remember);
-  return res.redirect(buildAuthorizationUrl(provider, state));
+  const state = signOAuthState(remember, redirectBase);
+  return res.redirect(buildAuthorizationUrl(provider, state, redirectBase));
 }
 
 export async function oauthCallback(req: Request, res: Response) {
   const provider = req.params.provider as OAuthProviderSlug;
+  const fallbackBase = resolveOauthRedirectBase(req);
+
   if (provider !== "google") {
-    return res.redirect(oauthFrontendRedirect("/login", { oauthError: "Proveedor no válido." }));
+    return res.redirect(oauthFrontendRedirect("/login", { oauthError: "Proveedor no válido." }, fallbackBase));
   }
 
   const code = String(req.body?.code ?? req.query.code ?? "");
@@ -195,15 +202,13 @@ export async function oauthCallback(req: Request, res: Response) {
   const oauthError = String(req.body?.error ?? req.query.error ?? "");
   if (oauthError || !code) {
     return res.redirect(
-      oauthFrontendRedirect("/login", {
-        oauthError: "No pudimos completar el inicio de sesión.",
-      }),
+      oauthFrontendRedirect("/login", { oauthError: "No pudimos completar el inicio de sesión." }, fallbackBase),
     );
   }
 
   try {
-    const { remember } = readOAuthState(state);
-    const profile = await exchangeOAuthCode(provider, code);
+    const { remember, redirectBase } = readOAuthState(state);
+    const profile = await exchangeOAuthCode(provider, code, oauthCallbackUrl(redirectBase, provider));
     const result = await loginOrRegisterOAuth(profile);
     setAuthCookies(
       res,
@@ -215,14 +220,18 @@ export async function oauthCallback(req: Request, res: Response) {
       { remember },
     );
     return res.redirect(
-      oauthFrontendRedirect("/auth/callback", {
-        remember: remember ? "1" : "0",
-        next: result.created ? "onboarding" : "app",
-      }),
+      oauthFrontendRedirect(
+        "/auth/callback",
+        {
+          remember: remember ? "1" : "0",
+          next: result.created ? "onboarding" : "app",
+        },
+        redirectBase,
+      ),
     );
   } catch (error) {
     const message =
       error instanceof ApiError ? error.message : "No pudimos completar el inicio de sesión.";
-    return res.redirect(oauthFrontendRedirect("/login", { oauthError: message }));
+    return res.redirect(oauthFrontendRedirect("/login", { oauthError: message }, fallbackBase));
   }
 }

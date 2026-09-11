@@ -32,7 +32,7 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     to: "/admin/administradores",
     label: "Administradores",
     icon: Users,
-    permission: "admins.manage",
+    permission: "admin.dashboard.view",
     match: ["/admin/administradores", "/admin/administrators"],
   },
   {

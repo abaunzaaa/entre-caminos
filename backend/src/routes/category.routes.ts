@@ -1,10 +1,14 @@
 import { Router } from "express";
-import { permissionMiddleware } from "../middleware/role.middleware.js";
+import { permissionMiddleware, roleMiddleware } from "../middleware/role.middleware.js";
 import { validate } from "../middleware/validate.middleware.js";
 import { asyncHandler } from "../utils/async-handler.js";
-import { PERMISSIONS } from "../config/constants.js";
+import { PERMISSIONS, ROLES } from "../config/constants.js";
 import * as categoryController from "../controllers/category.controller.js";
-import { categorySchema, categoryUpdateSchema } from "../validators/category.validator.js";
+import {
+  categoryRejectSchema,
+  categorySchema,
+  categoryUpdateSchema,
+} from "../validators/category.validator.js";
 
 export const categoryRouter = Router();
 
@@ -16,5 +20,25 @@ adminCategoryRouter.use(permissionMiddleware(PERMISSIONS.CATEGORIES_MANAGE));
 
 adminCategoryRouter.get("/", asyncHandler(categoryController.listAdmin));
 adminCategoryRouter.post("/", validate(categorySchema), asyncHandler(categoryController.create));
-adminCategoryRouter.put("/:id", validate(categoryUpdateSchema), asyncHandler(categoryController.update));
-adminCategoryRouter.delete("/:id", asyncHandler(categoryController.remove));
+adminCategoryRouter.put(
+  "/:id",
+  roleMiddleware([ROLES.SUPER_ADMIN]),
+  validate(categoryUpdateSchema),
+  asyncHandler(categoryController.update),
+);
+adminCategoryRouter.post(
+  "/:id/approve",
+  roleMiddleware([ROLES.SUPER_ADMIN]),
+  asyncHandler(categoryController.approve),
+);
+adminCategoryRouter.post(
+  "/:id/reject",
+  roleMiddleware([ROLES.SUPER_ADMIN]),
+  validate(categoryRejectSchema),
+  asyncHandler(categoryController.reject),
+);
+adminCategoryRouter.delete(
+  "/:id",
+  roleMiddleware([ROLES.SUPER_ADMIN]),
+  asyncHandler(categoryController.remove),
+);

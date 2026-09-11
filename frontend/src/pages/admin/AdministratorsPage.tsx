@@ -93,6 +93,7 @@ function FilterMenu<T extends string>({
 export function AdministratorsPage() {
   const { user, hasPermission } = useAuth();
   const canManageAdmins = hasPermission("admins.manage");
+  const canCreateAdmins = user?.role === "SUPER_ADMIN";
   const [admins, setAdmins] = useState<PublicUser[]>([]);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -215,6 +216,9 @@ export function AdministratorsPage() {
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!canCreateAdmins) {
+      return;
+    }
     const formElement = event.currentTarget;
     const form = new FormData(formElement);
     setError("");
@@ -247,14 +251,17 @@ export function AdministratorsPage() {
   const activeSuperAdmins = countActiveByRole(admins, "SUPER_ADMIN");
   const visibleAdmins = useMemo(() => {
     const term = query.trim().toLowerCase();
-    const next = admins.filter((user) => {
-      if (statusFilter !== "all" && user.status !== statusFilter) {
+    const next = admins.filter((item) => {
+      if (!canCreateAdmins && readRole(item.role) !== "SUPER_ADMIN") {
         return false;
       }
-      if (roleFilter && readRole(user.role) !== roleFilter) {
+      if (statusFilter !== "all" && item.status !== statusFilter) {
         return false;
       }
-      if (term && !user.name.toLowerCase().includes(term)) {
+      if (roleFilter && readRole(item.role) !== roleFilter) {
+        return false;
+      }
+      if (term && !item.name.toLowerCase().includes(term)) {
         return false;
       }
       return true;
@@ -264,7 +271,7 @@ export function AdministratorsPage() {
       const rightTime = right.createdAt ? new Date(right.createdAt).getTime() : 0;
       return dateSort === "oldest" ? leftTime - rightTime : rightTime - leftTime;
     });
-  }, [admins, dateSort, query, roleFilter, statusFilter]);
+  }, [admins, canCreateAdmins, dateSort, query, roleFilter, statusFilter]);
 
   const directoryRef = useRef<HTMLDivElement>(null);
   const directoryScrollable = visibleAdmins.length > TEAM_DIRECTORY_PAGE_SIZE;
@@ -320,18 +327,24 @@ export function AdministratorsPage() {
           <div className="dash-profile__identity">
             <h1 className="dash-profile__name">Equipo administrativo</h1>
             <p className="dash-profile__row">
-              <span>Gestiona los usuarios autorizados y sus permisos.</span>
+              <span>
+                {canCreateAdmins
+                  ? "Gestiona los usuarios autorizados y sus permisos."
+                  : "Consulta los super administradores de la plataforma."}
+              </span>
             </p>
           </div>
         </div>
         <div className="dash-profile__stats">
-          <div className="dash-profile__stat">
-            <img src={adminIlus} alt="" className="dash-profile__stat-art dash-float-art" />
-            <p className="dash-profile__stat-label">Administradores registrados</p>
-            <p className="dash-profile__stat-value">
-              <CountUp value={activeAdmins} />
-            </p>
-          </div>
+          {canCreateAdmins ? (
+            <div className="dash-profile__stat">
+              <img src={adminIlus} alt="" className="dash-profile__stat-art dash-float-art" />
+              <p className="dash-profile__stat-label">Administradores registrados</p>
+              <p className="dash-profile__stat-value">
+                <CountUp value={activeAdmins} />
+              </p>
+            </div>
+          ) : null}
           <div className="dash-profile__stat">
             <img src={superadmIlus} alt="" className="dash-profile__stat-art dash-float-art" />
             <p className="dash-profile__stat-label">Super administradores registrados</p>
@@ -343,6 +356,7 @@ export function AdministratorsPage() {
       </article>
 
       <section className="dash-team-board" aria-label="Gestión del equipo">
+        {canCreateAdmins ? (
         <div className="dash-team-compose">
           <section className="dash-split__panel" aria-label="Añadir usuario al equipo">
             <div>
@@ -409,6 +423,7 @@ export function AdministratorsPage() {
           </section>
           <TeamInviteCarousel />
         </div>
+        ) : null}
 
         <section
           className={`dash-split__panel dash-team-roster${directoryScrollable ? " is-scrollable" : ""}`}
@@ -416,7 +431,11 @@ export function AdministratorsPage() {
         >
           <header className="dash-team-roster__head">
             <h2 className="dash-section__title">Equipo registrado</h2>
-            <p className="dash-section__lead">Personas con acceso para administrar la plataforma.</p>
+            <p className="dash-section__lead">
+              {canCreateAdmins
+                ? "Personas con acceso para administrar la plataforma."
+                : "Super administradores con acceso a la plataforma."}
+            </p>
           </header>
           <div className="dash-team-filters" role="toolbar" aria-label="Filtros del equipo" ref={filtersRef}>
             <button
@@ -440,21 +459,23 @@ export function AdministratorsPage() {
             >
               Inactivos
             </button>
-            <FilterMenu
-              label={roleFilter === "ADMIN" ? "Administración" : roleFilter === "SUPER_ADMIN" ? "Super administración" : "Rol"}
-              active={Boolean(roleFilter) || openMenu === "role"}
-              open={openMenu === "role"}
-              options={[
-                { value: "", label: "Todos los roles" },
-                { value: "ADMIN", label: "Administración" },
-                { value: "SUPER_ADMIN", label: "Super administración" },
-              ]}
-              onToggle={() => setOpenMenu((current) => (current === "role" ? null : "role"))}
-              onSelect={(value) => {
-                setRoleFilter(value as "" | "ADMIN" | "SUPER_ADMIN");
-                setOpenMenu(null);
-              }}
-            />
+            {canCreateAdmins ? (
+              <FilterMenu
+                label={roleFilter === "ADMIN" ? "Administración" : roleFilter === "SUPER_ADMIN" ? "Super administración" : "Rol"}
+                active={Boolean(roleFilter) || openMenu === "role"}
+                open={openMenu === "role"}
+                options={[
+                  { value: "", label: "Todos los roles" },
+                  { value: "ADMIN", label: "Administración" },
+                  { value: "SUPER_ADMIN", label: "Super administración" },
+                ]}
+                onToggle={() => setOpenMenu((current) => (current === "role" ? null : "role"))}
+                onSelect={(value) => {
+                  setRoleFilter(value as "" | "ADMIN" | "SUPER_ADMIN");
+                  setOpenMenu(null);
+                }}
+              />
+            ) : null}
             <FilterMenu
               label={dateSort === "oldest" ? "Más antiguos" : "Más recientes"}
               active={dateSort === "oldest" || openMenu === "sort"}
@@ -489,7 +510,11 @@ export function AdministratorsPage() {
           </div>
           {admins.length === 0 ? (
             <Panel className="dash-empty">
-              <p>No hay administradores registrados.</p>
+              <p>
+                {canCreateAdmins
+                  ? "No hay administradores registrados."
+                  : "No hay super administradores registrados."}
+              </p>
             </Panel>
           ) : visibleAdmins.length === 0 ? (
             <Panel className="dash-empty">
@@ -529,7 +554,7 @@ export function AdministratorsPage() {
                         </StatusDot>
                       </div>
                     </div>
-                    {admin.status === "ACTIVE" ? (
+                    {canCreateAdmins && readRole(admin.role) !== "SUPER_ADMIN" && admin.status === "ACTIVE" ? (
                       <div className="dash-team-card__actions">
                         <Button
                           type="button"
@@ -553,7 +578,7 @@ export function AdministratorsPage() {
                           </Button>
                         ) : null}
                       </div>
-                    ) : (
+                    ) : canCreateAdmins && readRole(admin.role) !== "SUPER_ADMIN" ? (
                       <div className="dash-team-card__actions">
                         <Button
                           type="button"
@@ -577,7 +602,7 @@ export function AdministratorsPage() {
                           </Button>
                         ) : null}
                       </div>
-                    )}
+                    ) : null}
                   </article>
                 );
               })}

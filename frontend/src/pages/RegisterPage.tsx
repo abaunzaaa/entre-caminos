@@ -3,16 +3,14 @@ import { createPortal } from "react-dom";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthFormBrand } from "../components/auth/AuthFormBrand";
 import { AuthTextField } from "../components/auth/AuthTextField";
+import { PasswordRequirements } from "../components/auth/PasswordRequirements";
 import { SocialButtons } from "../components/auth/SocialButtons";
 import { TermsModal, type LegalDocument } from "../components/legal/TermsModal";
-import { saveOnboarding } from "../utils/onboarding";
+import { resetOnboarding } from "../utils/onboarding";
 import { getApiErrorMessage } from "../utils/api-error";
 import { setPendingVerificationEmail } from "../utils/pending-verification";
 import { validateRegisterForm, type RegisterFieldErrors } from "../utils/register-validation";
 import { useAuth } from "../hooks/useAuth";
-
-const PASSWORD_HINT =
-  "Usa al menos 8 caracteres, con mayúscula, minúscula, número y símbolo. Ejemplo: Caminos#2026";
 
 export function RegisterForm() {
   const { register } = useAuth();
@@ -20,6 +18,7 @@ export function RegisterForm() {
   const [fieldErrors, setFieldErrors] = useState<RegisterFieldErrors>({});
   const [formError, setFormError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [password, setPassword] = useState("");
   const [legalDocument, setLegalDocument] = useState<LegalDocument | null>(null);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -52,7 +51,7 @@ export function RegisterForm() {
         confirmPassword: payload.confirmPassword,
         termsAccepted: true,
       });
-      saveOnboarding({ name: payload.name.trim(), preferences: [] });
+      resetOnboarding({ name: payload.name.trim() });
       setPendingVerificationEmail(result.user.email);
       navigate("/verify-email", { replace: true, state: { email: result.user.email } });
     } catch (err) {
@@ -65,45 +64,44 @@ export function RegisterForm() {
   }
 
   return (
-    <div className="auth-form">
+    <div className="auth-form auth-form--register">
+      <AuthFormBrand />
       <header className="auth-form__header">
-        <AuthFormBrand />
-        <h1 className="auth-form__title">Registrarse</h1>
-        <p className="auth-form__lead">Empieza a descubrir experiencias hechas para ti.</p>
+        <h1 className="auth-form__title">Crea tu cuenta</h1>
       </header>
       <form className="auth-form__stack" onSubmit={onSubmit} noValidate>
-        <AuthTextField
-          name="name"
-          label="Nombre completo"
-          placeholder="Tu nombre"
-          autoComplete="name"
-          error={fieldErrors.name}
-        />
-        <AuthTextField
-          name="email"
-          type="email"
-          label="Correo electrónico"
-          placeholder="tucorreo@email.com"
-          autoComplete="email"
-          error={fieldErrors.email}
-        />
-        <AuthTextField
-          name="password"
-          type="password"
-          label="Contraseña"
-          placeholder="Crea una contraseña segura"
-          autoComplete="new-password"
-          error={fieldErrors.password}
-        />
-        <p className="auth-hint">{PASSWORD_HINT}</p>
-        <AuthTextField
-          name="confirmPassword"
-          type="password"
-          label="Confirmar contraseña"
-          placeholder="Repite tu contraseña"
-          autoComplete="new-password"
-          error={fieldErrors.confirmPassword}
-        />
+        <div className="auth-form__fields">
+          <AuthTextField
+            name="name"
+            label="Nombre completo"
+            autoComplete="name"
+            error={fieldErrors.name}
+          />
+          <AuthTextField
+            name="email"
+            type="email"
+            label="Correo electrónico"
+            autoComplete="email"
+            error={fieldErrors.email}
+          />
+          <AuthTextField
+            name="password"
+            type="password"
+            label="Contraseña"
+            autoComplete="new-password"
+            error={fieldErrors.password}
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+          />
+          <AuthTextField
+            name="confirmPassword"
+            type="password"
+            label="Confirmar contraseña"
+            autoComplete="new-password"
+            error={fieldErrors.confirmPassword}
+          />
+        </div>
+        <PasswordRequirements value={password} />
         <label className="auth-check">
           <input type="checkbox" name="terms" />
           <span>
@@ -161,11 +159,10 @@ export function RegisterForm() {
       </form>
       <footer className="auth-form__footer">
         <p className="auth-switch">
-          ¿Ya tienes cuenta?{" "}
-          <Link to="/login">Iniciar sesión</Link>
+          ¿Ya tienes una cuenta? <Link to="/login">Iniciar sesión</Link>
         </p>
         <div className="auth-alt">
-          <SocialButtons label="O regístrate con" remember />
+          <SocialButtons remember />
         </div>
       </footer>
       {createPortal(

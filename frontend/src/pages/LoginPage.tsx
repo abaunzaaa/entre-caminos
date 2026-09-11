@@ -9,6 +9,7 @@ import { consumeSessionExpiredMessage } from "../services/api";
 import { resendVerificationCode } from "../services/auth.service";
 import { getApiErrorMessage } from "../utils/api-error";
 import { INACTIVE_ACCOUNT_CONTACT_REASON, isInactiveAccountMessage } from "../utils/auth-messages";
+import { needsOnboarding } from "../utils/onboarding";
 import { setPendingVerificationEmail } from "../utils/pending-verification";
 
 const UNVERIFIED_LOGIN_MESSAGE = "Debes verificar tu correo antes de iniciar sesión.";
@@ -47,7 +48,7 @@ export function LoginForm() {
     try {
       setLoading(true);
       const user = await login(email, String(form.get("password")), remember);
-      navigate(user.role === "USER" ? "/explorar" : "/admin", { replace: true });
+      navigate(user.role !== "USER" ? "/admin" : needsOnboarding(user) ? "/onboarding" : "/explorar", { replace: true });
     } catch (err) {
       const message = getApiErrorMessage(err, "Credenciales incorrectas");
       setError(message);
@@ -81,11 +82,10 @@ export function LoginForm() {
   }
 
   return (
-    <div className="auth-form">
+    <div className="auth-form auth-form--login">
+      <AuthFormBrand />
       <header className="auth-form__header">
-        <AuthFormBrand />
-        <h1 className="auth-form__title">Acceder</h1>
-        <p className="auth-form__lead">Continúa descubriendo experiencias para recordar.</p>
+        <h1 className="auth-form__title">Bienvenido de nuevo</h1>
         {registered && <p className="auth-notice">Cuenta creada. Ya puedes entrar.</p>}
       </header>
       <form className="auth-form__stack" onSubmit={onSubmit}>
@@ -93,7 +93,6 @@ export function LoginForm() {
           name="email"
           type="email"
           label="Correo electrónico"
-          placeholder="Correo electrónico"
           autoComplete="username"
           required
         />
@@ -101,7 +100,6 @@ export function LoginForm() {
           name="password"
           type="password"
           label="Contraseña"
-          placeholder="Contraseña"
           autoComplete="current-password"
           required
         />
@@ -151,11 +149,10 @@ export function LoginForm() {
       </form>
       <footer className="auth-form__footer">
         <p className="auth-switch">
-          ¿No tienes cuenta?{" "}
-          <Link to="/register">Crear cuenta</Link>
+          ¿Aún no tienes cuenta? <Link to="/register">Crear cuenta</Link>
         </p>
         <div className="auth-alt">
-          <SocialButtons label="O inicia sesión con" remember={remember} />
+          <SocialButtons remember={remember} />
         </div>
       </footer>
       <ContactModal

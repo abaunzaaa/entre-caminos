@@ -15,8 +15,9 @@ enum UserStatus {
 }
 
 enum CategoryStatus {
-  ACTIVE
-  INACTIVE
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 enum ExperienceStatus {
@@ -25,6 +26,12 @@ enum ExperienceStatus {
   PUBLISHED
   ARCHIVED
   REJECTED
+}
+
+enum DurationUnit {
+  MINUTES
+  HOURS
+  DAYS
 }
 
 enum ExperienceReviewDecision {
@@ -88,12 +95,14 @@ model User {
   role                  Role                   @relation(fields: [roleId], references: [id])
   experiences             Experience[]
   reviewedExperiences     Experience[]         @relation("ExperienceReviewedBy")
+  reviewedCategories      Category[]           @relation("CategoryReviewedBy")
   experienceReviews       ExperienceReview[]
   notifications           Notification[]
   auditLogs               AuditLog[]
   passwordResetTokens     PasswordResetToken[]
   emailVerificationTokens EmailVerificationToken[]
   oauthAccounts           OAuthAccount[]
+  profile                 UserProfile?
 
   @@index([roleId])
   @@index([status])
@@ -103,18 +112,23 @@ model User {
 }
 
 model Category {
-  id          String         @id @default(uuid())
-  name        String         @unique
-  description String?
-  icon        String         @default("tags")
-  status      CategoryStatus @default(ACTIVE)
-  createdAt   DateTime       @default(now()) @map("created_at")
-  updatedAt   DateTime       @updatedAt @map("updated_at")
+  id              String         @id @default(uuid())
+  name            String         @unique
+  description     String?
+  icon            String         @default("tags")
+  status          CategoryStatus @default(PENDING)
+  rejectionReason String?        @map("rejection_reason")
+  reviewedAt      DateTime?      @map("reviewed_at")
+  reviewedById    String?        @map("reviewed_by")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
 
   experiences Experience[]
+  reviewedBy  User?        @relation("CategoryReviewedBy", fields: [reviewedById], references: [id])
 
   @@index([status])
   @@index([createdAt])
+  @@index([reviewedById])
   @@map("categories")
 }
 
@@ -127,6 +141,12 @@ model Experience {
   location        String
   latitude        Decimal?         @db.Decimal(10, 7)
   longitude       Decimal?         @db.Decimal(10, 7)
+  externalUrl     String?          @map("external_url")
+  duration        String?
+  durationValue   Int?             @map("duration_value")
+  durationUnit    DurationUnit?    @map("duration_unit")
+  availability    Json?
+  howToGetThere   String?          @map("how_to_get_there")
   imageUrl        String?          @map("image_url")
   imageUrls       String[]         @default([]) @map("image_urls")
   status          ExperienceStatus @default(PENDING)
@@ -228,10 +248,46 @@ model EmailVerificationToken {
   @@map("email_verification_tokens")
 }
 
+enum ProfileImageType {
+  PHOTO
+  AVATAR
+}
+
 enum AuthProvider {
   GOOGLE
   APPLE
   MICROSOFT
+}
+
+model UserProfile {
+  id                    String           @id @default(uuid())
+  userId                String           @unique @map("user_id")
+  country               String?
+  department            String?
+  city                  String?
+  neighborhood          String?
+  addressReference      String?          @map("address_reference")
+  latitude              Decimal?         @db.Decimal(10, 7)
+  longitude             Decimal?         @db.Decimal(10, 7)
+  profileImageUrl       String?          @map("profile_image_url")
+  profileImagePublicId  String?          @map("profile_image_public_id")
+  profileImageType      ProfileImageType @default(AVATAR) @map("profile_image_type")
+  avatarConfig          Json?            @map("avatar_config")
+  interests             String[]         @default([])
+  companions            String[]         @default([])
+  places                String[]         @default([])
+  music                 String[]         @default([])
+  budget                String[]         @default([])
+  climate               String[]         @default([])
+  onboardingCompleted   Boolean          @default(false) @map("onboarding_completed")
+  onboardingCompletedAt DateTime?        @map("onboarding_completed_at")
+  createdAt             DateTime         @default(now()) @map("created_at")
+  updatedAt             DateTime         @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([onboardingCompleted])
+  @@map("user_profiles")
 }
 
 model OAuthAccount {

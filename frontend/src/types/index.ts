@@ -1,5 +1,45 @@
 export type RoleName = "SUPER_ADMIN" | "ADMIN" | "USER";
 
+export type AvatarConfig = {
+  version: 1 | 2;
+  skinTone: string;
+  face: string;
+  eyes: string;
+  eyebrows: string;
+  mouth: string;
+  hairStyle: string;
+  hairColor: string;
+  outfit: string;
+  outfitColor: string;
+  accessory: string;
+  glasses: string;
+};
+
+export type ProfileImageType = "PHOTO" | "AVATAR";
+
+export type UserOnboardingProfile = {
+  country: string | null;
+  department: string | null;
+  city: string | null;
+  neighborhood: string | null;
+  addressReference: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  profileImageUrl: string | null;
+  profileImagePublicId: string | null;
+  profileImageType: ProfileImageType;
+  avatarConfig: AvatarConfig;
+  interests: string[];
+  companions: string[];
+  places: string[];
+  music: string[];
+  budget: string[];
+  climate: string[];
+  onboardingCompleted: boolean;
+  onboardingCompletedAt: string | null;
+  updatedAt: string;
+};
+
 export type PublicUser = {
   id: string;
   name: string;
@@ -9,6 +49,7 @@ export type PublicUser = {
   role: RoleName;
   createdAt: string;
   permissions?: string[];
+  profile?: UserOnboardingProfile | null;
 };
 
 export type Category = {
@@ -16,7 +57,9 @@ export type Category = {
   name: string;
   description: string | null;
   icon?: string;
-  status: "ACTIVE" | "INACTIVE";
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  rejectionReason?: string | null;
+  reviewedAt?: string | null;
   createdAt: string;
   _count?: { experiences: number };
 };
@@ -32,6 +75,12 @@ export type Experience = {
   location: string;
   latitude: string | number | null;
   longitude: string | number | null;
+  externalUrl?: string | null;
+  duration?: string | null;
+  durationValue?: number | null;
+  durationUnit?: "MINUTES" | "HOURS" | "DAYS" | null;
+  availability?: unknown;
+  howToGetThere?: string | null;
   imageUrl: string | null;
   imageUrls?: string[];
   status: ExperienceStatus;
