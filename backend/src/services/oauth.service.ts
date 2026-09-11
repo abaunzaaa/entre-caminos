@@ -3,7 +3,7 @@ import type { Request } from "express";
 import jwt from "jsonwebtoken";
 import type { AuthProvider } from "@prisma/client";
 import { env } from "../config/env.js";
-import { ROLES } from "../config/constants.js";
+import { EMAIL_INACTIVE_LOGIN_MESSAGE, ROLES } from "../config/constants.js";
 import { prisma } from "../database/prisma.js";
 import { ACCOUNT_REMOVED_MESSAGE, isAccountRemoved } from "../utils/account.js";
 import { ApiError } from "../utils/api-error.js";
@@ -149,7 +149,7 @@ export async function loginOrRegisterOAuth(profile: OAuthProfile) {
     if (isAccountRemoved(existingLink.user) || existingLink.user.status !== "ACTIVE") {
       throw ApiError.forbidden(
         existingLink.user.status !== "ACTIVE"
-          ? "Tu cuenta está inactiva. Contacta a soporte."
+          ? EMAIL_INACTIVE_LOGIN_MESSAGE
           : ACCOUNT_REMOVED_MESSAGE,
       );
     }
@@ -182,7 +182,7 @@ export async function loginOrRegisterOAuth(profile: OAuthProfile) {
     if (isAccountRemoved(existingUser) || existingUser.status !== "ACTIVE") {
       throw ApiError.forbidden(
         existingUser.status !== "ACTIVE"
-          ? "Tu cuenta está inactiva. Contacta a soporte."
+          ? EMAIL_INACTIVE_LOGIN_MESSAGE
           : ACCOUNT_REMOVED_MESSAGE,
       );
     }
