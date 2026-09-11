@@ -1,5 +1,6 @@
 import { prisma } from "../database/prisma.js";
 import {
+  EMAIL_INACTIVE_LOGIN_MESSAGE,
   EMAIL_UNVERIFIED_LOGIN_MESSAGE,
   EMAIL_VERIFICATION_TTL_LABEL,
   EMAIL_VERIFICATION_TTL_MS,
@@ -120,7 +121,7 @@ export async function loginUser(input: { email: string; password: string }) {
   }
 
   if (user.status !== "ACTIVE") {
-    throw ApiError.forbidden("Tu cuenta está inactiva. Contacta a soporte.");
+    throw ApiError.forbidden(EMAIL_INACTIVE_LOGIN_MESSAGE);
   }
 
   const valid = await verifyPassword(input.password, user.passwordHash);

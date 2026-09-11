@@ -3,10 +3,12 @@ import { Link, useLocation, useNavigate, useSearchParams } from "react-router-do
 import { AuthFormBrand } from "../components/auth/AuthFormBrand";
 import { AuthTextField } from "../components/auth/AuthTextField";
 import { SocialButtons } from "../components/auth/SocialButtons";
+import { ContactModal } from "../components/contact/ContactModal";
 import { useAuth } from "../hooks/useAuth";
 import { consumeSessionExpiredMessage } from "../services/api";
 import { resendVerificationCode } from "../services/auth.service";
 import { getApiErrorMessage } from "../utils/api-error";
+import { INACTIVE_ACCOUNT_CONTACT_REASON, isInactiveAccountMessage } from "../utils/auth-messages";
 import { setPendingVerificationEmail } from "../utils/pending-verification";
 
 const UNVERIFIED_LOGIN_MESSAGE = "Debes verificar tu correo antes de iniciar sesión.";
@@ -25,6 +27,8 @@ export function LoginForm() {
       consumeSessionExpiredMessage(),
   );
   const [pendingEmail, setPendingEmail] = useState("");
+  const [attemptedEmail, setAttemptedEmail] = useState("");
+  const [contactOpen, setContactOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const registered = Boolean((location.state as { registered?: boolean } | null)?.registered);
@@ -38,6 +42,7 @@ export function LoginForm() {
     setPendingEmail("");
     const form = new FormData(event.currentTarget);
     const email = String(form.get("email") ?? "").trim().toLowerCase();
+    setAttemptedEmail(email);
 
     try {
       setLoading(true);
@@ -111,7 +116,17 @@ export function LoginForm() {
         </div>
         {error && (
           <p className="auth-error" role="alert">
-            {error}
+            {isInactiveAccountMessage(error) ? (
+              <>
+                Tu cuenta está inactiva.{" "}
+                <button type="button" className="auth-error__link" onClick={() => setContactOpen(true)}>
+                  Contacta a soporte
+                </button>
+                .
+              </>
+            ) : (
+              error
+            )}
           </p>
         )}
         {pendingEmail ? (
@@ -139,6 +154,12 @@ export function LoginForm() {
           <SocialButtons remember={remember} />
         </div>
       </footer>
+      <ContactModal
+        open={contactOpen}
+        onClose={() => setContactOpen(false)}
+        defaultEmail={attemptedEmail}
+        defaultReason={INACTIVE_ACCOUNT_CONTACT_REASON}
+      />
     </div>
   );
 }
