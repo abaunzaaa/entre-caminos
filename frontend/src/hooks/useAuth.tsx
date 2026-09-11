@@ -111,12 +111,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshUser = useCallback(async () => {
     const profile = await getMe();
+    setStoredUser(profile);
     setUser(profile);
     return profile;
   }, []);
 
   const updateProfile = useCallback(async (payload: UpdateProfileInput) => {
     const profile = await updateMyProfile(payload);
+    setStoredUser(profile);
     setUser(profile);
     return profile;
   }, []);
