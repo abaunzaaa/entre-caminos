@@ -468,6 +468,14 @@
   pointer-events: none;
 }
 
+.contact-success__icon--category {
+  width: 120px;
+}
+
+.contact-success__icon--experience {
+  width: 124px;
+}
+
 .contact-success__title {
   margin: 12px 0 0;
   max-width: 18rem;
@@ -565,6 +573,14 @@
 
   .contact-success__icon {
     width: 64px;
+  }
+
+  .contact-success__icon--category {
+    width: 104px;
+  }
+
+  .contact-success__icon--experience {
+    width: 108px;
   }
 
   .contact-modal {

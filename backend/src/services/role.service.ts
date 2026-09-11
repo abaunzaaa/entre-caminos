@@ -7,7 +7,13 @@ export async function listRoles() {
   return prisma.role.findMany({
     include: {
       permissions: { include: { permission: true } },
-      _count: { select: { users: true } },
+      _count: {
+        select: {
+          users: {
+            where: { deletedAt: null, status: "ACTIVE" },
+          },
+        },
+      },
     },
     orderBy: { name: "asc" },
   });

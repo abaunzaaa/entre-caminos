@@ -1,16 +1,21 @@
 import { FormEvent, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { ChevronDown, Search } from "lucide-react";
+import { SuccessConfirm } from "../../components/feedback/SuccessConfirm";
 import { Button } from "../../components/ui/Button";
 import { Input, Textarea } from "../../components/ui/Input";
 import { Panel, StatusDot } from "../../components/admin/Panel";
 import { CategoryIconPicker } from "../../components/admin/CategoryIconPicker";
 import { TeamInviteCarousel } from "../../components/admin/TeamInviteCarousel";
 import {
+  approveCategory,
   createCategory,
   deleteCategory,
   getAdminCategories,
+  rejectCategory,
   updateCategory,
 } from "../../services/catalog.service";
+import { useAuth } from "../../hooks/useAuth";
 import { getApiErrorMessage } from "../../utils/api-error";
 import { DEFAULT_CATEGORY_ICON, getCategoryIcon } from "../../utils/category-icons";
 import type { Category } from "../../types";
@@ -74,24 +79,47 @@ function experiencesLabel(count: number) {
   return count === 1 ? "1 experiencia" : `${count} experiencias`;
 }
 
+function categoryStatusLabel(status: Category["status"]) {
+  if (status === "APPROVED") {
+    return "Aprobada";
+  }
+  if (status === "REJECTED") {
+    return "Rechazada";
+  }
+  return "Pendiente de revisión";
+}
+
+const CATEGORY_STATUS_ORDER: Record<Category["status"], number> = {
+  PENDING: 0,
+  REJECTED: 1,
+  APPROVED: 2,
+};
+
+type CategoryStatusFilter = "all" | Category["status"];
+
 export function CategoriesPage() {
+  const { user } = useAuth();
+  const isSuperAdmin = user?.role === "SUPER_ADMIN";
   const [categories, setCategories] = useState<Category[]>([]);
   const [error, setError] = useState("");
   const [editing, setEditing] = useState<Category | null>(null);
   const [saving, setSaving] = useState(false);
-  const [status, setStatus] = useState<"ACTIVE" | "INACTIVE">("ACTIVE");
   const [icon, setIcon] = useState("");
-  const [statusOpen, setStatusOpen] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<"all" | "ACTIVE" | "INACTIVE">("all");
+  const [statusFilter, setStatusFilter] = useState<CategoryStatusFilter>("all");
   const [dateSort, setDateSort] = useState<"newest" | "oldest">("newest");
   const [query, setQuery] = useState("");
   const [openMenu, setOpenMenu] = useState<"sort" | null>(null);
   const [pendingDelete, setPendingDelete] = useState<Category | null>(null);
+  const [pendingReject, setPendingReject] = useState<Category | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
+  const [rejectError, setRejectError] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const [reviewing, setReviewing] = useState(false);
+  const [createdOpen, setCreatedOpen] = useState(false);
+  const [createdPendingReview, setCreatedPendingReview] = useState(true);
   const [toast, setToast] = useState<{ text: string; tone: "success" | "error" } | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const filtersRef = useRef<HTMLDivElement>(null);
-  const statusRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLElement>(null);
 
   async function load() {
@@ -108,9 +136,6 @@ export function CategoriesPage() {
       if (!filtersRef.current?.contains(target)) {
         setOpenMenu(null);
       }
-      if (!statusRef.current?.contains(target)) {
-        setStatusOpen(false);
-      }
     }
     document.addEventListener("mousedown", onPointerDown);
     return () => document.removeEventListener("mousedown", onPointerDown);
@@ -125,12 +150,13 @@ export function CategoriesPage() {
   }, [toast]);
 
   useEffect(() => {
-    if (!pendingDelete) {
+    if (!pendingDelete && !pendingReject) {
       return;
     }
     function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape" && !deleting) {
+      if (event.key === "Escape" && !deleting && !reviewing) {
         setPendingDelete(null);
+        setPendingReject(null);
       }
     }
     document.addEventListener("keydown", onKeyDown);
@@ -140,11 +166,13 @@ export function CategoriesPage() {
       document.removeEventListener("keydown", onKeyDown);
       document.body.style.overflow = previousOverflow;
     };
-  }, [pendingDelete, deleting]);
+  }, [pendingDelete, pendingReject, deleting, reviewing]);
 
   function startEdit(category: Category) {
+    if (!isSuperAdmin) {
+      return;
+    }
     setEditing(category);
-    setStatus(category.status);
     setIcon(category.icon && category.icon !== DEFAULT_CATEGORY_ICON ? category.icon : "");
     setError("");
     formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -152,9 +180,7 @@ export function CategoriesPage() {
 
   function cancelEdit() {
     setEditing(null);
-    setStatus("ACTIVE");
     setIcon("");
-    setStatusOpen(false);
     setError("");
   }
 
@@ -167,22 +193,24 @@ export function CategoriesPage() {
       name: String(form.get("name")),
       description: String(form.get("description")),
       icon: icon || DEFAULT_CATEGORY_ICON,
-      ...(editing ? { status } : {}),
     };
 
     try {
       setSaving(true);
       if (editing) {
+        if (!isSuperAdmin) {
+          setError("Solo un super administrador puede editar categorías");
+          return;
+        }
         await updateCategory(editing.id, payload);
         setToast({ tone: "success", text: "Categoría actualizada correctamente." });
         setEditing(null);
-        setStatus("ACTIVE");
       } else {
-        await createCategory(payload);
-        setToast({ tone: "success", text: "Categoría creada y guardada." });
+        const created = await createCategory(payload);
+        setCreatedPendingReview(created.status === "PENDING");
+        setCreatedOpen(true);
       }
       formElement.reset();
-      setStatus("ACTIVE");
       setIcon("");
       await load();
     } catch (err) {
@@ -196,6 +224,9 @@ export function CategoriesPage() {
 
   async function confirmDelete() {
     if (!pendingDelete) {
+      return;
+    }
+    if ((pendingDelete._count?.experiences ?? 0) > 0) {
       return;
     }
     setError("");
@@ -217,6 +248,47 @@ export function CategoriesPage() {
     }
   }
 
+  async function confirmApprove(category: Category) {
+    setError("");
+    try {
+      setReviewing(true);
+      await approveCategory(category.id);
+      setToast({ tone: "success", text: "Categoría aprobada." });
+      await load();
+    } catch (err) {
+      const message = getApiErrorMessage(err, "No se pudo aprobar");
+      setError(message);
+      setToast({ tone: "error", text: message });
+    } finally {
+      setReviewing(false);
+    }
+  }
+
+  async function confirmReject() {
+    if (!pendingReject) {
+      return;
+    }
+    if (!rejectReason.trim()) {
+      setRejectError("Debes ingresar un motivo para rechazar la categoría.");
+      return;
+    }
+    setRejectError("");
+    try {
+      setReviewing(true);
+      await rejectCategory(pendingReject.id, rejectReason.trim());
+      setPendingReject(null);
+      setRejectReason("");
+      setToast({ tone: "success", text: "Categoría rechazada." });
+      await load();
+    } catch (err) {
+      const message = getApiErrorMessage(err, "No se pudo rechazar");
+      setRejectError(message);
+      setToast({ tone: "error", text: message });
+    } finally {
+      setReviewing(false);
+    }
+  }
+
   const visibleCategories = useMemo(() => {
     const term = query.trim().toLowerCase();
     const next = categories.filter((category) => {
@@ -229,6 +301,12 @@ export function CategoriesPage() {
       return true;
     });
     return [...next].sort((left, right) => {
+      if (statusFilter === "all") {
+        const rank = CATEGORY_STATUS_ORDER[left.status] - CATEGORY_STATUS_ORDER[right.status];
+        if (rank !== 0) {
+          return rank;
+        }
+      }
       const leftTime = left.createdAt ? new Date(left.createdAt).getTime() : 0;
       const rightTime = right.createdAt ? new Date(right.createdAt).getTime() : 0;
       return dateSort === "oldest" ? leftTime - rightTime : rightTime - leftTime;
@@ -314,48 +392,6 @@ export function CategoriesPage() {
             </div>
           <form key={editing?.id ?? "create"} className="dash-team-invite" onSubmit={onSubmit}>
             <Input name="name" label="Nombre" defaultValue={editing?.name} required />
-            {editing ? (
-            <div className="dash-team-role" ref={statusRef}>
-              <span className="dash-team-role__label">Estado</span>
-              <input type="hidden" name="status" value={status} />
-              <button
-                type="button"
-                className={`dash-team-role__trigger${statusOpen ? " is-open" : ""}`}
-                aria-haspopup="listbox"
-                aria-expanded={statusOpen}
-                onClick={() => setStatusOpen((open) => !open)}
-              >
-                <span>{status === "ACTIVE" ? "Activa" : "Inactiva"}</span>
-                <ChevronDown size={18} strokeWidth={1.7} aria-hidden="true" />
-              </button>
-              <div className={`dash-team-role__menu${statusOpen ? " is-open" : ""}`} role="listbox">
-                <button
-                  type="button"
-                  role="option"
-                  aria-selected={status === "ACTIVE"}
-                  className={`dash-team-role__option${status === "ACTIVE" ? " is-active" : ""}`}
-                  onClick={() => {
-                    setStatus("ACTIVE");
-                    setStatusOpen(false);
-                  }}
-                >
-                  Activa
-                </button>
-                <button
-                  type="button"
-                  role="option"
-                  aria-selected={status === "INACTIVE"}
-                  className={`dash-team-role__option${status === "INACTIVE" ? " is-active" : ""}`}
-                  onClick={() => {
-                    setStatus("INACTIVE");
-                    setStatusOpen(false);
-                  }}
-                >
-                  Inactiva
-                </button>
-              </div>
-            </div>
-            ) : null}
             <div className="dash-team-invite__full">
               <CategoryIconPicker value={icon} onChange={setIcon} />
             </div>
@@ -404,17 +440,24 @@ export function CategoriesPage() {
             </button>
             <button
               type="button"
-              className={`dash-team-filters__chip${statusFilter === "ACTIVE" ? " is-active" : ""}`}
-              onClick={() => setStatusFilter("ACTIVE")}
+              className={`dash-team-filters__chip${statusFilter === "APPROVED" ? " is-active" : ""}`}
+              onClick={() => setStatusFilter("APPROVED")}
             >
-              Activas
+              Aprobadas
             </button>
             <button
               type="button"
-              className={`dash-team-filters__chip${statusFilter === "INACTIVE" ? " is-active" : ""}`}
-              onClick={() => setStatusFilter("INACTIVE")}
+              className={`dash-team-filters__chip${statusFilter === "PENDING" ? " is-active" : ""}`}
+              onClick={() => setStatusFilter("PENDING")}
             >
-              Inactivas
+              Pendientes
+            </button>
+            <button
+              type="button"
+              className={`dash-team-filters__chip${statusFilter === "REJECTED" ? " is-active" : ""}`}
+              onClick={() => setStatusFilter("REJECTED")}
+            >
+              Rechazadas
             </button>
             <FilterMenu
               label={dateSort === "oldest" ? "Más antiguas" : "Más recientes"}
@@ -492,18 +535,53 @@ export function CategoriesPage() {
                       <h3>{category.name}</h3>
                       {category.description ? <p className="dash-team-card__email">{category.description}</p> : null}
                       <div className="dash-team-card__facts">
-                        <StatusDot active={category.status === "ACTIVE"}>
-                          {category.status === "ACTIVE" ? "Activa" : "Inactiva"}
+                        <StatusDot active={category.status === "APPROVED"}>
+                          {categoryStatusLabel(category.status)}
                         </StatusDot>
                         <StatusDot active={count > 0}>{experiencesLabel(count)}</StatusDot>
                       </div>
+                      {category.status === "REJECTED" && category.rejectionReason ? (
+                        <p className="dash-team-card__email">{category.rejectionReason}</p>
+                      ) : null}
                     </div>
-                    <Button type="button" variant="ghost" size="sm" className="ml-auto shrink-0" onClick={() => startEdit(category)}>
-                      Editar
-                    </Button>
-                    <Button type="button" variant="ghost" size="sm" className="shrink-0" onClick={() => setPendingDelete(category)}>
-                      Eliminar
-                    </Button>
+                    {isSuperAdmin ? (
+                      <Button type="button" variant="ghost" size="sm" className="ml-auto shrink-0" onClick={() => startEdit(category)}>
+                        Editar
+                      </Button>
+                    ) : null}
+                    {isSuperAdmin && category.status === "PENDING" ? (
+                      <>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="shrink-0"
+                          disabled={reviewing}
+                          onClick={() => void confirmApprove(category)}
+                        >
+                          Aprobar
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="shrink-0"
+                          disabled={reviewing}
+                          onClick={() => {
+                            setPendingReject(category);
+                            setRejectReason("");
+                            setRejectError("");
+                          }}
+                        >
+                          Rechazar
+                        </Button>
+                      </>
+                    ) : null}
+                    {isSuperAdmin ? (
+                      <Button type="button" variant="ghost" size="sm" className="shrink-0" onClick={() => setPendingDelete(category)}>
+                        Eliminar
+                      </Button>
+                    ) : null}
                   </article>
                 );
               })}
@@ -512,6 +590,69 @@ export function CategoriesPage() {
           )}
         </section>
       </section>
+
+      {pendingReject
+        ? createPortal(
+            <div
+              className="dash-team-confirm"
+              role="presentation"
+              onClick={() => {
+                if (!reviewing) {
+                  setPendingReject(null);
+                  setRejectError("");
+                }
+              }}
+            >
+              <div
+                className="dash-team-confirm__card dash-team-confirm__card--scroll"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="cat-reject-title"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <h2 id="cat-reject-title" className="dash-team-confirm__title">
+                  ¿Rechazar categoría?
+                </h2>
+                <div className="dash-team-confirm__scroll">
+                  <p className="dash-team-confirm__lead">Motivo del rechazo *</p>
+                  <textarea
+                    className="dash-exps-review-reason"
+                    value={rejectReason}
+                    onChange={(event) => {
+                      setRejectReason(event.target.value);
+                      if (rejectError) {
+                        setRejectError("");
+                      }
+                    }}
+                    placeholder="Explica por qué esta categoría no puede publicarse"
+                    required
+                    aria-required="true"
+                    aria-invalid={Boolean(rejectError)}
+                  />
+                  {rejectError ? <p className="text-sm text-red-700">{rejectError}</p> : null}
+                </div>
+                <div className="dash-team-confirm__actions">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    disabled={reviewing}
+                    onClick={() => {
+                      setPendingReject(null);
+                      setRejectReason("");
+                      setRejectError("");
+                    }}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button type="button" disabled={reviewing} onClick={() => void confirmReject()}>
+                    {reviewing ? "Rechazando..." : "Rechazar categoría"}
+                  </Button>
+                </div>
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
 
       {pendingDelete ? (
         <div
@@ -528,26 +669,54 @@ export function CategoriesPage() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="cat-delete-title"
-            aria-describedby="cat-delete-copy"
+            aria-describedby={(pendingDelete._count?.experiences ?? 0) > 0 ? "cat-delete-copy" : undefined}
             onClick={(event) => event.stopPropagation()}
           >
-            <h2 id="cat-delete-title" className="dash-team-confirm__title">
-              ¿Estás seguro de eliminar esta categoría?
-            </h2>
-            <p id="cat-delete-copy" className="dash-team-confirm__lead">
-              Las categorías con experiencias asociadas no pueden eliminarse.
-            </p>
-            <div className="dash-team-confirm__actions">
-              <Button type="button" variant="secondary" disabled={deleting} onClick={() => setPendingDelete(null)}>
-                Cancelar
-              </Button>
-              <Button type="button" disabled={deleting} onClick={() => void confirmDelete()}>
-                {deleting ? "Eliminando..." : "Eliminar"}
-              </Button>
-            </div>
+            {(pendingDelete._count?.experiences ?? 0) > 0 ? (
+              <>
+                <h2 id="cat-delete-title" className="dash-team-confirm__title">
+                  ¿No puedes eliminar esta categoría?
+                </h2>
+                <p id="cat-delete-copy" className="dash-team-confirm__lead">
+                  Esta categoría tiene experiencias asociadas y debe conservarse para mantener la información de las
+                  experiencias registradas.
+                </p>
+                <div className="dash-team-confirm__actions">
+                  <Button type="button" variant="secondary" disabled={deleting} onClick={() => setPendingDelete(null)}>
+                    Cancelar
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <>
+                <h2 id="cat-delete-title" className="dash-team-confirm__title">
+                  ¿Estás seguro de eliminar esta categoría?
+                </h2>
+                <div className="dash-team-confirm__actions">
+                  <Button type="button" variant="secondary" disabled={deleting} onClick={() => setPendingDelete(null)}>
+                    Cancelar
+                  </Button>
+                  <Button type="button" disabled={deleting} onClick={() => void confirmDelete()}>
+                    {deleting ? "Eliminando..." : "Eliminar"}
+                  </Button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       ) : null}
+
+      <SuccessConfirm
+        open={createdOpen}
+        variant="category"
+        title="Categoría creada correctamente"
+        text={
+          createdPendingReview
+            ? "La categoría quedó pendiente de revisión."
+            : "La categoría fue publicada correctamente."
+        }
+        onClose={() => setCreatedOpen(false)}
+      />
     </div>
   );
 }

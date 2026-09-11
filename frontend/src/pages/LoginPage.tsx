@@ -1,11 +1,15 @@
 import { FormEvent, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { AuthFormBrand } from "../components/auth/AuthFormBrand";
 import { AuthTextField } from "../components/auth/AuthTextField";
 import { SocialButtons } from "../components/auth/SocialButtons";
+import { ContactModal } from "../components/contact/ContactModal";
 import { useAuth } from "../hooks/useAuth";
 import { consumeSessionExpiredMessage } from "../services/api";
 import { resendVerificationCode } from "../services/auth.service";
 import { getApiErrorMessage } from "../utils/api-error";
+import { INACTIVE_ACCOUNT_CONTACT_REASON, isInactiveAccountMessage } from "../utils/auth-messages";
+import { needsOnboarding } from "../utils/onboarding";
 import { setPendingVerificationEmail } from "../utils/pending-verification";
 
 const UNVERIFIED_LOGIN_MESSAGE = "Debes verificar tu correo antes de iniciar sesión.";
@@ -15,8 +19,17 @@ export function LoginForm() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [error, setError] = useState(() => consumeSessionExpiredMessage());
+  const [searchParams] = useSearchParams();
+  const [remember, setRemember] = useState(false);
+  const [error, setError] = useState(
+    () =>
+      searchParams.get("oauthError") ||
+      (location.state as { oauthError?: string } | null)?.oauthError ||
+      consumeSessionExpiredMessage(),
+  );
   const [pendingEmail, setPendingEmail] = useState("");
+  const [attemptedEmail, setAttemptedEmail] = useState("");
+  const [contactOpen, setContactOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const registered = Boolean((location.state as { registered?: boolean } | null)?.registered);
@@ -30,11 +43,12 @@ export function LoginForm() {
     setPendingEmail("");
     const form = new FormData(event.currentTarget);
     const email = String(form.get("email") ?? "").trim().toLowerCase();
+    setAttemptedEmail(email);
 
     try {
       setLoading(true);
-      const user = await login(email, String(form.get("password")));
-      navigate(user.role === "USER" ? "/explorar" : "/admin", { replace: true });
+      const user = await login(email, String(form.get("password")), remember);
+      navigate(user.role !== "USER" ? "/admin" : needsOnboarding(user) ? "/onboarding" : "/explorar", { replace: true });
     } catch (err) {
       const message = getApiErrorMessage(err, "Credenciales incorrectas");
       setError(message);
@@ -68,10 +82,10 @@ export function LoginForm() {
   }
 
   return (
-    <div className="auth-form">
+    <div className="auth-form auth-form--login">
+      <AuthFormBrand />
       <header className="auth-form__header">
-        <h1 className="auth-form__title">Acceder</h1>
-        <p className="auth-form__lead">Continúa descubriendo experiencias para recordar.</p>
+        <h1 className="auth-form__title">Bienvenido de nuevo</h1>
         {registered && <p className="auth-notice">Cuenta creada. Ya puedes entrar.</p>}
       </header>
       <form className="auth-form__stack" onSubmit={onSubmit}>
@@ -79,7 +93,6 @@ export function LoginForm() {
           name="email"
           type="email"
           label="Correo electrónico"
-          placeholder="Correo electrónico"
           autoComplete="username"
           required
         />
@@ -87,20 +100,34 @@ export function LoginForm() {
           name="password"
           type="password"
           label="Contraseña"
-          placeholder="Contraseña"
           autoComplete="current-password"
           required
         />
         <div className="auth-row">
           <label className="auth-check">
-            <input type="checkbox" name="remember" />
+            <input
+              type="checkbox"
+              name="remember"
+              checked={remember}
+              onChange={(event) => setRemember(event.target.checked)}
+            />
             Recuérdame
           </label>
           <Link to="/forgot-password">¿Olvidaste tu contraseña?</Link>
         </div>
         {error && (
           <p className="auth-error" role="alert">
-            {error}
+            {isInactiveAccountMessage(error) ? (
+              <>
+                Tu cuenta está inactiva.{" "}
+                <button type="button" className="auth-error__link" onClick={() => setContactOpen(true)}>
+                  Contacta a soporte
+                </button>
+                .
+              </>
+            ) : (
+              error
+            )}
           </p>
         )}
         {pendingEmail ? (
@@ -122,13 +149,18 @@ export function LoginForm() {
       </form>
       <footer className="auth-form__footer">
         <p className="auth-switch">
-          ¿No tienes cuenta?{" "}
-          <Link to="/register">Crear cuenta</Link>
+          ¿Aún no tienes cuenta? <Link to="/register">Crear cuenta</Link>
         </p>
         <div className="auth-alt">
-          <SocialButtons label="O inicia sesión con" />
+          <SocialButtons remember={remember} />
         </div>
       </footer>
+      <ContactModal
+        open={contactOpen}
+        onClose={() => setContactOpen(false)}
+        defaultEmail={attemptedEmail}
+        defaultReason={INACTIVE_ACCOUNT_CONTACT_REASON}
+      />
     </div>
   );
 }

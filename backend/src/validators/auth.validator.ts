@@ -35,6 +35,10 @@ export const registerSchema = z
 export const loginSchema = z.object({
   email: z.string().trim().email("Correo electrónico inválido").toLowerCase(),
   password: z.string().min(1, "La contraseña es obligatoria"),
+  remember: z
+    .union([z.boolean(), z.literal("true"), z.literal("false"), z.literal("1"), z.literal("0")])
+    .optional()
+    .transform((value) => value === true || value === "true" || value === "1"),
 });
 
 export const forgotPasswordSchema = z.object({

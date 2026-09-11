@@ -1,4 +1,5 @@
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { useEffect } from "react";
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { AdminLayout } from "../layouts/AdminLayout";
 import { PublicLayout } from "../layouts/PublicLayout";
 import { LandingPage } from "../pages/LandingPage";
@@ -6,9 +7,10 @@ import { AuthPage } from "../pages/AuthPage";
 import { ForgotPasswordPage } from "../pages/ForgotPasswordPage";
 import { ResetPasswordPage } from "../pages/ResetPasswordPage";
 import { VerifyEmailPage } from "../pages/VerifyEmailPage";
-import { OnboardingWelcomePage } from "../pages/onboarding/OnboardingWelcomePage";
-import { OnboardingPreferencesPage } from "../pages/onboarding/OnboardingPreferencesPage";
-import { OnboardingReadyPage } from "../pages/onboarding/OnboardingReadyPage";
+import { OAuthCallbackPage } from "../pages/OAuthCallbackPage";
+import { OnboardingCatalogGuard } from "../components/onboarding/OnboardingCatalogGuard";
+import { OnboardingLayout } from "../components/onboarding/OnboardingLayout";
+import { OnboardingPage } from "../pages/onboarding/OnboardingPage";
 import { ExplorePage } from "../pages/ExplorePage";
 import { ExperienceDetailPage } from "../pages/ExperienceDetailPage";
 import { DashboardPage } from "../pages/admin/DashboardPage";
@@ -22,9 +24,31 @@ import { ExperienceFormPage } from "../pages/admin/ExperienceFormPage";
 import { ExperiencePreviewPage } from "../pages/admin/ExperiencePreviewPage";
 import { ProtectedRoute } from "./ProtectedRoute";
 
+const PAGE_TITLES: Record<string, string> = {
+  "/login": "Iniciar sesión | Entre Caminos",
+  "/register": "Registrarse | Entre Caminos",
+  "/forgot-password": "Recuperar contraseña | Entre Caminos",
+  "/reset-password": "Restablecer contraseña | Entre Caminos",
+  "/verify-email": "Verificar correo | Entre Caminos",
+  "/onboarding": "Personaliza tu experiencia | Entre Caminos",
+  "/onboarding/preferencias": "Personaliza tu experiencia | Entre Caminos",
+  "/onboarding/listo": "Personaliza tu experiencia | Entre Caminos",
+};
+
+function DocumentTitle() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    document.title = PAGE_TITLES[pathname] ?? "Entre Caminos";
+  }, [pathname]);
+
+  return null;
+}
+
 export function AppRoutes() {
   return (
     <BrowserRouter>
+      <DocumentTitle />
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route element={<AuthPage />}>
@@ -34,14 +58,19 @@ export function AppRoutes() {
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/verify-email" element={<VerifyEmailPage />} />
+        <Route path="/auth/callback" element={<OAuthCallbackPage />} />
         <Route element={<ProtectedRoute />}>
-          <Route path="/onboarding" element={<OnboardingWelcomePage />} />
-          <Route path="/onboarding/preferencias" element={<OnboardingPreferencesPage />} />
-          <Route path="/onboarding/listo" element={<OnboardingReadyPage />} />
+          <Route element={<OnboardingLayout />}>
+            <Route path="/onboarding" element={<OnboardingPage />} />
+            <Route path="/onboarding/preferencias" element={<Navigate to="/onboarding" replace />} />
+            <Route path="/onboarding/listo" element={<Navigate to="/onboarding" replace />} />
+          </Route>
         </Route>
-        <Route element={<PublicLayout />}>
-          <Route path="/explorar" element={<ExplorePage />} />
-          <Route path="/explorar/:id" element={<ExperienceDetailPage />} />
+        <Route element={<OnboardingCatalogGuard />}>
+          <Route element={<PublicLayout />}>
+            <Route path="/explorar" element={<ExplorePage />} />
+            <Route path="/explorar/:id" element={<ExperienceDetailPage />} />
+          </Route>
         </Route>
         <Route element={<ProtectedRoute admin />}>
           <Route path="/admin" element={<AdminLayout />}>
@@ -52,6 +81,7 @@ export function AppRoutes() {
             <Route path="administradores" element={<AdministratorsPage />} />
             <Route path="roles" element={<RolesPage />} />
             <Route path="permissions" element={<PermissionsPage />} />
+            <Route path="permisos" element={<PermissionsPage />} />
             <Route path="categories" element={<CategoriesPage />} />
             <Route path="categorias" element={<CategoriesPage />} />
             <Route path="experiences" element={<ExperiencesPage />} />

@@ -127,7 +127,7 @@ export function ExperienceEditorialPlace({
           <p className="dash-exps-place__empty">Esta experiencia aún no tiene un punto geográfico registrado.</p>
         )}
 
-        {chips.length || note ? (
+        {chips.length || note || experience.howToGetThere?.trim() ? (
           <div className="dash-exps-place__extra">
             {chips.length ? (
               <ul className="dash-exps-place__chips">
@@ -143,6 +143,12 @@ export function ExperienceEditorialPlace({
               </ul>
             ) : null}
             {note ? <p className="dash-exps-place__note">{note}</p> : null}
+            {experience.howToGetThere?.trim() ? (
+              <p className="dash-exps-place__note">
+                <strong>Cómo llegar. </strong>
+                {experience.howToGetThere.trim()}
+              </p>
+            ) : null}
           </div>
         ) : null}
       </article>

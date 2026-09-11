@@ -3,7 +3,7 @@ import { ROLES, type RoleName } from "../config/constants.js";
 import type { AuthUser } from "../models/auth-user.js";
 import { livingUserWhere } from "../utils/account.js";
 import { ApiError } from "../utils/api-error.js";
-import { canReviewExperiences } from "../utils/permissions.js";
+import { canReviewExperiences, isSuperAdmin } from "../utils/permissions.js";
 import { hashPassword } from "../utils/password.js";
 import { clearAuthUserCache, revokeAuthUser } from "../utils/auth-cache.js";
 import { publicUser } from "../utils/serializers.js";
@@ -51,9 +51,12 @@ export async function listAdministrators(options?: { take?: number; roles?: Role
 }
 
 export async function createAdministrator(
-  actorId: string,
+  actor: AuthUser,
   input: { name: string; email: string; password: string; role: "SUPER_ADMIN" | "ADMIN" },
 ) {
+  if (!isSuperAdmin(actor)) {
+    throw ApiError.forbidden("Solo un super administrador puede crear cuentas administrativas");
+  }
   const existing = await prisma.user.findUnique({ where: { email: input.email } });
   if (existing) {
     throw ApiError.conflict("Ya existe un usuario con este correo");
@@ -76,7 +79,7 @@ export async function createAdministrator(
   });
 
   await recordAudit({
-    userId: actorId,
+    userId: actor.id,
     action: "ADMIN_CREATE",
     entity: "User",
     entityId: user.id,
@@ -86,10 +89,13 @@ export async function createAdministrator(
 }
 
 export async function updateAdministrator(
-  actorId: string,
+  actor: AuthUser,
   adminId: string,
   input: { name?: string; status?: "ACTIVE" | "INACTIVE" | "SUSPENDED"; role?: "SUPER_ADMIN" | "ADMIN" },
 ) {
+  if (!isSuperAdmin(actor)) {
+    throw ApiError.forbidden("Solo un super administrador puede gestionar usuarios administrativos");
+  }
   const target = await prisma.user.findUnique({
     where: { id: adminId },
     include: { role: true },
@@ -99,7 +105,7 @@ export async function updateAdministrator(
     throw ApiError.notFound("Administrador no encontrado");
   }
 
-  if (target.id === actorId && input.status && input.status !== "ACTIVE") {
+  if (target.id === actor.id && input.status && input.status !== "ACTIVE") {
     throw ApiError.badRequest("No puedes desactivar tu propia cuenta");
   }
 
@@ -125,7 +131,7 @@ export async function updateAdministrator(
   clearAuthUserCache(updated.id);
 
   await recordAudit({
-    userId: actorId,
+    userId: actor.id,
     action: "ADMIN_UPDATE",
     entity: "User",
     entityId: updated.id,
@@ -219,7 +225,7 @@ export async function getDashboardMetrics(actor: AuthUser) {
       by: ["status"],
       _count: { _all: true },
     }),
-    prisma.category.count({ where: { status: "ACTIVE" } }),
+    prisma.category.count({ where: { status: "APPROVED" } }),
     countActiveAdministrators(),
     prisma.auditLog.findMany({
       where: { userId: actor.id, action: "CATEGORY_CREATE", entity: "Category" },
@@ -234,14 +240,14 @@ export async function getDashboardMetrics(actor: AuthUser) {
     }),
     listAdministrators({
       take: 3,
-      ...(actor.role === ROLES.ADMIN ? { roles: [ROLES.SUPER_ADMIN] } : {}),
+      roles: [ROLES.SUPER_ADMIN],
     }),
     prisma.auditLog.findMany({
       take: 8,
       orderBy: { createdAt: "desc" },
       include: { user: { select: { name: true, email: true } } },
     }),
-    listCategories({ includeInactive: true, take: 3 }),
+    listCategories({ includeHidden: false, take: 3 }),
     prisma.experience.findMany({
       where: reviewer ? undefined : { createdBy: actor.id },
       take: 10,
@@ -272,7 +278,7 @@ export async function getDashboardMetrics(actor: AuthUser) {
     ? await prisma.category.count({
         where: {
           id: { in: ownedCategoryIds },
-          status: { in: ["ACTIVE", "INACTIVE"] },
+          status: { in: ["PENDING", "APPROVED", "REJECTED"] },
         },
       })
     : 0;

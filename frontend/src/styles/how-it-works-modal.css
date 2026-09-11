@@ -150,36 +150,16 @@
   flex-shrink: 0;
   width: 2.2rem;
   height: 2.2rem;
-  border: 1px solid rgba(41, 73, 66, 0.08);
+  border: 1px solid rgba(143, 181, 168, 0.45);
   border-radius: 999px;
-  background: #3a665c;
-  box-shadow: 0 4px 14px rgba(28, 51, 46, 0.04);
-  color: #f6f6f3;
+  background: #8fb5a8;
+  box-shadow: 0 4px 14px rgba(28, 51, 46, 0.06);
+  color: #f7faf8;
 }
 
 .how-it-works-modal__node svg {
   width: 1rem;
   height: 1rem;
-}
-
-.how-it-works-modal__step:nth-child(1) .how-it-works-modal__node {
-  color: #c4a3a8;
-}
-
-.how-it-works-modal__step:nth-child(2) .how-it-works-modal__node {
-  color: #a8a37a;
-}
-
-.how-it-works-modal__step:nth-child(3) .how-it-works-modal__node {
-  color: #d2ae8a;
-}
-
-.how-it-works-modal__step:nth-child(4) .how-it-works-modal__node {
-  color: #6a8a83;
-}
-
-.how-it-works-modal__step:nth-child(5) .how-it-works-modal__node {
-  color: #f6f6f3;
 }
 
 .how-it-works-modal__line {

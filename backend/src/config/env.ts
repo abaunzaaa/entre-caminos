@@ -7,7 +7,23 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
 dotenv.config({ path: path.resolve(__dirname, "../../.env"), override: true });
 
-const emptyToUndefined = (value: unknown) => (value === "" ? undefined : value);
+const emptyToUndefined = (value: unknown) => {
+  if (typeof value !== "string") {
+    return value === "" ? undefined : value;
+  }
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return undefined;
+  }
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
+    const inner = trimmed.slice(1, -1).trim();
+    return inner || undefined;
+  }
+  return trimmed;
+};
 
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
@@ -43,6 +59,9 @@ const envSchema = z.object({
   MAPBOX_ACCESS_TOKEN: z.string().optional().default(""),
   OPENAI_API_KEY: z.string().optional().default(""),
   OPENAI_MODEL: z.string().optional().default("gpt-4o-mini"),
+  GOOGLE_CLIENT_ID: z.preprocess(emptyToUndefined, z.string().optional()),
+  GOOGLE_CLIENT_SECRET: z.preprocess(emptyToUndefined, z.string().optional()),
+  OAUTH_REDIRECT_BASE: z.preprocess(emptyToUndefined, z.string().url().optional()),
 });
 
 const parsed = envSchema.safeParse(process.env);

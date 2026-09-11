@@ -14,6 +14,23 @@ body,
   min-height: 100%;
 }
 
+html.onboarding-lock,
+html.onboarding-lock body,
+html.onboarding-lock #root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+html.auth-lock,
+html.auth-lock body,
+html.auth-lock #root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
 body {
   margin: 0;
   background: #ffffff;

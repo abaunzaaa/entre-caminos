@@ -36,6 +36,7 @@ adminRouter.get(
 
 adminRouter.post(
   "/administrators",
+  roleMiddleware([ROLES.SUPER_ADMIN]),
   permissionMiddleware(PERMISSIONS.ADMINS_MANAGE),
   validate(createAdminSchema),
   asyncHandler(adminController.createAdmin),
@@ -43,6 +44,7 @@ adminRouter.post(
 
 adminRouter.put(
   "/administrators/:id",
+  roleMiddleware([ROLES.SUPER_ADMIN]),
   permissionMiddleware(PERMISSIONS.ADMINS_MANAGE),
   validate(updateAdminSchema),
   asyncHandler(adminController.updateAdmin),
@@ -50,18 +52,21 @@ adminRouter.put(
 
 adminRouter.delete(
   "/administrators/:id",
+  roleMiddleware([ROLES.SUPER_ADMIN]),
   permissionMiddleware(PERMISSIONS.ADMINS_MANAGE),
   asyncHandler(adminController.deleteAdmin),
 );
 
 adminRouter.get(
   "/roles",
+  roleMiddleware([ROLES.SUPER_ADMIN]),
   permissionMiddleware(PERMISSIONS.ROLES_MANAGE),
   asyncHandler(roleController.listRoles),
 );
 
 adminRouter.post(
   "/roles",
+  roleMiddleware([ROLES.SUPER_ADMIN]),
   permissionMiddleware(PERMISSIONS.ROLES_MANAGE),
   validate(createRoleSchema),
   asyncHandler(roleController.createRole),
@@ -69,6 +74,7 @@ adminRouter.post(
 
 adminRouter.put(
   "/roles/:id/permissions",
+  roleMiddleware([ROLES.SUPER_ADMIN]),
   permissionMiddleware(PERMISSIONS.ROLES_MANAGE),
   validate(assignPermissionsSchema),
   asyncHandler(roleController.assignPermissions),
@@ -76,12 +82,14 @@ adminRouter.put(
 
 adminRouter.get(
   "/permissions",
+  roleMiddleware([ROLES.SUPER_ADMIN]),
   permissionMiddleware(PERMISSIONS.PERMISSIONS_MANAGE),
   asyncHandler(roleController.listPermissions),
 );
 
 adminRouter.post(
   "/permissions",
+  roleMiddleware([ROLES.SUPER_ADMIN]),
   permissionMiddleware(PERMISSIONS.PERMISSIONS_MANAGE),
   validate(createPermissionSchema),
   asyncHandler(roleController.createPermission),

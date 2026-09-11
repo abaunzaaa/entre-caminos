@@ -13,6 +13,7 @@ type ContactIntent = "discover" | "ally";
 const discoverReasons = [
   "Quiero conocer más experiencias",
   "Necesito ayuda para elegir un plan",
+  "Mi cuenta está inactiva",
   "Tengo una sugerencia",
   "Otro",
 ] as const;
@@ -191,9 +192,13 @@ function ContactSelect({
 export function ContactModal({
   open,
   onClose,
+  defaultEmail = "",
+  defaultReason = "",
 }: {
   open: boolean;
   onClose: () => void;
+  defaultEmail?: string;
+  defaultReason?: string;
 }) {
   const titleId = useId();
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -233,7 +238,23 @@ export function ContactModal({
   }, [open, onClose]);
 
   useEffect(() => {
-    if (open) return;
+    if (open) {
+      setIntent("discover");
+      setDiscover({
+        ...emptyDiscover,
+        email: defaultEmail,
+        reason: defaultReason,
+      });
+      setAlly(emptyAlly);
+      setDiscoverErrors({});
+      setAllyErrors({});
+      setSuccessOpen(false);
+      setSubmitError("");
+      if (!inFlight.current) {
+        setLoading(false);
+      }
+      return;
+    }
     setIntent("discover");
     setDiscover(emptyDiscover);
     setAlly(emptyAlly);
@@ -244,7 +265,7 @@ export function ContactModal({
     if (!inFlight.current) {
       setLoading(false);
     }
-  }, [open]);
+  }, [open, defaultEmail, defaultReason]);
 
   const successWasOpen = useRef(false);
 

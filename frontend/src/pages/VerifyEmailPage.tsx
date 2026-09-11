@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { AuthFormBrand } from "../components/auth/AuthFormBrand";
 import { AuthRecoveryLayout } from "../components/auth/AuthRecoveryLayout";
 import { AuthTextField } from "../components/auth/AuthTextField";
 import { useAuth } from "../hooks/useAuth";
@@ -57,7 +58,11 @@ export function VerifyEmailPage() {
 
     try {
       setLoading(true);
-      await verifyEmail(email, code.trim());
+      const verified = await verifyEmail(email, code.trim());
+      if (!verified.emailVerified) {
+        setError("No pudimos verificar el código.");
+        return;
+      }
       clearPendingVerificationEmail();
       navigate("/onboarding", { replace: true });
     } catch (err) {
@@ -91,8 +96,9 @@ export function VerifyEmailPage() {
 
   return (
     <AuthRecoveryLayout onBack={() => void goHome()}>
-      <div className="auth-form">
+      <div className="auth-form auth-form--verify">
         <header className="auth-form__header">
+          <AuthFormBrand />
           <h1 className="auth-form__title">Verifica tu correo</h1>
           <p className="auth-form__lead">
             {email

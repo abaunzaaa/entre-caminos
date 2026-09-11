@@ -35,7 +35,11 @@ export function AuthTextField({ label, error, type, className, id, ...props }: A
             onClick={() => setVisible((value) => !value)}
             aria-label={visible ? "Ocultar contraseña" : "Mostrar contraseña"}
           >
-            {visible ? <EyeOff size={18} /> : <Eye size={18} />}
+            {visible ? (
+              <EyeOff size={18} strokeWidth={1.7} aria-hidden="true" />
+            ) : (
+              <Eye size={18} strokeWidth={1.7} aria-hidden="true" />
+            )}
           </button>
         )}
       </div>

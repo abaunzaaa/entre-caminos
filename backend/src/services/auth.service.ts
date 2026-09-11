@@ -1,5 +1,6 @@
 import { prisma } from "../database/prisma.js";
 import {
+  EMAIL_INACTIVE_LOGIN_MESSAGE,
   EMAIL_UNVERIFIED_LOGIN_MESSAGE,
   EMAIL_VERIFICATION_TTL_LABEL,
   EMAIL_VERIFICATION_TTL_MS,
@@ -13,6 +14,7 @@ import { ApiError } from "../utils/api-error.js";
 import { hashPassword, verifyPassword } from "../utils/password.js";
 import { publicUser } from "../utils/serializers.js";
 import { clearAuthUserCache, getCachedProfile } from "../utils/auth-cache.js";
+import { getOnboardingProfile } from "./onboarding.service.js";
 import { recordAudit } from "./audit.service.js";
 import { sendPasswordResetEmail, sendVerificationEmail } from "./email.service.js";
 import { persistUserAvatar, removeUserAvatarFiles } from "./upload.service.js";
@@ -54,6 +56,7 @@ export async function registerUser(input: { name: string; email: string; passwor
         emailVerified: false,
         verificationCode: hash,
         verificationCodeExpires: new Date(Date.now() + EMAIL_VERIFICATION_TTL_MS),
+        profile: { create: {} },
       },
       include: userInclude,
     });
@@ -121,7 +124,7 @@ export async function loginUser(input: { email: string; password: string }) {
   }
 
   if (user.status !== "ACTIVE") {
-    throw ApiError.forbidden("Tu cuenta está inactiva. Contacta a soporte.");
+    throw ApiError.forbidden(EMAIL_INACTIVE_LOGIN_MESSAGE);
   }
 
   const valid = await verifyPassword(input.password, user.passwordHash);
@@ -145,6 +148,7 @@ export async function loginUser(input: { email: string; password: string }) {
 
 export async function getProfile(userId: string) {
   const cached = getCachedProfile(userId);
+  const onboarding = await getOnboardingProfile(userId);
   if (cached) {
     return {
       id: cached.id,
@@ -161,6 +165,7 @@ export async function getProfile(userId: string) {
       city: cached.city ?? null,
       address: cached.address ?? null,
       avatarUrl: cached.avatarUrl ?? null,
+      profile: onboarding,
     };
   }
 
@@ -196,6 +201,7 @@ export async function getProfile(userId: string) {
   return {
     ...publicUser(user),
     permissions: user.role.permissions.map((item) => item.permission.name),
+    profile: onboarding,
   };
 }
 
@@ -285,7 +291,7 @@ export async function requestPasswordReset(email: string) {
   const resetUrl = `${frontendUrl}/reset-password?token=${encodeURIComponent(raw)}`;
 
   const sent = await sendPasswordResetEmail(user.email, resetUrl, PASSWORD_RESET_TTL_LABEL);
-  if (!sent && env.SENDGRID_API_KEY) {
+  if (!sent && env.NODE_ENV === "production") {
     throw new ApiError(500, "No pudimos enviar el correo. Inténtalo de nuevo.", "EMAIL_UNAVAILABLE");
   }
 

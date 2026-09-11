@@ -1,9 +1,12 @@
-import { Router } from "express";
+import type { RequestHandler } from "express";
+import { Router as createRouter } from "express";
 import { authRateLimiter } from "../middleware/rate-limit.middleware.js";
 import { validate } from "../middleware/validate.middleware.js";
 import { authMiddleware } from "../middleware/auth.middleware.js";
 import { asyncHandler } from "../utils/async-handler.js";
+import multer from "multer";
 import * as authController from "../controllers/auth.controller.js";
+import * as onboardingController from "../controllers/onboarding.controller.js";
 import {
   forgotPasswordSchema,
   loginSchema,
@@ -13,8 +16,9 @@ import {
   updateProfileSchema,
   verifyEmailSchema,
 } from "../validators/auth.validator.js";
+import { onboardingSaveSchema } from "../validators/onboarding.validator.js";
 
-export const authRouter = Router();
+export const authRouter = createRouter();
 
 authRouter.post(
   "/register",
@@ -39,6 +43,26 @@ authRouter.patch(
   validate(updateProfileSchema),
   asyncHandler(authController.updateMe),
 );
+
+const onboardingUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+});
+
+authRouter.get("/onboarding", authMiddleware, asyncHandler(onboardingController.getOnboarding));
+authRouter.patch(
+  "/onboarding",
+  authMiddleware,
+  validate(onboardingSaveSchema),
+  asyncHandler(onboardingController.saveOnboarding),
+);
+authRouter.post(
+  "/onboarding/photo",
+  authMiddleware,
+  onboardingUpload.single("image"),
+  asyncHandler(onboardingController.uploadOnboardingPhoto),
+);
+authRouter.delete("/onboarding/photo", authMiddleware, asyncHandler(onboardingController.deleteOnboardingPhoto));
 
 authRouter.post(
   "/forgot-password",
@@ -67,3 +91,12 @@ authRouter.post(
   validate(resendVerificationSchema),
   asyncHandler(authController.resendVerificationCode),
 );
+
+const setGoogleProvider: RequestHandler = (req, _res, next) => {
+  req.params.provider = "google";
+  next();
+};
+
+authRouter.get("/google", setGoogleProvider, asyncHandler(authController.oauthStart));
+authRouter.get("/google/callback", setGoogleProvider, asyncHandler(authController.oauthCallback));
+authRouter.post("/google/callback", setGoogleProvider, asyncHandler(authController.oauthCallback));

@@ -1,56 +1,35 @@
 function GoogleIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden>
-      <path fill="#EA4335" d="M12 10.2v3.6h5.1c-.2 1.2-1.5 3.6-5.1 3.6-3.1 0-5.6-2.6-5.6-5.7S8.9 6 12 6c1.8 0 3 .7 3.7 1.4l2.5-2.4C16.7 3.6 14.6 2.7 12 2.7 6.9 2.7 2.8 6.8 2.8 12S6.9 21.3 12 21.3c5.2 0 8.6-3.6 8.6-8.7 0-.6-.1-1-.2-1.4H12z" />
+    <svg className="auth-social__google-icon" viewBox="0 0 48 48" aria-hidden="true">
+      <path
+        fill="#EA4335"
+        d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
+      />
+      <path
+        fill="#4285F4"
+        d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"
+      />
+      <path
+        fill="#34A853"
+        d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
+      />
     </svg>
   );
 }
 
-function MicrosoftIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden>
-      <path fill="#F25022" d="M3 3h8.5v8.5H3z" />
-      <path fill="#7FBA00" d="M12.5 3H21v8.5h-8.5z" />
-      <path fill="#00A4EF" d="M3 12.5h8.5V21H3z" />
-      <path fill="#FFB900" d="M12.5 12.5H21V21h-8.5z" />
-    </svg>
-  );
-}
+export function SocialButtons({ remember = true }: { remember?: boolean }) {
+  const params = new URLSearchParams({ remember: remember ? "1" : "0" });
 
-export function SocialButtons({ label }: { label: string }) {
   return (
     <div className="auth-social">
-      <div className="flex items-center gap-3 text-xs text-neutral-400">
-        <span className="h-px flex-1 bg-neutral-200" />
-        {label}
-        <span className="h-px flex-1 bg-neutral-200" />
-      </div>
-      <div className="flex justify-center gap-4">
-        {[
-          { name: "Google", icon: <GoogleIcon /> },
-          {
-            name: "Apple",
-            icon: (
-              <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden>
-                <path d="M16.4 12.6c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.2-2.8.9-3.5.9s-1.8-.8-3-.8c-1.5 0-3 .9-3.8 2.3-1.6 2.8-.4 7 1.2 9.3.8 1.1 1.7 2.3 3 2.3 1.2 0 1.6-.7 3-.7s1.8.7 3 .7 2-1.1 2.8-2.2c.9-1.3 1.3-2.5 1.3-2.6-.1 0-2.6-1-2.6-3.9zM14.6 5.8c.6-.8 1.1-1.9.9-3-1 .1-2.2.7-2.9 1.5-.6.7-1.2 1.9-1 3 1.1.1 2.3-.5 3-1.5z" />
-              </svg>
-            ),
-          },
-          { name: "Microsoft", icon: <MicrosoftIcon /> },
-        ].map((item) => (
-          <button
-            key={item.name}
-            type="button"
-            className="grid h-12 w-12 place-items-center rounded-full border border-neutral-200"
-            aria-label={item.name}
-            onClick={() =>
-              window.alert("Por ahora crea la cuenta con correo y contraseña. Google, Apple y Microsoft llegan después.")
-            }
-          >
-            {item.icon}
-          </button>
-        ))}
-      </div>
+      <a className="auth-social__google" href={`/api/auth/google?${params.toString()}`}>
+        <GoogleIcon />
+        Continuar con Google
+      </a>
     </div>
   );
 }

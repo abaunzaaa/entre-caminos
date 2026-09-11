@@ -17,6 +17,7 @@ export type CachedProfile = {
   city?: string | null;
   address?: string | null;
   avatarUrl?: string | null;
+  profile?: unknown;
 };
 
 const cache = new Map<string, CacheEntry>();

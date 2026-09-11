@@ -5,7 +5,7 @@ import { authScenicPhoto, type AuthMode } from "./authArt";
 import { cn } from "../../utils/cn";
 import "../../styles/auth-interactive.css";
 
-const ANIMATION_MS = 720;
+const ANIMATION_MS = 1400;
 
 function usePrefersReducedMotion() {
   const [reduced, setReduced] = useState(
@@ -68,6 +68,7 @@ export function AuthInteractiveCard({
         aria-hidden={!registerActive}
         {...(registerInteractive ? {} : { inert: true })}
       >
+        <AuthBackLink variant="icon" className="auth-back--panel" />
         {registerForm}
       </div>
       <div
@@ -77,11 +78,10 @@ export function AuthInteractiveCard({
       >
         {loginForm}
       </div>
-
-      <div className="auth-visual-pane" aria-hidden="true">
+      <div className="auth-visual-pane">
         <AuthVisualPanel mode={mode} photo={authScenicPhoto} />
+        <AuthBackLink variant="icon" className="auth-back--photo" />
       </div>
-      {loginActive ? <AuthBackLink variant="icon" /> : null}
     </div>
   );
 }
