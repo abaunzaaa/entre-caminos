@@ -1,0 +1,1015 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/legal/TermsModal.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=a181de7c"; const Fragment = __vite__cjsImport0_react_jsxDevRuntime["Fragment"]; const jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+var _s = $RefreshSig$();
+import __vite__cjsImport1_react from "/node_modules/.vite/deps/react.js?v=a181de7c"; const useEffect = __vite__cjsImport1_react["useEffect"]; const useId = __vite__cjsImport1_react["useId"]; const useRef = __vite__cjsImport1_react["useRef"];
+import "/src/styles/terms-modal.css";
+const CONTACT_EMAIL = "entrecaminos.e@gmail.com";
+function MailLink() {
+  return /* @__PURE__ */ jsxDEV("a", { className: "terms-modal__mail", href: `mailto:${CONTACT_EMAIL}`, children: CONTACT_EMAIL }, void 0, false, {
+    fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+    lineNumber: 10,
+    columnNumber: 5
+  }, this);
+}
+_c = MailLink;
+function Section({ number, title, children }) {
+  return /* @__PURE__ */ jsxDEV("section", { className: "terms-modal__section", children: [
+    /* @__PURE__ */ jsxDEV("h3", { className: "terms-modal__section-title", children: [
+      /* @__PURE__ */ jsxDEV("span", { children: [
+        number,
+        "."
+      ] }, void 0, true, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 20,
+        columnNumber: 9
+      }, this),
+      " ",
+      title
+    ] }, void 0, true, {
+      fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+      lineNumber: 19,
+      columnNumber: 7
+    }, this),
+    children
+  ] }, void 0, true, {
+    fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+    lineNumber: 18,
+    columnNumber: 5
+  }, this);
+}
+_c2 = Section;
+function TermsBody() {
+  return /* @__PURE__ */ jsxDEV(Fragment, { children: [
+    /* @__PURE__ */ jsxDEV("h3", { className: "terms-modal__doc-title", children: "Términos y condiciones de uso" }, void 0, false, {
+      fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+      lineNumber: 30,
+      columnNumber: 7
+    }, this),
+    /* @__PURE__ */ jsxDEV("p", { children: [
+      "Al ingresar, registrarse o utilizar ",
+      /* @__PURE__ */ jsxDEV("strong", { children: "Entre Caminos" }, void 0, false, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 32,
+        columnNumber: 45
+      }, this),
+      ", el usuario declara que ha leído, comprendido y aceptado estos Términos y Condiciones."
+    ] }, void 0, true, {
+      fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+      lineNumber: 31,
+      columnNumber: 7
+    }, this),
+    /* @__PURE__ */ jsxDEV(Section, { number: "1", title: "Finalidad de la plataforma", children: [
+      /* @__PURE__ */ jsxDEV("p", { children: [
+        /* @__PURE__ */ jsxDEV("strong", { children: "Entre Caminos" }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 38,
+          columnNumber: 11
+        }, this),
+        " es un sitio web informativo que permite descubrir planes y experiencias turísticas, culturales, gastronómicas, recreativas y de bienestar."
+      ] }, void 0, true, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 37,
+        columnNumber: 9
+      }, this),
+      /* @__PURE__ */ jsxDEV("p", { children: [
+        "La plataforma ",
+        /* @__PURE__ */ jsxDEV("strong", { children: "no realiza reservas" }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 42,
+          columnNumber: 25
+        }, this),
+        ", ",
+        /* @__PURE__ */ jsxDEV("strong", { children: "no recibe pagos" }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 42,
+          columnNumber: 63
+        }, this),
+        ",",
+        " ",
+        /* @__PURE__ */ jsxDEV("strong", { children: "no vende entradas" }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 43,
+          columnNumber: 11
+        }, this),
+        " ni presta directamente las experiencias publicadas."
+      ] }, void 0, true, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 41,
+        columnNumber: 9
+      }, this)
+    ] }, void 0, true, {
+      fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+      lineNumber: 36,
+      columnNumber: 7
+    }, this),
+    /* @__PURE__ */ jsxDEV(Section, { number: "2", title: "Empresas aliadas", children: [
+      /* @__PURE__ */ jsxDEV("p", { children: [
+        "Los planes son publicados en colaboración con ",
+        /* @__PURE__ */ jsxDEV("strong", { children: "empresas y emprendimientos aliados" }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 49,
+          columnNumber: 57
+        }, this),
+        ", quienes son responsables de la veracidad y actualización de la información, así como de los precios, horarios, disponibilidad, seguridad y prestación de sus servicios."
+      ] }, void 0, true, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 48,
+        columnNumber: 9
+      }, this),
+      /* @__PURE__ */ jsxDEV("p", { children: [
+        "Antes de asistir, comprar o reservar por medios externos, el usuario deberá confirmar directamente las condiciones con la ",
+        /* @__PURE__ */ jsxDEV("strong", { children: "empresa responsable" }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 55,
+          columnNumber: 30
+        }, this),
+        "."
+      ] }, void 0, true, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 53,
+        columnNumber: 9
+      }, this)
+    ] }, void 0, true, {
+      fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+      lineNumber: 47,
+      columnNumber: 7
+    }, this),
+    /* @__PURE__ */ jsxDEV(Section, { number: "3", title: "Uso de la plataforma", children: [
+      /* @__PURE__ */ jsxDEV("p", { children: [
+        "El usuario deberá proporcionar información verdadera, proteger su cuenta y utilizar la plataforma de forma",
+        " ",
+        /* @__PURE__ */ jsxDEV("strong", { children: "legal y respetuosa" }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 62,
+          columnNumber: 11
+        }, this),
+        "."
+      ] }, void 0, true, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 60,
+        columnNumber: 9
+      }, this),
+      /* @__PURE__ */ jsxDEV("p", { children: "Está prohibido publicar contenido falso u ofensivo, suplantar identidades, manipular reseñas, vulnerar la seguridad del sitio o utilizar sus contenidos sin autorización." }, void 0, false, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 64,
+        columnNumber: 9
+      }, this),
+      /* @__PURE__ */ jsxDEV("p", { children: [
+        "Entre Caminos podrá ",
+        /* @__PURE__ */ jsxDEV("strong", { children: "suspender cuentas" }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 69,
+          columnNumber: 31
+        }, this),
+        " o retirar contenido que incumpla estas condiciones."
+      ] }, void 0, true, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 68,
+        columnNumber: 9
+      }, this)
+    ] }, void 0, true, {
+      fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+      lineNumber: 59,
+      columnNumber: 7
+    }, this),
+    /* @__PURE__ */ jsxDEV(Section, { number: "4", title: "Inteligencia artificial", children: [
+      /* @__PURE__ */ jsxDEV("p", { children: [
+        "Las recomendaciones generadas mediante ",
+        /* @__PURE__ */ jsxDEV("strong", { children: "inteligencia artificial" }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 75,
+          columnNumber: 50
+        }, this),
+        " son orientativas y pueden contener errores o información desactualizada."
+      ] }, void 0, true, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 74,
+        columnNumber: 9
+      }, this),
+      /* @__PURE__ */ jsxDEV("p", { children: "No garantizan disponibilidad, precio, seguridad ni calidad." }, void 0, false, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 78,
+        columnNumber: 9
+      }, this),
+      /* @__PURE__ */ jsxDEV("p", { children: "El usuario deberá verificar la información directamente con la empresa que ofrece la experiencia." }, void 0, false, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 79,
+        columnNumber: 9
+      }, this)
+    ] }, void 0, true, {
+      fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+      lineNumber: 73,
+      columnNumber: 7
+    }, this),
+    /* @__PURE__ */ jsxDEV(Section, { number: "5", title: "Reseñas y contenidos", children: [
+      /* @__PURE__ */ jsxDEV("p", { children: [
+        "Las reseñas deben ser ",
+        /* @__PURE__ */ jsxDEV("strong", { children: "auténticas" }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 84,
+          columnNumber: 33
+        }, this),
+        ", respetuosas y relacionadas con la experiencia evaluada."
+      ] }, void 0, true, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 83,
+        columnNumber: 9
+      }, this),
+      /* @__PURE__ */ jsxDEV("p", { children: "Entre Caminos podrá eliminar contenidos falsos, ofensivos, publicitarios o que vulneren derechos de terceros." }, void 0, false, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 86,
+        columnNumber: 9
+      }, this),
+      /* @__PURE__ */ jsxDEV("p", { children: "Las opiniones publicadas pertenecen a sus autores y no representan necesariamente la posición de Entre Caminos." }, void 0, false, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 90,
+        columnNumber: 9
+      }, this)
+    ] }, void 0, true, {
+      fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+      lineNumber: 82,
+      columnNumber: 7
+    }, this),
+    /* @__PURE__ */ jsxDEV(Section, { number: "6", title: "Responsabilidad", children: [
+      /* @__PURE__ */ jsxDEV("p", { children: [
+        "Entre Caminos procura publicar información clara y actualizada, pero ",
+        /* @__PURE__ */ jsxDEV("strong", { children: "no responde" }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 98,
+          columnNumber: 80
+        }, this),
+        " por cambios, cancelaciones, accidentes, incumplimientos o diferencias en la información atribuibles a las empresas aliadas."
+      ] }, void 0, true, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 97,
+        columnNumber: 9
+      }, this),
+      /* @__PURE__ */ jsxDEV("p", { children: "Esta disposición no limita las responsabilidades legales de Entre Caminos ni los derechos de los consumidores." }, void 0, false, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 102,
+        columnNumber: 9
+      }, this)
+    ] }, void 0, true, {
+      fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+      lineNumber: 96,
+      columnNumber: 7
+    }, this),
+    /* @__PURE__ */ jsxDEV(Section, { number: "7", title: "Propiedad intelectual y datos personales", children: [
+      /* @__PURE__ */ jsxDEV("p", { children: [
+        "El nombre, logotipo, diseño y contenido propio de Entre Caminos están protegidos por las normas de",
+        " ",
+        /* @__PURE__ */ jsxDEV("strong", { children: "propiedad intelectual" }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 111,
+          columnNumber: 11
+        }, this),
+        "."
+      ] }, void 0, true, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 109,
+        columnNumber: 9
+      }, this),
+      /* @__PURE__ */ jsxDEV("p", { children: [
+        "Los ",
+        /* @__PURE__ */ jsxDEV("strong", { children: "datos personales" }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 114,
+          columnNumber: 15
+        }, this),
+        " serán tratados de acuerdo con la Política de Privacidad y la legislación colombiana."
+      ] }, void 0, true, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 113,
+        columnNumber: 9
+      }, this),
+      /* @__PURE__ */ jsxDEV("p", { children: "Los usuarios podrán solicitar su consulta, actualización, corrección o eliminación mediante:" }, void 0, false, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 117,
+        columnNumber: 9
+      }, this),
+      /* @__PURE__ */ jsxDEV("p", { children: /* @__PURE__ */ jsxDEV(MailLink, {}, void 0, false, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 119,
+        columnNumber: 11
+      }, this) }, void 0, false, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 118,
+        columnNumber: 9
+      }, this)
+    ] }, void 0, true, {
+      fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+      lineNumber: 108,
+      columnNumber: 7
+    }, this),
+    /* @__PURE__ */ jsxDEV(Section, { number: "8", title: "Modificaciones y legislación aplicable", children: [
+      /* @__PURE__ */ jsxDEV("p", { children: "Estos términos podrán actualizarse por cambios legales o funcionales." }, void 0, false, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 124,
+        columnNumber: 9
+      }, this),
+      /* @__PURE__ */ jsxDEV("p", { children: "La versión vigente estará disponible en la plataforma." }, void 0, false, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 125,
+        columnNumber: 9
+      }, this),
+      /* @__PURE__ */ jsxDEV("p", { children: [
+        "Los presentes términos se rigen por las leyes de la ",
+        /* @__PURE__ */ jsxDEV("strong", { children: "República de Colombia" }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 127,
+          columnNumber: 63
+        }, this),
+        "."
+      ] }, void 0, true, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 126,
+        columnNumber: 9
+      }, this),
+      /* @__PURE__ */ jsxDEV("p", { children: "Las solicitudes o reclamaciones podrán enviarse a:" }, void 0, false, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 129,
+        columnNumber: 9
+      }, this),
+      /* @__PURE__ */ jsxDEV("p", { children: /* @__PURE__ */ jsxDEV(MailLink, {}, void 0, false, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 131,
+        columnNumber: 11
+      }, this) }, void 0, false, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 130,
+        columnNumber: 9
+      }, this)
+    ] }, void 0, true, {
+      fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+      lineNumber: 123,
+      columnNumber: 7
+    }, this),
+    /* @__PURE__ */ jsxDEV(Section, { number: "9", title: "Aceptación", children: [
+      /* @__PURE__ */ jsxDEV("p", { children: "Al seleccionar:" }, void 0, false, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 136,
+        columnNumber: 9
+      }, this),
+      /* @__PURE__ */ jsxDEV("p", { className: "terms-modal__acceptance", children: "He leído y acepto los Términos y Condiciones" }, void 0, false, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 137,
+        columnNumber: 9
+      }, this),
+      /* @__PURE__ */ jsxDEV("p", { children: "el usuario acepta estas disposiciones." }, void 0, false, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 138,
+        columnNumber: 9
+      }, this),
+      /* @__PURE__ */ jsxDEV("p", { children: [
+        "Esta aceptación ",
+        /* @__PURE__ */ jsxDEV("strong", { children: "no constituye una compra, reserva o contratación" }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 140,
+          columnNumber: 27
+        }, this),
+        " de las experiencias anunciadas."
+      ] }, void 0, true, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 139,
+        columnNumber: 9
+      }, this)
+    ] }, void 0, true, {
+      fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+      lineNumber: 135,
+      columnNumber: 7
+    }, this)
+  ] }, void 0, true, {
+    fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+    lineNumber: 29,
+    columnNumber: 5
+  }, this);
+}
+_c3 = TermsBody;
+function PrivacyBody() {
+  return /* @__PURE__ */ jsxDEV(Fragment, { children: [
+    /* @__PURE__ */ jsxDEV("h3", { className: "terms-modal__doc-title", children: "Política de Tratamiento de Datos Personales" }, void 0, false, {
+      fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+      lineNumber: 151,
+      columnNumber: 7
+    }, this),
+    /* @__PURE__ */ jsxDEV("p", { children: [
+      "Al registrarse o utilizar ",
+      /* @__PURE__ */ jsxDEV("strong", { children: "Entre Caminos" }, void 0, false, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 153,
+        columnNumber: 35
+      }, this),
+      ", el usuario autoriza el tratamiento de sus datos personales conforme a esta política y a la legislación colombiana vigente."
+    ] }, void 0, true, {
+      fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+      lineNumber: 152,
+      columnNumber: 7
+    }, this),
+    /* @__PURE__ */ jsxDEV(Section, { number: "1", title: "Datos recopilados", children: [
+      /* @__PURE__ */ jsxDEV("p", { children: [
+        "Entre Caminos podrá recopilar datos como ",
+        /* @__PURE__ */ jsxDEV("strong", { children: "nombre" }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 159,
+          columnNumber: 52
+        }, this),
+        ", ",
+        /* @__PURE__ */ jsxDEV("strong", { children: "correo electrónico" }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 159,
+          columnNumber: 77
+        }, this),
+        ",",
+        " ",
+        /* @__PURE__ */ jsxDEV("strong", { children: "contraseña cifrada" }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 160,
+          columnNumber: 11
+        }, this),
+        ", preferencias, experiencias favoritas, reseñas e información relacionada con el uso de la plataforma."
+      ] }, void 0, true, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 158,
+        columnNumber: 9
+      }, this),
+      /* @__PURE__ */ jsxDEV("p", { children: [
+        "Entre Caminos ",
+        /* @__PURE__ */ jsxDEV("strong", { children: "no solicita información financiera" }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 164,
+          columnNumber: 25
+        }, this),
+        ", debido a que no procesa pagos ni reservas."
+      ] }, void 0, true, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 163,
+        columnNumber: 9
+      }, this)
+    ] }, void 0, true, {
+      fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+      lineNumber: 157,
+      columnNumber: 7
+    }, this),
+    /* @__PURE__ */ jsxDEV(Section, { number: "2", title: "Finalidad del tratamiento", children: [
+      /* @__PURE__ */ jsxDEV("p", { children: "Los datos personales podrán utilizarse para:" }, void 0, false, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 170,
+        columnNumber: 9
+      }, this),
+      /* @__PURE__ */ jsxDEV("ul", { className: "terms-modal__list", children: [
+        /* @__PURE__ */ jsxDEV("li", { children: "Crear y administrar la cuenta del usuario." }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 172,
+          columnNumber: 11
+        }, this),
+        /* @__PURE__ */ jsxDEV("li", { children: "Permitir el acceso a las funcionalidades de la plataforma." }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 173,
+          columnNumber: 11
+        }, this),
+        /* @__PURE__ */ jsxDEV("li", { children: "Personalizar recomendaciones de planes y experiencias." }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 174,
+          columnNumber: 11
+        }, this),
+        /* @__PURE__ */ jsxDEV("li", { children: "Guardar favoritos, preferencias y reseñas." }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 175,
+          columnNumber: 11
+        }, this),
+        /* @__PURE__ */ jsxDEV("li", { children: "Atender consultas, solicitudes o reclamos." }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 176,
+          columnNumber: 11
+        }, this),
+        /* @__PURE__ */ jsxDEV("li", { children: "Enviar comunicaciones autorizadas sobre novedades y experiencias." }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 177,
+          columnNumber: 11
+        }, this),
+        /* @__PURE__ */ jsxDEV("li", { children: "Mejorar la seguridad y funcionamiento del sitio." }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 178,
+          columnNumber: 11
+        }, this),
+        /* @__PURE__ */ jsxDEV("li", { children: "Cumplir obligaciones legales." }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 179,
+          columnNumber: 11
+        }, this)
+      ] }, void 0, true, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 171,
+        columnNumber: 9
+      }, this),
+      /* @__PURE__ */ jsxDEV("p", { children: [
+        "Los datos ",
+        /* @__PURE__ */ jsxDEV("strong", { children: "no serán utilizados para finalidades diferentes" }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 182,
+          columnNumber: 21
+        }, this),
+        " sin informar al usuario y solicitar su autorización cuando sea necesario."
+      ] }, void 0, true, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 181,
+        columnNumber: 9
+      }, this)
+    ] }, void 0, true, {
+      fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+      lineNumber: 169,
+      columnNumber: 7
+    }, this),
+    /* @__PURE__ */ jsxDEV(Section, { number: "3", title: "Derechos del usuario", children: [
+      /* @__PURE__ */ jsxDEV("p", { children: "El titular de los datos podrá:" }, void 0, false, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 188,
+        columnNumber: 9
+      }, this),
+      /* @__PURE__ */ jsxDEV("ul", { className: "terms-modal__list", children: [
+        /* @__PURE__ */ jsxDEV("li", { children: "Conocer, consultar y actualizar su información." }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 190,
+          columnNumber: 11
+        }, this),
+        /* @__PURE__ */ jsxDEV("li", { children: "Solicitar la corrección de datos incorrectos." }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 191,
+          columnNumber: 11
+        }, this),
+        /* @__PURE__ */ jsxDEV("li", { children: "Solicitar prueba de la autorización otorgada." }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 192,
+          columnNumber: 11
+        }, this),
+        /* @__PURE__ */ jsxDEV("li", { children: "Conocer el uso dado a sus datos." }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 193,
+          columnNumber: 11
+        }, this),
+        /* @__PURE__ */ jsxDEV("li", { children: "Revocar la autorización o solicitar la eliminación de sus datos cuando sea legalmente procedente." }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 194,
+          columnNumber: 11
+        }, this),
+        /* @__PURE__ */ jsxDEV("li", { children: [
+          "Presentar quejas ante la ",
+          /* @__PURE__ */ jsxDEV("strong", { children: "Superintendencia de Industria y Comercio" }, void 0, false, {
+            fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+            lineNumber: 198,
+            columnNumber: 38
+          }, this),
+          "."
+        ] }, void 0, true, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 197,
+          columnNumber: 11
+        }, this)
+      ] }, void 0, true, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 189,
+        columnNumber: 9
+      }, this)
+    ] }, void 0, true, {
+      fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+      lineNumber: 187,
+      columnNumber: 7
+    }, this),
+    /* @__PURE__ */ jsxDEV(Section, { number: "4", title: "Protección de la información", children: [
+      /* @__PURE__ */ jsxDEV("p", { children: [
+        "Entre Caminos adoptará ",
+        /* @__PURE__ */ jsxDEV("strong", { children: "medidas técnicas y administrativas razonables" }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 205,
+          columnNumber: 34
+        }, this),
+        " para evitar la pérdida, alteración, acceso no autorizado o uso indebido de los datos."
+      ] }, void 0, true, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 204,
+        columnNumber: 9
+      }, this),
+      /* @__PURE__ */ jsxDEV("p", { children: [
+        "La contraseña será almacenada de manera ",
+        /* @__PURE__ */ jsxDEV("strong", { children: "cifrada" }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 209,
+          columnNumber: 51
+        }, this),
+        "."
+      ] }, void 0, true, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 208,
+        columnNumber: 9
+      }, this),
+      /* @__PURE__ */ jsxDEV("p", { children: "El usuario también deberá proteger sus credenciales y evitar compartirlas con otras personas." }, void 0, false, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 211,
+        columnNumber: 9
+      }, this)
+    ] }, void 0, true, {
+      fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+      lineNumber: 203,
+      columnNumber: 7
+    }, this),
+    /* @__PURE__ */ jsxDEV(Section, { number: "5", title: "Información compartida", children: [
+      /* @__PURE__ */ jsxDEV("p", { children: [
+        "Entre Caminos ",
+        /* @__PURE__ */ jsxDEV("strong", { children: "no venderá" }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 216,
+          columnNumber: 25
+        }, this),
+        " los datos personales de sus usuarios."
+      ] }, void 0, true, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 215,
+        columnNumber: 9
+      }, this),
+      /* @__PURE__ */ jsxDEV("p", { children: "La información solo podrá compartirse con:" }, void 0, false, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 218,
+        columnNumber: 9
+      }, this),
+      /* @__PURE__ */ jsxDEV("ul", { className: "terms-modal__list", children: [
+        /* @__PURE__ */ jsxDEV("li", { children: "Proveedores tecnológicos necesarios para el funcionamiento de la plataforma." }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 220,
+          columnNumber: 11
+        }, this),
+        /* @__PURE__ */ jsxDEV("li", { children: "Autoridades competentes cuando exista una obligación legal." }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 221,
+          columnNumber: 11
+        }, this),
+        /* @__PURE__ */ jsxDEV("li", { children: "Terceros autorizados expresamente por el usuario." }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 222,
+          columnNumber: 11
+        }, this)
+      ] }, void 0, true, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 219,
+        columnNumber: 9
+      }, this),
+      /* @__PURE__ */ jsxDEV("p", { children: [
+        "Las ",
+        /* @__PURE__ */ jsxDEV("strong", { children: "empresas aliadas" }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 225,
+          columnNumber: 15
+        }, this),
+        " no recibirán información personal del usuario sin autorización o una finalidad legítima previamente informada."
+      ] }, void 0, true, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 224,
+        columnNumber: 9
+      }, this)
+    ] }, void 0, true, {
+      fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+      lineNumber: 214,
+      columnNumber: 7
+    }, this),
+    /* @__PURE__ */ jsxDEV(Section, { number: "6", title: "Conservación y eliminación", children: [
+      /* @__PURE__ */ jsxDEV("p", { children: "Los datos serán conservados durante el tiempo necesario para cumplir las finalidades informadas y las obligaciones legales aplicables." }, void 0, false, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 231,
+        columnNumber: 9
+      }, this),
+      /* @__PURE__ */ jsxDEV("p", { children: [
+        "El usuario podrá solicitar la ",
+        /* @__PURE__ */ jsxDEV("strong", { children: "eliminación de su cuenta" }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 236,
+          columnNumber: 41
+        }, this),
+        " y de sus datos."
+      ] }, void 0, true, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 235,
+        columnNumber: 9
+      }, this),
+      /* @__PURE__ */ jsxDEV("p", { children: "Algunos registros podrán conservarse cuando exista una obligación legal, contractual o de seguridad." }, void 0, false, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 238,
+        columnNumber: 9
+      }, this)
+    ] }, void 0, true, {
+      fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+      lineNumber: 230,
+      columnNumber: 7
+    }, this),
+    /* @__PURE__ */ jsxDEV(Section, { number: "7", title: "Cookies", children: [
+      /* @__PURE__ */ jsxDEV("p", { children: [
+        "Entre Caminos podrá utilizar ",
+        /* @__PURE__ */ jsxDEV("strong", { children: "cookies" }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 245,
+          columnNumber: 40
+        }, this),
+        " y tecnologías similares para:"
+      ] }, void 0, true, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 244,
+        columnNumber: 9
+      }, this),
+      /* @__PURE__ */ jsxDEV("ul", { className: "terms-modal__list", children: [
+        /* @__PURE__ */ jsxDEV("li", { children: "Recordar preferencias." }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 248,
+          columnNumber: 11
+        }, this),
+        /* @__PURE__ */ jsxDEV("li", { children: "Mantener la sesión activa." }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 249,
+          columnNumber: 11
+        }, this),
+        /* @__PURE__ */ jsxDEV("li", { children: "Conocer el funcionamiento del sitio." }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 250,
+          columnNumber: 11
+        }, this),
+        /* @__PURE__ */ jsxDEV("li", { children: "Mejorar la experiencia del usuario." }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 251,
+          columnNumber: 11
+        }, this)
+      ] }, void 0, true, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 247,
+        columnNumber: 9
+      }, this),
+      /* @__PURE__ */ jsxDEV("p", { children: "El usuario podrá configurar o desactivar las cookies desde su navegador, aunque algunas funcionalidades podrían verse afectadas." }, void 0, false, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 253,
+        columnNumber: 9
+      }, this)
+    ] }, void 0, true, {
+      fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+      lineNumber: 243,
+      columnNumber: 7
+    }, this),
+    /* @__PURE__ */ jsxDEV(Section, { number: "8", title: "Consultas y reclamos", children: [
+      /* @__PURE__ */ jsxDEV("p", { children: "Para consultar, actualizar, corregir o solicitar la eliminación de sus datos, el usuario podrá comunicarse mediante:" }, void 0, false, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 260,
+        columnNumber: 9
+      }, this),
+      /* @__PURE__ */ jsxDEV("p", { children: [
+        "Correo electrónico:",
+        /* @__PURE__ */ jsxDEV("br", {}, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 266,
+          columnNumber: 11
+        }, this),
+        /* @__PURE__ */ jsxDEV(MailLink, {}, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 267,
+          columnNumber: 11
+        }, this)
+      ] }, void 0, true, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 264,
+        columnNumber: 9
+      }, this),
+      /* @__PURE__ */ jsxDEV("p", { children: "La solicitud deberá incluir:" }, void 0, false, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 269,
+        columnNumber: 9
+      }, this),
+      /* @__PURE__ */ jsxDEV("ul", { className: "terms-modal__list", children: [
+        /* @__PURE__ */ jsxDEV("li", { children: "Nombre del titular." }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 271,
+          columnNumber: 11
+        }, this),
+        /* @__PURE__ */ jsxDEV("li", { children: "Descripción clara de la petición." }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 272,
+          columnNumber: 11
+        }, this),
+        /* @__PURE__ */ jsxDEV("li", { children: "Información necesaria para verificar su identidad." }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 273,
+          columnNumber: 11
+        }, this)
+      ] }, void 0, true, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 270,
+        columnNumber: 9
+      }, this)
+    ] }, void 0, true, {
+      fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+      lineNumber: 259,
+      columnNumber: 7
+    }, this),
+    /* @__PURE__ */ jsxDEV(Section, { number: "9", title: "Modificaciones", children: [
+      /* @__PURE__ */ jsxDEV("p", { children: "Esta política podrá actualizarse por cambios legales, técnicos o funcionales." }, void 0, false, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 278,
+        columnNumber: 9
+      }, this),
+      /* @__PURE__ */ jsxDEV("p", { children: [
+        "La versión vigente y su ",
+        /* @__PURE__ */ jsxDEV("strong", { children: "fecha de actualización" }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 280,
+          columnNumber: 35
+        }, this),
+        " estarán disponibles en la plataforma."
+      ] }, void 0, true, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 279,
+        columnNumber: 9
+      }, this)
+    ] }, void 0, true, {
+      fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+      lineNumber: 277,
+      columnNumber: 7
+    }, this),
+    /* @__PURE__ */ jsxDEV(Section, { number: "10", title: "Autorización", children: [
+      /* @__PURE__ */ jsxDEV("p", { children: "Al seleccionar:" }, void 0, false, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 285,
+        columnNumber: 9
+      }, this),
+      /* @__PURE__ */ jsxDEV("p", { className: "terms-modal__acceptance", children: "He leído y acepto la Política de Tratamiento de Datos Personales" }, void 0, false, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 286,
+        columnNumber: 9
+      }, this),
+      /* @__PURE__ */ jsxDEV("p", { children: [
+        "el usuario manifiesta que fue informado sobre las finalidades del tratamiento y sus derechos, y autoriza de manera ",
+        /* @__PURE__ */ jsxDEV("strong", { children: "previa, expresa e informada" }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 291,
+          columnNumber: 21
+        }, this),
+        " el uso de sus datos personales."
+      ] }, void 0, true, {
+        fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+        lineNumber: 289,
+        columnNumber: 9
+      }, this)
+    ] }, void 0, true, {
+      fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+      lineNumber: 284,
+      columnNumber: 7
+    }, this)
+  ] }, void 0, true, {
+    fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+    lineNumber: 150,
+    columnNumber: 5
+  }, this);
+}
+_c4 = PrivacyBody;
+const documents = {
+  terms: {
+    kicker: "Conoce nuestras condiciones de uso",
+    title: "TÉRMINOS Y CONDICIONES",
+    intro: "Al utilizar Entre Caminos aceptas nuestras condiciones de uso y las reglas que permiten ofrecer una experiencia segura para todos nuestros usuarios.",
+    body: /* @__PURE__ */ jsxDEV(TermsBody, {}, void 0, false, {
+      fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+      lineNumber: 307,
+      columnNumber: 11
+    }, this)
+  },
+  privacy: {
+    kicker: "Protegemos tu información durante cada camino",
+    title: "TRATAMIENTO DE DATOS PERSONALES",
+    intro: "Conoce cómo Entre Caminos recopila, utiliza y protege tu información personal para ofrecerte una experiencia segura y personalizada.",
+    body: /* @__PURE__ */ jsxDEV(PrivacyBody, {}, void 0, false, {
+      fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+      lineNumber: 314,
+      columnNumber: 11
+    }, this)
+  }
+};
+export function TermsModal({
+  open,
+  onClose,
+  kind = "terms"
+}) {
+  _s();
+  const titleId = useId();
+  const closeRef = useRef(null);
+  const bodyRef = useRef(null);
+  const copy = documents[kind];
+  useEffect(() => {
+    if (!open) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    closeRef.current?.focus();
+    bodyRef.current?.scrollTo(0, 0);
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open, onClose, kind]);
+  if (!open) return null;
+  return /* @__PURE__ */ jsxDEV("div", { className: "terms-modal", role: "presentation", onClick: onClose, children: /* @__PURE__ */ jsxDEV(
+    "div",
+    {
+      className: "terms-modal__dialog",
+      role: "dialog",
+      "aria-modal": "true",
+      "aria-labelledby": titleId,
+      onClick: (event) => event.stopPropagation(),
+      children: [
+        /* @__PURE__ */ jsxDEV(
+          "button",
+          {
+            ref: closeRef,
+            type: "button",
+            className: "terms-modal__close",
+            "aria-label": "Cerrar",
+            onClick: onClose,
+            children: "×"
+          },
+          void 0,
+          false,
+          {
+            fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+            lineNumber: 362,
+            columnNumber: 9
+          },
+          this
+        ),
+        /* @__PURE__ */ jsxDEV("header", { className: "terms-modal__header", children: [
+          /* @__PURE__ */ jsxDEV("p", { className: "terms-modal__kicker", children: copy.kicker }, void 0, false, {
+            fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+            lineNumber: 373,
+            columnNumber: 11
+          }, this),
+          /* @__PURE__ */ jsxDEV("h2", { id: titleId, className: "terms-modal__title", children: copy.title }, void 0, false, {
+            fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+            lineNumber: 374,
+            columnNumber: 11
+          }, this),
+          /* @__PURE__ */ jsxDEV("p", { className: "terms-modal__intro", children: copy.intro }, void 0, false, {
+            fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+            lineNumber: 377,
+            columnNumber: 11
+          }, this)
+        ] }, void 0, true, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 372,
+          columnNumber: 9
+        }, this),
+        /* @__PURE__ */ jsxDEV("div", { className: "terms-modal__body", ref: bodyRef, children: copy.body }, void 0, false, {
+          fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+          lineNumber: 380,
+          columnNumber: 9
+        }, this)
+      ]
+    },
+    void 0,
+    true,
+    {
+      fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+      lineNumber: 355,
+      columnNumber: 7
+    },
+    this
+  ) }, void 0, false, {
+    fileName: "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx",
+    lineNumber: 354,
+    columnNumber: 5
+  }, this);
+}
+_s(TermsModal, "PK5P3y72nCnr3GZQkcE5X30zHmc=");
+_c5 = TermsModal;
+var _c, _c2, _c3, _c4, _c5;
+$RefreshReg$(_c, "MailLink");
+$RefreshReg$(_c2, "Section");
+$RefreshReg$(_c3, "TermsBody");
+$RefreshReg$(_c4, "PrivacyBody");
+$RefreshReg$(_c5, "TermsModal");
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react can't detect preamble. Something is wrong."
+    );
+  }
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) {
+  return RefreshRuntime.register(type, "C:/Users/julia/Desktop/entre-caminos/frontend/src/components/legal/TermsModal.tsx " + id);
+}
+function $RefreshSig$() {
+  return RefreshRuntime.createSignatureFunctionForTransform();
+}
+
+//# sourceMappingURL=data:application/json;base64,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O0FBQUE7QUFBQTtBQUFBLEVBNEJBLEtBN0JGO0FBQUE7QUFBQTtBQUFBO0FBQUEsU0E4QkE7QUFFSjtBQUFDTSxHQXBFZUosWUFBVTtBQUFBLE1BQVZBO0FBQVUsSUFBQWhCLElBQUFLLEtBQUFFLEtBQUFFLEtBQUE4QjtBQUFBLGFBQUF2QyxJQUFBO0FBQUEsYUFBQUssS0FBQTtBQUFBLGFBQUFFLEtBQUE7QUFBQSxhQUFBRSxLQUFBO0FBQUEsYUFBQThCLEtBQUEiLCJuYW1lcyI6WyJ1c2VFZmZlY3QiLCJ1c2VJZCIsInVzZVJlZiIsIkNPTlRBQ1RfRU1BSUwiLCJNYWlsTGluayIsIl9jIiwiU2VjdGlvbiIsIm51bWJlciIsInRpdGxlIiwiY2hpbGRyZW4iLCJfYzIiLCJUZXJtc0JvZHkiLCJfYzMiLCJQcml2YWN5Qm9keSIsIl9jNCIsImRvY3VtZW50cyIsInRlcm1zIiwia2lja2VyIiwiaW50cm8iLCJib2R5IiwicHJpdmFjeSIsIlRlcm1zTW9kYWwiLCJvcGVuIiwib25DbG9zZSIsImtpbmQiLCJfcyIsInRpdGxlSWQiLCJjbG9zZVJlZiIsImJvZHlSZWYiLCJjb3B5IiwicHJldmlvdXNPdmVyZmxvdyIsImRvY3VtZW50Iiwic3R5bGUiLCJvdmVyZmxvdyIsImN1cnJlbnQiLCJmb2N1cyIsInNjcm9sbFRvIiwib25LZXlEb3duIiwiZXZlbnQiLCJrZXkiLCJ3aW5kb3ciLCJhZGRFdmVudExpc3RlbmVyIiwicmVtb3ZlRXZlbnRMaXN0ZW5lciIsInN0b3BQcm9wYWdhdGlvbiIsIl9jNSJdLCJpZ25vcmVMaXN0IjpbXSwic291cmNlcyI6WyJUZXJtc01vZGFsLnRzeCJdLCJzb3VyY2VzQ29udGVudCI6WyJpbXBvcnQgeyB1c2VFZmZlY3QsIHVzZUlkLCB1c2VSZWYsIHR5cGUgUmVhY3ROb2RlIH0gZnJvbSBcInJlYWN0XCI7XHJcbmltcG9ydCBcIi4uLy4uL3N0eWxlcy90ZXJtcy1tb2RhbC5jc3NcIjtcclxuXHJcbmNvbnN0IENPTlRBQ1RfRU1BSUwgPSBcImVudHJlY2FtaW5vcy5lQGdtYWlsLmNvbVwiO1xyXG5cclxuZXhwb3J0IHR5cGUgTGVnYWxEb2N1bWVudCA9IFwidGVybXNcIiB8IFwicHJpdmFjeVwiO1xyXG5cclxuZnVuY3Rpb24gTWFpbExpbmsoKSB7XHJcbiAgcmV0dXJuIChcclxuICAgIDxhIGNsYXNzTmFtZT1cInRlcm1zLW1vZGFsX19tYWlsXCIgaHJlZj17YG1haWx0bzoke0NPTlRBQ1RfRU1BSUx9YH0+XHJcbiAgICAgIHtDT05UQUNUX0VNQUlMfVxyXG4gICAgPC9hPlxyXG4gICk7XHJcbn1cclxuXHJcbmZ1bmN0aW9uIFNlY3Rpb24oeyBudW1iZXIsIHRpdGxlLCBjaGlsZHJlbiB9OiB7IG51bWJlcjogc3RyaW5nOyB0aXRsZTogc3RyaW5nOyBjaGlsZHJlbjogUmVhY3ROb2RlIH0pIHtcclxuICByZXR1cm4gKFxyXG4gICAgPHNlY3Rpb24gY2xhc3NOYW1lPVwidGVybXMtbW9kYWxfX3NlY3Rpb25cIj5cclxuICAgICAgPGgzIGNsYXNzTmFtZT1cInRlcm1zLW1vZGFsX19zZWN0aW9uLXRpdGxlXCI+XHJcbiAgICAgICAgPHNwYW4+e251bWJlcn0uPC9zcGFuPiB7dGl0bGV9XHJcbiAgICAgIDwvaDM+XHJcbiAgICAgIHtjaGlsZHJlbn1cclxuICAgIDwvc2VjdGlvbj5cclxuICApO1xyXG59XHJcblxyXG5mdW5jdGlvbiBUZXJtc0JvZHkoKSB7XHJcbiAgcmV0dXJuIChcclxuICAgIDw+XHJcbiAgICAgIDxoMyBjbGFzc05hbWU9XCJ0ZXJtcy1tb2RhbF9fZG9jLXRpdGxlXCI+VMOpcm1pbm9zIHkgY29uZGljaW9uZXMgZGUgdXNvPC9oMz5cclxuICAgICAgPHA+XHJcbiAgICAgICAgQWwgaW5ncmVzYXIsIHJlZ2lzdHJhcnNlIG8gdXRpbGl6YXIgPHN0cm9uZz5FbnRyZSBDYW1pbm9zPC9zdHJvbmc+LCBlbCB1c3VhcmlvIGRlY2xhcmEgcXVlIGhhIGxlw61kbyxcclxuICAgICAgICBjb21wcmVuZGlkbyB5IGFjZXB0YWRvIGVzdG9zIFTDqXJtaW5vcyB5IENvbmRpY2lvbmVzLlxyXG4gICAgICA8L3A+XHJcblxyXG4gICAgICA8U2VjdGlvbiBudW1iZXI9XCIxXCIgdGl0bGU9XCJGaW5hbGlkYWQgZGUgbGEgcGxhdGFmb3JtYVwiPlxyXG4gICAgICAgIDxwPlxyXG4gICAgICAgICAgPHN0cm9uZz5FbnRyZSBDYW1pbm9zPC9zdHJvbmc+IGVzIHVuIHNpdGlvIHdlYiBpbmZvcm1hdGl2byBxdWUgcGVybWl0ZSBkZXNjdWJyaXIgcGxhbmVzIHkgZXhwZXJpZW5jaWFzXHJcbiAgICAgICAgICB0dXLDrXN0aWNhcywgY3VsdHVyYWxlcywgZ2FzdHJvbsOzbWljYXMsIHJlY3JlYXRpdmFzIHkgZGUgYmllbmVzdGFyLlxyXG4gICAgICAgIDwvcD5cclxuICAgICAgICA8cD5cclxuICAgICAgICAgIExhIHBsYXRhZm9ybWEgPHN0cm9uZz5ubyByZWFsaXphIHJlc2VydmFzPC9zdHJvbmc+LCA8c3Ryb25nPm5vIHJlY2liZSBwYWdvczwvc3Ryb25nPix7XCIgXCJ9XHJcbiAgICAgICAgICA8c3Ryb25nPm5vIHZlbmRlIGVudHJhZGFzPC9zdHJvbmc+IG5pIHByZXN0YSBkaXJlY3RhbWVudGUgbGFzIGV4cGVyaWVuY2lhcyBwdWJsaWNhZGFzLlxyXG4gICAgICAgIDwvcD5cclxuICAgICAgPC9TZWN0aW9uPlxyXG5cclxuICAgICAgPFNlY3Rpb24gbnVtYmVyPVwiMlwiIHRpdGxlPVwiRW1wcmVzYXMgYWxpYWRhc1wiPlxyXG4gICAgICAgIDxwPlxyXG4gICAgICAgICAgTG9zIHBsYW5lcyBzb24gcHVibGljYWRvcyBlbiBjb2xhYm9yYWNpw7NuIGNvbiA8c3Ryb25nPmVtcHJlc2FzIHkgZW1wcmVuZGltaWVudG9zIGFsaWFkb3M8L3N0cm9uZz4sIHF1aWVuZXNcclxuICAgICAgICAgIHNvbiByZXNwb25zYWJsZXMgZGUgbGEgdmVyYWNpZGFkIHkgYWN0dWFsaXphY2nDs24gZGUgbGEgaW5mb3JtYWNpw7NuLCBhc8OtIGNvbW8gZGUgbG9zIHByZWNpb3MsIGhvcmFyaW9zLFxyXG4gICAgICAgICAgZGlzcG9uaWJpbGlkYWQsIHNlZ3VyaWRhZCB5IHByZXN0YWNpw7NuIGRlIHN1cyBzZXJ2aWNpb3MuXHJcbiAgICAgICAgPC9wPlxyXG4gICAgICAgIDxwPlxyXG4gICAgICAgICAgQW50ZXMgZGUgYXNpc3RpciwgY29tcHJhciBvIHJlc2VydmFyIHBvciBtZWRpb3MgZXh0ZXJub3MsIGVsIHVzdWFyaW8gZGViZXLDoSBjb25maXJtYXIgZGlyZWN0YW1lbnRlIGxhc1xyXG4gICAgICAgICAgY29uZGljaW9uZXMgY29uIGxhIDxzdHJvbmc+ZW1wcmVzYSByZXNwb25zYWJsZTwvc3Ryb25nPi5cclxuICAgICAgICA8L3A+XHJcbiAgICAgIDwvU2VjdGlvbj5cclxuXHJcbiAgICAgIDxTZWN0aW9uIG51bWJlcj1cIjNcIiB0aXRsZT1cIlVzbyBkZSBsYSBwbGF0YWZvcm1hXCI+XHJcbiAgICAgICAgPHA+XHJcbiAgICAgICAgICBFbCB1c3VhcmlvIGRlYmVyw6EgcHJvcG9yY2lvbmFyIGluZm9ybWFjacOzbiB2ZXJkYWRlcmEsIHByb3RlZ2VyIHN1IGN1ZW50YSB5IHV0aWxpemFyIGxhIHBsYXRhZm9ybWEgZGUgZm9ybWF7XCIgXCJ9XHJcbiAgICAgICAgICA8c3Ryb25nPmxlZ2FsIHkgcmVzcGV0dW9zYTwvc3Ryb25nPi5cclxuICAgICAgICA8L3A+XHJcbiAgICAgICAgPHA+XHJcbiAgICAgICAgICBFc3TDoSBwcm9oaWJpZG8gcHVibGljYXIgY29udGVuaWRvIGZhbHNvIHUgb2ZlbnNpdm8sIHN1cGxhbnRhciBpZGVudGlkYWRlcywgbWFuaXB1bGFyIHJlc2XDsWFzLCB2dWxuZXJhciBsYVxyXG4gICAgICAgICAgc2VndXJpZGFkIGRlbCBzaXRpbyBvIHV0aWxpemFyIHN1cyBjb250ZW5pZG9zIHNpbiBhdXRvcml6YWNpw7NuLlxyXG4gICAgICAgIDwvcD5cclxuICAgICAgICA8cD5cclxuICAgICAgICAgIEVudHJlIENhbWlub3MgcG9kcsOhIDxzdHJvbmc+c3VzcGVuZGVyIGN1ZW50YXM8L3N0cm9uZz4gbyByZXRpcmFyIGNvbnRlbmlkbyBxdWUgaW5jdW1wbGEgZXN0YXMgY29uZGljaW9uZXMuXHJcbiAgICAgICAgPC9wPlxyXG4gICAgICA8L1NlY3Rpb24+XHJcblxyXG4gICAgICA8U2VjdGlvbiBudW1iZXI9XCI0XCIgdGl0bGU9XCJJbnRlbGlnZW5jaWEgYXJ0aWZpY2lhbFwiPlxyXG4gICAgICAgIDxwPlxyXG4gICAgICAgICAgTGFzIHJlY29tZW5kYWNpb25lcyBnZW5lcmFkYXMgbWVkaWFudGUgPHN0cm9uZz5pbnRlbGlnZW5jaWEgYXJ0aWZpY2lhbDwvc3Ryb25nPiBzb24gb3JpZW50YXRpdmFzIHkgcHVlZGVuXHJcbiAgICAgICAgICBjb250ZW5lciBlcnJvcmVzIG8gaW5mb3JtYWNpw7NuIGRlc2FjdHVhbGl6YWRhLlxyXG4gICAgICAgIDwvcD5cclxuICAgICAgICA8cD5ObyBnYXJhbnRpemFuIGRpc3BvbmliaWxpZGFkLCBwcmVjaW8sIHNlZ3VyaWRhZCBuaSBjYWxpZGFkLjwvcD5cclxuICAgICAgICA8cD5FbCB1c3VhcmlvIGRlYmVyw6EgdmVyaWZpY2FyIGxhIGluZm9ybWFjacOzbiBkaXJlY3RhbWVudGUgY29uIGxhIGVtcHJlc2EgcXVlIG9mcmVjZSBsYSBleHBlcmllbmNpYS48L3A+XHJcbiAgICAgIDwvU2VjdGlvbj5cclxuXHJcbiAgICAgIDxTZWN0aW9uIG51bWJlcj1cIjVcIiB0aXRsZT1cIlJlc2XDsWFzIHkgY29udGVuaWRvc1wiPlxyXG4gICAgICAgIDxwPlxyXG4gICAgICAgICAgTGFzIHJlc2XDsWFzIGRlYmVuIHNlciA8c3Ryb25nPmF1dMOpbnRpY2FzPC9zdHJvbmc+LCByZXNwZXR1b3NhcyB5IHJlbGFjaW9uYWRhcyBjb24gbGEgZXhwZXJpZW5jaWEgZXZhbHVhZGEuXHJcbiAgICAgICAgPC9wPlxyXG4gICAgICAgIDxwPlxyXG4gICAgICAgICAgRW50cmUgQ2FtaW5vcyBwb2Ryw6EgZWxpbWluYXIgY29udGVuaWRvcyBmYWxzb3MsIG9mZW5zaXZvcywgcHVibGljaXRhcmlvcyBvIHF1ZSB2dWxuZXJlbiBkZXJlY2hvcyBkZVxyXG4gICAgICAgICAgdGVyY2Vyb3MuXHJcbiAgICAgICAgPC9wPlxyXG4gICAgICAgIDxwPlxyXG4gICAgICAgICAgTGFzIG9waW5pb25lcyBwdWJsaWNhZGFzIHBlcnRlbmVjZW4gYSBzdXMgYXV0b3JlcyB5IG5vIHJlcHJlc2VudGFuIG5lY2VzYXJpYW1lbnRlIGxhIHBvc2ljacOzbiBkZSBFbnRyZVxyXG4gICAgICAgICAgQ2FtaW5vcy5cclxuICAgICAgICA8L3A+XHJcbiAgICAgIDwvU2VjdGlvbj5cclxuXHJcbiAgICAgIDxTZWN0aW9uIG51bWJlcj1cIjZcIiB0aXRsZT1cIlJlc3BvbnNhYmlsaWRhZFwiPlxyXG4gICAgICAgIDxwPlxyXG4gICAgICAgICAgRW50cmUgQ2FtaW5vcyBwcm9jdXJhIHB1YmxpY2FyIGluZm9ybWFjacOzbiBjbGFyYSB5IGFjdHVhbGl6YWRhLCBwZXJvIDxzdHJvbmc+bm8gcmVzcG9uZGU8L3N0cm9uZz4gcG9yXHJcbiAgICAgICAgICBjYW1iaW9zLCBjYW5jZWxhY2lvbmVzLCBhY2NpZGVudGVzLCBpbmN1bXBsaW1pZW50b3MgbyBkaWZlcmVuY2lhcyBlbiBsYSBpbmZvcm1hY2nDs24gYXRyaWJ1aWJsZXMgYSBsYXNcclxuICAgICAgICAgIGVtcHJlc2FzIGFsaWFkYXMuXHJcbiAgICAgICAgPC9wPlxyXG4gICAgICAgIDxwPlxyXG4gICAgICAgICAgRXN0YSBkaXNwb3NpY2nDs24gbm8gbGltaXRhIGxhcyByZXNwb25zYWJpbGlkYWRlcyBsZWdhbGVzIGRlIEVudHJlIENhbWlub3MgbmkgbG9zIGRlcmVjaG9zIGRlIGxvc1xyXG4gICAgICAgICAgY29uc3VtaWRvcmVzLlxyXG4gICAgICAgIDwvcD5cclxuICAgICAgPC9TZWN0aW9uPlxyXG5cclxuICAgICAgPFNlY3Rpb24gbnVtYmVyPVwiN1wiIHRpdGxlPVwiUHJvcGllZGFkIGludGVsZWN0dWFsIHkgZGF0b3MgcGVyc29uYWxlc1wiPlxyXG4gICAgICAgIDxwPlxyXG4gICAgICAgICAgRWwgbm9tYnJlLCBsb2dvdGlwbywgZGlzZcOxbyB5IGNvbnRlbmlkbyBwcm9waW8gZGUgRW50cmUgQ2FtaW5vcyBlc3TDoW4gcHJvdGVnaWRvcyBwb3IgbGFzIG5vcm1hcyBkZXtcIiBcIn1cclxuICAgICAgICAgIDxzdHJvbmc+cHJvcGllZGFkIGludGVsZWN0dWFsPC9zdHJvbmc+LlxyXG4gICAgICAgIDwvcD5cclxuICAgICAgICA8cD5cclxuICAgICAgICAgIExvcyA8c3Ryb25nPmRhdG9zIHBlcnNvbmFsZXM8L3N0cm9uZz4gc2Vyw6FuIHRyYXRhZG9zIGRlIGFjdWVyZG8gY29uIGxhIFBvbMOtdGljYSBkZSBQcml2YWNpZGFkIHkgbGFcclxuICAgICAgICAgIGxlZ2lzbGFjacOzbiBjb2xvbWJpYW5hLlxyXG4gICAgICAgIDwvcD5cclxuICAgICAgICA8cD5Mb3MgdXN1YXJpb3MgcG9kcsOhbiBzb2xpY2l0YXIgc3UgY29uc3VsdGEsIGFjdHVhbGl6YWNpw7NuLCBjb3JyZWNjacOzbiBvIGVsaW1pbmFjacOzbiBtZWRpYW50ZTo8L3A+XHJcbiAgICAgICAgPHA+XHJcbiAgICAgICAgICA8TWFpbExpbmsgLz5cclxuICAgICAgICA8L3A+XHJcbiAgICAgIDwvU2VjdGlvbj5cclxuXHJcbiAgICAgIDxTZWN0aW9uIG51bWJlcj1cIjhcIiB0aXRsZT1cIk1vZGlmaWNhY2lvbmVzIHkgbGVnaXNsYWNpw7NuIGFwbGljYWJsZVwiPlxyXG4gICAgICAgIDxwPkVzdG9zIHTDqXJtaW5vcyBwb2Ryw6FuIGFjdHVhbGl6YXJzZSBwb3IgY2FtYmlvcyBsZWdhbGVzIG8gZnVuY2lvbmFsZXMuPC9wPlxyXG4gICAgICAgIDxwPkxhIHZlcnNpw7NuIHZpZ2VudGUgZXN0YXLDoSBkaXNwb25pYmxlIGVuIGxhIHBsYXRhZm9ybWEuPC9wPlxyXG4gICAgICAgIDxwPlxyXG4gICAgICAgICAgTG9zIHByZXNlbnRlcyB0w6lybWlub3Mgc2UgcmlnZW4gcG9yIGxhcyBsZXllcyBkZSBsYSA8c3Ryb25nPlJlcMO6YmxpY2EgZGUgQ29sb21iaWE8L3N0cm9uZz4uXHJcbiAgICAgICAgPC9wPlxyXG4gICAgICAgIDxwPkxhcyBzb2xpY2l0dWRlcyBvIHJlY2xhbWFjaW9uZXMgcG9kcsOhbiBlbnZpYXJzZSBhOjwvcD5cclxuICAgICAgICA8cD5cclxuICAgICAgICAgIDxNYWlsTGluayAvPlxyXG4gICAgICAgIDwvcD5cclxuICAgICAgPC9TZWN0aW9uPlxyXG5cclxuICAgICAgPFNlY3Rpb24gbnVtYmVyPVwiOVwiIHRpdGxlPVwiQWNlcHRhY2nDs25cIj5cclxuICAgICAgICA8cD5BbCBzZWxlY2Npb25hcjo8L3A+XHJcbiAgICAgICAgPHAgY2xhc3NOYW1lPVwidGVybXMtbW9kYWxfX2FjY2VwdGFuY2VcIj5IZSBsZcOtZG8geSBhY2VwdG8gbG9zIFTDqXJtaW5vcyB5IENvbmRpY2lvbmVzPC9wPlxyXG4gICAgICAgIDxwPmVsIHVzdWFyaW8gYWNlcHRhIGVzdGFzIGRpc3Bvc2ljaW9uZXMuPC9wPlxyXG4gICAgICAgIDxwPlxyXG4gICAgICAgICAgRXN0YSBhY2VwdGFjacOzbiA8c3Ryb25nPm5vIGNvbnN0aXR1eWUgdW5hIGNvbXByYSwgcmVzZXJ2YSBvIGNvbnRyYXRhY2nDs248L3N0cm9uZz4gZGUgbGFzIGV4cGVyaWVuY2lhc1xyXG4gICAgICAgICAgYW51bmNpYWRhcy5cclxuICAgICAgICA8L3A+XHJcbiAgICAgIDwvU2VjdGlvbj5cclxuICAgIDwvPlxyXG4gICk7XHJcbn1cclxuXHJcbmZ1bmN0aW9uIFByaXZhY3lCb2R5KCkge1xyXG4gIHJldHVybiAoXHJcbiAgICA8PlxyXG4gICAgICA8aDMgY2xhc3NOYW1lPVwidGVybXMtbW9kYWxfX2RvYy10aXRsZVwiPlBvbMOtdGljYSBkZSBUcmF0YW1pZW50byBkZSBEYXRvcyBQZXJzb25hbGVzPC9oMz5cclxuICAgICAgPHA+XHJcbiAgICAgICAgQWwgcmVnaXN0cmFyc2UgbyB1dGlsaXphciA8c3Ryb25nPkVudHJlIENhbWlub3M8L3N0cm9uZz4sIGVsIHVzdWFyaW8gYXV0b3JpemEgZWwgdHJhdGFtaWVudG8gZGUgc3VzIGRhdG9zXHJcbiAgICAgICAgcGVyc29uYWxlcyBjb25mb3JtZSBhIGVzdGEgcG9sw610aWNhIHkgYSBsYSBsZWdpc2xhY2nDs24gY29sb21iaWFuYSB2aWdlbnRlLlxyXG4gICAgICA8L3A+XHJcblxyXG4gICAgICA8U2VjdGlvbiBudW1iZXI9XCIxXCIgdGl0bGU9XCJEYXRvcyByZWNvcGlsYWRvc1wiPlxyXG4gICAgICAgIDxwPlxyXG4gICAgICAgICAgRW50cmUgQ2FtaW5vcyBwb2Ryw6EgcmVjb3BpbGFyIGRhdG9zIGNvbW8gPHN0cm9uZz5ub21icmU8L3N0cm9uZz4sIDxzdHJvbmc+Y29ycmVvIGVsZWN0csOzbmljbzwvc3Ryb25nPix7XCIgXCJ9XHJcbiAgICAgICAgICA8c3Ryb25nPmNvbnRyYXNlw7FhIGNpZnJhZGE8L3N0cm9uZz4sIHByZWZlcmVuY2lhcywgZXhwZXJpZW5jaWFzIGZhdm9yaXRhcywgcmVzZcOxYXMgZSBpbmZvcm1hY2nDs25cclxuICAgICAgICAgIHJlbGFjaW9uYWRhIGNvbiBlbCB1c28gZGUgbGEgcGxhdGFmb3JtYS5cclxuICAgICAgICA8L3A+XHJcbiAgICAgICAgPHA+XHJcbiAgICAgICAgICBFbnRyZSBDYW1pbm9zIDxzdHJvbmc+bm8gc29saWNpdGEgaW5mb3JtYWNpw7NuIGZpbmFuY2llcmE8L3N0cm9uZz4sIGRlYmlkbyBhIHF1ZSBubyBwcm9jZXNhIHBhZ29zIG5pXHJcbiAgICAgICAgICByZXNlcnZhcy5cclxuICAgICAgICA8L3A+XHJcbiAgICAgIDwvU2VjdGlvbj5cclxuXHJcbiAgICAgIDxTZWN0aW9uIG51bWJlcj1cIjJcIiB0aXRsZT1cIkZpbmFsaWRhZCBkZWwgdHJhdGFtaWVudG9cIj5cclxuICAgICAgICA8cD5Mb3MgZGF0b3MgcGVyc29uYWxlcyBwb2Ryw6FuIHV0aWxpemFyc2UgcGFyYTo8L3A+XHJcbiAgICAgICAgPHVsIGNsYXNzTmFtZT1cInRlcm1zLW1vZGFsX19saXN0XCI+XHJcbiAgICAgICAgICA8bGk+Q3JlYXIgeSBhZG1pbmlzdHJhciBsYSBjdWVudGEgZGVsIHVzdWFyaW8uPC9saT5cclxuICAgICAgICAgIDxsaT5QZXJtaXRpciBlbCBhY2Nlc28gYSBsYXMgZnVuY2lvbmFsaWRhZGVzIGRlIGxhIHBsYXRhZm9ybWEuPC9saT5cclxuICAgICAgICAgIDxsaT5QZXJzb25hbGl6YXIgcmVjb21lbmRhY2lvbmVzIGRlIHBsYW5lcyB5IGV4cGVyaWVuY2lhcy48L2xpPlxyXG4gICAgICAgICAgPGxpPkd1YXJkYXIgZmF2b3JpdG9zLCBwcmVmZXJlbmNpYXMgeSByZXNlw7Fhcy48L2xpPlxyXG4gICAgICAgICAgPGxpPkF0ZW5kZXIgY29uc3VsdGFzLCBzb2xpY2l0dWRlcyBvIHJlY2xhbW9zLjwvbGk+XHJcbiAgICAgICAgICA8bGk+RW52aWFyIGNvbXVuaWNhY2lvbmVzIGF1dG9yaXphZGFzIHNvYnJlIG5vdmVkYWRlcyB5IGV4cGVyaWVuY2lhcy48L2xpPlxyXG4gICAgICAgICAgPGxpPk1lam9yYXIgbGEgc2VndXJpZGFkIHkgZnVuY2lvbmFtaWVudG8gZGVsIHNpdGlvLjwvbGk+XHJcbiAgICAgICAgICA8bGk+Q3VtcGxpciBvYmxpZ2FjaW9uZXMgbGVnYWxlcy48L2xpPlxyXG4gICAgICAgIDwvdWw+XHJcbiAgICAgICAgPHA+XHJcbiAgICAgICAgICBMb3MgZGF0b3MgPHN0cm9uZz5ubyBzZXLDoW4gdXRpbGl6YWRvcyBwYXJhIGZpbmFsaWRhZGVzIGRpZmVyZW50ZXM8L3N0cm9uZz4gc2luIGluZm9ybWFyIGFsIHVzdWFyaW8geVxyXG4gICAgICAgICAgc29saWNpdGFyIHN1IGF1dG9yaXphY2nDs24gY3VhbmRvIHNlYSBuZWNlc2FyaW8uXHJcbiAgICAgICAgPC9wPlxyXG4gICAgICA8L1NlY3Rpb24+XHJcblxyXG4gICAgICA8U2VjdGlvbiBudW1iZXI9XCIzXCIgdGl0bGU9XCJEZXJlY2hvcyBkZWwgdXN1YXJpb1wiPlxyXG4gICAgICAgIDxwPkVsIHRpdHVsYXIgZGUgbG9zIGRhdG9zIHBvZHLDoTo8L3A+XHJcbiAgICAgICAgPHVsIGNsYXNzTmFtZT1cInRlcm1zLW1vZGFsX19saXN0XCI+XHJcbiAgICAgICAgICA8bGk+Q29ub2NlciwgY29uc3VsdGFyIHkgYWN0dWFsaXphciBzdSBpbmZvcm1hY2nDs24uPC9saT5cclxuICAgICAgICAgIDxsaT5Tb2xpY2l0YXIgbGEgY29ycmVjY2nDs24gZGUgZGF0b3MgaW5jb3JyZWN0b3MuPC9saT5cclxuICAgICAgICAgIDxsaT5Tb2xpY2l0YXIgcHJ1ZWJhIGRlIGxhIGF1dG9yaXphY2nDs24gb3RvcmdhZGEuPC9saT5cclxuICAgICAgICAgIDxsaT5Db25vY2VyIGVsIHVzbyBkYWRvIGEgc3VzIGRhdG9zLjwvbGk+XHJcbiAgICAgICAgICA8bGk+XHJcbiAgICAgICAgICAgIFJldm9jYXIgbGEgYXV0b3JpemFjacOzbiBvIHNvbGljaXRhciBsYSBlbGltaW5hY2nDs24gZGUgc3VzIGRhdG9zIGN1YW5kbyBzZWEgbGVnYWxtZW50ZSBwcm9jZWRlbnRlLlxyXG4gICAgICAgICAgPC9saT5cclxuICAgICAgICAgIDxsaT5cclxuICAgICAgICAgICAgUHJlc2VudGFyIHF1ZWphcyBhbnRlIGxhIDxzdHJvbmc+U3VwZXJpbnRlbmRlbmNpYSBkZSBJbmR1c3RyaWEgeSBDb21lcmNpbzwvc3Ryb25nPi5cclxuICAgICAgICAgIDwvbGk+XHJcbiAgICAgICAgPC91bD5cclxuICAgICAgPC9TZWN0aW9uPlxyXG5cclxuICAgICAgPFNlY3Rpb24gbnVtYmVyPVwiNFwiIHRpdGxlPVwiUHJvdGVjY2nDs24gZGUgbGEgaW5mb3JtYWNpw7NuXCI+XHJcbiAgICAgICAgPHA+XHJcbiAgICAgICAgICBFbnRyZSBDYW1pbm9zIGFkb3B0YXLDoSA8c3Ryb25nPm1lZGlkYXMgdMOpY25pY2FzIHkgYWRtaW5pc3RyYXRpdmFzIHJhem9uYWJsZXM8L3N0cm9uZz4gcGFyYSBldml0YXIgbGFcclxuICAgICAgICAgIHDDqXJkaWRhLCBhbHRlcmFjacOzbiwgYWNjZXNvIG5vIGF1dG9yaXphZG8gbyB1c28gaW5kZWJpZG8gZGUgbG9zIGRhdG9zLlxyXG4gICAgICAgIDwvcD5cclxuICAgICAgICA8cD5cclxuICAgICAgICAgIExhIGNvbnRyYXNlw7FhIHNlcsOhIGFsbWFjZW5hZGEgZGUgbWFuZXJhIDxzdHJvbmc+Y2lmcmFkYTwvc3Ryb25nPi5cclxuICAgICAgICA8L3A+XHJcbiAgICAgICAgPHA+RWwgdXN1YXJpbyB0YW1iacOpbiBkZWJlcsOhIHByb3RlZ2VyIHN1cyBjcmVkZW5jaWFsZXMgeSBldml0YXIgY29tcGFydGlybGFzIGNvbiBvdHJhcyBwZXJzb25hcy48L3A+XHJcbiAgICAgIDwvU2VjdGlvbj5cclxuXHJcbiAgICAgIDxTZWN0aW9uIG51bWJlcj1cIjVcIiB0aXRsZT1cIkluZm9ybWFjacOzbiBjb21wYXJ0aWRhXCI+XHJcbiAgICAgICAgPHA+XHJcbiAgICAgICAgICBFbnRyZSBDYW1pbm9zIDxzdHJvbmc+bm8gdmVuZGVyw6E8L3N0cm9uZz4gbG9zIGRhdG9zIHBlcnNvbmFsZXMgZGUgc3VzIHVzdWFyaW9zLlxyXG4gICAgICAgIDwvcD5cclxuICAgICAgICA8cD5MYSBpbmZvcm1hY2nDs24gc29sbyBwb2Ryw6EgY29tcGFydGlyc2UgY29uOjwvcD5cclxuICAgICAgICA8dWwgY2xhc3NOYW1lPVwidGVybXMtbW9kYWxfX2xpc3RcIj5cclxuICAgICAgICAgIDxsaT5Qcm92ZWVkb3JlcyB0ZWNub2zDs2dpY29zIG5lY2VzYXJpb3MgcGFyYSBlbCBmdW5jaW9uYW1pZW50byBkZSBsYSBwbGF0YWZvcm1hLjwvbGk+XHJcbiAgICAgICAgICA8bGk+QXV0b3JpZGFkZXMgY29tcGV0ZW50ZXMgY3VhbmRvIGV4aXN0YSB1bmEgb2JsaWdhY2nDs24gbGVnYWwuPC9saT5cclxuICAgICAgICAgIDxsaT5UZXJjZXJvcyBhdXRvcml6YWRvcyBleHByZXNhbWVudGUgcG9yIGVsIHVzdWFyaW8uPC9saT5cclxuICAgICAgICA8L3VsPlxyXG4gICAgICAgIDxwPlxyXG4gICAgICAgICAgTGFzIDxzdHJvbmc+ZW1wcmVzYXMgYWxpYWRhczwvc3Ryb25nPiBubyByZWNpYmlyw6FuIGluZm9ybWFjacOzbiBwZXJzb25hbCBkZWwgdXN1YXJpbyBzaW4gYXV0b3JpemFjacOzbiBvIHVuYVxyXG4gICAgICAgICAgZmluYWxpZGFkIGxlZ8OtdGltYSBwcmV2aWFtZW50ZSBpbmZvcm1hZGEuXHJcbiAgICAgICAgPC9wPlxyXG4gICAgICA8L1NlY3Rpb24+XHJcblxyXG4gICAgICA8U2VjdGlvbiBudW1iZXI9XCI2XCIgdGl0bGU9XCJDb25zZXJ2YWNpw7NuIHkgZWxpbWluYWNpw7NuXCI+XHJcbiAgICAgICAgPHA+XHJcbiAgICAgICAgICBMb3MgZGF0b3Mgc2Vyw6FuIGNvbnNlcnZhZG9zIGR1cmFudGUgZWwgdGllbXBvIG5lY2VzYXJpbyBwYXJhIGN1bXBsaXIgbGFzIGZpbmFsaWRhZGVzIGluZm9ybWFkYXMgeSBsYXNcclxuICAgICAgICAgIG9ibGlnYWNpb25lcyBsZWdhbGVzIGFwbGljYWJsZXMuXHJcbiAgICAgICAgPC9wPlxyXG4gICAgICAgIDxwPlxyXG4gICAgICAgICAgRWwgdXN1YXJpbyBwb2Ryw6Egc29saWNpdGFyIGxhIDxzdHJvbmc+ZWxpbWluYWNpw7NuIGRlIHN1IGN1ZW50YTwvc3Ryb25nPiB5IGRlIHN1cyBkYXRvcy5cclxuICAgICAgICA8L3A+XHJcbiAgICAgICAgPHA+XHJcbiAgICAgICAgICBBbGd1bm9zIHJlZ2lzdHJvcyBwb2Ryw6FuIGNvbnNlcnZhcnNlIGN1YW5kbyBleGlzdGEgdW5hIG9ibGlnYWNpw7NuIGxlZ2FsLCBjb250cmFjdHVhbCBvIGRlIHNlZ3VyaWRhZC5cclxuICAgICAgICA8L3A+XHJcbiAgICAgIDwvU2VjdGlvbj5cclxuXHJcbiAgICAgIDxTZWN0aW9uIG51bWJlcj1cIjdcIiB0aXRsZT1cIkNvb2tpZXNcIj5cclxuICAgICAgICA8cD5cclxuICAgICAgICAgIEVudHJlIENhbWlub3MgcG9kcsOhIHV0aWxpemFyIDxzdHJvbmc+Y29va2llczwvc3Ryb25nPiB5IHRlY25vbG9nw61hcyBzaW1pbGFyZXMgcGFyYTpcclxuICAgICAgICA8L3A+XHJcbiAgICAgICAgPHVsIGNsYXNzTmFtZT1cInRlcm1zLW1vZGFsX19saXN0XCI+XHJcbiAgICAgICAgICA8bGk+UmVjb3JkYXIgcHJlZmVyZW5jaWFzLjwvbGk+XHJcbiAgICAgICAgICA8bGk+TWFudGVuZXIgbGEgc2VzacOzbiBhY3RpdmEuPC9saT5cclxuICAgICAgICAgIDxsaT5Db25vY2VyIGVsIGZ1bmNpb25hbWllbnRvIGRlbCBzaXRpby48L2xpPlxyXG4gICAgICAgICAgPGxpPk1lam9yYXIgbGEgZXhwZXJpZW5jaWEgZGVsIHVzdWFyaW8uPC9saT5cclxuICAgICAgICA8L3VsPlxyXG4gICAgICAgIDxwPlxyXG4gICAgICAgICAgRWwgdXN1YXJpbyBwb2Ryw6EgY29uZmlndXJhciBvIGRlc2FjdGl2YXIgbGFzIGNvb2tpZXMgZGVzZGUgc3UgbmF2ZWdhZG9yLCBhdW5xdWUgYWxndW5hcyBmdW5jaW9uYWxpZGFkZXNcclxuICAgICAgICAgIHBvZHLDrWFuIHZlcnNlIGFmZWN0YWRhcy5cclxuICAgICAgICA8L3A+XHJcbiAgICAgIDwvU2VjdGlvbj5cclxuXHJcbiAgICAgIDxTZWN0aW9uIG51bWJlcj1cIjhcIiB0aXRsZT1cIkNvbnN1bHRhcyB5IHJlY2xhbW9zXCI+XHJcbiAgICAgICAgPHA+XHJcbiAgICAgICAgICBQYXJhIGNvbnN1bHRhciwgYWN0dWFsaXphciwgY29ycmVnaXIgbyBzb2xpY2l0YXIgbGEgZWxpbWluYWNpw7NuIGRlIHN1cyBkYXRvcywgZWwgdXN1YXJpbyBwb2Ryw6EgY29tdW5pY2Fyc2VcclxuICAgICAgICAgIG1lZGlhbnRlOlxyXG4gICAgICAgIDwvcD5cclxuICAgICAgICA8cD5cclxuICAgICAgICAgIENvcnJlbyBlbGVjdHLDs25pY286XHJcbiAgICAgICAgICA8YnIgLz5cclxuICAgICAgICAgIDxNYWlsTGluayAvPlxyXG4gICAgICAgIDwvcD5cclxuICAgICAgICA8cD5MYSBzb2xpY2l0dWQgZGViZXLDoSBpbmNsdWlyOjwvcD5cclxuICAgICAgICA8dWwgY2xhc3NOYW1lPVwidGVybXMtbW9kYWxfX2xpc3RcIj5cclxuICAgICAgICAgIDxsaT5Ob21icmUgZGVsIHRpdHVsYXIuPC9saT5cclxuICAgICAgICAgIDxsaT5EZXNjcmlwY2nDs24gY2xhcmEgZGUgbGEgcGV0aWNpw7NuLjwvbGk+XHJcbiAgICAgICAgICA8bGk+SW5mb3JtYWNpw7NuIG5lY2VzYXJpYSBwYXJhIHZlcmlmaWNhciBzdSBpZGVudGlkYWQuPC9saT5cclxuICAgICAgICA8L3VsPlxyXG4gICAgICA8L1NlY3Rpb24+XHJcblxyXG4gICAgICA8U2VjdGlvbiBudW1iZXI9XCI5XCIgdGl0bGU9XCJNb2RpZmljYWNpb25lc1wiPlxyXG4gICAgICAgIDxwPkVzdGEgcG9sw610aWNhIHBvZHLDoSBhY3R1YWxpemFyc2UgcG9yIGNhbWJpb3MgbGVnYWxlcywgdMOpY25pY29zIG8gZnVuY2lvbmFsZXMuPC9wPlxyXG4gICAgICAgIDxwPlxyXG4gICAgICAgICAgTGEgdmVyc2nDs24gdmlnZW50ZSB5IHN1IDxzdHJvbmc+ZmVjaGEgZGUgYWN0dWFsaXphY2nDs248L3N0cm9uZz4gZXN0YXLDoW4gZGlzcG9uaWJsZXMgZW4gbGEgcGxhdGFmb3JtYS5cclxuICAgICAgICA8L3A+XHJcbiAgICAgIDwvU2VjdGlvbj5cclxuXHJcbiAgICAgIDxTZWN0aW9uIG51bWJlcj1cIjEwXCIgdGl0bGU9XCJBdXRvcml6YWNpw7NuXCI+XHJcbiAgICAgICAgPHA+QWwgc2VsZWNjaW9uYXI6PC9wPlxyXG4gICAgICAgIDxwIGNsYXNzTmFtZT1cInRlcm1zLW1vZGFsX19hY2NlcHRhbmNlXCI+XHJcbiAgICAgICAgICBIZSBsZcOtZG8geSBhY2VwdG8gbGEgUG9sw610aWNhIGRlIFRyYXRhbWllbnRvIGRlIERhdG9zIFBlcnNvbmFsZXNcclxuICAgICAgICA8L3A+XHJcbiAgICAgICAgPHA+XHJcbiAgICAgICAgICBlbCB1c3VhcmlvIG1hbmlmaWVzdGEgcXVlIGZ1ZSBpbmZvcm1hZG8gc29icmUgbGFzIGZpbmFsaWRhZGVzIGRlbCB0cmF0YW1pZW50byB5IHN1cyBkZXJlY2hvcywgeSBhdXRvcml6YVxyXG4gICAgICAgICAgZGUgbWFuZXJhIDxzdHJvbmc+cHJldmlhLCBleHByZXNhIGUgaW5mb3JtYWRhPC9zdHJvbmc+IGVsIHVzbyBkZSBzdXMgZGF0b3MgcGVyc29uYWxlcy5cclxuICAgICAgICA8L3A+XHJcbiAgICAgIDwvU2VjdGlvbj5cclxuICAgIDwvPlxyXG4gICk7XHJcbn1cclxuXHJcbmNvbnN0IGRvY3VtZW50czogUmVjb3JkPFxyXG4gIExlZ2FsRG9jdW1lbnQsXHJcbiAgeyBraWNrZXI6IHN0cmluZzsgdGl0bGU6IHN0cmluZzsgaW50cm86IHN0cmluZzsgYm9keTogUmVhY3ROb2RlIH1cclxuPiA9IHtcclxuICB0ZXJtczoge1xyXG4gICAga2lja2VyOiBcIkNvbm9jZSBudWVzdHJhcyBjb25kaWNpb25lcyBkZSB1c29cIixcclxuICAgIHRpdGxlOiBcIlTDiVJNSU5PUyBZIENPTkRJQ0lPTkVTXCIsXHJcbiAgICBpbnRybzpcclxuICAgICAgXCJBbCB1dGlsaXphciBFbnRyZSBDYW1pbm9zIGFjZXB0YXMgbnVlc3RyYXMgY29uZGljaW9uZXMgZGUgdXNvIHkgbGFzIHJlZ2xhcyBxdWUgcGVybWl0ZW4gb2ZyZWNlciB1bmEgZXhwZXJpZW5jaWEgc2VndXJhIHBhcmEgdG9kb3MgbnVlc3Ryb3MgdXN1YXJpb3MuXCIsXHJcbiAgICBib2R5OiA8VGVybXNCb2R5IC8+LFxyXG4gIH0sXHJcbiAgcHJpdmFjeToge1xyXG4gICAga2lja2VyOiBcIlByb3RlZ2Vtb3MgdHUgaW5mb3JtYWNpw7NuIGR1cmFudGUgY2FkYSBjYW1pbm9cIixcclxuICAgIHRpdGxlOiBcIlRSQVRBTUlFTlRPIERFIERBVE9TIFBFUlNPTkFMRVNcIixcclxuICAgIGludHJvOlxyXG4gICAgICBcIkNvbm9jZSBjw7NtbyBFbnRyZSBDYW1pbm9zIHJlY29waWxhLCB1dGlsaXphIHkgcHJvdGVnZSB0dSBpbmZvcm1hY2nDs24gcGVyc29uYWwgcGFyYSBvZnJlY2VydGUgdW5hIGV4cGVyaWVuY2lhIHNlZ3VyYSB5IHBlcnNvbmFsaXphZGEuXCIsXHJcbiAgICBib2R5OiA8UHJpdmFjeUJvZHkgLz4sXHJcbiAgfSxcclxufTtcclxuXHJcbmV4cG9ydCBmdW5jdGlvbiBUZXJtc01vZGFsKHtcclxuICBvcGVuLFxyXG4gIG9uQ2xvc2UsXHJcbiAga2luZCA9IFwidGVybXNcIixcclxufToge1xyXG4gIG9wZW46IGJvb2xlYW47XHJcbiAgb25DbG9zZTogKCkgPT4gdm9pZDtcclxuICBraW5kPzogTGVnYWxEb2N1bWVudDtcclxufSkge1xyXG4gIGNvbnN0IHRpdGxlSWQgPSB1c2VJZCgpO1xyXG4gIGNvbnN0IGNsb3NlUmVmID0gdXNlUmVmPEhUTUxCdXR0b25FbGVtZW50PihudWxsKTtcclxuICBjb25zdCBib2R5UmVmID0gdXNlUmVmPEhUTUxEaXZFbGVtZW50PihudWxsKTtcclxuICBjb25zdCBjb3B5ID0gZG9jdW1lbnRzW2tpbmRdO1xyXG5cclxuICB1c2VFZmZlY3QoKCkgPT4ge1xyXG4gICAgaWYgKCFvcGVuKSByZXR1cm47XHJcblxyXG4gICAgY29uc3QgcHJldmlvdXNPdmVyZmxvdyA9IGRvY3VtZW50LmJvZHkuc3R5bGUub3ZlcmZsb3c7XHJcbiAgICBkb2N1bWVudC5ib2R5LnN0eWxlLm92ZXJmbG93ID0gXCJoaWRkZW5cIjtcclxuICAgIGNsb3NlUmVmLmN1cnJlbnQ/LmZvY3VzKCk7XHJcbiAgICBib2R5UmVmLmN1cnJlbnQ/LnNjcm9sbFRvKDAsIDApO1xyXG5cclxuICAgIGNvbnN0IG9uS2V5RG93biA9IChldmVudDogS2V5Ym9hcmRFdmVudCkgPT4ge1xyXG4gICAgICBpZiAoZXZlbnQua2V5ID09PSBcIkVzY2FwZVwiKSBvbkNsb3NlKCk7XHJcbiAgICB9O1xyXG5cclxuICAgIHdpbmRvdy5hZGRFdmVudExpc3RlbmVyKFwia2V5ZG93blwiLCBvbktleURvd24pO1xyXG4gICAgcmV0dXJuICgpID0+IHtcclxuICAgICAgZG9jdW1lbnQuYm9keS5zdHlsZS5vdmVyZmxvdyA9IHByZXZpb3VzT3ZlcmZsb3c7XHJcbiAgICAgIHdpbmRvdy5yZW1vdmVFdmVudExpc3RlbmVyKFwia2V5ZG93blwiLCBvbktleURvd24pO1xyXG4gICAgfTtcclxuICB9LCBbb3Blbiwgb25DbG9zZSwga2luZF0pO1xyXG5cclxuICBpZiAoIW9wZW4pIHJldHVybiBudWxsO1xyXG5cclxuICByZXR1cm4gKFxyXG4gICAgPGRpdiBjbGFzc05hbWU9XCJ0ZXJtcy1tb2RhbFwiIHJvbGU9XCJwcmVzZW50YXRpb25cIiBvbkNsaWNrPXtvbkNsb3NlfT5cclxuICAgICAgPGRpdlxyXG4gICAgICAgIGNsYXNzTmFtZT1cInRlcm1zLW1vZGFsX19kaWFsb2dcIlxyXG4gICAgICAgIHJvbGU9XCJkaWFsb2dcIlxyXG4gICAgICAgIGFyaWEtbW9kYWw9XCJ0cnVlXCJcclxuICAgICAgICBhcmlhLWxhYmVsbGVkYnk9e3RpdGxlSWR9XHJcbiAgICAgICAgb25DbGljaz17KGV2ZW50KSA9PiBldmVudC5zdG9wUHJvcGFnYXRpb24oKX1cclxuICAgICAgPlxyXG4gICAgICAgIDxidXR0b25cclxuICAgICAgICAgIHJlZj17Y2xvc2VSZWZ9XHJcbiAgICAgICAgICB0eXBlPVwiYnV0dG9uXCJcclxuICAgICAgICAgIGNsYXNzTmFtZT1cInRlcm1zLW1vZGFsX19jbG9zZVwiXHJcbiAgICAgICAgICBhcmlhLWxhYmVsPVwiQ2VycmFyXCJcclxuICAgICAgICAgIG9uQ2xpY2s9e29uQ2xvc2V9XHJcbiAgICAgICAgPlxyXG4gICAgICAgICAgw5dcclxuICAgICAgICA8L2J1dHRvbj5cclxuXHJcbiAgICAgICAgPGhlYWRlciBjbGFzc05hbWU9XCJ0ZXJtcy1tb2RhbF9faGVhZGVyXCI+XHJcbiAgICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXJtcy1tb2RhbF9fa2lja2VyXCI+e2NvcHkua2lja2VyfTwvcD5cclxuICAgICAgICAgIDxoMiBpZD17dGl0bGVJZH0gY2xhc3NOYW1lPVwidGVybXMtbW9kYWxfX3RpdGxlXCI+XHJcbiAgICAgICAgICAgIHtjb3B5LnRpdGxlfVxyXG4gICAgICAgICAgPC9oMj5cclxuICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRlcm1zLW1vZGFsX19pbnRyb1wiPntjb3B5LmludHJvfTwvcD5cclxuICAgICAgICA8L2hlYWRlcj5cclxuXHJcbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJ0ZXJtcy1tb2RhbF9fYm9keVwiIHJlZj17Ym9keVJlZn0+XHJcbiAgICAgICAgICB7Y29weS5ib2R5fVxyXG4gICAgICAgIDwvZGl2PlxyXG4gICAgICA8L2Rpdj5cclxuICAgIDwvZGl2PlxyXG4gICk7XHJcbn1cclxuIl0sImZpbGUiOiJDOi9Vc2Vycy9qdWxpYS9EZXNrdG9wL2VudHJlLWNhbWlub3MvZnJvbnRlbmQvc3JjL2NvbXBvbmVudHMvbGVnYWwvVGVybXNNb2RhbC50c3gifQ==
