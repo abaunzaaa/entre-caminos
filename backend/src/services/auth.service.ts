@@ -215,7 +215,7 @@ export async function requestPasswordReset(email: string) {
   const resetUrl = `${frontendUrl}/reset-password?token=${encodeURIComponent(raw)}`;
 
   const sent = await sendPasswordResetEmail(user.email, resetUrl, PASSWORD_RESET_TTL_LABEL);
-  if (!sent && env.SENDGRID_API_KEY) {
+  if (!sent && env.NODE_ENV === "production") {
     throw new ApiError(500, "No pudimos enviar el correo. Inténtalo de nuevo.", "EMAIL_UNAVAILABLE");
   }
 

@@ -1,10 +1,11 @@
 import { FormEvent, useState } from "react";
 import { Link } from "react-router-dom";
-import { AuthRecoveryLayout } from "../components/auth/AuthRecoveryLayout";
+import { AuthForgotModalLayout } from "../components/auth/AuthForgotModalLayout";
 import { AuthTextField } from "../components/auth/AuthTextField";
 import { forgotPassword } from "../services/auth.service";
 import { getApiErrorMessage } from "../utils/api-error";
 import { validateEmailFormat } from "../utils/register-validation";
+import keyIcon from "../assets/key-icon-green.png";
 
 const GENERIC_MESSAGE =
   "Si el correo está registrado, recibirás un enlace para restablecer tu contraseña. Si no encuentras el correo en tu bandeja de entrada, revisa la carpeta de spam o correo no deseado.";
@@ -45,12 +46,17 @@ export function ForgotPasswordPage() {
   }
 
   return (
-    <AuthRecoveryLayout>
+    <AuthForgotModalLayout>
       <div className="auth-form">
+        <div className="auth-recovery-icon" aria-hidden="true">
+          <img src={keyIcon} alt="" />
+        </div>
         <header className="auth-form__header">
-          <h1 className="auth-form__title">Recuperar contraseña</h1>
+          <h1 id="forgot-password-title" className="auth-form__title">
+            Recuperar contraseña
+          </h1>
           <p className="auth-form__lead">
-            Escribe el correo de tu cuenta. Te enviaremos un enlace para crear una nueva.
+            Escribe el correo de tu cuenta y te enviaremos un enlace para crear una nueva.
           </p>
         </header>
         <form className="auth-form__stack" onSubmit={onSubmit} noValidate>
@@ -58,7 +64,6 @@ export function ForgotPasswordPage() {
             name="email"
             type="email"
             label="Correo electrónico"
-            placeholder="Correo electrónico"
             autoComplete="email"
             error={emailError}
           />
@@ -73,11 +78,11 @@ export function ForgotPasswordPage() {
           </button>
         </form>
         <footer className="auth-form__footer">
-          <div className="auth-row">
-            <Link to="/login">Volver a iniciar sesión</Link>
-          </div>
+          <Link to="/login" className="auth-recovery-back">
+            ← Volver a iniciar sesión
+          </Link>
         </footer>
       </div>
-    </AuthRecoveryLayout>
+    </AuthForgotModalLayout>
   );
 }

@@ -1,15 +1,10 @@
-import scenicPhoto from "../../assets/encabezado.png";
+import scenicPhoto from "../../assets/auth-scenic.jpg";
 
 export type AuthMode = "register" | "login";
 
-/** Paisaje local reutilizado en el panel visual de autenticación. */
+/** Fotografía editorial del panel visual de autenticación. */
 export const authScenicPhoto = scenicPhoto;
 
-/**
- * Fotografía del panel visual.
- * La misma imagen se usa en login y registro para que el panel
- * se desplace como una sola pieza, sin cruzar ilustraciones.
- */
 export const authArt: Record<AuthMode, string> = {
   register: scenicPhoto,
   login: scenicPhoto,

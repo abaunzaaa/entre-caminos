@@ -1,34 +1,35 @@
 function GoogleIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden>
-      <path fill="#EA4335" d="M12 10.2v3.6h5.1c-.2 1.2-1.5 3.6-5.1 3.6-3.1 0-5.6-2.6-5.6-5.7S8.9 6 12 6c1.8 0 3 .7 3.7 1.4l2.5-2.4C16.7 3.6 14.6 2.7 12 2.7 6.9 2.7 2.8 6.8 2.8 12S6.9 21.3 12 21.3c5.2 0 8.6-3.6 8.6-8.7 0-.6-.1-1-.2-1.4H12z" />
+    <svg className="auth-social__google-icon" viewBox="0 0 48 48" aria-hidden="true">
+      <path
+        fill="#EA4335"
+        d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
+      />
+      <path
+        fill="#4285F4"
+        d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"
+      />
+      <path
+        fill="#34A853"
+        d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
+      />
     </svg>
   );
 }
 
-function startGoogleLogin(remember: boolean) {
+export function SocialButtons({ remember = true }: { remember?: boolean }) {
   const params = new URLSearchParams({ remember: remember ? "1" : "0" });
-  window.location.assign(`/api/auth/google?${params.toString()}`);
-}
 
-export function SocialButtons({ label, remember = true }: { label: string; remember?: boolean }) {
   return (
     <div className="auth-social">
-      <div className="flex items-center gap-3 text-xs text-neutral-400">
-        <span className="h-px flex-1 bg-neutral-200" />
-        {label}
-        <span className="h-px flex-1 bg-neutral-200" />
-      </div>
-      <div className="flex w-full justify-center">
-        <button
-          type="button"
-          className="grid h-12 w-12 place-items-center rounded-full border border-neutral-200"
-          aria-label="Google"
-          onClick={() => startGoogleLogin(remember)}
-        >
-          <GoogleIcon />
-        </button>
-      </div>
+      <a className="auth-social__google" href={`/api/auth/google?${params.toString()}`}>
+        <GoogleIcon />
+        Continuar con Google
+      </a>
     </div>
   );
 }
