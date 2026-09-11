@@ -7,6 +7,7 @@ import { useAuth } from "../hooks/useAuth";
 import { consumeSessionExpiredMessage } from "../services/api";
 import { resendVerificationCode } from "../services/auth.service";
 import { getApiErrorMessage } from "../utils/api-error";
+import { needsOnboarding } from "../utils/onboarding";
 import { setPendingVerificationEmail } from "../utils/pending-verification";
 
 const UNVERIFIED_LOGIN_MESSAGE = "Debes verificar tu correo antes de iniciar sesión.";
@@ -42,7 +43,7 @@ export function LoginForm() {
     try {
       setLoading(true);
       const user = await login(email, String(form.get("password")), remember);
-      navigate(user.role === "USER" ? "/explorar" : "/admin", { replace: true });
+      navigate(user.role !== "USER" ? "/admin" : needsOnboarding(user) ? "/onboarding" : "/explorar", { replace: true });
     } catch (err) {
       const message = getApiErrorMessage(err, "Credenciales incorrectas");
       setError(message);
