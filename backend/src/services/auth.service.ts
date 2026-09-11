@@ -17,6 +17,7 @@ import { clearAuthUserCache, getCachedProfile } from "../utils/auth-cache.js";
 import { getOnboardingProfile } from "./onboarding.service.js";
 import { recordAudit } from "./audit.service.js";
 import { sendPasswordResetEmail, sendVerificationEmail } from "./email.service.js";
+import { persistUserAvatar, removeUserAvatarFiles } from "./upload.service.js";
 import { createRawToken, hashToken } from "./token.service.js";
 import { Prisma } from "@prisma/client";
 import { logger } from "../utils/logger.js";
@@ -158,6 +159,12 @@ export async function getProfile(userId: string) {
       role: cached.role,
       createdAt: cached.createdAt,
       permissions: cached.permissions,
+      phone: cached.phone ?? null,
+      country: cached.country ?? null,
+      department: cached.department ?? null,
+      city: cached.city ?? null,
+      address: cached.address ?? null,
+      avatarUrl: cached.avatarUrl ?? null,
       profile: onboarding,
     };
   }
@@ -172,6 +179,12 @@ export async function getProfile(userId: string) {
       status: true,
       deletedAt: true,
       createdAt: true,
+      phone: true,
+      country: true,
+      department: true,
+      city: true,
+      address: true,
+      avatarUrl: true,
       role: {
         select: {
           name: true,
@@ -190,6 +203,63 @@ export async function getProfile(userId: string) {
     permissions: user.role.permissions.map((item) => item.permission.name),
     profile: onboarding,
   };
+}
+
+export async function updateMyProfile(
+  userId: string,
+  input: {
+    name: string;
+    phone?: string | null;
+    country?: string | null;
+    department?: string | null;
+    city?: string | null;
+    address?: string | null;
+    avatarUrl?: string | null;
+  },
+) {
+  const name = input.name.trim();
+  const existing = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, deletedAt: true, avatarUrl: true },
+  });
+
+  if (!existing || isAccountRemoved(existing)) {
+    throw ApiError.notFound("Usuario no encontrado");
+  }
+
+  let avatarUrl = existing.avatarUrl ?? null;
+  if (input.avatarUrl !== undefined) {
+    if (input.avatarUrl === null) {
+      await removeUserAvatarFiles(userId);
+      avatarUrl = null;
+    } else {
+      avatarUrl = await persistUserAvatar(userId, input.avatarUrl);
+    }
+  }
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      name,
+      ...(input.phone !== undefined ? { phone: input.phone } : {}),
+      ...(input.country !== undefined ? { country: input.country } : {}),
+      ...(input.department !== undefined ? { department: input.department } : {}),
+      ...(input.city !== undefined ? { city: input.city } : {}),
+      ...(input.address !== undefined ? { address: input.address } : {}),
+      ...(input.avatarUrl !== undefined ? { avatarUrl } : {}),
+    },
+  });
+
+  clearAuthUserCache(userId);
+
+  await recordAudit({
+    userId,
+    action: "PROFILE_UPDATE",
+    entity: "User",
+    entityId: userId,
+  });
+
+  return getProfile(userId);
 }
 
 export async function requestPasswordReset(email: string) {

@@ -43,6 +43,12 @@ export async function authMiddleware(req: Request, _res: Response, next: NextFun
         deletedAt: true,
         emailVerified: true,
         createdAt: true,
+        phone: true,
+        country: true,
+        department: true,
+        city: true,
+        address: true,
+        avatarUrl: true,
         role: {
           select: {
             name: true,
@@ -83,6 +89,12 @@ export async function authMiddleware(req: Request, _res: Response, next: NextFun
       status: user.status,
       role: user.role.name,
       createdAt: user.createdAt,
+      phone: user.phone,
+      country: user.country,
+      department: user.department,
+      city: user.city,
+      address: user.address,
+      avatarUrl: user.avatarUrl,
       permissions,
     });
     req.user = authUser;

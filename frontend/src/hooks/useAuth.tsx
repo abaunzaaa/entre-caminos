@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   getAccessToken,
   getAccessTokenExpiry,
@@ -14,7 +14,9 @@ import {
   logoutAccount,
   registerAccount,
   restoreSession,
+  updateMyProfile,
   verifyEmailAccount,
+  type UpdateProfileInput,
 } from "../services/auth.service";
 import type { PublicUser } from "../types";
 
@@ -31,6 +33,8 @@ type AuthContextValue = {
   }) => Promise<{ user: PublicUser; verificationEmailSent: boolean }>;
   verifyEmail: (email: string, code: string) => Promise<PublicUser>;
   logout: () => Promise<void>;
+  refreshUser: () => Promise<PublicUser>;
+  updateProfile: (payload: UpdateProfileInput) => Promise<PublicUser>;
   refresh: () => Promise<PublicUser | null>;
   hasPermission: (permission: string) => boolean;
   isAdmin: boolean;
@@ -105,10 +109,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => window.clearInterval(timer);
   }, [user]);
 
+  const refreshUser = useCallback(async () => {
+    const profile = await getMe();
+    setStoredUser(profile);
+    setUser(profile);
+    return profile;
+  }, []);
+
+  const updateProfile = useCallback(async (payload: UpdateProfileInput) => {
+    const profile = await updateMyProfile(payload);
+    setStoredUser(profile);
+    setUser(profile);
+    return profile;
+  }, []);
+
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
       loading,
+      refreshUser,
+      updateProfile,
       async login(email, password, remember = false) {
         const result = await loginAccount({ email, password, remember });
         setUser(result.user);
@@ -160,7 +180,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       isAdmin: user?.role === "ADMIN" || user?.role === "SUPER_ADMIN",
     }),
-    [user, loading],
+    [user, loading, refreshUser, updateProfile],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

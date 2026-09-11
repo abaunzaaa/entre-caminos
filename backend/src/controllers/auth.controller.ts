@@ -65,6 +65,15 @@ export async function me(req: Request, res: Response) {
   return res.json({ success: true, data: { user: profile } });
 }
 
+export async function updateMe(req: Request, res: Response) {
+  const profile = await authService.updateMyProfile(req.user!.id, req.body);
+  return res.json({
+    success: true,
+    message: "Perfil actualizado",
+    data: { user: profile },
+  });
+}
+
 export async function refresh(req: Request, res: Response) {
   const token = req.cookies?.[COOKIE_NAMES.REFRESH] as string | undefined;
   if (!token) {

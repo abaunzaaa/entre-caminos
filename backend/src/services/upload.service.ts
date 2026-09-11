@@ -6,6 +6,7 @@ import { ApiError } from "../utils/api-error.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const uploadsDir = path.resolve(__dirname, "../../uploads");
+const avatarsDir = path.join(uploadsDir, "avatars");
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_BYTES = 5 * 1024 * 1024;
 
@@ -25,6 +26,67 @@ function assertImageFile(file: Express.Multer.File) {
 
 function cloudinaryConfigured() {
   return Boolean(env.CLOUDINARY_CLOUD_NAME && env.CLOUDINARY_API_KEY && env.CLOUDINARY_API_SECRET);
+}
+
+export function isRemoteAvatarUrl(value: string) {
+  return /^https:\/\//i.test(value);
+}
+
+export async function persistUserAvatar(userId: string, dataUrl: string): Promise<string> {
+  if (isRemoteAvatarUrl(dataUrl)) {
+    return dataUrl;
+  }
+
+  if (dataUrl.startsWith("/uploads/avatars/")) {
+    const filename = path.basename(dataUrl);
+    try {
+      const buffer = await fs.readFile(path.join(avatarsDir, filename));
+      return `data:image/jpeg;base64,${buffer.toString("base64")}`;
+    } catch {
+      throw ApiError.badRequest("La foto de perfil no está disponible. Súbela de nuevo.");
+    }
+  }
+
+  const match = /^data:image\/(jpeg|jpg|png|webp);base64,([A-Za-z0-9+/=\s]+)$/i.exec(dataUrl.trim());
+  if (!match) {
+    throw ApiError.badRequest("La foto de perfil no es válida.");
+  }
+
+  const kind = match[1].toLowerCase();
+  const mime = kind === "png" ? "image/png" : kind === "webp" ? "image/webp" : "image/jpeg";
+  const ext = mime === "image/png" ? "png" : mime === "image/webp" ? "webp" : "jpg";
+  const buffer = Buffer.from(match[2].replace(/\s/g, ""), "base64");
+  if (buffer.length < 24) {
+    throw ApiError.badRequest("La foto de perfil no es válida.");
+  }
+  if (buffer.length > 500_000) {
+    throw ApiError.badRequest("La foto de perfil es demasiado pesada.");
+  }
+
+  if (env.CLOUDINARY_CLOUD_NAME && env.CLOUDINARY_API_KEY && env.CLOUDINARY_API_SECRET) {
+    const stored = await uploadToCloudinary({
+      buffer,
+      originalname: `avatar-${userId}.${ext}`,
+      mimetype: mime,
+      size: buffer.length,
+    } as Express.Multer.File);
+    return stored.url;
+  }
+
+  return `data:${mime};base64,${buffer.toString("base64")}`;
+}
+
+export async function removeUserAvatarFiles(userId: string) {
+  try {
+    const files = await fs.readdir(avatarsDir);
+    await Promise.all(
+      files
+        .filter((file) => file.startsWith(`${userId}-`))
+        .map((file) => fs.unlink(path.join(avatarsDir, file)).catch(() => undefined)),
+    );
+  } catch {
+    /* directory may not exist yet */
+  }
 }
 
 export async function persistExperienceImage(file?: Express.Multer.File): Promise<string | null> {

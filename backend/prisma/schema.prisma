@@ -88,6 +88,12 @@ model User {
   verificationCode        String?    @map("verification_code")
   verificationCodeExpires DateTime?  @map("verification_code_expires")
   status                  UserStatus @default(ACTIVE)
+  phone                   String?
+  country                 String?
+  department              String?
+  city                    String?
+  address                 String?
+  avatarUrl               String?    @map("avatar_url")
   deletedAt               DateTime?  @map("deleted_at")
   createdAt               DateTime   @default(now()) @map("created_at")
   updatedAt               DateTime   @updatedAt @map("updated_at")
