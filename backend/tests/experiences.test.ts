@@ -18,10 +18,10 @@ function experiencePayload(categoryId: string, title: string, extra?: Record<str
 
 describe("Revisión de experiencias", () => {
   it("impide crear o enviar una experiencia con menos de 5 imágenes", async () => {
-    const { adminToken, email } = await createAndLoginStaffAdmin();
+    const { adminToken, superToken, email } = await createAndLoginStaffAdmin();
     const category = await api()
       .post("/api/admin/categories")
-      .set("Authorization", `Bearer ${adminToken}`)
+      .set("Authorization", `Bearer ${superToken}`)
       .send({ name: `Mínimo fotos ${Date.now()}` });
     const categoryId = category.body.data.category.id as string;
 
@@ -78,10 +78,10 @@ describe("Revisión de experiencias", () => {
   });
 
   it("deja pendiente la experiencia de un administrador e ignora un intento de publicar directo", async () => {
-    const { adminToken } = await createAndLoginStaffAdmin();
+    const { adminToken, superToken } = await createAndLoginStaffAdmin();
     const category = await api()
       .post("/api/admin/categories")
-      .set("Authorization", `Bearer ${adminToken}`)
+      .set("Authorization", `Bearer ${superToken}`)
       .send({ name: `Revisión ${Date.now()}` });
 
     const created = await api()
@@ -152,7 +152,7 @@ describe("Revisión de experiencias", () => {
     const { adminToken, superToken } = await createAndLoginStaffAdmin();
     const category = await api()
       .post("/api/admin/categories")
-      .set("Authorization", `Bearer ${adminToken}`)
+      .set("Authorization", `Bearer ${superToken}`)
       .send({ name: `Aprobar ${Date.now()}` });
 
     const created = await api()
@@ -208,7 +208,7 @@ describe("Revisión de experiencias", () => {
     const { adminToken, superToken } = await createAndLoginStaffAdmin({ name: "Admin Revisor" });
     const category = await api()
       .post("/api/admin/categories")
-      .set("Authorization", `Bearer ${adminToken}`)
+      .set("Authorization", `Bearer ${superToken}`)
       .send({ name: `Notificar ${Date.now()}` });
 
     const created = await api()
@@ -375,7 +375,7 @@ describe("Disponibilidad activa/inactiva", () => {
     const stamp = Date.now();
     const category = await api()
       .post("/api/admin/categories")
-      .set("Authorization", `Bearer ${adminToken}`)
+      .set("Authorization", `Bearer ${superToken}`)
       .send({ name: `Revisión disponibilidad ${stamp}` });
     const categoryId = category.body.data.category.id as string;
 

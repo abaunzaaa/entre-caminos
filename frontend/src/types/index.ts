@@ -16,7 +16,9 @@ export type Category = {
   name: string;
   description: string | null;
   icon?: string;
-  status: "ACTIVE" | "INACTIVE";
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  rejectionReason?: string | null;
+  reviewedAt?: string | null;
   createdAt: string;
   _count?: { experiences: number };
 };

@@ -20,7 +20,7 @@ import { ADMIN_AVATAR_EVENT, readAdminAvatar } from "../../utils/admin-avatar";
 import { CountUp } from "../../components/admin/CountUp";
 import { DashCardRail } from "../../components/admin/DashCardRail";
 import { ExperienceCatalogCard } from "../../components/admin/ExperienceCatalogCard";
-import { Panel } from "../../components/admin/Panel";
+import { Panel, StatusDot } from "../../components/admin/Panel";
 import { useAuth } from "../../hooks/useAuth";
 import { getApiErrorMessage } from "../../utils/api-error";
 import { getCategoryIcon } from "../../utils/category-icons";
@@ -65,15 +65,8 @@ function asAdministratorList(value: unknown): PublicUser[] {
   return value.filter(isAdministrator);
 }
 
-function asDashboardAdministratorList(
-  value: unknown,
-  viewerRole: PublicUser["role"] | undefined,
-): PublicUser[] {
-  const list = asAdministratorList(value);
-  if (readRole(viewerRole) === "ADMIN") {
-    return list.filter((item) => readRole(item.role) === "SUPER_ADMIN");
-  }
-  return list;
+function asDashboardSuperAdmins(value: unknown): PublicUser[] {
+  return asAdministratorList(value).filter((item) => readRole(item.role) === "SUPER_ADMIN");
 }
 
 function countActiveTeam(users: PublicUser[]): number {
@@ -152,6 +145,7 @@ export function DashboardPage() {
   const [adminsError, setAdminsError] = useState("");
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [categoriesError, setCategoriesError] = useState("");
+  const [experiencesLoading, setExperiencesLoading] = useState(true);
   const [photo, setPhoto] = useState<string | null>(() => readAdminAvatar(user?.id));
 
   useEffect(() => {
@@ -171,6 +165,10 @@ export function DashboardPage() {
   }, [user?.id]);
 
   useEffect(() => {
+    if (!user?.id) {
+      return;
+    }
+
     let cancelled = false;
 
     async function loadSummary() {
@@ -178,70 +176,68 @@ export function DashboardPage() {
       setAdminsError("");
       setCategoriesLoading(true);
       setCategoriesError("");
+      setExperiencesLoading(true);
 
-      const dash = await getDashboard().catch(() => null);
-      if (cancelled) {
-        return;
-      }
-
-      if (dash && typeof dash.admins === "number") {
-        setMetrics(dash);
-        setAdmins(newestFirst(asDashboardAdministratorList(dash.administrators, user?.role)));
-        setAdminsLoading(false);
-        setAdminsError("");
-        setCategories(newestFirst(Array.isArray(dash.recentCategories) ? dash.recentCategories : []));
-        setCategoriesLoading(false);
-        setCategoriesError("");
-        if (Array.isArray(dash.recentExperiences)) {
-          setExperiences(dash.recentExperiences);
-        }
-        return;
-      }
-
-      const [adminsResult, categoriesResult, experiencesResult] = await Promise.allSettled([
-        getAdministrators(user?.role === "ADMIN" ? undefined : { limit: SUMMARY_LIMIT }),
+      const [dashResult, categoriesResult, adminsResult, experiencesResult] = await Promise.allSettled([
+        getDashboard(),
         getAdminCategories({ limit: SUMMARY_LIMIT }),
+        getAdministrators(),
         getAdminExperiences({ limit: 10 }),
       ]);
       if (cancelled) {
         return;
       }
 
-      const fromEndpoint =
-        adminsResult.status === "fulfilled" ? asDashboardAdministratorList(adminsResult.value, user?.role) : [];
-      const allAdmins = fromEndpoint;
-      setMetrics({
-        users: 0,
-        experiences: 0,
-        categories: 0,
-        published: 0,
-        admins: countActiveTeam(allAdmins),
-      });
-      setAdmins(newestFirst(fromEndpoint));
-      setAdminsLoading(false);
-      setAdminsError(
-        fromEndpoint.length === 0 && adminsResult.status === "rejected"
-          ? getApiErrorMessage(adminsResult.reason, "No se pudieron cargar los administradores.")
-          : "",
-      );
-
+      const dash = dashResult.status === "fulfilled" ? dashResult.value : null;
+      const fromDashCategories = Array.isArray(dash?.recentCategories) ? dash.recentCategories : [];
       const fromCategoriesEndpoint =
         categoriesResult.status === "fulfilled" && Array.isArray(categoriesResult.value)
           ? categoriesResult.value
           : [];
-      setCategories(newestFirst(fromCategoriesEndpoint));
+      const visibleCategories = newestFirst(
+        (fromDashCategories.length > 0 ? fromDashCategories : fromCategoriesEndpoint).filter(
+          (category) => !category.status || category.status === "APPROVED",
+        ),
+      );
+      setCategories(visibleCategories);
       setCategoriesLoading(false);
       setCategoriesError(
-        fromCategoriesEndpoint.length === 0 && categoriesResult.status === "rejected"
+        visibleCategories.length === 0 &&
+          dashResult.status === "rejected" &&
+          categoriesResult.status === "rejected"
           ? getApiErrorMessage(categoriesResult.reason, "No se pudieron cargar las categorías.")
           : "",
       );
 
-      if (experiencesResult.status === "fulfilled") {
-        setExperiences(experiencesResult.value);
+      const fromDashAdmins = asDashboardSuperAdmins(dash?.administrators);
+      const fromAdminsEndpoint =
+        adminsResult.status === "fulfilled" ? asDashboardSuperAdmins(adminsResult.value) : [];
+      const visibleAdmins = newestFirst(fromDashAdmins.length > 0 ? fromDashAdmins : fromAdminsEndpoint);
+      setAdmins(visibleAdmins);
+      setAdminsLoading(false);
+      setAdminsError(
+        visibleAdmins.length === 0 && dashResult.status === "rejected" && adminsResult.status === "rejected"
+          ? getApiErrorMessage(adminsResult.reason, "No se pudieron cargar los administradores.")
+          : "",
+      );
+
+      if (dash && typeof dash.admins === "number") {
+        setMetrics(dash);
       } else {
-        setExperiences([]);
+        setMetrics({
+          users: 0,
+          experiences: 0,
+          categories: 0,
+          published: 0,
+          admins: countActiveTeam(fromAdminsEndpoint),
+        });
       }
+
+      const fromDashExperiences = Array.isArray(dash?.recentExperiences) ? dash.recentExperiences : [];
+      const fromExperiencesEndpoint =
+        experiencesResult.status === "fulfilled" ? experiencesResult.value : [];
+      setExperiences(fromDashExperiences.length > 0 ? fromDashExperiences : fromExperiencesEndpoint);
+      setExperiencesLoading(false);
     }
 
     void loadSummary();
@@ -249,7 +245,7 @@ export function DashboardPage() {
     return () => {
       cancelled = true;
     };
-  }, [user?.role]);
+  }, [user?.id]);
 
   const fullName = user?.name?.trim() || "Administrador";
   const initial = fullName.charAt(0).toUpperCase() || "A";
@@ -331,9 +327,7 @@ export function DashboardPage() {
         <div className="dash-split__cards">
           <article className="dash-split__panel">
             <div className="dash-split__intro">
-              <h2 className="dash-section__title">
-                {isStaffAdmin ? "Super administradores" : "Administradores"}
-              </h2>
+              <h2 className="dash-section__title">Super administradores</h2>
               <p className="dash-section__lead">Últimos registrados</p>
             </div>
             {adminsLoading ? (
@@ -346,11 +340,7 @@ export function DashboardPage() {
               </Panel>
             ) : admins.length === 0 ? (
               <Panel className="dash-empty">
-                <p>
-                  {isStaffAdmin
-                    ? "No hay super administradores registrados."
-                    : "No hay administradores registrados."}
-                </p>
+                <p>No hay super administradores registrados.</p>
               </Panel>
             ) : (
               <div className="dash-split__list">
@@ -364,7 +354,13 @@ export function DashboardPage() {
                       </span>
                       <div className="dash-team-card__info">
                         <h3>{admin.name}</h3>
-                        <p>{roleLabel(admin.role)}</p>
+                        <p className="dash-team-card__email">{admin.email}</p>
+                        <div className="dash-team-card__facts">
+                          <StatusDot active>{roleLabel(admin.role)}</StatusDot>
+                          <StatusDot active={admin.status === "ACTIVE"}>
+                            {admin.status === "ACTIVE" ? "Activo" : "Inactivo"}
+                          </StatusDot>
+                        </div>
                       </div>
                     </article>
                   );
@@ -372,7 +368,7 @@ export function DashboardPage() {
               </div>
             )}
             <Link to="/admin/administradores" className="admin-cta dash-split__action">
-              Añadir administrador
+              {isStaffAdmin ? "Ver todos" : "Añadir administrador"}
             </Link>
           </article>
           <article className="dash-split__panel">
@@ -435,7 +431,11 @@ export function DashboardPage() {
             </Link>
           </div>
         </div>
-        {experiences.length === 0 ? (
+        {experiencesLoading ? (
+          <Panel className="dash-empty">
+            <p>Cargando experiencias…</p>
+          </Panel>
+        ) : experiences.length === 0 ? (
           <Panel className="dash-empty">
             <p>Aún no hay experiencias registradas.</p>
           </Panel>

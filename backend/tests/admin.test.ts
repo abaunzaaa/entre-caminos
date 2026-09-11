@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { PERMISSIONS, ROLES } from "../src/config/constants.js";
 import { ACCOUNT_REMOVED_MESSAGE } from "../src/utils/account.js";
-import { api, loginAs, loginAsAdmin, prisma, registerUser, uniqueEmail, sampleExperienceImages } from "./helpers.js";
+import { api, createAndLoginStaffAdmin, loginAs, loginAsAdmin, prisma, registerUser, uniqueEmail, sampleExperienceImages } from "./helpers.js";
 
 async function countActiveAdministratorsInDb() {
   return prisma.user.count({
@@ -117,15 +117,15 @@ describe("HU-21 Administración", () => {
     const activeCat = await api()
       .post("/api/admin/categories")
       .set("Authorization", `Bearer ${token}`)
-      .send({ name: `Dash activa ${stamp}`, status: "ACTIVE" });
+      .send({ name: `Dash activa ${stamp}` });
     const inactiveCat = await api()
       .post("/api/admin/categories")
       .set("Authorization", `Bearer ${token}`)
-      .send({ name: `Dash inactiva ${stamp}`, status: "INACTIVE" });
+      .send({ name: `Dash inactiva ${stamp}` });
     const deletedCat = await api()
       .post("/api/admin/categories")
       .set("Authorization", `Bearer ${token}`)
-      .send({ name: `Dash eliminada ${stamp}`, status: "ACTIVE" });
+      .send({ name: `Dash eliminada ${stamp}` });
 
     expect(activeCat.status).toBe(201);
     expect(inactiveCat.status).toBe(201);
@@ -332,8 +332,7 @@ describe("HU-21 Administración", () => {
       const attempt = await api()
         .delete(`/api/admin/administrators/${superId}`)
         .set("Authorization", `Bearer ${adminToken}`);
-      expect(attempt.status).toBe(400);
-      expect(attempt.body.error.message).toMatch(/último super administrador/i);
+      expect(attempt.status).toBe(403);
     } finally {
       await prisma.user.updateMany({
         where: { id: { in: otherSupers.map((item) => item.id) } },
@@ -346,6 +345,100 @@ describe("HU-21 Administración", () => {
         where: { id: adminId },
         data: { deletedAt: new Date() },
       });
+    }
+  });
+
+  it("impide que un administrador cree cuentas administrativas o gestione roles", async () => {
+    const { adminToken, superToken } = await createAndLoginStaffAdmin();
+    const email = uniqueEmail("admin.blocked");
+
+    const created = await api()
+      .post("/api/admin/administrators")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({
+        name: "Admin no autorizado",
+        email,
+        password: "Admin#2026x",
+        role: "ADMIN",
+      });
+    expect(created.status).toBe(403);
+
+    const team = await api().get("/api/admin/administrators").set("Authorization", `Bearer ${adminToken}`);
+    expect(team.status).toBe(200);
+    expect(
+      (team.body.data.admins as Array<{ role: string }>).every((item) => item.role === "SUPER_ADMIN"),
+    ).toBe(true);
+
+    const roles = await api().get("/api/admin/roles").set("Authorization", `Bearer ${adminToken}`);
+    expect(roles.status).toBe(403);
+
+    const newRole = await api()
+      .post("/api/admin/roles")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ name: `Rol ${Date.now()}` });
+    expect(newRole.status).toBe(403);
+
+    const target = await api()
+      .post("/api/admin/administrators")
+      .set("Authorization", `Bearer ${superToken}`)
+      .send({
+        name: "Admin objetivo",
+        email: uniqueEmail("admin.target"),
+        password: "Admin#2026x",
+        role: "ADMIN",
+      });
+    expect(target.status).toBe(201);
+
+    const permission = await prisma.permission.findUnique({ where: { name: PERMISSIONS.ADMINS_MANAGE } });
+    const adminRole = await prisma.role.findUnique({ where: { name: ROLES.ADMIN } });
+    expect(permission).toBeTruthy();
+    expect(adminRole).toBeTruthy();
+
+    await prisma.rolePermission.upsert({
+      where: {
+        roleId_permissionId: {
+          roleId: adminRole!.id,
+          permissionId: permission!.id,
+        },
+      },
+      update: {},
+      create: {
+        roleId: adminRole!.id,
+        permissionId: permission!.id,
+      },
+    });
+
+    try {
+      const roleChange = await api()
+        .put(`/api/admin/administrators/${target.body.data.admin.id}`)
+        .set("Authorization", `Bearer ${adminToken}`)
+        .send({ role: "SUPER_ADMIN" });
+      expect(roleChange.status).toBe(403);
+    } finally {
+      await prisma.rolePermission.deleteMany({
+        where: { roleId: adminRole!.id, permissionId: permission!.id },
+      });
+    }
+  });
+
+  it("devuelve la cantidad real de usuarios activos por rol", async () => {
+    const token = (await loginAsAdmin()).body.data.accessToken as string;
+    await createAndLoginStaffAdmin();
+    await registerUser();
+
+    const response = await api().get("/api/admin/roles").set("Authorization", `Bearer ${token}`);
+    expect(response.status).toBe(200);
+
+    const roles = response.body.data.roles as Array<{ name: string; _count?: { users: number } }>;
+    for (const name of [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.USER]) {
+      const expected = await prisma.user.count({
+        where: {
+          deletedAt: null,
+          status: "ACTIVE",
+          role: { name },
+        },
+      });
+      expect(roles.find((role) => role.name === name)?._count?.users).toBe(expected);
     }
   });
 });

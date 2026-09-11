@@ -184,8 +184,8 @@ export async function createExperience(
   if (!category) {
     throw ApiError.badRequest("La categoría no existe");
   }
-  if (category.status !== "ACTIVE") {
-    throw ApiError.badRequest("La categoría está inactiva");
+  if (category.status !== "APPROVED") {
+    throw ApiError.badRequest("La categoría aún no está aprobada");
   }
 
   const gallery = normalizeExperienceImages(input);
@@ -292,6 +292,9 @@ export async function updateExperience(
     const category = await prisma.category.findUnique({ where: { id: input.categoryId } });
     if (!category) {
       throw ApiError.badRequest("La categoría no existe");
+    }
+    if (category.status !== "APPROVED") {
+      throw ApiError.badRequest("La categoría aún no está aprobada");
     }
   }
 
