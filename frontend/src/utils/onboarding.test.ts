@@ -10,6 +10,7 @@ import {
   toggleMulti,
   toggleSingle,
   uniqueCanonical,
+  toOnboardingPayload,
 } from "./onboarding";
 
 describe("onboarding helpers", () => {
@@ -47,9 +48,10 @@ describe("onboarding helpers", () => {
     expect(limited.limited).toBe(true);
     expect(limited.next).toHaveLength(5);
     expect(countPrimaryInterests(["Naturaleza", "Naturaleza", "Cultura"])).toBe(2);
+    expect(uniqueCanonical(["Café", "Fotografía", "Comida"])).toEqual(["Café", "Fotografía", "Gastronomía"]);
   });
 
-  it("reconstruye el avatar con la configuración guardada", () => {
+  it("reconstruye el avatar v1 y v2 con la configuración guardada", () => {
     const stored = parseAvatarConfig({
       version: 1,
       skinTone: "cocoa",
@@ -62,11 +64,14 @@ describe("onboarding helpers", () => {
       glasses: "thin",
     });
     expect(stored).toMatchObject({
+      version: 2,
       skinTone: "cocoa",
       hairStyle: "bun",
       glasses: "thin",
+      eyes: "almond",
     });
     expect(parseAvatarConfig({ hairStyle: "no-existe" }).hairStyle).toBe(DEFAULT_AVATAR_CONFIG.hairStyle);
+    expect(parseAvatarConfig({ version: 2, eyes: "lidded" }).eyes).toBe("lidded");
   });
 
   it("reanuda el paso correcto y exige onboarding solo a usuarios nuevos", () => {
@@ -110,5 +115,27 @@ describe("onboarding helpers", () => {
   it("permite una sola opción en presupuesto", () => {
     expect(toggleSingle(["Moderado"], "Lujo")).toEqual(["Lujo"]);
     expect(toggleSingle(["Lujo"], "Lujo")).toEqual([]);
+  });
+
+  it("envía barrio y dirección nulos al vaciarlos", () => {
+    const payload = toOnboardingPayload({ ...emptyOnboardingForm(), neighborhood: "  ", addressReference: "" });
+    expect(payload.neighborhood).toBeNull();
+    expect(payload.addressReference).toBeNull();
+  });
+
+  it("incluye el avatar y el tipo de imagen en el borrador que se guarda en el servidor", () => {
+    const payload = toOnboardingPayload(
+      {
+        ...emptyOnboardingForm(),
+        profileImageType: "AVATAR",
+        avatarConfig: { ...DEFAULT_AVATAR_CONFIG, face: "round", mouth: "calm" },
+        interests: ["Naturaleza", "Café", "Fotografía"],
+      },
+      false,
+    );
+    expect(payload.completed).toBe(false);
+    expect(payload.profileImageType).toBe("AVATAR");
+    expect(payload.avatarConfig).toMatchObject({ version: 2, face: "round", mouth: "calm" });
+    expect(payload.interests).toEqual(["Naturaleza", "Café", "Fotografía"]);
   });
 });

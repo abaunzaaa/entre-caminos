@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import {
   DEFAULT_AVATAR_CONFIG,
+  normalizeAvatarConfig,
   ONBOARDING_BUDGETS,
   ONBOARDING_CLIMATES,
   ONBOARDING_COMPANIONS,
@@ -82,7 +83,7 @@ export function serializeProfile(
     profileImageUrl: profile.profileImageUrl,
     profileImagePublicId: profile.profileImagePublicId,
     profileImageType: profile.profileImageType,
-    avatarConfig: profile.avatarConfig ?? DEFAULT_AVATAR_CONFIG,
+    avatarConfig: normalizeAvatarConfig(profile.avatarConfig),
     interests: normalizeList(profile.interests, ONBOARDING_INTERESTS, ONBOARDING_INTEREST_ALIASES) ?? [],
     companions: normalizeList(profile.companions, ONBOARDING_COMPANIONS) ?? [],
     places: normalizeList(profile.places, ONBOARDING_PLACES) ?? [],
@@ -160,11 +161,14 @@ export async function saveOnboarding(userId: string, input: OnboardingSaveInput)
 
     const nextLatitude = input.latitude === undefined ? current?.latitude : input.latitude;
     const nextLongitude = input.longitude === undefined ? current?.longitude : input.longitude;
-    const avatarConfig = input.avatarConfig ?? current?.avatarConfig ?? DEFAULT_AVATAR_CONFIG;
+    const avatarConfig = normalizeAvatarConfig(input.avatarConfig ?? current?.avatarConfig);
 
-    const keepText = (incoming: string | undefined, previous: string | null | undefined) => {
+    const keepText = (incoming: string | null | undefined, previous: string | null | undefined) => {
       if (incoming === undefined) {
         return previous;
+      }
+      if (incoming === null) {
+        return null;
       }
       const trimmed = incoming.trim();
       return trimmed || null;

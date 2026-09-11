@@ -8,6 +8,7 @@ type ProfileStepProps = {
   form: OnboardingForm;
   tab: "face" | "hair" | "outfit" | "accessories";
   photoLoading: boolean;
+  photoProgress: number;
   photoError: string;
   fileInput: RefObject<HTMLInputElement | null>;
   onMode: (mode: "PHOTO" | "AVATAR") => void;
@@ -22,6 +23,7 @@ export function ProfileStep({
   form,
   tab,
   photoLoading,
+  photoProgress,
   photoError,
   fileInput,
   onMode,
@@ -35,7 +37,7 @@ export function ProfileStep({
 
   return (
     <div className="onboarding-profile">
-      <div className="onboarding-segment" role="group" aria-label="Tipo de imagen de perfil">
+      <div className="onboarding-segment onboarding-segment--profile" role="group" aria-label="Tipo de imagen de perfil">
         <button
           type="button"
           className={`onboarding-segment__btn${form.profileImageType === "PHOTO" ? " is-active" : ""}`}
@@ -61,26 +63,44 @@ export function ProfileStep({
         onChange={(event) => void onPick(event.target.files?.[0])}
       />
       {form.profileImageType === "PHOTO" ? (
-        preview ? (
+        <div className="onboarding-photo-layout">
           <div className="onboarding-photo-preview">
-            <div className="onboarding-photo-frame">
-              <img src={preview} alt="Foto de perfil seleccionada" />
+            {preview ? (
+              <div className="onboarding-photo-frame">
+                <img src={preview} alt="Foto de perfil seleccionada" />
+                <button
+                  type="button"
+                  className="onboarding-photo-camera"
+                  aria-label="Cambiar foto"
+                  onClick={() => fileInput.current?.click()}
+                >
+                  <Camera size={16} strokeWidth={1.8} />
+                </button>
+              </div>
+            ) : (
               <button
                 type="button"
-                className="onboarding-photo-camera"
-                aria-label="Cambiar foto"
+                className="onboarding-photo-empty"
                 onClick={() => fileInput.current?.click()}
+                disabled={photoLoading}
               >
-                <Camera size={16} strokeWidth={1.8} />
+                <Camera size={28} strokeWidth={1.6} aria-hidden="true" />
+                <span>Selecciona una foto</span>
               </button>
-            </div>
+            )}
+          </div>
+          <div className="onboarding-photo-copy">
+            <p>JPG, PNG o WebP</p>
+            <p>Máximo 5 MB. La imagen se recorta en círculo sin deformarse.</p>
             <div className="onboarding-photo-preview__actions">
-              <button type="button" className="onboarding-text-btn" onClick={() => fileInput.current?.click()}>
-                Cambiar foto
+              <button type="button" className="onboarding-nav__btn onboarding-nav__btn--primary" onClick={() => fileInput.current?.click()}>
+                Seleccionar foto
               </button>
-              <button type="button" className="onboarding-text-btn" onClick={onRemovePhoto}>
-                Eliminar
-              </button>
+              {preview ? (
+                <button type="button" className="onboarding-text-btn" onClick={onRemovePhoto}>
+                  Eliminar
+                </button>
+              ) : null}
               {photoError ? (
                 <button type="button" className="onboarding-text-btn" onClick={onRetry}>
                   Reintentar
@@ -88,20 +108,18 @@ export function ProfileStep({
               ) : null}
             </div>
             {photoLoading ? (
-              <p className="onboarding-hint" aria-live="polite">
-                Subiendo fotografía…
+              <div className="onboarding-progress" aria-live="polite">
+                <span>Subiendo fotografía… {photoProgress}%</span>
+                <progress max={100} value={photoProgress} />
+              </div>
+            ) : null}
+            {photoError ? (
+              <p className="onboarding-error" role="alert">
+                {photoError}
               </p>
             ) : null}
           </div>
-        ) : (
-          <button type="button" className="onboarding-dropzone" onClick={() => fileInput.current?.click()} disabled={photoLoading}>
-            <span className="onboarding-dropzone__icon" aria-hidden="true">
-              <Camera size={22} strokeWidth={1.7} />
-            </span>
-            <strong>{photoLoading ? "Subiendo foto…" : "Selecciona una foto"}</strong>
-            <span>JPG, PNG o WebP · máximo 5 MB</span>
-          </button>
-        )
+        </div>
       ) : (
         <AvatarConfigurator
           config={form.avatarConfig}
@@ -110,11 +128,6 @@ export function ProfileStep({
           onChange={(avatarConfig) => onForm({ ...form, avatarConfig, profileImageType: "AVATAR" })}
         />
       )}
-      {photoError ? (
-        <p className="onboarding-error" role="alert">
-          {photoError}
-        </p>
-      ) : null}
     </div>
   );
 }

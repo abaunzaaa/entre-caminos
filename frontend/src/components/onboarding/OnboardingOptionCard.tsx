@@ -31,7 +31,7 @@ export function OnboardingOptionCard({
           </span>
         ) : null}
         <span className="onboarding-choice__icon" aria-hidden="true">
-          <Icon size={22} strokeWidth={1.7} />
+          <Icon size={28} strokeWidth={1.6} />
         </span>
         <span className="onboarding-choice__name">{label}</span>
         {hint ? <span className="onboarding-company-card__hint">{hint}</span> : null}
@@ -50,6 +50,7 @@ export function OnboardingOptionCard({
       >
         <Icon size={16} strokeWidth={1.7} aria-hidden="true" />
         {label}
+        {selected ? <Check size={14} strokeWidth={2.4} aria-hidden="true" /> : null}
       </button>
     );
   }
@@ -68,7 +69,7 @@ export function OnboardingOptionCard({
         </span>
       ) : null}
       <span className="onboarding-choice__icon" aria-hidden="true">
-        <Icon size={22} strokeWidth={1.7} />
+        <Icon size={16} strokeWidth={1.7} />
       </span>
       <span className="onboarding-choice__name">{label}</span>
     </button>

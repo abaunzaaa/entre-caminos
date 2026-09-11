@@ -1,31 +1,25 @@
-# Piezas de avatar
+# Piezas 3D del avatar
 
-El configurador actual reconstruye el avatar con SVG local en `frontend/src/components/onboarding/AvatarPreview.tsx`.
+No hay un paquete 3D en el repositorio. El configurador ya persiste un JSON v2 y busca capas en esta carpeta. Hasta que existan los PNG, la vista previa usa un compositor de reserva y **no debe considerarse el avatar 3D final**.
 
-No hay assets 3D profesionales en el repositorio. Cuando existan, colócalos aquí con este contrato:
+## Contrato
 
 ```
-frontend/src/assets/avatars/
+frontend/src/assets/avatars/v2/
   skin/{sand,honey,amber,cocoa,espresso}.png
   face/{soft,oval,round}.png
-  hair/{short,wavy,bun,fade,none}/
-    {ink,chestnut,gold,silver,dark}.png
-  outfit/{shirt,knit,jacket}/
-    {forest,sage,sand,clay}.png
-  accessory/{none,earring}.png
-  glasses/{none,round,thin}.png
+  eyes/{almond,round,lidded}.png
+  eyebrows/{soft,defined,arched}.png
+  mouths/{neutral,soft-smile,calm}.png
+  hair/{short,wavy,bun,fade}/{ink,chestnut,gold,silver,dark}.png
+  outfit/{shirt,knit,jacket}/{forest,sage,sand,clay}.png
+  glasses/{round,thin}.png
+  accessory/earring.png
 ```
 
-Formato: PNG o WebP cuadrado, fondo transparente, 512×512, recorte centrado al busto.
+- PNG o WebP, 1024×1024, fondo transparente, busto 3/4, iluminación de estudio.
+- Proporciones adultas, expresión neutra, sin contorno negro.
+- Ropa en verdes, beige y tierra.
+- Todas las capas deben compartir la misma cámara y origen.
 
-La configuración persistida en PostgreSQL sigue siendo:
-
-```ts
-{
-  version: 1,
-  skinTone, face, hairStyle, hairColor,
-  outfit, outfitColor, accessory?, glasses?
-}
-```
-
-El preview debe seguir usando exactamente esos identificadores para reconstruir el avatar en cualquier sesión.
+Cuando `AVATAR_ASSET_MANIFEST.ready` pase a `true` y existan esos archivos, `AvatarPreview` los combina en el mismo orden del manifiesto. El JSON guardado en `user_profiles.avatar_config` no cambia de identificadores.

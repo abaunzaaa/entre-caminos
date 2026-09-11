@@ -107,6 +107,13 @@ describe("Onboarding y perfil persistente", () => {
     expect(mapped.status).toBe(200);
     expect(mapped.body.data.profile.interests).toEqual(["Gastronomía", "Fiesta / Vida nocturna", "Naturaleza"]);
 
+    const expanded = await api()
+      .patch("/api/auth/onboarding")
+      .set(auth(session.token))
+      .send({ interests: ["Café", "Fotografía", "Bienestar"] });
+    expect(expanded.status).toBe(200);
+    expect(expanded.body.data.profile.interests).toEqual(["Café", "Fotografía", "Relajación"]);
+
     const tooMany = await api()
       .patch("/api/auth/onboarding")
       .set(auth(session.token))
@@ -127,6 +134,8 @@ describe("Onboarding y perfil persistente", () => {
       });
     expect(saved.status).toBe(200);
     expect(saved.body.data.profile.avatarConfig.hairStyle).toBe("bun");
+    expect(saved.body.data.profile.avatarConfig.version).toBe(2);
+    expect(saved.body.data.profile.avatarConfig.eyes).toBe("almond");
     expect(saved.body.data.profile.profileImageType).toBe("AVATAR");
     expect(saved.body.data.profile.onboardingCompleted).toBe(true);
 

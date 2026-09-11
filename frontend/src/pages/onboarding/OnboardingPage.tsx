@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import logoEntreCaminos from "../../assets/logo.png";
 import { CompanyStep } from "../../components/onboarding/CompanyStep";
-import { LocationStep } from "../../components/onboarding/LocationStep";
+import { LocationStep, type LocationStatus } from "../../components/onboarding/LocationStep";
 import { OnboardingActions } from "../../components/onboarding/OnboardingActions";
 import { OnboardingOptionCard } from "../../components/onboarding/OnboardingOptionCard";
 import { OnboardingStepper } from "../../components/onboarding/OnboardingStepper";
@@ -17,7 +17,7 @@ import {
   uploadOnboardingPhoto,
 } from "../../services/onboarding.service";
 import { getApiErrorMessage } from "../../utils/api-error";
-import { reverseGeocodeColombia } from "../../utils/geocode";
+import { prepareOnboardingPhoto } from "../../utils/onboarding-photo";
 import {
   ONBOARDING_STEPS,
   PRIMARY_INTEREST_MAX,
@@ -51,7 +51,10 @@ export function OnboardingPage() {
   const fileInput = useRef<HTMLInputElement>(null);
   const pendingFile = useRef<File | null>(null);
   const savingLock = useRef(false);
+  const skipDraftSave = useRef(true);
   const [form, setForm] = useState<OnboardingForm>(emptyOnboardingForm);
+  const formRef = useRef(form);
+  formRef.current = form;
   const [step, setStep] = useState(1);
   const [direction, setDirection] = useState(1);
   const [hydrated, setHydrated] = useState(false);
@@ -62,8 +65,11 @@ export function OnboardingPage() {
   const [formError, setFormError] = useState("");
   const [limitMessage, setLimitMessage] = useState("");
   const [locating, setLocating] = useState(false);
+  const [locationStatus, setLocationStatus] = useState<LocationStatus>("idle");
   const [locationError, setLocationError] = useState("");
+  const [photoProgress, setPhotoProgress] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [draftSaving, setDraftSaving] = useState(false);
   const [exitOpen, setExitOpen] = useState(false);
 
   useEffect(() => {
@@ -94,10 +100,29 @@ export function OnboardingPage() {
     setStep(next);
   }
 
-  async function persistDraft(nextForm = form) {
-    await saveOnboardingProfile(nextForm, false);
-    await refresh();
-  }
+  useEffect(() => {
+    if (!hydrated) {
+      return;
+    }
+    if (skipDraftSave.current) {
+      skipDraftSave.current = false;
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      void saveOnboardingProfile(formRef.current, false).catch((error) => {
+        setFormError(getApiErrorMessage(error, "No pudimos guardar. Inténtalo de nuevo."));
+      });
+    }, 400);
+    return () => window.clearTimeout(timer);
+  }, [form, hydrated]);
+
+  useEffect(() => {
+    function flushDraft() {
+      void saveOnboardingProfile(formRef.current, false);
+    }
+    window.addEventListener("pagehide", flushDraft);
+    return () => window.removeEventListener("pagehide", flushDraft);
+  }, []);
 
   async function onPickFile(file: File | undefined) {
     if (!file) {
@@ -116,7 +141,9 @@ export function OnboardingPage() {
       }
       return { ...current, profileImageType: "PHOTO", localPhotoUrl: localUrl };
     });
-    await uploadSelectedPhoto(file);
+    const optimized = await prepareOnboardingPhoto(file);
+    pendingFile.current = optimized;
+    await uploadSelectedPhoto(optimized);
     if (fileInput.current) {
       fileInput.current.value = "";
     }
@@ -125,14 +152,14 @@ export function OnboardingPage() {
   async function uploadSelectedPhoto(file: File) {
     try {
       setPhotoLoading(true);
+      setPhotoProgress(8);
       setPhotoError("");
-      const profile = await uploadOnboardingPhoto(file);
+      const profile = await uploadOnboardingPhoto(file, setPhotoProgress);
       setForm((current) => ({
         ...current,
         profileImageType: "PHOTO",
         profileImageUrl: profile.profileImageUrl,
       }));
-      await refresh();
     } catch (error) {
       setPhotoError(getApiErrorMessage(error, "No se pudo subir la foto. Puedes reintentar."));
     } finally {
@@ -142,10 +169,12 @@ export function OnboardingPage() {
 
   async function onUseLocation() {
     if (!navigator.geolocation) {
+      setLocationStatus("error");
       setLocationError("Tu navegador no permite usar la ubicación.");
       return;
     }
     setLocating(true);
+    setLocationStatus("loading");
     setLocationError("");
     navigator.geolocation.getCurrentPosition(
       async (position) => {
@@ -164,7 +193,9 @@ export function OnboardingPage() {
             const withDepartment = applyDepartmentChange(withCoords, match.department);
             return applyCityChange(withDepartment, match.municipality);
           });
+          setLocationStatus("success");
         } catch {
+          setLocationStatus("error");
           setLocationError("No pudimos leer tu ubicación. Complétala en el formulario.");
         } finally {
           setLocating(false);
@@ -172,6 +203,7 @@ export function OnboardingPage() {
       },
       () => {
         setLocating(false);
+        setLocationStatus("error");
         setLocationError("Necesitamos permiso para usar tu ubicación.");
       },
       { enableHighAccuracy: true, timeout: 12_000 },
@@ -186,18 +218,33 @@ export function OnboardingPage() {
     });
   }
 
+  async function persistDraft(nextForm = formRef.current) {
+    await saveOnboardingProfile(nextForm, false);
+  }
+
   async function onContinue() {
-    if (!canContinue) {
+    if (!canContinue || draftSaving) {
       return;
     }
+    setFormError("");
+    setDraftSaving(true);
     try {
-      setFormError("");
-      if (step < 6) {
-        await persistDraft();
-        goTo(step + 1);
-      }
+      await persistDraft();
+      goTo(step + 1);
     } catch (error) {
       setFormError(getApiErrorMessage(error, "No pudimos guardar este paso. Inténtalo de nuevo."));
+    } finally {
+      setDraftSaving(false);
+    }
+  }
+
+  async function onLeave() {
+    try {
+      await persistDraft();
+      navigate("/", { replace: true });
+    } catch (error) {
+      setExitOpen(false);
+      setFormError(getApiErrorMessage(error, "No pudimos guardar. Inténtalo de nuevo."));
     }
   }
 
@@ -227,6 +274,7 @@ export function OnboardingPage() {
         <LocationStep
           form={form}
           locating={locating}
+          locationStatus={locationStatus}
           locationError={locationError}
           onChange={setForm}
           onUseLocation={() => void onUseLocation()}
@@ -239,6 +287,7 @@ export function OnboardingPage() {
           form={form}
           tab={avatarTab}
           photoLoading={photoLoading}
+          photoProgress={photoProgress}
           photoError={photoError}
           fileInput={fileInput}
           onMode={(profileImageType) => setForm((current) => ({ ...current, profileImageType }))}
@@ -302,18 +351,18 @@ export function OnboardingPage() {
         />
       );
     }
-    return <SummaryStep form={form} userName={user?.name ?? ""} />;
-  }, [avatarTab, form, locating, locationError, photoError, photoLoading, prefTab, step, user?.name]);
+    return <SummaryStep form={form} userName={user?.name ?? ""} onChangeImage={() => goTo(2)} />;
+  }, [avatarTab, form, locating, locationError, locationStatus, photoError, photoLoading, photoProgress, prefTab, step, user?.name]);
 
   if (!hydrated) {
     return <div className="onboarding-page" />;
   }
 
   return (
-    <div className={`onboarding-page${step === 3 ? " is-interests" : ""}`}>
+    <div className="onboarding-page">
       <section className="onboarding-shell" aria-labelledby="onboarding-title">
         <header className="onboarding-header">
-          <Link to="/" className="onboarding-header__brand" aria-label="Entre Caminos, ir al inicio">
+          <Link to="/" className="onboarding-header__brand">
             <img src={logoEntreCaminos} alt="Entre Caminos" />
             <span className="onboarding-header__copy">
               <strong className="onboarding-header__wordmark">Entre Caminos</strong>
@@ -330,7 +379,8 @@ export function OnboardingPage() {
           </div>
         </header>
 
-        <div className="onboarding-content">
+        <div className="onboarding-main onboarding-content">
+          <div className="onboarding-main-inner onboarding-content-inner">
           <div className="onboarding-pane" data-dir={direction} key={step}>
             <div className="onboarding-copy">
               <h1 id="onboarding-title" className="onboarding-title">
@@ -355,6 +405,7 @@ export function OnboardingPage() {
             </div>
             <div className="onboarding-body">{body}</div>
           </div>
+          </div>
         </div>
 
         <footer className="onboarding-footer">
@@ -370,6 +421,7 @@ export function OnboardingPage() {
               }}
               onContinue={() => void onContinue()}
               continueDisabled={!canContinue}
+              continueLoading={draftSaving}
             />
           ) : (
             <OnboardingActions
@@ -380,7 +432,16 @@ export function OnboardingPage() {
               continueLoading={saving}
             />
           )}
-          <OnboardingStepper currentStep={step} onStepSelect={(next) => goTo(next)} />
+          <OnboardingStepper
+            currentStep={step}
+            onStepSelect={(next) => {
+              void persistDraft()
+                .then(() => goTo(next))
+                .catch((error) => {
+                  setFormError(getApiErrorMessage(error, "No pudimos guardar. Inténtalo de nuevo."));
+                });
+            }}
+          />
         </footer>
       </section>
 
@@ -396,7 +457,7 @@ export function OnboardingPage() {
               <button
                 type="button"
                 className="onboarding-nav__btn onboarding-nav__btn--primary"
-                onClick={() => navigate("/", { replace: true })}
+                onClick={() => void onLeave()}
               >
                 Salir
               </button>

@@ -11,10 +11,17 @@ export async function saveOnboardingProfile(form: OnboardingForm, completed = fa
   return data.data.profile;
 }
 
-export async function uploadOnboardingPhoto(file: File) {
+export async function uploadOnboardingPhoto(file: File, onProgress?: (percent: number) => void) {
   const form = new FormData();
   form.append("image", file);
-  const { data } = await api.post<ApiResponse<{ profile: UserOnboardingProfile }>>("/auth/onboarding/photo", form);
+  const { data } = await api.post<ApiResponse<{ profile: UserOnboardingProfile }>>("/auth/onboarding/photo", form, {
+    onUploadProgress(event) {
+      if (!event.total) {
+        return;
+      }
+      onProgress?.(Math.round((event.loaded / event.total) * 100));
+    },
+  });
   return data.data.profile;
 }
 

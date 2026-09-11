@@ -1,14 +1,19 @@
 import {
+  BookOpen,
   Building2,
+  Camera,
   Church,
   CloudSun,
+  Coffee,
   Compass,
+  Dumbbell,
   Flower2,
   Heart,
   Home,
   Landmark,
   Mountain,
   Music,
+  Palette,
   Palmtree,
   PartyPopper,
   Snowflake,
@@ -18,6 +23,7 @@ import {
   Users,
   Utensils,
   Wallet,
+  Wrench,
   type LucideIcon,
 } from "lucide-react";
 import type { AvatarConfig } from "../types";
@@ -42,6 +48,8 @@ export const ONBOARDING_COUNTRIES = ["Colombia"] as const;
 export const INTEREST_ALIASES: Record<string, string> = {
   Comida: "Gastronomía",
   Fiesta: "Fiesta / Vida nocturna",
+  "Vida nocturna": "Fiesta / Vida nocturna",
+  Bienestar: "Relajación",
 };
 
 export const INTEREST_OPTIONS: OnboardingOption[] = [
@@ -50,6 +58,16 @@ export const INTEREST_OPTIONS: OnboardingOption[] = [
   { value: "Cultura", label: "Cultura", icon: Landmark },
   { value: "Aventura", label: "Aventura", icon: Compass },
   { value: "Relajación", label: "Bienestar", icon: Flower2 },
+  { value: "Arte y creatividad", label: "Arte y creatividad", icon: Palette },
+  { value: "Deportes", label: "Deportes", icon: Dumbbell },
+  { value: "Historia y patrimonio", label: "Historia y patrimonio", icon: Landmark },
+  { value: "Música", label: "Música", icon: Music },
+  { value: "Talleres", label: "Talleres", icon: Wrench },
+  { value: "Planes urbanos", label: "Planes urbanos", icon: Building2 },
+  { value: "Café", label: "Café", icon: Coffee },
+  { value: "Fotografía", label: "Fotografía", icon: Camera },
+  { value: "Danza", label: "Danza", icon: Heart },
+  { value: "Literatura", label: "Literatura", icon: BookOpen },
   { value: "Fiesta / Vida nocturna", label: "Vida nocturna", icon: PartyPopper },
 ];
 
@@ -150,6 +168,24 @@ export const AVATAR_FACES = [
   { id: "round", label: "Redondeado" },
 ] as const;
 
+export const AVATAR_EYES = [
+  { id: "almond", label: "Almendrados" },
+  { id: "round", label: "Redondos" },
+  { id: "lidded", label: "Párpado suave" },
+] as const;
+
+export const AVATAR_EYEBROWS = [
+  { id: "soft", label: "Suaves" },
+  { id: "defined", label: "Marcadas" },
+  { id: "arched", label: "Arqueadas" },
+] as const;
+
+export const AVATAR_MOUTHS = [
+  { id: "neutral", label: "Neutra" },
+  { id: "soft-smile", label: "Sonrisa suave" },
+  { id: "calm", label: "Sereno" },
+] as const;
+
 export const AVATAR_HAIR_STYLES = [
   { id: "short", label: "Corto" },
   { id: "wavy", label: "Ondulado" },
@@ -191,9 +227,12 @@ export const AVATAR_GLASSES = [
 ] as const;
 
 export const DEFAULT_AVATAR_CONFIG: AvatarConfig = {
-  version: 1,
+  version: 2,
   skinTone: "honey",
   face: "soft",
+  eyes: "almond",
+  eyebrows: "soft",
+  mouth: "soft-smile",
   hairStyle: "wavy",
   hairColor: "chestnut",
   outfit: "knit",
@@ -211,9 +250,12 @@ export function parseAvatarConfig(value: unknown): AvatarConfig {
     return allowed.some((item) => item.id === incoming) ? (incoming as T) : fallback;
   };
   return {
-    version: 1,
+    version: 2,
     skinTone: pick(AVATAR_SKIN_TONES, raw.skinTone, DEFAULT_AVATAR_CONFIG.skinTone),
     face: pick(AVATAR_FACES, raw.face, DEFAULT_AVATAR_CONFIG.face),
+    eyes: pick(AVATAR_EYES, raw.eyes, DEFAULT_AVATAR_CONFIG.eyes),
+    eyebrows: pick(AVATAR_EYEBROWS, raw.eyebrows, DEFAULT_AVATAR_CONFIG.eyebrows),
+    mouth: pick(AVATAR_MOUTHS, raw.mouth, DEFAULT_AVATAR_CONFIG.mouth),
     hairStyle: pick(AVATAR_HAIR_STYLES, raw.hairStyle, DEFAULT_AVATAR_CONFIG.hairStyle),
     hairColor: pick(AVATAR_HAIR_COLORS, raw.hairColor, DEFAULT_AVATAR_CONFIG.hairColor),
     outfit: pick(AVATAR_OUTFITS, raw.outfit, DEFAULT_AVATAR_CONFIG.outfit),
@@ -226,9 +268,12 @@ export function parseAvatarConfig(value: unknown): AvatarConfig {
 export function randomAvatarConfig(): AvatarConfig {
   const pick = <T>(items: readonly T[]) => items[Math.floor(Math.random() * items.length)]!;
   return {
-    version: 1,
+    version: 2,
     skinTone: pick(AVATAR_SKIN_TONES).id,
     face: pick(AVATAR_FACES).id,
+    eyes: pick(AVATAR_EYES).id,
+    eyebrows: pick(AVATAR_EYEBROWS).id,
+    mouth: pick(AVATAR_MOUTHS).id,
     hairStyle: pick(AVATAR_HAIR_STYLES).id,
     hairColor: pick(AVATAR_HAIR_COLORS).id,
     outfit: pick(AVATAR_OUTFITS).id,

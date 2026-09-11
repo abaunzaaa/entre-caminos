@@ -1,15 +1,18 @@
 export type RoleName = "SUPER_ADMIN" | "ADMIN" | "USER";
 
 export type AvatarConfig = {
-  version: 1;
+  version: 1 | 2;
   skinTone: string;
   face: string;
+  eyes: string;
+  eyebrows: string;
+  mouth: string;
   hairStyle: string;
   hairColor: string;
   outfit: string;
   outfitColor: string;
-  accessory?: string;
-  glasses?: string;
+  accessory: string;
+  glasses: string;
 };
 
 export type ProfileImageType = "PHOTO" | "AVATAR";

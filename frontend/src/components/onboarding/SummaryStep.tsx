@@ -28,52 +28,61 @@ function SummaryBlock({
             </span>
           ))
         ) : (
-          <span className="onboarding-tag is-empty">Sin seleccionar</span>
+          <span className="onboarding-tag is-empty">Más adelante</span>
         )}
       </div>
     </div>
   );
 }
 
-export function SummaryStep({ form, userName }: { form: OnboardingForm; userName: string }) {
+export function SummaryStep({
+  form,
+  userName,
+  onChangeImage,
+}: {
+  form: OnboardingForm;
+  userName: string;
+  onChangeImage: () => void;
+}) {
   const photo = form.localPhotoUrl || (form.profileImageUrl ? mediaUrl(form.profileImageUrl) : "");
   const place = locationSummary(form);
   const displayName = userName.trim();
 
   return (
-    <article className="onboarding-summary-card">
-      <header className="onboarding-summary-card__head">
-        <div className="onboarding-summary-card__photo">
+    <div className="onboarding-summary">
+      <div className="onboarding-summary__identity">
+        <div className="onboarding-summary__photo">
           {form.profileImageType === "PHOTO" && photo ? (
             <img src={photo} alt={displayName ? `Foto de ${displayName}` : "Foto de perfil"} />
           ) : (
-            <AvatarPreview config={form.avatarConfig} size={150} label={displayName ? `Avatar de ${displayName}` : "Avatar de perfil"} />
+            <AvatarPreview config={form.avatarConfig} size={200} label={displayName ? `Avatar de ${displayName}` : "Avatar de perfil"} />
           )}
         </div>
-        <div>
-          <p className="onboarding-summary-card__status">Perfil listo</p>
-          <h2>{displayName || "Tu perfil"}</h2>
-          {place ? (
-            <p>
-              <MapPin size={14} strokeWidth={1.8} aria-hidden="true" />
-              {place}
-            </p>
-          ) : null}
-        </div>
-      </header>
-      <div className="onboarding-summary-grid">
-        <SummaryBlock
-          icon={<MapPin size={14} strokeWidth={1.8} />}
-          label="Ubicación"
-          values={[form.country, form.department, form.city, form.neighborhood].filter(Boolean)}
-        />
-        <SummaryBlock icon={<Trees size={14} strokeWidth={1.8} />} label="Intereses" values={form.interests} />
-        <SummaryBlock icon={<Users size={14} strokeWidth={1.8} />} label="Compañía" values={form.companions} />
-        <SummaryBlock icon={<Heart size={14} strokeWidth={1.8} />} label="Ambientes" values={form.places} />
-        <SummaryBlock icon={<Music size={14} strokeWidth={1.8} />} label="Música" values={form.music} />
-        <SummaryBlock icon={<Wallet size={14} strokeWidth={1.8} />} label="Presupuesto" values={form.budget} />
-        <SummaryBlock icon={<CloudSun size={14} strokeWidth={1.8} />} label="Clima" values={form.climate} />
+        <p className="onboarding-summary-card__status">Perfil listo</p>
+        <h2>{displayName || "Tu perfil"}</h2>
+        {place ? (
+          <p className="onboarding-summary__place">
+            <MapPin size={14} strokeWidth={1.8} aria-hidden="true" />
+            <span>{place}</span>
+          </p>
+        ) : null}
+        <button type="button" className="onboarding-text-btn" onClick={onChangeImage}>
+          Cambiar imagen
+        </button>
       </div>
-    </article>
+      <div className="onboarding-summary__details">
+        <div className="onboarding-summary-grid">
+          <SummaryBlock icon={<Trees size={14} strokeWidth={1.8} />} label="Intereses" values={form.interests} />
+          <SummaryBlock icon={<Users size={14} strokeWidth={1.8} />} label="Compañía" values={form.companions} />
+          <SummaryBlock icon={<Heart size={14} strokeWidth={1.8} />} label="Ambientes" values={form.places} />
+          <SummaryBlock icon={<Music size={14} strokeWidth={1.8} />} label="Música" values={form.music} />
+          <SummaryBlock icon={<Wallet size={14} strokeWidth={1.8} />} label="Presupuesto" values={form.budget} />
+          <SummaryBlock icon={<CloudSun size={14} strokeWidth={1.8} />} label="Clima" values={form.climate} />
+        </div>
+        <p className="onboarding-summary__saved">
+          Tus datos ya están guardados. Después podrás editar tus intereses y preferencias.
+        </p>
+      </div>
+    </div>
   );
 }
