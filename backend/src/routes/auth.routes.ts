@@ -67,6 +67,6 @@ const setGoogleProvider: RequestHandler = (req, _res, next) => {
   next();
 };
 
-authRouter.get("/google", authRateLimiter, setGoogleProvider, asyncHandler(authController.oauthStart));
-authRouter.get("/google/callback", authRateLimiter, setGoogleProvider, asyncHandler(authController.oauthCallback));
-authRouter.post("/google/callback", authRateLimiter, setGoogleProvider, asyncHandler(authController.oauthCallback));
+authRouter.get("/google", setGoogleProvider, asyncHandler(authController.oauthStart));
+authRouter.get("/google/callback", setGoogleProvider, asyncHandler(authController.oauthCallback));
+authRouter.post("/google/callback", setGoogleProvider, asyncHandler(authController.oauthCallback));

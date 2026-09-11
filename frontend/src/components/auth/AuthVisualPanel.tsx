@@ -1,43 +1,34 @@
+import { AuthFormBrand } from "./AuthFormBrand";
 import type { AuthMode } from "./authArt";
 
-const copy = {
-  title: "Cada camino guarda una historia",
-  description:
-    "Descubre experiencias que te conectan con nuevos lugares, personas y recuerdos.",
-  artAlt: "Colinas verdes de Antioquia, un paisaje para recorrer",
-  actions: {
-    login: "Crear cuenta",
-    register: "Iniciar sesión",
-  },
-} as const;
+const WAVE_PATH = "M100 0C58 90 14 200 22 360 30 520 86 590 72 740 58 890 40 940 100 1000V0Z";
+
+function AuthWave({ className }: { className: string }) {
+  return (
+    <svg className={className} viewBox="0 0 100 1000" preserveAspectRatio="none" aria-hidden="true">
+      <path d={WAVE_PATH} />
+    </svg>
+  );
+}
 
 export function AuthVisualPanel({
   mode,
   photo,
-  onAction,
 }: {
   mode: AuthMode;
   photo: string;
-  onAction?: () => void;
 }) {
   return (
     <div className={`auth-visual auth-visual--${mode}`}>
-      <img src={photo} alt={copy.artAlt} className="auth-visual__photo" />
+      <img
+        src={photo}
+        alt="Pareja recorriendo un lago entre bosques"
+        className="auth-visual__photo"
+      />
       <div className="auth-visual__veil" aria-hidden="true" />
-      <svg className="auth-visual__wave" viewBox="0 0 180 900" preserveAspectRatio="none" aria-hidden="true">
-        <path d="M180 0C70 70 10 160 90 280c80 120-20 170-70 280-52 114 48 210 10 340h150V0Z" />
-      </svg>
-      <div className="auth-visual__content">
-        <div className="auth-visual__copy">
-          <h2 className="auth-visual__title">{copy.title}</h2>
-          <p className="auth-visual__text">{copy.description}</p>
-          {onAction ? (
-            <button type="button" className="auth-panel-btn" onClick={onAction}>
-              {copy.actions[mode]}
-            </button>
-          ) : null}
-        </div>
-      </div>
+      <AuthFormBrand variant="visual" hidden={mode === "login"} />
+      <AuthWave className="auth-visual__wave auth-visual__wave--end" />
+      <AuthWave className="auth-visual__wave auth-visual__wave--start" />
     </div>
   );
 }
