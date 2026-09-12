@@ -6,7 +6,13 @@ import { AuthScrollLock } from "./AuthScrollLock";
 import { LoginForm } from "../../pages/LoginPage";
 import "../../styles/auth-recovery-modal.css";
 
-export function AuthForgotModalLayout({ children }: { children: ReactNode }) {
+export function AuthForgotModalLayout({
+  children,
+  titleId = "forgot-password-title",
+}: {
+  children: ReactNode;
+  titleId?: string;
+}) {
   const closeRef = useRef<HTMLAnchorElement>(null);
 
   useEffect(() => {
@@ -39,7 +45,7 @@ export function AuthForgotModalLayout({ children }: { children: ReactNode }) {
           className="auth-recovery-modal"
           role="dialog"
           aria-modal="true"
-          aria-labelledby="forgot-password-title"
+          aria-labelledby={titleId}
           onClick={(event) => event.stopPropagation()}
         >
           <Link ref={closeRef} to="/login" className="auth-recovery-close" aria-label="Cerrar">

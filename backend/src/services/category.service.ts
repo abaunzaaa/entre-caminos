@@ -3,7 +3,11 @@ import { normalizeCategoryIcon } from "../config/category-icons.js";
 import { prisma } from "../database/prisma.js";
 import type { AuthUser } from "../models/auth-user.js";
 import { ApiError } from "../utils/api-error.js";
-import { isSuperAdmin } from "../utils/permissions.js";
+import {
+  canManageApprovedCategories,
+  canMutateApprovedCatalog,
+  isSuperAdmin,
+} from "../utils/permissions.js";
 import { recordAudit } from "./audit.service.js";
 import { notifyCategoryApproved, notifyCategoryRejected, notifyCategorySubmitted } from "./notification.service.js";
 
@@ -92,7 +96,7 @@ export async function createCategory(
     throw ApiError.conflict("Ya existe una categoría con ese nombre");
   }
 
-  const approved = isSuperAdmin(actor);
+  const approved = canManageApprovedCategories(actor);
   const now = approved ? new Date() : null;
   const category = await prisma.category.create({
     data: {
@@ -129,7 +133,7 @@ export async function updateCategory(
   id: string,
   input: { name?: string; description?: string; icon?: string; status?: CategoryStatus },
 ) {
-  if (!isSuperAdmin(actor)) {
+  if (!canMutateApprovedCatalog(actor)) {
     throw ApiError.forbidden("Solo un super administrador puede editar categorías");
   }
 
@@ -145,7 +149,7 @@ export async function updateCategory(
   }
 
   const statusPatch =
-    input.status && isSuperAdmin(actor)
+    input.status && canManageApprovedCategories(actor)
       ? {
           status: input.status,
           rejectionReason: input.status === "REJECTED" ? undefined : null,
@@ -184,7 +188,7 @@ async function findCategoryCreatorId(categoryId: string) {
 }
 
 export async function approveCategory(actor: AuthUser, id: string) {
-  if (!isSuperAdmin(actor)) {
+  if (!canManageApprovedCategories(actor)) {
     throw ApiError.forbidden("Solo un super administrador puede aprobar categorías");
   }
   const current = await getCategory(id);
@@ -222,7 +226,7 @@ export async function approveCategory(actor: AuthUser, id: string) {
 }
 
 export async function rejectCategory(actor: AuthUser, id: string, reason: string) {
-  if (!isSuperAdmin(actor)) {
+  if (!canManageApprovedCategories(actor)) {
     throw ApiError.forbidden("Solo un super administrador puede rechazar categorías");
   }
   const trimmed = reason.trim();
@@ -265,7 +269,7 @@ export async function rejectCategory(actor: AuthUser, id: string, reason: string
 }
 
 export async function deleteCategory(actor: AuthUser, id: string) {
-  if (!isSuperAdmin(actor)) {
+  if (!canMutateApprovedCatalog(actor)) {
     throw ApiError.forbidden("Solo un super administrador puede eliminar categorías");
   }
   const category = await prisma.category.findUnique({

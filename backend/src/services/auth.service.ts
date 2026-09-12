@@ -296,7 +296,8 @@ export async function requestPasswordReset(email: string) {
   }
 
   if (!sent && env.NODE_ENV !== "production") {
-    logger.info("SendGrid no envió el correo. Enlace de recuperación (solo no-producción)", { resetUrl });
+    // Development-only: email provider unavailable. Keep the URL in server logs, never in the API/UI.
+    logger.info("SendGrid no envió el correo. Enlace de recuperación (solo desarrollo)", { resetUrl });
   }
 
   return genericResetResult(raw);

@@ -22,6 +22,7 @@ import {
   updateExperience,
   uploadImage,
 } from "../../services/catalog.service";
+import { canEditExperience, CATEGORIES_CHANGED_EVENT } from "../../utils/admin-access";
 import { getApiErrorMessage } from "../../utils/api-error";
 import { experienceImages, mediaUrl } from "../../utils/media";
 import { geocodeColombiaLocation, reverseGeocodeColombia } from "../../utils/geocode";
@@ -172,7 +173,6 @@ export function ExperienceFormPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { hasPermission, user } = useAuth();
-  const canReview = hasPermission("experiences.review");
   const isAdministrator = user?.role === "ADMIN";
   const isSuperAdmin = user?.role === "SUPER_ADMIN";
   const [categories, setCategories] = useState<Category[]>([]);
@@ -183,6 +183,7 @@ export function ExperienceFormPage() {
   const [uploading, setUploading] = useState(false);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [status, setStatus] = useState<ExperienceStatus>("PENDING");
+  const canSavePublished = !id || canEditExperience(status, hasPermission, user?.role);
   const [rejectionReason, setRejectionReason] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -233,19 +234,24 @@ export function ExperienceFormPage() {
 
   useEffect(() => {
     let cancelled = false;
-    getPublicCategories()
-      .then((items) => {
-        if (!cancelled) {
-          setCategories(Array.isArray(items) ? items : []);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setCategories([]);
-        }
-      });
+    function loadCategories() {
+      getPublicCategories()
+        .then((items) => {
+          if (!cancelled) {
+            setCategories(Array.isArray(items) ? items : []);
+          }
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setCategories([]);
+          }
+        });
+    }
+    loadCategories();
+    window.addEventListener(CATEGORIES_CHANGED_EVENT, loadCategories);
     return () => {
       cancelled = true;
+      window.removeEventListener(CATEGORIES_CHANGED_EVENT, loadCategories);
     };
   }, []);
 
@@ -411,6 +417,9 @@ export function ExperienceFormPage() {
   }
 
   async function persist(submitToReview: boolean) {
+    if (saving || uploading || createdOpen) {
+      return;
+    }
     setError("");
     if (!categoryId) {
       setError("Selecciona una categoría.");
@@ -978,7 +987,7 @@ export function ExperienceFormPage() {
                 </Button>
               </>
             ) : (
-              <Button type="submit" disabled={saving || uploading || Boolean(id && status === "PUBLISHED" && !canReview)}>
+              <Button type="submit" disabled={saving || uploading || !canSavePublished}>
                 {saving ? "Guardando..." : id ? "Guardar cambios" : isSuperAdmin ? "Publicar experiencia" : "Enviar a revisión"}
               </Button>
             )}
