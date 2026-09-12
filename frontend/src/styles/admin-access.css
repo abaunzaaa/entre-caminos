@@ -123,34 +123,25 @@
   justify-content: center;
   min-height: 0;
   padding: 22px 20px 20px;
-  border: 1.5px solid transparent;
+  border: 1px solid var(--border-soft, #dce3df);
   border-radius: 20px;
-  background: #ffffff;
-  box-shadow: 0 1px 2px rgba(45, 48, 46, 0.04), 0 6px 16px rgba(45, 48, 46, 0.04);
+  background: var(--card-background, #f3f5f4);
+  box-shadow: 0 1px 2px rgba(45, 48, 46, 0.04), 0 4px 12px rgba(45, 48, 46, 0.03);
   color: inherit;
   text-align: center;
   cursor: pointer;
   transition:
-    border-color 250ms ease,
-    box-shadow 250ms ease,
-    transform 250ms ease,
-    background 250ms ease;
+    border-color 220ms ease,
+    box-shadow 220ms ease,
+    transform 220ms ease,
+    background 220ms ease;
 }
 
-.dash-access-roles > .dash-access-role:nth-child(1) {
-  background: rgba(232, 176, 186, 0.28);
-}
-
-.dash-access-roles > .dash-access-role:nth-child(2) {
-  background: rgba(176, 170, 132, 0.24);
-}
-
-.dash-access-roles > .dash-access-role:nth-child(3) {
-  background: rgba(236, 188, 152, 0.28);
-}
-
+.dash-access-roles > .dash-access-role:nth-child(1),
+.dash-access-roles > .dash-access-role:nth-child(2),
+.dash-access-roles > .dash-access-role:nth-child(3),
 .dash-access-roles > .dash-access-role:nth-child(4) {
-  background: rgba(220, 152, 118, 0.22);
+  background: var(--card-background, #f3f5f4);
 }
 
 .dash-access-role:hover,
@@ -158,12 +149,15 @@
 .admin-shell .dash--access .dash-access-role:hover,
 .admin-shell .dash--access .dash-access-role:focus-visible {
   outline: none;
-  transform: translateY(-3px);
-  box-shadow: 0 8px 22px rgba(45, 48, 46, 0.07), 0 2px 6px rgba(45, 48, 46, 0.04);
+  transform: translateY(-2px);
+  background: var(--card-background-hover, #edf1ee);
+  box-shadow: 0 6px 16px rgba(45, 48, 46, 0.06), 0 2px 6px rgba(45, 48, 46, 0.04);
 }
 
 .dash-access-role.is-selected {
-  box-shadow: 0 2px 4px rgba(45, 48, 46, 0.05), 0 10px 22px rgba(45, 48, 46, 0.06);
+  border-color: color-mix(in srgb, var(--brand-green, #284f45) 28%, #ffffff);
+  background: var(--brand-sage, #e3ece7);
+  box-shadow: 0 2px 4px rgba(45, 48, 46, 0.05), 0 8px 18px rgba(45, 48, 46, 0.05);
 }
 
 .dash-access-role.is-selected::before {
@@ -174,43 +168,22 @@
   left: 0;
   width: 2px;
   border-radius: 0 3px 3px 0;
-  background: rgba(45, 48, 46, 0.18);
+  background: var(--brand-green, #284f45);
 }
 
-.dash-access-roles > .dash-access-role:nth-child(1).is-selected {
-  background: rgba(232, 176, 186, 0.46);
-  border-color: rgba(196, 132, 144, 0.55);
-}
-
-.dash-access-roles > .dash-access-role:nth-child(1).is-selected::before {
-  background: rgba(184, 118, 132, 0.7);
-}
-
-.dash-access-roles > .dash-access-role:nth-child(2).is-selected {
-  background: rgba(176, 170, 132, 0.4);
-  border-color: rgba(148, 140, 104, 0.5);
-}
-
-.dash-access-roles > .dash-access-role:nth-child(2).is-selected::before {
-  background: rgba(132, 126, 92, 0.65);
-}
-
-.dash-access-roles > .dash-access-role:nth-child(3).is-selected {
-  background: rgba(236, 188, 152, 0.46);
-  border-color: rgba(212, 156, 112, 0.55);
-}
-
-.dash-access-roles > .dash-access-role:nth-child(3).is-selected::before {
-  background: rgba(196, 140, 100, 0.7);
-}
-
+.dash-access-roles > .dash-access-role:nth-child(1).is-selected,
+.dash-access-roles > .dash-access-role:nth-child(2).is-selected,
+.dash-access-roles > .dash-access-role:nth-child(3).is-selected,
 .dash-access-roles > .dash-access-role:nth-child(4).is-selected {
-  background: rgba(220, 152, 118, 0.4);
-  border-color: rgba(196, 124, 90, 0.5);
+  background: var(--brand-sage, #e3ece7);
+  border-color: color-mix(in srgb, var(--brand-green, #284f45) 28%, #ffffff);
 }
 
+.dash-access-roles > .dash-access-role:nth-child(1).is-selected::before,
+.dash-access-roles > .dash-access-role:nth-child(2).is-selected::before,
+.dash-access-roles > .dash-access-role:nth-child(3).is-selected::before,
 .dash-access-roles > .dash-access-role:nth-child(4).is-selected::before {
-  background: rgba(180, 112, 80, 0.65);
+  background: var(--brand-green, #284f45);
 }
 
 .dash-access-role.is-selected:hover,
@@ -226,36 +199,24 @@
   width: 42px;
   height: 42px;
   margin-bottom: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(40, 79, 69, 0.08);
   border-radius: 14px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0.38) 100%),
-    rgba(255, 255, 255, 0.65);
-  color: var(--admin-forest, #294942);
-  box-shadow:
-    0 6px 14px rgba(45, 48, 46, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.35);
-  backdrop-filter: blur(10px) saturate(1.1);
-  -webkit-backdrop-filter: blur(10px) saturate(1.1);
-  transition:
-    background 220ms ease,
-    box-shadow 220ms ease;
+  background: var(--brand-sage, #e3ece7);
+  color: var(--brand-green, #284f45);
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  transition: background 220ms ease;
 }
 
 .dash-access-role.is-explorer .dash-access-role__icon {
-  color: #5c5470;
+  color: var(--brand-green, #284f45);
 }
 
 .dash-access-role.is-selected .dash-access-role__icon {
-  border-color: rgba(255, 255, 255, 0.9);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.78) 0%, rgba(255, 255, 255, 0.42) 100%),
-    rgba(255, 255, 255, 0.7);
-  box-shadow:
-    0 8px 16px rgba(45, 48, 46, 0.07),
-    inset 0 1px 0 rgba(255, 255, 255, 0.95),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.4);
+  border-color: rgba(40, 79, 69, 0.12);
+  background: #ffffff;
+  box-shadow: none;
 }
 
 .dash-access-role__title {

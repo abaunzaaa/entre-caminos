@@ -103,7 +103,16 @@ export function AdministratorsPage() {
   const [dateSort, setDateSort] = useState<"newest" | "oldest">("newest");
   const [query, setQuery] = useState("");
 
-  const [inviteRole, setInviteRole] = useState<"ADMIN" | "SUPER_ADMIN">("ADMIN");
+  const [inviteRole, setInviteRole] = useState<"" | "ADMIN" | "SUPER_ADMIN">("");
+  const [inviteName, setInviteName] = useState("");
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [invitePassword, setInvitePassword] = useState("");
+  const [inviteFieldErrors, setInviteFieldErrors] = useState<{
+    name?: string;
+    email?: string;
+    password?: string;
+    role?: string;
+  }>({});
   const [inviteRoleOpen, setInviteRoleOpen] = useState(false);
   const [openMenu, setOpenMenu] = useState<"role" | "sort" | null>(null);
   const [pendingDeactivate, setPendingDeactivate] = useState<PublicUser | null>(null);
@@ -214,26 +223,51 @@ export function AdministratorsPage() {
     }
   }
 
+  function resetInviteForm() {
+    setInviteName("");
+    setInviteEmail("");
+    setInvitePassword("");
+    setInviteRole("");
+    setInviteRoleOpen(false);
+    setInviteFieldErrors({});
+  }
+
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!canCreateAdmins) {
+    if (!canCreateAdmins || saving) {
       return;
     }
-    const formElement = event.currentTarget;
-    const form = new FormData(formElement);
     setError("");
     setSuccess("");
+    const name = inviteName.trim();
+    const email = inviteEmail.trim().toLowerCase();
+    const password = invitePassword;
+    const nextErrors: typeof inviteFieldErrors = {};
+    if (!name) {
+      nextErrors.name = "Ingresa el nombre.";
+    }
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      nextErrors.email = "Ingresa un correo válido.";
+    }
+    if (!password || password.length < 8) {
+      nextErrors.password = "La contraseña debe tener al menos 8 caracteres.";
+    }
+    if (inviteRole !== "ADMIN" && inviteRole !== "SUPER_ADMIN") {
+      nextErrors.role = "Selecciona un rol.";
+    }
+    setInviteFieldErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) {
+      return;
+    }
     try {
       setSaving(true);
       await createAdministrator({
-        name: String(form.get("name")),
-        email: String(form.get("email")),
-        password: String(form.get("password")),
-        role: String(form.get("role")) as "ADMIN" | "SUPER_ADMIN",
+        name,
+        email,
+        password,
+        role: inviteRole as "ADMIN" | "SUPER_ADMIN",
       });
-      formElement.reset();
-      setInviteRole("ADMIN");
-      setInviteRoleOpen(false);
+      resetInviteForm();
       setSuccess("Administrador creado correctamente.");
       try {
         await load();
@@ -365,21 +399,56 @@ export function AdministratorsPage() {
                 Crea nuevos usuarios con permisos de administración dentro de la plataforma.
               </p>
             </div>
-            <form className="dash-team-invite" onSubmit={onSubmit}>
-              <Input name="name" label="Nombre" required />
-              <Input name="email" type="email" label="Correo" required />
-              <Input name="password" type="password" label="Contraseña" required />
+            <form className="dash-team-invite" onSubmit={onSubmit} noValidate>
+              <Input
+                name="name"
+                label="Nombre"
+                placeholder="Nombre completo"
+                autoComplete="off"
+                value={inviteName}
+                onChange={(event) => setInviteName(event.target.value)}
+                error={inviteFieldErrors.name}
+                required
+              />
+              <Input
+                name="email"
+                type="email"
+                label="Correo"
+                placeholder="correo@ejemplo.com"
+                autoComplete="off"
+                value={inviteEmail}
+                onChange={(event) => setInviteEmail(event.target.value)}
+                error={inviteFieldErrors.email}
+                required
+              />
+              <Input
+                name="password"
+                type="password"
+                label="Contraseña"
+                placeholder="Contraseña temporal"
+                autoComplete="new-password"
+                value={invitePassword}
+                onChange={(event) => setInvitePassword(event.target.value)}
+                error={inviteFieldErrors.password}
+                required
+              />
               <div className="dash-team-role" ref={inviteRoleRef}>
                 <span className="dash-team-role__label">Rol</span>
                 <input type="hidden" name="role" value={inviteRole} />
                 <button
                   type="button"
-                  className={`dash-team-role__trigger${inviteRoleOpen ? " is-open" : ""}`}
+                  className={`dash-team-role__trigger${inviteRoleOpen ? " is-open" : ""}${inviteFieldErrors.role ? " is-invalid" : ""}`}
                   aria-haspopup="listbox"
                   aria-expanded={inviteRoleOpen}
                   onClick={() => setInviteRoleOpen((open) => !open)}
                 >
-                  <span>{inviteRole === "SUPER_ADMIN" ? "Super administrador" : "Administrador"}</span>
+                  <span>
+                    {inviteRole === "SUPER_ADMIN"
+                      ? "Super administrador"
+                      : inviteRole === "ADMIN"
+                        ? "Administrador"
+                        : "Selecciona un rol"}
+                  </span>
                   <ChevronDown size={18} strokeWidth={1.7} aria-hidden="true" />
                 </button>
                 <div className={`dash-team-role__menu${inviteRoleOpen ? " is-open" : ""}`} role="listbox">
@@ -391,6 +460,7 @@ export function AdministratorsPage() {
                     onClick={() => {
                       setInviteRole("ADMIN");
                       setInviteRoleOpen(false);
+                      setInviteFieldErrors((current) => ({ ...current, role: undefined }));
                     }}
                   >
                     Administrador
@@ -403,11 +473,13 @@ export function AdministratorsPage() {
                     onClick={() => {
                       setInviteRole("SUPER_ADMIN");
                       setInviteRoleOpen(false);
+                      setInviteFieldErrors((current) => ({ ...current, role: undefined }));
                     }}
                   >
                     Super administrador
                   </button>
                 </div>
+                {inviteFieldErrors.role ? <p className="text-sm text-red-600">{inviteFieldErrors.role}</p> : null}
               </div>
               <p className="dash-section__lead dash-team-invite__full">
                 La contraseña necesita mayúscula, minúscula, número y símbolo.

@@ -24,8 +24,11 @@ export function canEditExperience(
   hasPermission: (permission: string) => boolean,
   role?: string | null,
 ) {
+  if (canMutateApprovedCatalog(role)) {
+    return true;
+  }
   if (status === "PUBLISHED" || status === "ARCHIVED") {
-    return canMutateApprovedCatalog(role);
+    return false;
   }
   return canReviewExperiences(hasPermission) || status === "PENDING" || status === "REJECTED" || status === "DRAFT";
 }
@@ -35,8 +38,11 @@ export function canDeleteExperience(
   hasPermission: (permission: string) => boolean,
   role?: string | null,
 ) {
+  if (canMutateApprovedCatalog(role)) {
+    return true;
+  }
   if (status === "PUBLISHED") {
-    return canMutateApprovedCatalog(role);
+    return false;
   }
   return canReviewExperiences(hasPermission) || status !== "PUBLISHED";
 }

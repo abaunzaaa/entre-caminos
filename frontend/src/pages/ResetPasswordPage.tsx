@@ -1,6 +1,5 @@
 import { FormEvent, useEffect, useId, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Check } from "lucide-react";
 import { AuthForgotModalLayout } from "../components/auth/AuthForgotModalLayout";
 import { AuthTextField } from "../components/auth/AuthTextField";
 import { PasswordRequirements } from "../components/auth/PasswordRequirements";
@@ -10,7 +9,7 @@ import {
   validateResetPasswordForm,
   type ResetPasswordFieldErrors,
 } from "../utils/register-validation";
-import logoEntreCaminos from "../assets/logo.png";
+import keyIcon from "../assets/key-recovery-icon.png";
 import "../styles/auth-recovery-modal.css";
 
 export function ResetPasswordPage() {
@@ -70,7 +69,7 @@ export function ResetPasswordPage() {
         {success ? (
           <div className="auth-reset-success" role="status">
             <span className="auth-reset-success__mark" aria-hidden="true">
-              <Check size={28} strokeWidth={2.2} />
+              <img src={keyIcon} alt="" width={76} height={76} decoding="async" />
             </span>
             <h1 id={titleId} className="auth-form__title">
               Contraseña actualizada
@@ -87,8 +86,8 @@ export function ResetPasswordPage() {
           </div>
         ) : (
           <>
-            <div className="auth-recovery-brand" aria-hidden="true">
-              <img src={logoEntreCaminos} alt="" />
+            <div className="auth-recovery-icon auth-reset-key" aria-hidden="true">
+              <img src={keyIcon} alt="" width={76} height={76} decoding="async" />
             </div>
             <header className="auth-form__header">
               <h1 id={titleId} className="auth-form__title">

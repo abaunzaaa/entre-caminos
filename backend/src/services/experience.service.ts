@@ -287,11 +287,12 @@ export async function updateExperience(
 ) {
   const current = await getExperience(id, { actor });
   const reviewer = canReviewExperiences(actor);
+  const superAdmin = canMutateApprovedCatalog(actor);
 
-  if (current.status === "PUBLISHED" || current.status === "ARCHIVED") {
-    if (!canMutateApprovedCatalog(actor)) {
-      throw ApiError.forbidden("Solo un super administrador puede editar experiencias publicadas o archivadas");
-    }
+  if (superAdmin) {
+    // SUPER_ADMIN may edit any experience status.
+  } else if (current.status === "PUBLISHED" || current.status === "ARCHIVED") {
+    throw ApiError.forbidden("Solo un super administrador puede editar experiencias publicadas o archivadas");
   } else if (!reviewer && current.createdBy !== actor.id) {
     throw ApiError.forbidden("No puedes editar esta experiencia");
   }
@@ -546,10 +547,10 @@ export async function changeExperienceStatus(actor: AuthUser, id: string, status
 
 export async function deleteExperience(actor: AuthUser, id: string) {
   const current = await getExperience(id, { actor });
-  if (current.status === "PUBLISHED") {
-    if (!canMutateApprovedCatalog(actor)) {
-      throw ApiError.forbidden("Solo un super administrador puede eliminar experiencias publicadas");
-    }
+  if (canMutateApprovedCatalog(actor)) {
+    // SUPER_ADMIN may delete any experience status.
+  } else if (current.status === "PUBLISHED") {
+    throw ApiError.forbidden("Solo un super administrador puede eliminar experiencias publicadas");
   } else if (!canReviewExperiences(actor) && current.createdBy !== actor.id) {
     throw ApiError.forbidden("No puedes eliminar esta experiencia");
   }

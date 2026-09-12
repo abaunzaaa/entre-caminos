@@ -37,7 +37,9 @@ export function AdminLayout() {
   const { user, loading, isAdmin, hasPermission } = useAuth();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(readCollapsed);
+  const [hoverExpanded, setHoverExpanded] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const sidebarCollapsed = collapsed && !hoverExpanded;
 
   useEffect(() => {
     try {
@@ -144,11 +146,17 @@ export function AdminLayout() {
       ) : null}
 
       <AdminSidebar
-        collapsed={collapsed}
+        collapsed={sidebarCollapsed}
         mobileOpen={mobileOpen}
         items={visibleLinks}
         onToggle={toggleSidebar}
         onCloseMobile={() => setMobileOpen(false)}
+        onHoverExpandChange={(expanded) => {
+          if (window.matchMedia("(max-width: 900px)").matches) {
+            return;
+          }
+          setHoverExpanded(expanded);
+        }}
       />
 
       <div className="admin-shell__main">

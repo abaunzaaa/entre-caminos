@@ -4,6 +4,7 @@ import { AuthFormBrand } from "../components/auth/AuthFormBrand";
 import { AuthTextField } from "../components/auth/AuthTextField";
 import { SocialButtons } from "../components/auth/SocialButtons";
 import { ContactModal } from "../components/contact/ContactModal";
+import { SuccessConfirmDialog } from "../components/ui/SuccessConfirmDialog";
 import { useAuth } from "../hooks/useAuth";
 import { consumeSessionExpiredMessage } from "../services/api";
 import { resendVerificationCode } from "../services/auth.service";
@@ -11,6 +12,8 @@ import { getApiErrorMessage } from "../utils/api-error";
 import { INACTIVE_ACCOUNT_CONTACT_REASON, isInactiveAccountMessage } from "../utils/auth-messages";
 import { needsOnboarding } from "../utils/onboarding";
 import { setPendingVerificationEmail } from "../utils/pending-verification";
+import keyIcon from "../assets/key-recovery-icon.png";
+import "../styles/admin-cta.css";
 
 const UNVERIFIED_LOGIN_MESSAGE = "Debes verificar tu correo antes de iniciar sesión.";
 const RESENT_CODE_NOTICE = "Te enviamos un nuevo código de verificación a tu correo.";
@@ -21,11 +24,12 @@ export function LoginForm() {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const [remember, setRemember] = useState(false);
+  const [sessionNotice, setSessionNotice] = useState(() => consumeSessionExpiredMessage());
   const [error, setError] = useState(
     () =>
       searchParams.get("oauthError") ||
       (location.state as { oauthError?: string } | null)?.oauthError ||
-      consumeSessionExpiredMessage(),
+      "",
   );
   const [pendingEmail, setPendingEmail] = useState("");
   const [attemptedEmail, setAttemptedEmail] = useState("");
@@ -160,6 +164,16 @@ export function LoginForm() {
         onClose={() => setContactOpen(false)}
         defaultEmail={attemptedEmail}
         defaultReason={INACTIVE_ACCOUNT_CONTACT_REASON}
+      />
+      <SuccessConfirmDialog
+        open={Boolean(sessionNotice)}
+        onClose={() => setSessionNotice("")}
+        icon={<img className="contact-success__icon" src={keyIcon} alt="" width={74} height={74} decoding="async" />}
+        title="Sesión finalizada"
+        description={sessionNotice || "Tu sesión ha finalizado. Por favor inicia sesión nuevamente."}
+        actionLabel="Entendido"
+        initialFocus="action"
+        className="contact-success--subtle"
       />
     </div>
   );

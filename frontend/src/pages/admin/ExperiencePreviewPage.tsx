@@ -13,7 +13,7 @@ import { getApiErrorMessage } from "../../utils/api-error";
 import { canDeleteExperience, canEditExperience, canReviewExperiences } from "../../utils/admin-access";
 import { formatPrice } from "../../utils/cn";
 import { formatAvailability, displayExternalUrl, durationParts, formatDuration } from "../../utils/experience-details";
-import { experienceImages, mediaUrl } from "../../utils/media";
+import { experienceImages, optimizedMediaUrl } from "../../utils/media";
 import type { Experience, ExperienceStatus } from "../../types";
 import superadmIlus2 from "../../assets/superadm-ilus2.png";
 import "../../styles/admin-access.css";
@@ -91,7 +91,7 @@ export function ExperiencePreviewPage() {
       : "";
   const pending = experience?.status === "PENDING";
   const photos = experience ? experienceImages(experience) : [];
-  const mainPhoto = photos[0] ? mediaUrl(photos[0]) : null;
+  const mainPhoto = photos[0] ? optimizedMediaUrl(photos[0], 1400) : null;
   const noteFacts = experience
     ? [
         ...(experience.creator?.name ? [{ label: "Creada por", value: experience.creator.name }] : []),
@@ -212,6 +212,41 @@ export function ExperiencePreviewPage() {
                   : "Así vería un explorador esta experiencia en Entre Caminos."}
               </span>
             </p>
+            {experience ? (
+              <div className="dash-cats-actions dash-exps-hero-actions">
+                {pending && canReview ? (
+                  <>
+                    <Button type="button" disabled={busy || deleting} onClick={() => void onApprove()}>
+                      {busy ? "Procesando..." : "Aprobar y publicar"}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      disabled={busy || deleting}
+                      onClick={() => setRejectOpen(true)}
+                    >
+                      Rechazar
+                    </Button>
+                  </>
+                ) : null}
+                {canEdit ? (
+                  <Link
+                    to={`/admin/experiencias/${experience.id}`}
+                    className="admin-cta inline-flex items-center justify-center"
+                  >
+                    Editar
+                  </Link>
+                ) : null}
+                {canDelete ? (
+                  <Button type="button" variant="secondary" disabled={deleting} onClick={() => setPendingDelete(true)}>
+                    Eliminar
+                  </Button>
+                ) : null}
+                <Link to="/admin/experiencias" className="admin-cta inline-flex items-center justify-center">
+                  Volver al listado
+                </Link>
+              </div>
+            ) : null}
           </div>
         </div>
         <div className="dash-access-hero" aria-hidden="true">
@@ -237,7 +272,7 @@ export function ExperiencePreviewPage() {
                 <Heart size={18} strokeWidth={1.7} fill={favoriteOn ? "currentColor" : "none"} aria-hidden="true" />
               </button>
               <ExperienceEditorialGallery
-                slides={experienceImages(experience).map((url) => mediaUrl(url))}
+                slides={experienceImages(experience).map((url) => optimizedMediaUrl(url, 1100))}
                 label={experience.title}
               />
             </div>
@@ -254,44 +289,7 @@ export function ExperiencePreviewPage() {
 
           <ExperienceEditorialPlace experience={experience} latitude={lat} longitude={lng} hasPoint={hasPoint} />
 
-          <ExperienceEditorialNearby
-            experience={experience}
-            footer={
-              <div className="dash-cats-actions">
-                {pending && canReview ? (
-                  <>
-                    <Button type="button" disabled={busy || deleting} onClick={() => void onApprove()}>
-                      {busy ? "Procesando..." : "Aprobar y publicar"}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      disabled={busy || deleting}
-                      onClick={() => setRejectOpen(true)}
-                    >
-                      Rechazar
-                    </Button>
-                  </>
-                ) : null}
-                {canEdit && experience ? (
-                  <Link
-                    to={`/admin/experiencias/${experience.id}`}
-                    className="admin-cta inline-flex items-center justify-center"
-                  >
-                    Editar
-                  </Link>
-                ) : null}
-                {canDelete ? (
-                  <Button type="button" variant="secondary" disabled={deleting} onClick={() => setPendingDelete(true)}>
-                    Eliminar
-                  </Button>
-                ) : null}
-                <Link to="/admin/experiencias" className="admin-cta inline-flex items-center justify-center">
-                  Volver al listado
-                </Link>
-              </div>
-            }
-          />
+          <ExperienceEditorialNearby experience={experience} />
         </section>
       ) : !error ? (
         <p className="dash-section__lead">Cargando experiencia…</p>

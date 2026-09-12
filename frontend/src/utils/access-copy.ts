@@ -29,7 +29,12 @@ export type RoleCopy = {
   canLabel: string;
 };
 
-export const CRITICAL_PERMISSIONS = new Set(["admins.manage", "roles.manage"]);
+export const CRITICAL_PERMISSIONS = new Set([
+  "admin.dashboard.view",
+  "admins.manage",
+  "roles.manage",
+  "permissions.manage",
+]);
 
 const PERMISSION_COPY: Record<string, PermissionCopy> = {
   "admin.dashboard.view": {

@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 import { cn } from "../../utils/cn";
 import logoMonogram from "../../assets/logo.png";
-import logoWordmark from "../../assets/titulo-encabezado.png";
 
 export type AdminNavItem = {
   to: string;
@@ -106,12 +105,14 @@ export function AdminSidebar({
   items,
   onToggle,
   onCloseMobile,
+  onHoverExpandChange,
 }: {
   collapsed: boolean;
   mobileOpen: boolean;
   items: AdminNavItem[];
   onToggle: () => void;
   onCloseMobile: () => void;
+  onHoverExpandChange?: (expanded: boolean) => void;
 }) {
   const compactBrand = collapsed && !mobileOpen;
 
@@ -119,28 +120,26 @@ export function AdminSidebar({
     <aside
       className={cn("admin-sidebar", collapsed && "is-collapsed", mobileOpen && "is-mobile-open")}
       aria-label="Menú administrativo"
+      onMouseEnter={() => onHoverExpandChange?.(true)}
+      onMouseLeave={() => onHoverExpandChange?.(false)}
+      onFocusCapture={() => onHoverExpandChange?.(true)}
+      onBlurCapture={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+          onHoverExpandChange?.(false);
+        }
+      }}
     >
       <div className="admin-sidebar__top">
         <div className="admin-sidebar__brand">
           <img
             src={logoMonogram}
-            alt={compactBrand ? "Entre Caminos" : ""}
+            alt="Entre Caminos"
             className="admin-sidebar__logo admin-sidebar__logo--mark"
-            width={38}
-            height={38}
+            width={96}
+            height={96}
             draggable={false}
             decoding="async"
-            aria-hidden={compactBrand ? undefined : true}
-          />
-          <img
-            src={logoWordmark}
-            alt={compactBrand ? "" : "Entre Caminos"}
-            className="admin-sidebar__logo admin-sidebar__logo--wordmark"
-            width={2100}
-            height={749}
-            draggable={false}
-            decoding="async"
-            aria-hidden={compactBrand ? true : undefined}
+            fetchPriority="high"
           />
         </div>
         <button

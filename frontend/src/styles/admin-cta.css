@@ -135,6 +135,12 @@
 
 .contact-success__close svg { display: block; width: 1rem; height: 1rem; }
 .contact-success__media { display: flex; align-items: center; justify-content: center; }
+.contact-success__media img {
+  display: block;
+  width: 4.5rem;
+  height: auto;
+  object-fit: contain;
+}
 .contact-success__icon {
   display: block;
   width: 74px;

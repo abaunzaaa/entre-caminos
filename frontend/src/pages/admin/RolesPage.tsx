@@ -28,6 +28,7 @@ export function RolesPage() {
   const [selectedId, setSelectedId] = useState("");
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const [pendingOff, setPendingOff] = useState<{ roleId: string; permissionId: string } | null>(null);
 
   const orderedRoles = useMemo(() => sortRoles(roles), [roles]);
@@ -36,20 +37,28 @@ export function RolesPage() {
   const explorer = selectedRole ? isExplorerRole(selectedRole.name) : false;
 
   async function load() {
-    const [nextRoles, nextPermissions] = await Promise.all([getRoles(), getPermissions()]);
-    setRoles(nextRoles);
-    setPermissions(nextPermissions);
-    setSelectedId((current) => {
-      if (current && nextRoles.some((role) => role.id === current)) {
-        return current;
-      }
-      const sorted = sortRoles(nextRoles);
-      return sorted[0]?.id ?? "";
-    });
+    setLoading(true);
+    try {
+      const [nextRoles, nextPermissions] = await Promise.all([getRoles(), getPermissions()]);
+      setRoles(nextRoles);
+      setPermissions(nextPermissions);
+      setSelectedId((current) => {
+        if (current && nextRoles.some((role) => role.id === current)) {
+          return current;
+        }
+        const sorted = sortRoles(nextRoles);
+        return sorted[0]?.id ?? "";
+      });
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {
-    load().catch(() => setError("No se pudieron cargar los accesos."));
+    load().catch(() => {
+      setError("No se pudieron cargar los accesos.");
+      setLoading(false);
+    });
   }, []);
 
   useEffect(() => {
@@ -97,9 +106,16 @@ export function RolesPage() {
   }
 
   function requestToggle(role: Role, permissionId: string) {
+    if (busyId) {
+      return;
+    }
     const current = role.permissions.map((item) => item.permission.id);
     const turningOff = current.includes(permissionId);
     const permissionName = permissionNameById(permissions, permissionId);
+    if (turningOff && role.name === "SUPER_ADMIN" && CRITICAL_PERMISSIONS.has(permissionName)) {
+      setError("El super administrador no puede perder los permisos indispensables para administrar el sistema.");
+      return;
+    }
     if (turningOff && CRITICAL_PERMISSIONS.has(permissionName)) {
       setPendingOff({ roleId: role.id, permissionId });
       return;
@@ -140,8 +156,10 @@ export function RolesPage() {
           <p className="dash-section__lead">Selecciona un rol para ver y ajustar sus permisos.</p>
         </div>
         {error ? <p className="dash-access-error">{error}</p> : null}
-        {orderedRoles.length === 0 ? (
+        {loading && orderedRoles.length === 0 ? (
           <p className="dash-section__lead">Cargando accesos...</p>
+        ) : orderedRoles.length === 0 ? (
+          <p className="dash-section__lead">No hay roles disponibles.</p>
         ) : (
           <div className="dash-access-roles">
             {orderedRoles.map((role) => (

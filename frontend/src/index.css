@@ -3,8 +3,17 @@
 @tailwind utilities;
 
 :root {
+  --page-background: #ffffff;
+  --card-background: #f3f5f4;
+  --card-background-hover: #edf1ee;
+  --border-soft: #dce3df;
+  --title-color: #17201d;
+  --secondary-text: #68736e;
+  --brand-green: #284f45;
+  --brand-sage: #e3ece7;
+  --field-blue-light: #eef5fa;
   color: #1a1a1a;
-  background: #ffffff;
+  background: var(--page-background);
   font-family: Inter, system-ui, sans-serif;
 }
 

@@ -1,7 +1,15 @@
 import { prisma } from "../database/prisma.js";
+import { PERMISSIONS, ROLES } from "../config/constants.js";
 import { ApiError } from "../utils/api-error.js";
 import { clearAuthUserCache } from "../utils/auth-cache.js";
 import { recordAudit } from "./audit.service.js";
+
+const SUPER_ADMIN_REQUIRED_PERMISSIONS = [
+  PERMISSIONS.DASHBOARD_VIEW,
+  PERMISSIONS.ADMINS_MANAGE,
+  PERMISSIONS.ROLES_MANAGE,
+  PERMISSIONS.PERMISSIONS_MANAGE,
+] as const;
 
 export async function listRoles() {
   return prisma.role.findMany({
@@ -36,10 +44,33 @@ export async function assignPermissions(actorId: string, roleId: string, permiss
     throw ApiError.notFound("Rol no encontrado");
   }
 
+  const uniqueIds = [...new Set(permissionIds)];
+  if (uniqueIds.length === 0) {
+    throw ApiError.badRequest("Un rol administrativo necesita al menos un permiso.");
+  }
+
+  const permissions = await prisma.permission.findMany({
+    where: { id: { in: uniqueIds } },
+    select: { id: true, name: true },
+  });
+  if (permissions.length !== uniqueIds.length) {
+    throw ApiError.badRequest("Hay permisos inválidos en la solicitud.");
+  }
+
+  if (role.name === ROLES.SUPER_ADMIN) {
+    const names = new Set(permissions.map((item) => item.name));
+    const missing = SUPER_ADMIN_REQUIRED_PERMISSIONS.filter((name) => !names.has(name));
+    if (missing.length > 0) {
+      throw ApiError.forbidden(
+        "El super administrador no puede perder los permisos indispensables para administrar el sistema.",
+      );
+    }
+  }
+
   await prisma.$transaction([
     prisma.rolePermission.deleteMany({ where: { roleId } }),
     prisma.rolePermission.createMany({
-      data: permissionIds.map((permissionId) => ({ roleId, permissionId })),
+      data: uniqueIds.map((permissionId) => ({ roleId, permissionId })),
       skipDuplicates: true,
     }),
   ]);

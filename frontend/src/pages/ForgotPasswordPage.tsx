@@ -5,7 +5,7 @@ import { AuthTextField } from "../components/auth/AuthTextField";
 import { forgotPassword } from "../services/auth.service";
 import { getApiErrorMessage } from "../utils/api-error";
 import { validateEmailFormat } from "../utils/register-validation";
-import keyIcon from "../assets/key-icon-green.png";
+import keyIcon from "../assets/key-recovery-icon.png";
 
 const GENERIC_MESSAGE =
   "Revisa tu correo. Te enviamos las instrucciones para crear una nueva contraseña.";

@@ -273,15 +273,17 @@ export async function getDashboardMetrics(actor: AuthUser) {
 
   const experiences = experienceGroups.reduce((sum, row) => sum + row._count._all, 0);
   const published = experienceGroups.find((row) => row.status === "PUBLISHED")?._count._all ?? 0;
-  const ownedCategoryIds = createdCategoryRows.map((row) => row.entityId);
-  const createdCategories = ownedCategoryIds.length
-    ? await prisma.category.count({
-        where: {
-          id: { in: ownedCategoryIds },
-          status: { in: ["PENDING", "APPROVED", "REJECTED"] },
-        },
-      })
-    : 0;
+  const ownedCategoryIds = createdCategoryRows.map((row) => row.entityId).filter(Boolean) as string[];
+  const createdCategories =
+    ownedCategoryIds.length === 0
+      ? 0
+      : await prisma.category.count({
+          where: {
+            id: { in: ownedCategoryIds },
+            status: { in: ["PENDING", "APPROVED", "REJECTED"] },
+          },
+        });
+
 
   return {
     users,

@@ -56,6 +56,9 @@ export function TeamInviteCarousel({
             alt=""
             className={`dash-team-gallery__img${slideIndex === index ? " is-active" : ""}`}
             aria-hidden={slideIndex !== index}
+            loading={slideIndex === 0 ? "eager" : "lazy"}
+            decoding="async"
+            fetchPriority={slideIndex === 0 ? "high" : "low"}
           />
         ))}
         {total > 1 ? (
