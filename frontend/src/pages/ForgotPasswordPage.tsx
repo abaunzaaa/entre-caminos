@@ -8,7 +8,8 @@ import { validateEmailFormat } from "../utils/register-validation";
 import keyIcon from "../assets/key-icon-green.png";
 
 const GENERIC_MESSAGE =
-  "Si el correo está registrado, recibirás un enlace para restablecer tu contraseña. Si no encuentras el correo en tu bandeja de entrada, revisa la carpeta de spam o correo no deseado.";
+  "Revisa tu correo. Te enviamos las instrucciones para crear una nueva contraseña.";
+const SPAM_HINT = "Si no lo encuentras, revisa la carpeta de spam.";
 
 export function ForgotPasswordPage() {
   const [emailError, setEmailError] = useState("");
@@ -36,8 +37,8 @@ export function ForgotPasswordPage() {
 
     try {
       setLoading(true);
-      const result = await forgotPassword(email);
-      setMessage(result.message || GENERIC_MESSAGE);
+      await forgotPassword(email);
+      setMessage(GENERIC_MESSAGE);
     } catch (err) {
       setFormError(getApiErrorMessage(err, "No pudimos enviar el correo. Inténtalo de nuevo."));
     } finally {
@@ -72,7 +73,12 @@ export function ForgotPasswordPage() {
               {formError}
             </p>
           )}
-          {message && <p className="auth-notice">{message}</p>}
+          {message ? (
+            <div className="auth-notice" role="status">
+              <p>{message}</p>
+              <p className="auth-notice__hint">{SPAM_HINT}</p>
+            </div>
+          ) : null}
           <button type="submit" className="auth-submit" disabled={loading}>
             {loading ? "Enviando..." : "Enviar enlace"}
           </button>

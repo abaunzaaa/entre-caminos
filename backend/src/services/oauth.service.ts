@@ -226,13 +226,14 @@ export async function loginOrRegisterOAuth(profile: OAuthProfile) {
       roleId: userRole.id,
       status: "ACTIVE",
       emailVerified: true,
-      oauthAccounts: {
-        create: {
-          provider: profile.provider,
-          providerAccountId: profile.providerAccountId,
+        oauthAccounts: {
+          create: {
+            provider: profile.provider,
+            providerAccountId: profile.providerAccountId,
+          },
         },
+        profile: { create: {} },
       },
-    },
     include: { role: true },
   });
 

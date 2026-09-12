@@ -6,7 +6,7 @@ import { AuthTextField } from "../components/auth/AuthTextField";
 import { PasswordRequirements } from "../components/auth/PasswordRequirements";
 import { SocialButtons } from "../components/auth/SocialButtons";
 import { TermsModal, type LegalDocument } from "../components/legal/TermsModal";
-import { saveOnboarding } from "../utils/onboarding";
+import { resetOnboarding } from "../utils/onboarding";
 import { getApiErrorMessage } from "../utils/api-error";
 import { setPendingVerificationEmail } from "../utils/pending-verification";
 import { validateRegisterForm, type RegisterFieldErrors } from "../utils/register-validation";
@@ -51,7 +51,7 @@ export function RegisterForm() {
         confirmPassword: payload.confirmPassword,
         termsAccepted: true,
       });
-      saveOnboarding({ name: payload.name.trim(), preferences: [] });
+      resetOnboarding({ name: payload.name.trim() });
       setPendingVerificationEmail(result.user.email);
       navigate("/verify-email", { replace: true, state: { email: result.user.email } });
     } catch (err) {

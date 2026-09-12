@@ -12,6 +12,7 @@ import {
   getAdminExperiences,
 } from "../../services/catalog.service";
 import { getApiErrorMessage } from "../../utils/api-error";
+import { canReviewExperiences } from "../../utils/admin-access";
 import { experienceImages, mediaUrl } from "../../utils/media";
 import type { Category, Experience, ExperienceStatus } from "../../types";
 import crearExp from "../../assets/crear-exp.png";
@@ -90,8 +91,8 @@ function SummaryPreviewCard({ experience, meta }: { experience: Experience; meta
 }
 
 export function ExperiencesPage() {
-  const { hasPermission } = useAuth();
-  const canReview = hasPermission("experiences.review");
+  const { hasPermission, user } = useAuth();
+  const canReview = canReviewExperiences(hasPermission);
   const [searchParams, setSearchParams] = useSearchParams();
   const [experiences, setExperiences] = useState<Experience[]>([]);
   const [pendingPreview, setPendingPreview] = useState<Experience[]>([]);
@@ -234,7 +235,7 @@ export function ExperiencesPage() {
   }
 
   async function confirmDelete() {
-    if (!pendingDelete) {
+    if (!pendingDelete || deleting) {
       return;
     }
     setError("");
@@ -663,6 +664,7 @@ export function ExperiencesPage() {
                     statusOpen={openMenu === statusMenu}
                     statusBusy={statusBusyId === experience.id}
                     canReview={canReview}
+                    role={user?.role}
                     onToggleStatus={() => setOpenMenu((current) => (current === statusMenu ? null : statusMenu))}
                     onChangeStatus={(status) => void onChangeStatus(experience, status)}
                     onDelete={() => setPendingDelete(experience)}

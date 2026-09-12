@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { createPortal } from "react-dom";
+import { useNavigate } from "react-router-dom";
 import { Camera, LogOut, UserRoundPen } from "lucide-react";
 import { Button } from "../ui/Button";
 import { useAuth } from "../../hooks/useAuth";
@@ -8,8 +9,9 @@ import {
   ADMIN_AVATAR_EVENT,
   clearAdminAvatar,
   fileToAvatarDataUrl,
-  readAdminAvatar,
+  resolveAvatarUrl,
   saveAdminAvatar,
+  toAvatarPayload,
 } from "../../utils/admin-avatar";
 import { cn } from "../../utils/cn";
 
@@ -42,12 +44,14 @@ function AvatarMark({
 }
 
 export function AdminUserMenu({ user }: { user: PublicUser | null }) {
-  const { logout } = useAuth();
+  const { logout, updateProfile } = useAuth();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  const [photo, setPhoto] = useState<string | null>(() => readAdminAvatar(user?.id));
+  const [photo, setPhoto] = useState<string | null>(() => resolveAvatarUrl(user));
   const [photoError, setPhotoError] = useState("");
   const [photoDialog, setPhotoDialog] = useState<PhotoDialog | null>(null);
   const [pendingPhoto, setPendingPhoto] = useState<string | null>(null);
+  const [photoSaving, setPhotoSaving] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pickingRef = useRef(false);
@@ -57,7 +61,7 @@ export function AdminUserMenu({ user }: { user: PublicUser | null }) {
 
   useEffect(() => {
     function syncPhoto() {
-      setPhoto(readAdminAvatar(user?.id));
+      setPhoto(resolveAvatarUrl(user));
     }
     syncPhoto();
     window.addEventListener(ADMIN_AVATAR_EVENT, syncPhoto);
@@ -66,7 +70,7 @@ export function AdminUserMenu({ user }: { user: PublicUser | null }) {
       window.removeEventListener(ADMIN_AVATAR_EVENT, syncPhoto);
       window.removeEventListener("storage", syncPhoto);
     };
-  }, [user?.id]);
+  }, [user, user?.id, user?.avatarUrl]);
 
   useEffect(() => {
     if (!open) {
@@ -159,23 +163,51 @@ export function AdminUserMenu({ user }: { user: PublicUser | null }) {
     }
   }
 
-  function savePendingPhoto() {
-    if (!pendingPhoto) {
+  async function savePendingPhoto() {
+    if (!pendingPhoto || !user) {
       return;
     }
-    if (user?.id) {
-      saveAdminAvatar(user.id, pendingPhoto);
+    setPhotoSaving(true);
+    setPhotoError("");
+    try {
+      const profile = await updateProfile({
+        name: user.name,
+        avatarUrl: toAvatarPayload(pendingPhoto),
+      });
+      const stored = resolveAvatarUrl(profile);
+      if (stored) {
+        saveAdminAvatar(user.id, stored);
+      }
+      setPhoto(stored);
+      closePhotoDialog();
+    } catch {
+      setPhotoError("No se pudo guardar la foto. Inténtalo de nuevo.");
+      setPhotoDialog("preview");
+    } finally {
+      setPhotoSaving(false);
     }
-    setPhoto(pendingPhoto);
-    closePhotoDialog();
   }
 
-  function removePhoto() {
-    if (user?.id) {
-      clearAdminAvatar(user.id);
+  async function removePhoto() {
+    if (!user) {
+      return;
     }
-    setPhoto(null);
-    closePhotoDialog();
+    setPhotoSaving(true);
+    setPhotoError("");
+    try {
+      await updateProfile({
+        name: user.name,
+        avatarUrl: null,
+      });
+      clearAdminAvatar(user.id);
+      setPhoto(null);
+      closePhotoDialog();
+    } catch {
+      setPhotoError("No se pudo eliminar la foto. Inténtalo de nuevo.");
+      setPhotoDialog("choose");
+    } finally {
+      setPhotoSaving(false);
+    }
   }
 
   const dialog =
@@ -241,15 +273,20 @@ export function AdminUserMenu({ user }: { user: PublicUser | null }) {
                   <div className="admin-usermenu__dialog-preview" aria-hidden="true">
                     <AvatarMark src={pendingPhoto} initial={initial} className="admin-usermenu__dialog-avatar" />
                   </div>
+                  {photoError ? (
+                    <p id="admin-photo-error" className="admin-usermenu__photo-error">
+                      {photoError}
+                    </p>
+                  ) : null}
                   <div className="dash-team-confirm__actions">
-                    <Button type="button" variant="secondary" onClick={pickPhoto}>
+                    <Button type="button" variant="secondary" onClick={pickPhoto} disabled={photoSaving}>
                       Elegir otra
                     </Button>
-                    <Button type="button" variant="ghost" onClick={closePhotoDialog}>
+                    <Button type="button" variant="ghost" onClick={closePhotoDialog} disabled={photoSaving}>
                       Cancelar
                     </Button>
-                    <Button type="button" onClick={savePendingPhoto}>
-                      Guardar
+                    <Button type="button" onClick={() => void savePendingPhoto()} disabled={photoSaving}>
+                      {photoSaving ? "Guardando…" : "Guardar"}
                     </Button>
                   </div>
                 </>
@@ -264,11 +301,11 @@ export function AdminUserMenu({ user }: { user: PublicUser | null }) {
                     Volverás a ver el avatar por defecto con tu inicial.
                   </p>
                   <div className="dash-team-confirm__actions">
-                    <Button type="button" variant="secondary" onClick={() => setPhotoDialog("choose")}>
+                    <Button type="button" variant="secondary" onClick={() => setPhotoDialog("choose")} disabled={photoSaving}>
                       Cancelar
                     </Button>
-                    <Button type="button" onClick={removePhoto}>
-                      Eliminar foto
+                    <Button type="button" onClick={() => void removePhoto()} disabled={photoSaving}>
+                      {photoSaving ? "Eliminando…" : "Eliminar foto"}
                     </Button>
                   </div>
                 </>
@@ -328,7 +365,15 @@ export function AdminUserMenu({ user }: { user: PublicUser | null }) {
         </div>
 
         <div className="admin-usermenu__list" role="menu">
-          <button type="button" className="admin-usermenu__item" role="menuitem" onClick={() => setOpen(false)}>
+          <button
+            type="button"
+            className="admin-usermenu__item"
+            role="menuitem"
+            onClick={() => {
+              setOpen(false);
+              navigate("/admin/perfil");
+            }}
+          >
             <UserRoundPen size={18} strokeWidth={1.7} />
             Editar perfil
           </button>

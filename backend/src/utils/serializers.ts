@@ -6,6 +6,12 @@ export function publicUser(user: {
   status: string;
   createdAt: Date;
   role: { name: string };
+  phone?: string | null;
+  country?: string | null;
+  department?: string | null;
+  city?: string | null;
+  address?: string | null;
+  avatarUrl?: string | null;
 }) {
   return {
     id: user.id,
@@ -15,5 +21,11 @@ export function publicUser(user: {
     status: user.status,
     role: user.role.name,
     createdAt: user.createdAt,
+    phone: user.phone ?? null,
+    country: user.country ?? null,
+    department: user.department ?? null,
+    city: user.city ?? null,
+    address: user.address ?? null,
+    avatarUrl: user.avatarUrl ?? null,
   };
 }

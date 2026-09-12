@@ -15,14 +15,17 @@ import {
   getAdminExperiences,
   getAdministrators,
   getDashboard,
+  deleteExperience,
 } from "../../services/catalog.service";
-import { ADMIN_AVATAR_EVENT, readAdminAvatar } from "../../utils/admin-avatar";
+import { ADMIN_AVATAR_EVENT, resolveAvatarUrl } from "../../utils/admin-avatar";
 import { CountUp } from "../../components/admin/CountUp";
 import { DashCardRail } from "../../components/admin/DashCardRail";
 import { ExperienceCatalogCard } from "../../components/admin/ExperienceCatalogCard";
 import { Panel, StatusDot } from "../../components/admin/Panel";
+import { Button } from "../../components/ui/Button";
 import { useAuth } from "../../hooks/useAuth";
 import { getApiErrorMessage } from "../../utils/api-error";
+import { canReviewExperiences } from "../../utils/admin-access";
 import { getCategoryIcon } from "../../utils/category-icons";
 import catAgregadas from "../../assets/cat-creadas.png";
 import expeAgregadas from "../../assets/expe-agregadas.png";
@@ -135,7 +138,7 @@ const KPI: Array<{
 
 export function DashboardPage() {
   const { user, hasPermission } = useAuth();
-  const canReview = hasPermission("experiences.review");
+  const canReview = canReviewExperiences(hasPermission);
   const isStaffAdmin = user?.role === "ADMIN";
   const [metrics, setMetrics] = useState<DashboardStats | null>(null);
   const [experiences, setExperiences] = useState<Experience[]>([]);
@@ -146,15 +149,18 @@ export function DashboardPage() {
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [categoriesError, setCategoriesError] = useState("");
   const [experiencesLoading, setExperiencesLoading] = useState(true);
-  const [photo, setPhoto] = useState<string | null>(() => readAdminAvatar(user?.id));
+  const [pendingDelete, setPendingDelete] = useState<Experience | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [toast, setToast] = useState<{ text: string; tone: "success" | "error" } | null>(null);
+  const [photo, setPhoto] = useState<string | null>(() => resolveAvatarUrl(user));
 
   useEffect(() => {
-    setPhoto(readAdminAvatar(user?.id));
-  }, [user?.id]);
+    setPhoto(resolveAvatarUrl(user));
+  }, [user, user?.id, user?.avatarUrl]);
 
   useEffect(() => {
     function syncPhoto() {
-      setPhoto(readAdminAvatar(user?.id));
+      setPhoto(resolveAvatarUrl(user));
     }
     window.addEventListener(ADMIN_AVATAR_EVENT, syncPhoto);
     window.addEventListener("storage", syncPhoto);
@@ -162,7 +168,7 @@ export function DashboardPage() {
       window.removeEventListener(ADMIN_AVATAR_EVENT, syncPhoto);
       window.removeEventListener("storage", syncPhoto);
     };
-  }, [user?.id]);
+  }, [user, user?.id, user?.avatarUrl]);
 
   useEffect(() => {
     if (!user?.id) {
@@ -251,8 +257,42 @@ export function DashboardPage() {
   const initial = fullName.charAt(0).toUpperCase() || "A";
   const createdCategories = metrics?.createdCategories ?? 0;
   const createdExperiences = metrics?.createdExperiences ?? 0;
+
+  useEffect(() => {
+    if (!toast) {
+      return;
+    }
+    const timer = window.setTimeout(() => setToast(null), 4200);
+    return () => window.clearTimeout(timer);
+  }, [toast]);
+
+  async function confirmDelete() {
+    if (!pendingDelete || deleting) {
+      return;
+    }
+    try {
+      setDeleting(true);
+      await deleteExperience(pendingDelete.id);
+      setExperiences((current) => current.filter((item) => item.id !== pendingDelete.id));
+      setPendingDelete(null);
+      setToast({ tone: "success", text: "Experiencia eliminada." });
+    } catch (err) {
+      setToast({
+        tone: "error",
+        text: getApiErrorMessage(err, "No se pudo eliminar la experiencia."),
+      });
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   return (
     <div className="dash">
+      {toast ? (
+        <p className={`dash-team-toast${toast.tone === "error" ? " is-error" : ""}`} role="status">
+          {toast.text}
+        </p>
+      ) : null}
       <article id="admin-profile-summary-card" className="dash-profile">
         <div className="dash-profile__top">
           <span className="dash-profile__photo" aria-hidden="true">
@@ -345,7 +385,7 @@ export function DashboardPage() {
             ) : (
               <div className="dash-split__list">
                 {admins.map((admin) => {
-                  const avatar = readAdminAvatar(admin.id);
+                  const avatar = resolveAvatarUrl(admin);
                   const initial = admin.name.trim().charAt(0).toUpperCase() || "A";
                   return (
                     <article key={admin.id} className="dash-team-card">
@@ -446,13 +486,50 @@ export function DashboardPage() {
                 key={item.id}
                 experience={item}
                 canReview={canReview}
-                showManage={false}
+                role={user?.role}
+                showManage
+                onDelete={() => setPendingDelete(item)}
               />
             ))}
           </DashCardRail>
         )}
       </section>
 
+      {pendingDelete ? (
+        <div
+          className="dash-team-confirm"
+          role="presentation"
+          onClick={() => {
+            if (!deleting) {
+              setPendingDelete(null);
+            }
+          }}
+        >
+          <div
+            className="dash-team-confirm__card"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="dash-exp-delete-title"
+            aria-describedby="dash-exp-delete-copy"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h2 id="dash-exp-delete-title" className="dash-team-confirm__title">
+              ¿Estás seguro de eliminar esta experiencia?
+            </h2>
+            <p id="dash-exp-delete-copy" className="dash-team-confirm__lead">
+              Esta acción quita la experiencia del catálogo y no se puede deshacer.
+            </p>
+            <div className="dash-team-confirm__actions">
+              <Button type="button" variant="secondary" disabled={deleting} onClick={() => setPendingDelete(null)}>
+                Cancelar
+              </Button>
+              <Button type="button" disabled={deleting} onClick={() => void confirmDelete()}>
+                {deleting ? "Eliminando..." : "Eliminar"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

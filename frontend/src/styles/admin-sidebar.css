@@ -77,25 +77,88 @@
 .admin-sidebar__top {
   display: flex;
   flex-shrink: 0;
+  flex-direction: row;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
-  min-height: 44px;
-  margin-bottom: 16px;
-  padding: 0 2px 0 0;
+  min-height: 0;
+  margin-bottom: 18px;
+  padding: 0;
 }
 
 .admin-sidebar.is-collapsed .admin-sidebar__top {
   flex-direction: column;
-  justify-content: flex-start;
   align-items: center;
-  min-height: 44px;
-  gap: 0;
-  padding: 0;
+  justify-content: flex-start;
+  gap: 8px;
+}
+
+.admin-sidebar__brand {
+  position: relative;
+  display: grid;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-items: start;
+  min-width: 0;
+  height: 40px;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.admin-sidebar.is-collapsed .admin-sidebar__brand {
+  flex: 0 0 auto;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+}
+
+.admin-sidebar__logo {
+  grid-area: 1 / 1;
+  display: block;
+  object-fit: contain;
+  object-position: center;
+  user-select: none;
+  transition:
+    opacity 300ms var(--admin-ease),
+    transform 300ms var(--admin-ease);
+}
+
+.admin-sidebar__logo--mark {
+  width: 38px;
+  height: 38px;
+  max-width: 38px;
+  max-height: 38px;
+  opacity: 0;
+  transform: scale(0.92);
+}
+
+.admin-sidebar.is-collapsed .admin-sidebar__logo--mark {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.admin-sidebar__logo--wordmark {
+  width: auto;
+  max-width: 100%;
+  height: 40px;
+  object-position: left center;
+  opacity: 1;
+  transform: scale(1);
+  filter: invert(1) sepia(0.32) saturate(1.7) hue-rotate(112deg) brightness(0.5);
+}
+
+.admin-sidebar.is-collapsed .admin-sidebar__logo--wordmark {
+  width: 38px;
+  height: 38px;
+  object-position: center;
+  opacity: 0;
+  transform: scale(0.96);
 }
 
 .admin-sidebar__toggle {
   display: grid;
   flex-shrink: 0;
+  align-self: center;
   place-items: center;
   width: 40px;
   height: 40px;
@@ -327,7 +390,6 @@
     padding-right: 12px;
   }
 
-  .admin-sidebar.is-collapsed .admin-sidebar__top,
   .admin-sidebar.is-collapsed .admin-nav-item,
   .admin-sidebar.is-collapsed .admin-sidebar__action {
     justify-content: flex-start;
@@ -340,10 +402,31 @@
   .admin-sidebar.is-collapsed .admin-sidebar__top {
     flex-direction: row;
     align-items: center;
-    justify-content: flex-start;
-    min-height: 44px;
+    justify-content: space-between;
     gap: 8px;
-    padding: 0 6px;
+    padding: 0;
+  }
+
+  .admin-sidebar.is-collapsed .admin-sidebar__brand {
+    flex: 1 1 auto;
+    width: auto;
+    min-width: 0;
+    height: 40px;
+    justify-items: start;
+  }
+
+  .admin-sidebar.is-collapsed .admin-sidebar__logo--mark {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+
+  .admin-sidebar.is-collapsed .admin-sidebar__logo--wordmark {
+    width: auto;
+    max-width: 100%;
+    height: 40px;
+    object-position: left center;
+    opacity: 1;
+    transform: scale(1);
   }
 
   .admin-sidebar.is-collapsed .admin-nav-item__label,
@@ -383,7 +466,8 @@
   .admin-nav-item,
   .admin-nav-item__label,
   .admin-sidebar__toggle,
-  .admin-sidebar__action {
+  .admin-sidebar__action,
+  .admin-sidebar__logo {
     transition: none;
   }
 }
