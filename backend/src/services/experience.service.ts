@@ -4,7 +4,11 @@ import { prisma } from "../database/prisma.js";
 import type { AuthUser } from "../models/auth-user.js";
 import { ApiError } from "../utils/api-error.js";
 import { resolveExperienceDuration } from "../utils/experience-duration.js";
-import { canReviewExperiences, publishesExperiencesDirectly } from "../utils/permissions.js";
+import {
+  canMutateApprovedCatalog,
+  canReviewExperiences,
+  publishesExperiencesDirectly,
+} from "../utils/permissions.js";
 import { recordAudit } from "./audit.service.js";
 import {
   notifyExperienceApproved,
@@ -284,8 +288,12 @@ export async function updateExperience(
   const current = await getExperience(id, { actor });
   const reviewer = canReviewExperiences(actor);
 
-  if (!reviewer && (current.status === "PUBLISHED" || current.status === "ARCHIVED")) {
-    throw ApiError.forbidden("No puedes editar una experiencia ya publicada o archivada");
+  if (current.status === "PUBLISHED" || current.status === "ARCHIVED") {
+    if (!canMutateApprovedCatalog(actor)) {
+      throw ApiError.forbidden("Solo un super administrador puede editar experiencias publicadas o archivadas");
+    }
+  } else if (!reviewer && current.createdBy !== actor.id) {
+    throw ApiError.forbidden("No puedes editar esta experiencia");
   }
 
   if (input.categoryId && typeof input.categoryId === "string") {
@@ -538,8 +546,12 @@ export async function changeExperienceStatus(actor: AuthUser, id: string, status
 
 export async function deleteExperience(actor: AuthUser, id: string) {
   const current = await getExperience(id, { actor });
-  if (!canReviewExperiences(actor) && current.status === "PUBLISHED") {
-    throw ApiError.forbidden("No puedes eliminar una experiencia publicada");
+  if (current.status === "PUBLISHED") {
+    if (!canMutateApprovedCatalog(actor)) {
+      throw ApiError.forbidden("Solo un super administrador puede eliminar experiencias publicadas");
+    }
+  } else if (!canReviewExperiences(actor) && current.createdBy !== actor.id) {
+    throw ApiError.forbidden("No puedes eliminar esta experiencia");
   }
   await prisma.experience.delete({ where: { id } });
   await recordAudit({

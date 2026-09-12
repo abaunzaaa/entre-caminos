@@ -8,8 +8,9 @@ import { ExperienceEditorialGallery } from "../../components/admin/ExperienceEdi
 import { Button } from "../../components/ui/Button";
 import { formatDepartmentMunicipality } from "../../data/colombia-locations";
 import { useAuth } from "../../hooks/useAuth";
-import { approveExperience, getAdminExperience, rejectExperience } from "../../services/catalog.service";
+import { approveExperience, deleteExperience, getAdminExperience, rejectExperience } from "../../services/catalog.service";
 import { getApiErrorMessage } from "../../utils/api-error";
+import { canDeleteExperience, canEditExperience, canReviewExperiences } from "../../utils/admin-access";
 import { formatPrice } from "../../utils/cn";
 import { formatAvailability, displayExternalUrl, durationParts, formatDuration } from "../../utils/experience-details";
 import { experienceImages, mediaUrl } from "../../utils/media";
@@ -47,13 +48,15 @@ function formatPublishedDate(value?: string | null) {
 export function ExperiencePreviewPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { hasPermission } = useAuth();
-  const canReview = hasPermission("experiences.review");
+  const { hasPermission, user } = useAuth();
+  const canReview = canReviewExperiences(hasPermission);
   const [experience, setExperience] = useState<Experience | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [rejectOpen, setRejectOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
+  const [pendingDelete, setPendingDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [toast, setToast] = useState("");
   const [favoriteOn, setFavoriteOn] = useState(false);
 
@@ -80,6 +83,8 @@ export function ExperiencePreviewPage() {
   const lat = experience?.latitude ? Number(experience.latitude) : null;
   const lng = experience?.longitude ? Number(experience.longitude) : null;
   const hasPoint = Number.isFinite(lat) && Number.isFinite(lng);
+  const canEdit = experience ? canEditExperience(experience.status, hasPermission, user?.role) : false;
+  const canDelete = experience ? canDeleteExperience(experience.status, hasPermission, user?.role) : false;
   const published =
     experience?.status === "PUBLISHED"
       ? formatPublishedDate(experience.reviewedAt || experience.createdAt)
@@ -144,6 +149,23 @@ export function ExperiencePreviewPage() {
       setError(getApiErrorMessage(err, "No se pudo aprobar la experiencia"));
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function confirmDelete() {
+    if (!experience || deleting) {
+      return;
+    }
+    setError("");
+    try {
+      setDeleting(true);
+      await deleteExperience(experience.id);
+      navigate("/admin/experiencias");
+    } catch (err) {
+      setError(getApiErrorMessage(err, "No se pudo eliminar la experiencia"));
+      setPendingDelete(false);
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -238,13 +260,31 @@ export function ExperiencePreviewPage() {
               <div className="dash-cats-actions">
                 {pending && canReview ? (
                   <>
-                    <Button type="button" disabled={busy} onClick={() => void onApprove()}>
+                    <Button type="button" disabled={busy || deleting} onClick={() => void onApprove()}>
                       {busy ? "Procesando..." : "Aprobar y publicar"}
                     </Button>
-                    <Button type="button" variant="secondary" disabled={busy} onClick={() => setRejectOpen(true)}>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      disabled={busy || deleting}
+                      onClick={() => setRejectOpen(true)}
+                    >
                       Rechazar
                     </Button>
                   </>
+                ) : null}
+                {canEdit && experience ? (
+                  <Link
+                    to={`/admin/experiencias/${experience.id}`}
+                    className="admin-cta inline-flex items-center justify-center"
+                  >
+                    Editar
+                  </Link>
+                ) : null}
+                {canDelete ? (
+                  <Button type="button" variant="secondary" disabled={deleting} onClick={() => setPendingDelete(true)}>
+                    Eliminar
+                  </Button>
                 ) : null}
                 <Link to="/admin/experiencias" className="admin-cta inline-flex items-center justify-center">
                   Volver al listado
@@ -291,6 +331,42 @@ export function ExperiencePreviewPage() {
               </Button>
               <Button type="button" disabled={busy} onClick={() => void onReject()}>
                 {busy ? "Rechazando..." : "Rechazar experiencia"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {pendingDelete ? (
+        <div
+          className="dash-team-confirm"
+          role="presentation"
+          onClick={() => {
+            if (!deleting) {
+              setPendingDelete(false);
+            }
+          }}
+        >
+          <div
+            className="dash-team-confirm__card"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="exp-preview-delete-title"
+            aria-describedby="exp-preview-delete-copy"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h2 id="exp-preview-delete-title" className="dash-team-confirm__title">
+              ¿Estás seguro de eliminar esta experiencia?
+            </h2>
+            <p id="exp-preview-delete-copy" className="dash-team-confirm__lead">
+              Esta acción quita la experiencia del catálogo y no se puede deshacer.
+            </p>
+            <div className="dash-team-confirm__actions">
+              <Button type="button" variant="secondary" disabled={deleting} onClick={() => setPendingDelete(false)}>
+                Cancelar
+              </Button>
+              <Button type="button" disabled={deleting} onClick={() => void confirmDelete()}>
+                {deleting ? "Eliminando..." : "Eliminar"}
               </Button>
             </div>
           </div>

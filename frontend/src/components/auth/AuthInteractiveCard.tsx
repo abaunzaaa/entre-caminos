@@ -5,7 +5,7 @@ import { authScenicPhoto, type AuthMode } from "./authArt";
 import { cn } from "../../utils/cn";
 import "../../styles/auth-interactive.css";
 
-const ANIMATION_MS = 1400;
+const ANIMATION_MS = 1100;
 
 function usePrefersReducedMotion() {
   const [reduced, setReduced] = useState(

@@ -17,6 +17,7 @@ import {
 } from "../../services/catalog.service";
 import { useAuth } from "../../hooks/useAuth";
 import { getApiErrorMessage } from "../../utils/api-error";
+import { canManageApprovedCategories, canMutateApprovedCatalog, notifyCategoriesChanged } from "../../utils/admin-access";
 import { DEFAULT_CATEGORY_ICON, getCategoryIcon } from "../../utils/category-icons";
 import type { Category } from "../../types";
 import catIlus from "../../assets/cat-creadas.png";
@@ -98,8 +99,9 @@ const CATEGORY_STATUS_ORDER: Record<Category["status"], number> = {
 type CategoryStatusFilter = "all" | Category["status"];
 
 export function CategoriesPage() {
-  const { user } = useAuth();
-  const isSuperAdmin = user?.role === "SUPER_ADMIN";
+  const { hasPermission, user } = useAuth();
+  const canManageApproved = canManageApprovedCategories(hasPermission);
+  const canMutateApproved = canMutateApprovedCatalog(user?.role);
   const [categories, setCategories] = useState<Category[]>([]);
   const [error, setError] = useState("");
   const [editing, setEditing] = useState<Category | null>(null);
@@ -169,7 +171,7 @@ export function CategoriesPage() {
   }, [pendingDelete, pendingReject, deleting, reviewing]);
 
   function startEdit(category: Category) {
-    if (!isSuperAdmin) {
+    if (!canMutateApproved) {
       return;
     }
     setEditing(category);
@@ -186,6 +188,9 @@ export function CategoriesPage() {
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (saving || createdOpen) {
+      return;
+    }
     const formElement = event.currentTarget;
     const form = new FormData(formElement);
     setError("");
@@ -198,7 +203,7 @@ export function CategoriesPage() {
     try {
       setSaving(true);
       if (editing) {
-        if (!isSuperAdmin) {
+        if (!canMutateApproved) {
           setError("Solo un super administrador puede editar categorías");
           return;
         }
@@ -213,6 +218,7 @@ export function CategoriesPage() {
       formElement.reset();
       setIcon("");
       await load();
+      notifyCategoriesChanged();
     } catch (err) {
       const message = getApiErrorMessage(err, "No se pudo guardar");
       setError(message);
@@ -239,6 +245,7 @@ export function CategoriesPage() {
       setPendingDelete(null);
       setToast({ tone: "success", text: "Categoría eliminada." });
       await load();
+      notifyCategoriesChanged();
     } catch (err) {
       const message = getApiErrorMessage(err, "No se puede eliminar");
       setError(message);
@@ -255,6 +262,7 @@ export function CategoriesPage() {
       await approveCategory(category.id);
       setToast({ tone: "success", text: "Categoría aprobada." });
       await load();
+      notifyCategoriesChanged();
     } catch (err) {
       const message = getApiErrorMessage(err, "No se pudo aprobar");
       setError(message);
@@ -280,6 +288,7 @@ export function CategoriesPage() {
       setRejectReason("");
       setToast({ tone: "success", text: "Categoría rechazada." });
       await load();
+      notifyCategoriesChanged();
     } catch (err) {
       const message = getApiErrorMessage(err, "No se pudo rechazar");
       setRejectError(message);
@@ -544,12 +553,12 @@ export function CategoriesPage() {
                         <p className="dash-team-card__email">{category.rejectionReason}</p>
                       ) : null}
                     </div>
-                    {isSuperAdmin ? (
+                    {canMutateApproved ? (
                       <Button type="button" variant="ghost" size="sm" className="ml-auto shrink-0" onClick={() => startEdit(category)}>
                         Editar
                       </Button>
                     ) : null}
-                    {isSuperAdmin && category.status === "PENDING" ? (
+                    {canManageApproved && category.status === "PENDING" ? (
                       <>
                         <Button
                           type="button"
@@ -577,7 +586,7 @@ export function CategoriesPage() {
                         </Button>
                       </>
                     ) : null}
-                    {isSuperAdmin ? (
+                    {canMutateApproved ? (
                       <Button type="button" variant="ghost" size="sm" className="shrink-0" onClick={() => setPendingDelete(category)}>
                         Eliminar
                       </Button>

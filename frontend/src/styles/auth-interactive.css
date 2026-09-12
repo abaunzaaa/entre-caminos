@@ -10,7 +10,7 @@
   --auth-placeholder: #9a9288;
   --auth-line: rgba(41, 73, 66, 0.12);
   --auth-error: #b56b63;
-  --auth-duration: 1400ms;
+  --auth-duration: 1100ms;
   --auth-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --auth-visual-width: 53%;
   --auth-visual-shift: 88.679245%;
@@ -118,7 +118,7 @@
   background: var(--auth-ivory);
   isolation: isolate;
   transform: translate3d(var(--auth-visual-shift), 0, 0);
-  transition: transform 1400ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 1100ms cubic-bezier(0.22, 1, 0.36, 1);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   box-shadow: none;

@@ -12,6 +12,7 @@ export const PERMISSIONS = {
   ROLES_MANAGE: "roles.manage",
   PERMISSIONS_MANAGE: "permissions.manage",
   CATEGORIES_MANAGE: "categories.manage",
+  CATEGORIES_REVIEW: "categories.review",
   EXPERIENCES_MANAGE: "experiences.manage",
   EXPERIENCES_REVIEW: "experiences.review",
   USERS_VIEW: "users.view",
@@ -42,7 +43,7 @@ export const PASSWORD_POLICY =
 export const PASSWORD_RESET_TTL_MS = 60 * 60 * 1000;
 export const PASSWORD_RESET_TTL_LABEL = "1 hora";
 export const PASSWORD_RESET_GENERIC_MESSAGE =
-  "Si el correo está registrado, recibirás un enlace para restablecer tu contraseña. Si no encuentras el correo en tu bandeja de entrada, revisa la carpeta de spam o correo no deseado.";
+  "Revisa tu correo. Te enviamos las instrucciones para crear una nueva contraseña.";
 
 export const EMAIL_VERIFICATION_TTL_MS = 10 * 60 * 1000;
 export const EMAIL_VERIFICATION_TTL_LABEL = "10 minutos";

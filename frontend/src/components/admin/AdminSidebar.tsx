@@ -7,10 +7,11 @@ import {
   Tags,
   Users,
   ExternalLink,
-  UserRoundPen,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "../../utils/cn";
+import logoMonogram from "../../assets/logo.png";
+import logoWordmark from "../../assets/titulo-encabezado.png";
 
 export type AdminNavItem = {
   to: string;
@@ -28,13 +29,6 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     icon: LayoutDashboard,
     permission: null,
     end: true,
-  },
-  {
-    to: "/admin/perfil",
-    label: "Editar perfil",
-    icon: UserRoundPen,
-    permission: null,
-    match: ["/admin/perfil", "/admin/profile"],
   },
   {
     to: "/admin/administradores",
@@ -119,17 +113,41 @@ export function AdminSidebar({
   onToggle: () => void;
   onCloseMobile: () => void;
 }) {
+  const compactBrand = collapsed && !mobileOpen;
+
   return (
     <aside
       className={cn("admin-sidebar", collapsed && "is-collapsed", mobileOpen && "is-mobile-open")}
       aria-label="Menú administrativo"
     >
       <div className="admin-sidebar__top">
+        <div className="admin-sidebar__brand">
+          <img
+            src={logoMonogram}
+            alt={compactBrand ? "Entre Caminos" : ""}
+            className="admin-sidebar__logo admin-sidebar__logo--mark"
+            width={38}
+            height={38}
+            draggable={false}
+            decoding="async"
+            aria-hidden={compactBrand ? undefined : true}
+          />
+          <img
+            src={logoWordmark}
+            alt={compactBrand ? "" : "Entre Caminos"}
+            className="admin-sidebar__logo admin-sidebar__logo--wordmark"
+            width={2100}
+            height={749}
+            draggable={false}
+            decoding="async"
+            aria-hidden={compactBrand ? true : undefined}
+          />
+        </div>
         <button
           type="button"
           className="admin-sidebar__toggle"
           aria-expanded={!collapsed || mobileOpen}
-          aria-label={collapsed && !mobileOpen ? "Expandir menú" : "Contraer menú"}
+          aria-label={compactBrand ? "Abrir menú" : "Cerrar menú"}
           onClick={onToggle}
         >
           <Menu size={20} strokeWidth={1.8} />

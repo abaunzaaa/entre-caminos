@@ -6,6 +6,7 @@ import { formatPrice } from "../../utils/cn";
 import type { Experience, ExperienceStatus } from "../../types";
 import { StatusDot } from "./Panel";
 import { TeamInviteCarousel } from "./TeamInviteCarousel";
+import { canDeleteExperience, canEditExperience } from "../../utils/admin-access";
 
 const STATUS_LABEL: Record<ExperienceStatus, string> = {
   DRAFT: "Borrador",
@@ -53,6 +54,7 @@ export function ExperienceCatalogCard({
   statusOpen = false,
   statusBusy = false,
   canReview,
+  role,
   showManage = true,
   onToggleStatus,
   onChangeStatus,
@@ -62,6 +64,7 @@ export function ExperienceCatalogCard({
   statusOpen?: boolean;
   statusBusy?: boolean;
   canReview: boolean;
+  role?: string | null;
   showManage?: boolean;
   onToggleStatus?: () => void;
   onChangeStatus?: (status: ExperienceStatus) => void;
@@ -74,8 +77,10 @@ export function ExperienceCatalogCard({
   const sent = formatSentAt(experience.submittedAt || experience.createdAt);
   const pending = experience.status === "PENDING";
   const viewLabel = pending && canReview ? "Revisar" : "Ver";
-  const canEdit =
-    canReview || experience.status === "PENDING" || experience.status === "REJECTED" || experience.status === "DRAFT";
+  const permissionCheck = (permission: string) =>
+    permission === "experiences.review" ? canReview : false;
+  const canEdit = canEditExperience(experience.status, permissionCheck, role);
+  const canDelete = Boolean(onDelete) && canDeleteExperience(experience.status, permissionCheck, role);
   const canChangeStatus = experience.status === "PUBLISHED" || experience.status === "ARCHIVED";
 
   return (
@@ -151,14 +156,18 @@ export function ExperienceCatalogCard({
               <Link to={`/admin/experiencias/${experience.id}/ver`}>Revisar</Link>
             </>
           ) : null}
-          {canEdit || canChangeStatus || (pending && canReview) ? (
-            <span className="dash-exps-tile__sep" aria-hidden="true">
-              |
-            </span>
+          {canDelete ? (
+            <>
+              {canEdit || canChangeStatus || (pending && canReview) ? (
+                <span className="dash-exps-tile__sep" aria-hidden="true">
+                  |
+                </span>
+              ) : null}
+              <button type="button" onClick={onDelete}>
+                Eliminar
+              </button>
+            </>
           ) : null}
-          <button type="button" onClick={onDelete}>
-            Eliminar
-          </button>
         </div>
         ) : null}
       </div>
