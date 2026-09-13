@@ -9,9 +9,10 @@ import type { RoleName } from "../config/constants.js";
 const ACCESS_MAX_AGE_MS = durationToMs(env.JWT_ACCESS_EXPIRES_IN, 15 * 60 * 1000);
 const REFRESH_MAX_AGE_MS = durationToMs(env.JWT_REFRESH_EXPIRES_IN, 7 * 24 * 60 * 60 * 1000);
 
+// Cross-site (Vercel frontend + Render API) needs SameSite=None + Secure.
 const cookieBase: CookieOptions = {
   httpOnly: true,
-  sameSite: "lax",
+  sameSite: isProduction ? "none" : "lax",
   secure: env.COOKIE_SECURE || isProduction,
   path: "/",
 };

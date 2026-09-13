@@ -206,7 +206,7 @@ function mapRegisterError(err: unknown): { form: string; fields: RegisterFieldEr
 
   if (!axiosErr.response) {
     return {
-      form: "No hay conexión con el servidor. Asegúrate de que el backend esté en http://localhost:4000.",
+      form: "No hay conexión con el servidor. Comprueba tu conexión e intenta de nuevo.",
       fields,
     };
   }

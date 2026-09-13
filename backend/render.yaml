@@ -1,9 +1,17 @@
 services:
   - type: web
     name: entre-caminos-api
-    env: node
+    runtime: node
     plan: starter
     rootDir: backend
     buildCommand: npm install && npx prisma generate && npm run build
-    startCommand: npx prisma migrate deploy && node dist/server.js
+    startCommand: npx prisma migrate deploy && npm run start
     healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: NODE_ENV
+        value: production
+      # Definir en el dashboard de Render (no en el repo):
+      # DATABASE_URL, DIRECT_URL, JWT_ACCESS_SECRET, JWT_REFRESH_SECRET,
+      # FRONTEND_URL, COOKIE_SECURE, SENDGRID_*, CLOUDINARY_*, CONTACT_TO_EMAIL

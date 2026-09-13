@@ -40,4 +40,9 @@ Archivo `frontend/.env`:
 - `COOKIE_SECURE=true`
 - `NODE_ENV=production`
 - PostgreSQL en Supabase (`entre-caminos-db` u otro proyecto de prod).
-- Frontend en Vercel, API en Render o Railway.
+- Frontend en **Vercel** (root `frontend/`, build `npm run build`, output `dist`).
+- API en **Render** (root `backend/`, ver `backend/render.yaml`).
+- En Vercel, variable de build: `VITE_API_URL=https://<servicio-render>/api` (URL pública del API).
+- En Render, `FRONTEND_URL=https://<proyecto-vercel>` (origen CORS, sin barra final).
+- Cloudinary obligatorio en producción (disco de Render es efímero).
+- SendGrid recomendado para verificación y recuperación de correo.

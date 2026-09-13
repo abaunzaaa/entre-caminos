@@ -26,7 +26,7 @@ export const SESSION_ENDED_MESSAGE = "Tu sesión ha finalizado. Por favor inicia
 
 export function getApiErrorMessage(err: unknown, fallback = "Ocurrió un error") {
   if (axios.isAxiosError(err) && !err.response) {
-    return "No hay conexión con el servidor. Abre el backend en http://localhost:4000 y vuelve a intentar.";
+    return "No hay conexión con el servidor. Comprueba tu conexión e intenta de nuevo.";
   }
 
   const body = err as ApiErrorBody;
