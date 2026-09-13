@@ -71,8 +71,10 @@ export function ExperienceCatalogCard({
   onDelete?: () => void;
 }) {
   const active = isCatalogActive(experience.status);
-  const slides = experienceImages(experience).map((url) => mediaUrl(url));
-  const gallery = slides.length ? slides : [mediaUrl(null)];
+  const slides = experienceImages(experience)
+    .slice(0, 3)
+    .map((url) => mediaUrl(url, 720));
+  const gallery = slides.length ? slides : [mediaUrl(null, 720)];
   const place = catalogPlace(experience.location);
   const sent = formatSentAt(experience.submittedAt || experience.createdAt);
   const pending = experience.status === "PENDING";

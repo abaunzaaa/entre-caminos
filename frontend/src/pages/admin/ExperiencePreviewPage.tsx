@@ -1,11 +1,14 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { Heart } from "lucide-react";
+import { ArrowLeft, Heart } from "lucide-react";
 import { ExperienceEditorialNearby } from "../../components/admin/ExperienceEditorialNearby";
 import { ExperienceEditorialPlace } from "../../components/admin/ExperienceEditorialPlace";
 import { ExperienceEditorialDossier } from "../../components/admin/ExperienceEditorialDossier";
 import { ExperienceEditorialGallery } from "../../components/admin/ExperienceEditorialGallery";
 import { Button } from "../../components/ui/Button";
+import { KeyConfirmDialog } from "../../components/ui/KeyConfirmDialog";
+import { SuccessConfirmDialog } from "../../components/ui/SuccessConfirmDialog";
+import { AuthKeyIcon } from "../../components/auth/AuthKeyIcon";
 import { formatDepartmentMunicipality } from "../../data/colombia-locations";
 import { useAuth } from "../../hooks/useAuth";
 import { approveExperience, deleteExperience, getAdminExperience, rejectExperience } from "../../services/catalog.service";
@@ -17,6 +20,7 @@ import { experienceImages, mediaUrl } from "../../utils/media";
 import type { Experience, ExperienceStatus } from "../../types";
 import superadmIlus2 from "../../assets/superadm-ilus2.png";
 import "../../styles/admin-access.css";
+import "../../styles/auth-recovery-modal.css";
 import "../../styles/experience-editorial-gallery.css";
 import "../../styles/experience-editorial-dossier.css";
 import "../../styles/experience-editorial-map.css";
@@ -56,6 +60,7 @@ export function ExperiencePreviewPage() {
   const [rejectOpen, setRejectOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [pendingDelete, setPendingDelete] = useState(false);
+  const [deletedOpen, setDeletedOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [toast, setToast] = useState("");
   const [favoriteOn, setFavoriteOn] = useState(false);
@@ -91,7 +96,7 @@ export function ExperiencePreviewPage() {
       : "";
   const pending = experience?.status === "PENDING";
   const photos = experience ? experienceImages(experience) : [];
-  const mainPhoto = photos[0] ? mediaUrl(photos[0]) : null;
+  const mainPhoto = photos[0] ? mediaUrl(photos[0], 1200) : null;
   const noteFacts = experience
     ? [
         ...(experience.creator?.name ? [{ label: "Creada por", value: experience.creator.name }] : []),
@@ -160,7 +165,8 @@ export function ExperiencePreviewPage() {
     try {
       setDeleting(true);
       await deleteExperience(experience.id);
-      navigate("/admin/experiencias");
+      setPendingDelete(false);
+      setDeletedOpen(true);
     } catch (err) {
       setError(getApiErrorMessage(err, "No se pudo eliminar la experiencia"));
       setPendingDelete(false);
@@ -201,10 +207,22 @@ export function ExperiencePreviewPage() {
         </p>
       ) : null}
 
-      <article className="dash-profile">
+      <article className="dash-profile dash-profile--review">
         <div className="dash-profile__top">
           <div className="dash-profile__identity">
-            <h1 className="dash-profile__name">{pending && canReview ? "Revisar experiencia" : "Vista previa"}</h1>
+            <div className="dash-exps-preview-heading">
+              <Link
+                to="/admin/experiencias"
+                className="dash-exps-preview-back"
+                aria-label="Volver al listado"
+                title="Volver al listado"
+              >
+                <ArrowLeft size={20} strokeWidth={1.75} aria-hidden="true" />
+              </Link>
+              <h1 className="dash-profile__name">
+                {pending && canReview ? "Revisar experiencia" : "Vista previa"}
+              </h1>
+            </div>
             <p className="dash-profile__row">
               <span>
                 {pending && canReview
@@ -212,6 +230,38 @@ export function ExperiencePreviewPage() {
                   : "Así vería un explorador esta experiencia en Entre Caminos."}
               </span>
             </p>
+            {experience ? (
+              <div className="dash-cats-actions dash-exps-preview-actions">
+                {pending && canReview ? (
+                  <>
+                    <Button type="button" disabled={busy || deleting} onClick={() => void onApprove()}>
+                      {busy ? "Procesando..." : "Aprobar y publicar"}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      disabled={busy || deleting}
+                      onClick={() => setRejectOpen(true)}
+                    >
+                      Rechazar
+                    </Button>
+                  </>
+                ) : null}
+                {canEdit ? (
+                  <Link
+                    to={`/admin/experiencias/${experience.id}`}
+                    className="admin-cta inline-flex items-center justify-center"
+                  >
+                    Editar
+                  </Link>
+                ) : null}
+                {canDelete ? (
+                  <Button type="button" variant="secondary" disabled={deleting} onClick={() => setPendingDelete(true)}>
+                    Eliminar
+                  </Button>
+                ) : null}
+              </div>
+            ) : null}
           </div>
         </div>
         <div className="dash-access-hero" aria-hidden="true">
@@ -237,7 +287,7 @@ export function ExperiencePreviewPage() {
                 <Heart size={18} strokeWidth={1.7} fill={favoriteOn ? "currentColor" : "none"} aria-hidden="true" />
               </button>
               <ExperienceEditorialGallery
-                slides={experienceImages(experience).map((url) => mediaUrl(url))}
+                slides={experienceImages(experience).map((url) => mediaUrl(url, 1400))}
                 label={experience.title}
               />
             </div>
@@ -254,44 +304,7 @@ export function ExperiencePreviewPage() {
 
           <ExperienceEditorialPlace experience={experience} latitude={lat} longitude={lng} hasPoint={hasPoint} />
 
-          <ExperienceEditorialNearby
-            experience={experience}
-            footer={
-              <div className="dash-cats-actions">
-                {pending && canReview ? (
-                  <>
-                    <Button type="button" disabled={busy || deleting} onClick={() => void onApprove()}>
-                      {busy ? "Procesando..." : "Aprobar y publicar"}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      disabled={busy || deleting}
-                      onClick={() => setRejectOpen(true)}
-                    >
-                      Rechazar
-                    </Button>
-                  </>
-                ) : null}
-                {canEdit && experience ? (
-                  <Link
-                    to={`/admin/experiencias/${experience.id}`}
-                    className="admin-cta inline-flex items-center justify-center"
-                  >
-                    Editar
-                  </Link>
-                ) : null}
-                {canDelete ? (
-                  <Button type="button" variant="secondary" disabled={deleting} onClick={() => setPendingDelete(true)}>
-                    Eliminar
-                  </Button>
-                ) : null}
-                <Link to="/admin/experiencias" className="admin-cta inline-flex items-center justify-center">
-                  Volver al listado
-                </Link>
-              </div>
-            }
-          />
+          <ExperienceEditorialNearby experience={experience} />
         </section>
       ) : !error ? (
         <p className="dash-section__lead">Cargando experiencia…</p>
@@ -338,40 +351,35 @@ export function ExperiencePreviewPage() {
       ) : null}
 
       {pendingDelete ? (
-        <div
-          className="dash-team-confirm"
-          role="presentation"
-          onClick={() => {
+        <KeyConfirmDialog
+          open={pendingDelete}
+          title="¿Eliminar esta experiencia?"
+          description="Se borrará del catálogo de forma permanente. Esta acción no se puede deshacer."
+          confirmLabel="Eliminar"
+          busy={deleting}
+          onCancel={() => {
             if (!deleting) {
               setPendingDelete(false);
             }
           }}
-        >
-          <div
-            className="dash-team-confirm__card"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="exp-preview-delete-title"
-            aria-describedby="exp-preview-delete-copy"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <h2 id="exp-preview-delete-title" className="dash-team-confirm__title">
-              ¿Estás seguro de eliminar esta experiencia?
-            </h2>
-            <p id="exp-preview-delete-copy" className="dash-team-confirm__lead">
-              Esta acción quita la experiencia del catálogo y no se puede deshacer.
-            </p>
-            <div className="dash-team-confirm__actions">
-              <Button type="button" variant="secondary" disabled={deleting} onClick={() => setPendingDelete(false)}>
-                Cancelar
-              </Button>
-              <Button type="button" disabled={deleting} onClick={() => void confirmDelete()}>
-                {deleting ? "Eliminando..." : "Eliminar"}
-              </Button>
-            </div>
-          </div>
-        </div>
+          onConfirm={() => void confirmDelete()}
+        />
       ) : null}
+
+      <SuccessConfirmDialog
+        open={deletedOpen}
+        onClose={() => {
+          setDeletedOpen(false);
+          navigate("/admin/experiencias");
+        }}
+        className="contact-success--subtle"
+        title="Experiencia eliminada"
+        description="La experiencia se eliminó correctamente. Volverás al listado de experiencias."
+        actionLabel="Ver experiencias"
+        closeLabel="Cerrar"
+        initialFocus="action"
+        icon={<AuthKeyIcon className="auth-reset-success__mark" />}
+      />
     </div>
   );
 }

@@ -14,6 +14,7 @@ import {
   logoutAccount,
   registerAccount,
   restoreSession,
+  changeMyPassword,
   updateMyProfile,
   verifyEmailAccount,
   type UpdateProfileInput,
@@ -35,6 +36,11 @@ type AuthContextValue = {
   logout: () => Promise<void>;
   refreshUser: () => Promise<PublicUser>;
   updateProfile: (payload: UpdateProfileInput) => Promise<PublicUser>;
+  changePassword: (payload: {
+    currentPassword?: string;
+    password: string;
+    confirmPassword: string;
+  }) => Promise<PublicUser>;
   refresh: () => Promise<PublicUser | null>;
   hasPermission: (permission: string) => boolean;
   isAdmin: boolean;
@@ -123,12 +129,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return profile;
   }, []);
 
+  const changePassword = useCallback(
+    async (payload: { currentPassword?: string; password: string; confirmPassword: string }) => {
+      const profile = await changeMyPassword(payload);
+      setStoredUser(profile);
+      setUser(profile);
+      return profile;
+    },
+    [],
+  );
+
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
       loading,
       refreshUser,
       updateProfile,
+      changePassword,
       async login(email, password, remember = false) {
         const result = await loginAccount({ email, password, remember });
         setUser(result.user);
@@ -180,7 +197,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       isAdmin: user?.role === "ADMIN" || user?.role === "SUPER_ADMIN",
     }),
-    [user, loading, refreshUser, updateProfile],
+    [user, loading, refreshUser, updateProfile, changePassword],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

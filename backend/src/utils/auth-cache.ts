@@ -17,6 +17,7 @@ export type CachedProfile = {
   city?: string | null;
   address?: string | null;
   avatarUrl?: string | null;
+  mustChangePassword?: boolean;
   profile?: unknown;
 };
 

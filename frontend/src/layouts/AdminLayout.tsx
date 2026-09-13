@@ -7,6 +7,7 @@ import {
   AdminSidebar,
 } from "../components/admin/AdminSidebar";
 import { AdminTopbar } from "../components/admin/AdminTopbar";
+import { AdminFirstPasswordDialog } from "../components/admin/AdminFirstPasswordDialog";
 import "../styles/admin-sidebar.css";
 import "../styles/admin-ui.css";
 import "../styles/admin-access.css";
@@ -37,7 +38,9 @@ export function AdminLayout() {
   const { user, loading, isAdmin, hasPermission } = useAuth();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(readCollapsed);
+  const [hoverExpanded, setHoverExpanded] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const sidebarCollapsed = collapsed && !hoverExpanded;
 
   useEffect(() => {
     try {
@@ -85,17 +88,32 @@ export function AdminLayout() {
     (
       location.pathname === "/admin/roles" ||
       location.pathname === "/admin/permissions" ||
-      location.pathname === "/admin/permisos"
+      location.pathname === "/admin/permisos" ||
+      location.pathname === "/admin/administradores" ||
+      location.pathname === "/admin/administrators"
     )
   ) {
     return <Navigate to="/admin" replace />;
   }
 
   const visibleLinks = ADMIN_NAV_ITEMS.filter((link) => {
-    if (link.to === "/admin/roles" && user?.role !== "SUPER_ADMIN") {
+    if (
+      (link.to === "/admin/roles" || link.to === "/admin/administradores") &&
+      user?.role !== "SUPER_ADMIN"
+    ) {
       return false;
     }
-    return !link.permission || hasPermission(link.permission);
+    if (!link.permission) {
+      return true;
+    }
+    if (hasPermission(link.permission)) {
+      return true;
+    }
+    // ADMIN always sees catalog nav; API still scopes content to what they created.
+    return (
+      user?.role === "ADMIN" &&
+      (link.permission === "categories.manage" || link.permission === "experiences.manage")
+    );
   });
   const isDashboard = location.pathname === "/admin";
   const isProfilePage = location.pathname === "/admin/perfil" || location.pathname === "/admin/profile";
@@ -144,11 +162,17 @@ export function AdminLayout() {
       ) : null}
 
       <AdminSidebar
-        collapsed={collapsed}
+        collapsed={sidebarCollapsed}
         mobileOpen={mobileOpen}
         items={visibleLinks}
         onToggle={toggleSidebar}
         onCloseMobile={() => setMobileOpen(false)}
+        onHoverExpandChange={(expanded) => {
+          if (window.matchMedia("(max-width: 900px)").matches) {
+            return;
+          }
+          setHoverExpanded(expanded);
+        }}
       />
 
       <div className="admin-shell__main">
@@ -185,6 +209,8 @@ export function AdminLayout() {
           </div>
         </main>
       </div>
+
+      <AdminFirstPasswordDialog open={Boolean(user?.mustChangePassword)} />
     </div>
   );
 }

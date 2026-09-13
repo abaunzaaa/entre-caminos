@@ -9,7 +9,7 @@
   --admin-muted: #6b746f;
   --admin-ink: #1a1a1a;
   --admin-sidebar-expanded: 248px;
-  --admin-sidebar-collapsed: 76px;
+  --admin-sidebar-collapsed: 88px;
   --admin-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --admin-font: Poppins, Nunito, system-ui, sans-serif;
 
@@ -75,15 +75,16 @@
 }
 
 .admin-sidebar__top {
+  position: relative;
   display: flex;
   flex-shrink: 0;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  justify-content: center;
+  gap: 10px;
   min-height: 0;
-  margin-bottom: 18px;
-  padding: 0;
+  margin-bottom: 22px;
+  padding: 4px 0 2px;
 }
 
 .admin-sidebar.is-collapsed .admin-sidebar__top {
@@ -91,16 +92,20 @@
   align-items: center;
   justify-content: flex-start;
   gap: 8px;
+  margin-bottom: 18px;
+  padding: 0;
 }
 
 .admin-sidebar__brand {
   position: relative;
   display: grid;
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   align-items: center;
-  justify-items: start;
+  justify-items: center;
   min-width: 0;
-  height: 40px;
+  width: 64px;
+  height: 64px;
+  margin-inline: auto;
   overflow: visible;
   pointer-events: none;
 }
@@ -108,57 +113,41 @@
 .admin-sidebar.is-collapsed .admin-sidebar__brand {
   flex: 0 0 auto;
   place-items: center;
-  width: 40px;
-  height: 40px;
+  width: 64px;
+  height: 64px;
 }
 
 .admin-sidebar__logo {
-  grid-area: 1 / 1;
   display: block;
   object-fit: contain;
   object-position: center;
   user-select: none;
-  transition:
-    opacity 300ms var(--admin-ease),
-    transform 300ms var(--admin-ease);
 }
 
 .admin-sidebar__logo--mark {
-  width: 38px;
-  height: 38px;
-  max-width: 38px;
-  max-height: 38px;
-  opacity: 0;
-  transform: scale(0.92);
+  width: 64px;
+  height: 64px;
+  max-width: 64px;
+  max-height: 64px;
+  opacity: 1;
+  transform: none;
 }
 
 .admin-sidebar.is-collapsed .admin-sidebar__logo--mark {
+  width: 64px;
+  height: 64px;
+  max-width: 64px;
+  max-height: 64px;
   opacity: 1;
-  transform: scale(1);
-}
-
-.admin-sidebar__logo--wordmark {
-  width: auto;
-  max-width: 100%;
-  height: 40px;
-  object-position: left center;
-  opacity: 1;
-  transform: scale(1);
-  filter: invert(1) sepia(0.32) saturate(1.7) hue-rotate(112deg) brightness(0.5);
-}
-
-.admin-sidebar.is-collapsed .admin-sidebar__logo--wordmark {
-  width: 38px;
-  height: 38px;
-  object-position: center;
-  opacity: 0;
-  transform: scale(0.96);
+  transform: none;
 }
 
 .admin-sidebar__toggle {
+  position: absolute;
+  top: 0;
+  right: 0;
   display: grid;
   flex-shrink: 0;
-  align-self: center;
   place-items: center;
   width: 40px;
   height: 40px;
@@ -168,6 +157,10 @@
   color: var(--admin-forest);
   cursor: pointer;
   transition: background 180ms ease, color 180ms ease;
+}
+
+.admin-sidebar.is-collapsed .admin-sidebar__toggle {
+  position: static;
 }
 
 .admin-sidebar__toggle:hover,
@@ -407,26 +400,50 @@
     padding: 0;
   }
 
+  .admin-sidebar.is-mobile-open .admin-sidebar__top {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 22px;
+    padding: 4px 0 2px;
+  }
+
   .admin-sidebar.is-collapsed .admin-sidebar__brand {
-    flex: 1 1 auto;
-    width: auto;
-    min-width: 0;
-    height: 40px;
-    justify-items: start;
+    flex: 0 0 auto;
+    width: 64px;
+    min-width: 64px;
+    height: 64px;
+    justify-items: center;
+  }
+
+  .admin-sidebar.is-mobile-open .admin-sidebar__brand {
+    width: 64px;
+    min-width: 64px;
+    height: 64px;
+    margin-inline: auto;
   }
 
   .admin-sidebar.is-collapsed .admin-sidebar__logo--mark {
-    opacity: 0;
-    transform: scale(0.92);
+    width: 64px;
+    height: 64px;
+    max-width: 64px;
+    max-height: 64px;
+    opacity: 1;
+    transform: none;
   }
 
-  .admin-sidebar.is-collapsed .admin-sidebar__logo--wordmark {
-    width: auto;
-    max-width: 100%;
-    height: 40px;
-    object-position: left center;
-    opacity: 1;
-    transform: scale(1);
+  .admin-sidebar.is-mobile-open .admin-sidebar__logo--mark {
+    width: 64px;
+    height: 64px;
+    max-width: 64px;
+    max-height: 64px;
+  }
+
+  .admin-sidebar.is-mobile-open .admin-sidebar__toggle {
+    position: absolute;
+    top: 0;
+    right: 0;
   }
 
   .admin-sidebar.is-collapsed .admin-nav-item__label,

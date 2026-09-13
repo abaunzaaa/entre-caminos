@@ -56,6 +56,17 @@ export const resetPasswordSchema = z
     path: ["confirmPassword"],
   });
 
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().optional(),
+    password: passwordSchema,
+    confirmPassword: z.string({ required_error: "Confirma tu contraseña" }).min(1, "Confirma tu contraseña"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Las contraseñas no coinciden",
+    path: ["confirmPassword"],
+  });
+
 export const verifyEmailSchema = z.object({
   email: z.string().trim().email("Correo electrónico inválido").toLowerCase(),
   code: z

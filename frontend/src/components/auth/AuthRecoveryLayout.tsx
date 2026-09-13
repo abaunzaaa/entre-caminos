@@ -17,7 +17,7 @@ export function AuthRecoveryLayout({
       <AuthScrollLock />
       <div className="auth-stage__frame">
         <div className="auth-card is-login" data-mode="login" data-motion="reduce">
-          <div className="auth-form-pane auth-form-pane--login">{children}</div>
+          <div className="auth-form-pane auth-form-pane--login auth-form-pane--recovery">{children}</div>
           <div className="auth-visual-pane">
             <AuthVisualPanel mode="login" photo={authScenicPhoto} />
             <AuthBackLink variant="icon" className="auth-back--photo" onBack={onBack} />

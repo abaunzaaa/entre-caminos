@@ -9,6 +9,8 @@ import {
 import type { PublicUser } from "../../types";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
+import { SuccessConfirmDialog } from "../../components/ui/SuccessConfirmDialog";
+import { AuthKeyIcon } from "../../components/auth/AuthKeyIcon";
 import { CountUp } from "../../components/admin/CountUp";
 import { Panel, StatusDot } from "../../components/admin/Panel";
 import { TeamInviteCarousel } from "../../components/admin/TeamInviteCarousel";
@@ -17,6 +19,7 @@ import { getApiErrorMessage } from "../../utils/api-error";
 import { resolveAvatarUrl } from "../../utils/admin-avatar";
 import adminIlus from "../../assets/admin-ilus.png";
 import superadmIlus from "../../assets/superadm-ilus.png";
+import "../../styles/auth-recovery-modal.css";
 
 function readRole(value: unknown): PublicUser["role"] | "" {
   if (typeof value === "string") {
@@ -96,14 +99,25 @@ export function AdministratorsPage() {
   const canCreateAdmins = user?.role === "SUPER_ADMIN";
   const [admins, setAdmins] = useState<PublicUser[]>([]);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [successOpen, setSuccessOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [statusFilter, setStatusFilter] = useState<"all" | "ACTIVE" | "INACTIVE">("all");
   const [roleFilter, setRoleFilter] = useState<"" | "ADMIN" | "SUPER_ADMIN">("");
   const [dateSort, setDateSort] = useState<"newest" | "oldest">("newest");
   const [query, setQuery] = useState("");
 
-  const [inviteRole, setInviteRole] = useState<"ADMIN" | "SUPER_ADMIN">("ADMIN");
+  const [inviteRole, setInviteRole] = useState<"" | "ADMIN" | "SUPER_ADMIN">("");
+  const [inviteName, setInviteName] = useState("");
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [invitePassword, setInvitePassword] = useState("");
+  const [inviteConfirmPassword, setInviteConfirmPassword] = useState("");
+  const [inviteFieldErrors, setInviteFieldErrors] = useState<{
+    name?: string;
+    email?: string;
+    password?: string;
+    confirmPassword?: string;
+    role?: string;
+  }>({});
   const [inviteRoleOpen, setInviteRoleOpen] = useState(false);
   const [openMenu, setOpenMenu] = useState<"role" | "sort" | null>(null);
   const [pendingDeactivate, setPendingDeactivate] = useState<PublicUser | null>(null);
@@ -214,27 +228,58 @@ export function AdministratorsPage() {
     }
   }
 
+  function resetInviteForm() {
+    setInviteName("");
+    setInviteEmail("");
+    setInvitePassword("");
+    setInviteConfirmPassword("");
+    setInviteRole("");
+    setInviteRoleOpen(false);
+    setInviteFieldErrors({});
+  }
+
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!canCreateAdmins) {
+    if (!canCreateAdmins || saving) {
       return;
     }
-    const formElement = event.currentTarget;
-    const form = new FormData(formElement);
     setError("");
-    setSuccess("");
+    const name = inviteName.trim();
+    const email = inviteEmail.trim().toLowerCase();
+    const password = invitePassword;
+    const confirmPassword = inviteConfirmPassword;
+    const nextErrors: typeof inviteFieldErrors = {};
+    if (!name) {
+      nextErrors.name = "Ingresa el nombre.";
+    }
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      nextErrors.email = "Ingresa un correo válido.";
+    }
+    if (!password || password.length < 8) {
+      nextErrors.password = "La contraseña debe tener al menos 8 caracteres.";
+    }
+    if (!confirmPassword) {
+      nextErrors.confirmPassword = "Confirma la contraseña.";
+    } else if (password !== confirmPassword) {
+      nextErrors.confirmPassword = "Las contraseñas no coinciden.";
+    }
+    if (inviteRole !== "ADMIN" && inviteRole !== "SUPER_ADMIN") {
+      nextErrors.role = "Selecciona un rol.";
+    }
+    setInviteFieldErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) {
+      return;
+    }
     try {
       setSaving(true);
       await createAdministrator({
-        name: String(form.get("name")),
-        email: String(form.get("email")),
-        password: String(form.get("password")),
-        role: String(form.get("role")) as "ADMIN" | "SUPER_ADMIN",
+        name,
+        email,
+        password,
+        role: inviteRole as "ADMIN" | "SUPER_ADMIN",
       });
-      formElement.reset();
-      setInviteRole("ADMIN");
-      setInviteRoleOpen(false);
-      setSuccess("Administrador creado correctamente.");
+      resetInviteForm();
+      setSuccessOpen(true);
       try {
         await load();
       } catch {
@@ -365,21 +410,67 @@ export function AdministratorsPage() {
                 Crea nuevos usuarios con permisos de administración dentro de la plataforma.
               </p>
             </div>
-            <form className="dash-team-invite" onSubmit={onSubmit}>
-              <Input name="name" label="Nombre" required />
-              <Input name="email" type="email" label="Correo" required />
-              <Input name="password" type="password" label="Contraseña" required />
-              <div className="dash-team-role" ref={inviteRoleRef}>
+            <form className="dash-team-invite" onSubmit={onSubmit} noValidate>
+              <Input
+                name="name"
+                label="Nombre"
+                placeholder="Nombre completo"
+                autoComplete="off"
+                value={inviteName}
+                onChange={(event) => setInviteName(event.target.value)}
+                error={inviteFieldErrors.name}
+                required
+              />
+              <Input
+                name="email"
+                type="email"
+                label="Correo"
+                placeholder="correo@ejemplo.com"
+                autoComplete="off"
+                value={inviteEmail}
+                onChange={(event) => setInviteEmail(event.target.value)}
+                error={inviteFieldErrors.email}
+                required
+              />
+              <Input
+                name="password"
+                type="password"
+                label="Contraseña"
+                placeholder="Contraseña temporal"
+                autoComplete="new-password"
+                value={invitePassword}
+                onChange={(event) => setInvitePassword(event.target.value)}
+                error={inviteFieldErrors.password}
+                required
+              />
+              <Input
+                name="confirmPassword"
+                type="password"
+                label="Confirmar contraseña"
+                placeholder="Repite la contraseña"
+                autoComplete="new-password"
+                value={inviteConfirmPassword}
+                onChange={(event) => setInviteConfirmPassword(event.target.value)}
+                error={inviteFieldErrors.confirmPassword}
+                required
+              />
+              <div className="dash-team-role dash-team-invite__full" ref={inviteRoleRef}>
                 <span className="dash-team-role__label">Rol</span>
                 <input type="hidden" name="role" value={inviteRole} />
                 <button
                   type="button"
-                  className={`dash-team-role__trigger${inviteRoleOpen ? " is-open" : ""}`}
+                  className={`dash-team-role__trigger${inviteRoleOpen ? " is-open" : ""}${inviteFieldErrors.role ? " is-invalid" : ""}`}
                   aria-haspopup="listbox"
                   aria-expanded={inviteRoleOpen}
                   onClick={() => setInviteRoleOpen((open) => !open)}
                 >
-                  <span>{inviteRole === "SUPER_ADMIN" ? "Super administrador" : "Administrador"}</span>
+                  <span>
+                    {inviteRole === "SUPER_ADMIN"
+                      ? "Super administrador"
+                      : inviteRole === "ADMIN"
+                        ? "Administrador"
+                        : "Selecciona un rol"}
+                  </span>
                   <ChevronDown size={18} strokeWidth={1.7} aria-hidden="true" />
                 </button>
                 <div className={`dash-team-role__menu${inviteRoleOpen ? " is-open" : ""}`} role="listbox">
@@ -391,6 +482,7 @@ export function AdministratorsPage() {
                     onClick={() => {
                       setInviteRole("ADMIN");
                       setInviteRoleOpen(false);
+                      setInviteFieldErrors((current) => ({ ...current, role: undefined }));
                     }}
                   >
                     Administrador
@@ -403,17 +495,18 @@ export function AdministratorsPage() {
                     onClick={() => {
                       setInviteRole("SUPER_ADMIN");
                       setInviteRoleOpen(false);
+                      setInviteFieldErrors((current) => ({ ...current, role: undefined }));
                     }}
                   >
                     Super administrador
                   </button>
                 </div>
+                {inviteFieldErrors.role ? <p className="text-sm text-red-600">{inviteFieldErrors.role}</p> : null}
               </div>
               <p className="dash-section__lead dash-team-invite__full">
                 La contraseña necesita mayúscula, minúscula, número y símbolo.
               </p>
               {error ? <p className="text-sm text-red-700 dash-team-invite__full">{error}</p> : null}
-              {success ? <p className="text-sm text-charcoal dash-team-invite__full">{success}</p> : null}
               <div className="dash-team-invite__full">
                 <Button type="submit" disabled={saving}>
                   {saving ? "Guardando..." : "Añadir usuario"}
@@ -704,6 +797,18 @@ export function AdministratorsPage() {
           </div>
         </div>
       ) : null}
+
+      <SuccessConfirmDialog
+        open={successOpen}
+        onClose={() => setSuccessOpen(false)}
+        className="contact-success--subtle"
+        title="Administrador creado correctamente"
+        description="En su primer acceso deberá elegir una contraseña nueva. Mientras tanto puede entrar con el correo y la contraseña registrados."
+        actionLabel="Entendido"
+        closeLabel="Cerrar confirmación"
+        initialFocus="action"
+        icon={<AuthKeyIcon className="auth-reset-success__mark" />}
+      />
     </div>
   );
 }

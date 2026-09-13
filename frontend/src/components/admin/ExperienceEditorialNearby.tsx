@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { MapPin } from "lucide-react";
 import { parseStoredLocation } from "../../data/colombia-locations";
 import { getAdminExperiences } from "../../services/catalog.service";
-import { experienceImages, mediaUrl } from "../../utils/media";
+import { experienceImages, optimizedMediaUrl } from "../../utils/media";
 import type { Experience } from "../../types";
 import floresIcon from "../../assets/flores-icon.png";
 
@@ -127,7 +127,7 @@ export function ExperienceEditorialNearby({
           </header>
           <div className="dash-exps-nearby__grid">
             {nearby.map((item) => {
-              const photo = mediaUrl(experienceImages(item)[0] ?? null);
+              const photo = optimizedMediaUrl(experienceImages(item)[0] ?? null, 640);
               const itemPlace = parseStoredLocation(item.location || "");
               const caption = [itemPlace.municipality, itemPlace.department].filter(Boolean).join(" · ");
               return (

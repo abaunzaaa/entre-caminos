@@ -8,6 +8,7 @@ import multer from "multer";
 import * as authController from "../controllers/auth.controller.js";
 import * as onboardingController from "../controllers/onboarding.controller.js";
 import {
+  changePasswordSchema,
   forgotPasswordSchema,
   loginSchema,
   registerSchema,
@@ -76,6 +77,14 @@ authRouter.post(
   authRateLimiter,
   validate(resetPasswordSchema),
   asyncHandler(authController.resetPassword),
+);
+
+authRouter.post(
+  "/change-password",
+  authMiddleware,
+  authRateLimiter,
+  validate(changePasswordSchema),
+  asyncHandler(authController.changePassword),
 );
 
 authRouter.post(

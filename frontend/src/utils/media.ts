@@ -1,24 +1,42 @@
 const PLACEHOLDER =
-  "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1600&q=80";
+  "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=900&q=70";
 
-export function mediaUrl(url?: string | null) {
+function withCloudinaryTransform(url: string, width: number) {
+  if (!url.includes("/upload/") || !/res\.cloudinary\.com|cloudinary/i.test(url)) {
+    return url;
+  }
+  if (/\/upload\/(?:[^/]+,)*?(?:f_auto|q_auto|w_\d+)/.test(url)) {
+    return url;
+  }
+  return url.replace("/upload/", `/upload/f_auto,q_auto:eco,c_limit,w_${width}/`);
+}
+
+export function mediaUrl(url?: string | null, width = 960) {
   if (!url) {
     return PLACEHOLDER;
   }
-  if (/^https?:\/\//i.test(url)) {
-    return url;
-  }
-  if (url.startsWith("/")) {
+  let resolved = url;
+  if (/^https?:\/\//i.test(url) || url.startsWith("data:") || url.startsWith("blob:")) {
+    resolved = url;
+  } else if (url.startsWith("/")) {
     const api = import.meta.env.VITE_API_URL as string | undefined;
-    if (api) {
+    // Absolute API host → prefix origin. Relative `/api` → keep path (Vite proxies `/uploads`).
+    if (api && /^https?:\/\//i.test(api)) {
       try {
-        return `${new URL(api).origin}${url}`;
+        resolved = `${new URL(api).origin}${url}`;
       } catch {
-        return url;
+        resolved = url;
       }
+    } else {
+      resolved = url;
     }
   }
-  return url;
+  return withCloudinaryTransform(resolved, width);
+}
+
+/** Alias para thumbnails / galerías con ancho acotado. */
+export function optimizedMediaUrl(url?: string | null, width = 640) {
+  return mediaUrl(url, width);
 }
 
 export function experienceImages(experience: { imageUrl?: string | null; imageUrls?: string[] | null }) {

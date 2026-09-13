@@ -12,6 +12,7 @@ export function publicUser(user: {
   city?: string | null;
   address?: string | null;
   avatarUrl?: string | null;
+  mustChangePassword?: boolean;
 }) {
   return {
     id: user.id,
@@ -27,5 +28,6 @@ export function publicUser(user: {
     city: user.city ?? null,
     address: user.address ?? null,
     avatarUrl: user.avatarUrl ?? null,
+    mustChangePassword: Boolean(user.mustChangePassword),
   };
 }

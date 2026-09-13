@@ -1,11 +1,11 @@
 import { FormEvent, useState } from "react";
 import { Link } from "react-router-dom";
 import { AuthForgotModalLayout } from "../components/auth/AuthForgotModalLayout";
+import { AuthKeyIcon } from "../components/auth/AuthKeyIcon";
 import { AuthTextField } from "../components/auth/AuthTextField";
 import { forgotPassword } from "../services/auth.service";
 import { getApiErrorMessage } from "../utils/api-error";
 import { validateEmailFormat } from "../utils/register-validation";
-import keyIcon from "../assets/key-icon-green.png";
 
 const GENERIC_MESSAGE =
   "Revisa tu correo. Te enviamos las instrucciones para crear una nueva contraseña.";
@@ -49,9 +49,7 @@ export function ForgotPasswordPage() {
   return (
     <AuthForgotModalLayout>
       <div className="auth-form">
-        <div className="auth-recovery-icon" aria-hidden="true">
-          <img src={keyIcon} alt="" />
-        </div>
+        <AuthKeyIcon className="auth-recovery-icon" />
         <header className="auth-form__header">
           <h1 id="forgot-password-title" className="auth-form__title">
             Recuperar contraseña

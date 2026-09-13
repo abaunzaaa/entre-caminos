@@ -96,9 +96,9 @@ export function VerifyEmailPage() {
 
   return (
     <AuthRecoveryLayout onBack={() => void goHome()}>
-      <div className="auth-form auth-form--verify">
+      <div className="auth-form auth-form--login auth-form--verify">
+        <AuthFormBrand />
         <header className="auth-form__header">
-          <AuthFormBrand />
           <h1 className="auth-form__title">Verifica tu correo</h1>
           <p className="auth-form__lead">
             {email

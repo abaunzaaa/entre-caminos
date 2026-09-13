@@ -49,6 +49,7 @@ export async function authMiddleware(req: Request, _res: Response, next: NextFun
         city: true,
         address: true,
         avatarUrl: true,
+        mustChangePassword: true,
         role: {
           select: {
             name: true,
@@ -95,6 +96,7 @@ export async function authMiddleware(req: Request, _res: Response, next: NextFun
       city: user.city,
       address: user.address,
       avatarUrl: user.avatarUrl,
+      mustChangePassword: user.mustChangePassword,
       permissions,
     });
     req.user = authUser;

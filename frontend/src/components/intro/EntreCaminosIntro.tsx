@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import keyIcon from "../../assets/key-icon-green.png";
+import keyIcon from "../../assets/key-icon-green-clear.png";
 import "../../styles/entre-caminos-intro.css";
 
 const FULL_DURATION_MS = 2400;

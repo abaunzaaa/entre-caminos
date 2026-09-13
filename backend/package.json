@@ -6,6 +6,7 @@
   "description": "API Entre Caminos — Node.js, Express, TypeScript, Prisma",
   "scripts": {
     "dev": "tsx watch src/index.ts",
+    "dev:generate": "prisma generate && tsx watch src/index.ts",
     "build": "tsc -p tsconfig.build.json",
     "start": "node dist/index.js",
     "prisma:generate": "prisma generate",
@@ -28,7 +29,6 @@
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
-    "entre-caminos": "file:..",
     "express": "^4.21.2",
     "express-rate-limit": "^7.5.0",
     "helmet": "^8.0.0",

@@ -93,7 +93,7 @@ export async function persistExperienceImage(file?: Express.Multer.File): Promis
   if (!file) {
     return null;
   }
-  const stored = await persistImage(file);
+  const stored = await persistImage(file, "entre-caminos/experiences");
   return stored.url;
 }
 

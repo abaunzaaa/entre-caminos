@@ -4,6 +4,9 @@ import { ChevronDown, Search } from "lucide-react";
 import { SuccessConfirm } from "../../components/feedback/SuccessConfirm";
 import { Button } from "../../components/ui/Button";
 import { Input, Textarea } from "../../components/ui/Input";
+import { KeyConfirmDialog } from "../../components/ui/KeyConfirmDialog";
+import { SuccessConfirmDialog } from "../../components/ui/SuccessConfirmDialog";
+import { AuthKeyIcon } from "../../components/auth/AuthKeyIcon";
 import { Panel, StatusDot } from "../../components/admin/Panel";
 import { CategoryIconPicker } from "../../components/admin/CategoryIconPicker";
 import { TeamInviteCarousel } from "../../components/admin/TeamInviteCarousel";
@@ -25,6 +28,7 @@ import carrusel4 from "../../assets/carrusel4.jpg";
 import carrusel5 from "../../assets/carrusel5.jpg";
 import carrusel6 from "../../assets/carrusel6.jpg";
 import "../../styles/admin-access.css";
+import "../../styles/auth-recovery-modal.css";
 
 const CATEGORY_CAROUSEL_SLIDES = [carrusel4, carrusel5, carrusel6] as const;
 
@@ -116,6 +120,7 @@ export function CategoriesPage() {
   const [rejectReason, setRejectReason] = useState("");
   const [rejectError, setRejectError] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const [deletedOpen, setDeletedOpen] = useState(false);
   const [reviewing, setReviewing] = useState(false);
   const [createdOpen, setCreatedOpen] = useState(false);
   const [createdPendingReview, setCreatedPendingReview] = useState(true);
@@ -243,7 +248,7 @@ export function CategoriesPage() {
         cancelEdit();
       }
       setPendingDelete(null);
-      setToast({ tone: "success", text: "Categoría eliminada." });
+      setDeletedOpen(true);
       await load();
       notifyCategoriesChanged();
     } catch (err) {
@@ -664,55 +669,28 @@ export function CategoriesPage() {
         : null}
 
       {pendingDelete ? (
-        <div
-          className="dash-team-confirm"
-          role="presentation"
-          onClick={() => {
+        <KeyConfirmDialog
+          open={Boolean(pendingDelete)}
+          title={
+            (pendingDelete._count?.experiences ?? 0) > 0
+              ? "No puedes eliminar esta categoría"
+              : "¿Eliminar esta categoría?"
+          }
+          description={
+            (pendingDelete._count?.experiences ?? 0) > 0
+              ? "Tiene experiencias asociadas y debe conservarse para mantener esa información."
+              : "Se borrará del catálogo de forma permanente. Esta acción no se puede deshacer."
+          }
+          confirmLabel="Eliminar"
+          busy={deleting}
+          showConfirm={(pendingDelete._count?.experiences ?? 0) === 0}
+          onCancel={() => {
             if (!deleting) {
               setPendingDelete(null);
             }
           }}
-        >
-          <div
-            className="dash-team-confirm__card"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="cat-delete-title"
-            aria-describedby={(pendingDelete._count?.experiences ?? 0) > 0 ? "cat-delete-copy" : undefined}
-            onClick={(event) => event.stopPropagation()}
-          >
-            {(pendingDelete._count?.experiences ?? 0) > 0 ? (
-              <>
-                <h2 id="cat-delete-title" className="dash-team-confirm__title">
-                  ¿No puedes eliminar esta categoría?
-                </h2>
-                <p id="cat-delete-copy" className="dash-team-confirm__lead">
-                  Esta categoría tiene experiencias asociadas y debe conservarse para mantener la información de las
-                  experiencias registradas.
-                </p>
-                <div className="dash-team-confirm__actions">
-                  <Button type="button" variant="secondary" disabled={deleting} onClick={() => setPendingDelete(null)}>
-                    Cancelar
-                  </Button>
-                </div>
-              </>
-            ) : (
-              <>
-                <h2 id="cat-delete-title" className="dash-team-confirm__title">
-                  ¿Estás seguro de eliminar esta categoría?
-                </h2>
-                <div className="dash-team-confirm__actions">
-                  <Button type="button" variant="secondary" disabled={deleting} onClick={() => setPendingDelete(null)}>
-                    Cancelar
-                  </Button>
-                  <Button type="button" disabled={deleting} onClick={() => void confirmDelete()}>
-                    {deleting ? "Eliminando..." : "Eliminar"}
-                  </Button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
+          onConfirm={() => void confirmDelete()}
+        />
       ) : null}
 
       <SuccessConfirm
@@ -725,6 +703,18 @@ export function CategoriesPage() {
             : "La categoría fue publicada correctamente."
         }
         onClose={() => setCreatedOpen(false)}
+      />
+
+      <SuccessConfirmDialog
+        open={deletedOpen}
+        onClose={() => setDeletedOpen(false)}
+        className="contact-success--subtle"
+        title="Categoría eliminada"
+        description="La categoría se eliminó correctamente. Sigues en el listado de categorías."
+        actionLabel="Entendido"
+        closeLabel="Cerrar"
+        initialFocus="action"
+        icon={<AuthKeyIcon className="auth-reset-success__mark" />}
       />
     </div>
   );

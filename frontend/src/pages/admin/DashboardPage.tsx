@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Clock,
   Compass,
@@ -22,7 +22,9 @@ import { CountUp } from "../../components/admin/CountUp";
 import { DashCardRail } from "../../components/admin/DashCardRail";
 import { ExperienceCatalogCard } from "../../components/admin/ExperienceCatalogCard";
 import { Panel, StatusDot } from "../../components/admin/Panel";
-import { Button } from "../../components/ui/Button";
+import { KeyConfirmDialog } from "../../components/ui/KeyConfirmDialog";
+import { SuccessConfirmDialog } from "../../components/ui/SuccessConfirmDialog";
+import { AuthKeyIcon } from "../../components/auth/AuthKeyIcon";
 import { useAuth } from "../../hooks/useAuth";
 import { getApiErrorMessage } from "../../utils/api-error";
 import { canReviewExperiences } from "../../utils/admin-access";
@@ -70,20 +72,6 @@ function asAdministratorList(value: unknown): PublicUser[] {
 
 function asDashboardSuperAdmins(value: unknown): PublicUser[] {
   return asAdministratorList(value).filter((item) => readRole(item.role) === "SUPER_ADMIN");
-}
-
-function countActiveTeam(users: PublicUser[]): number {
-  const ids = new Set<string>();
-  for (const user of users) {
-    if (user.status !== "ACTIVE") {
-      continue;
-    }
-    if (!isAdministrator(user)) {
-      continue;
-    }
-    ids.add(user.id);
-  }
-  return ids.size;
 }
 
 const SUMMARY_LIMIT = 3;
@@ -138,6 +126,7 @@ const KPI: Array<{
 
 export function DashboardPage() {
   const { user, hasPermission } = useAuth();
+  const navigate = useNavigate();
   const canReview = canReviewExperiences(hasPermission);
   const isStaffAdmin = user?.role === "ADMIN";
   const [metrics, setMetrics] = useState<DashboardStats | null>(null);
@@ -151,6 +140,7 @@ export function DashboardPage() {
   const [experiencesLoading, setExperiencesLoading] = useState(true);
   const [pendingDelete, setPendingDelete] = useState<Experience | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [deletedOpen, setDeletedOpen] = useState(false);
   const [toast, setToast] = useState<{ text: string; tone: "success" | "error" } | null>(null);
   const [photo, setPhoto] = useState<string | null>(() => resolveAvatarUrl(user));
 
@@ -184,10 +174,11 @@ export function DashboardPage() {
       setCategoriesError("");
       setExperiencesLoading(true);
 
+      const staffOnly = user?.role === "ADMIN";
       const [dashResult, categoriesResult, adminsResult, experiencesResult] = await Promise.allSettled([
         getDashboard(),
         getAdminCategories({ limit: SUMMARY_LIMIT }),
-        getAdministrators(),
+        staffOnly ? Promise.resolve([]) : getAdministrators(),
         getAdminExperiences({ limit: 10 }),
       ]);
       if (cancelled) {
@@ -215,17 +206,23 @@ export function DashboardPage() {
           : "",
       );
 
-      const fromDashAdmins = asDashboardSuperAdmins(dash?.administrators);
-      const fromAdminsEndpoint =
-        adminsResult.status === "fulfilled" ? asDashboardSuperAdmins(adminsResult.value) : [];
-      const visibleAdmins = newestFirst(fromDashAdmins.length > 0 ? fromDashAdmins : fromAdminsEndpoint);
-      setAdmins(visibleAdmins);
-      setAdminsLoading(false);
-      setAdminsError(
-        visibleAdmins.length === 0 && dashResult.status === "rejected" && adminsResult.status === "rejected"
-          ? getApiErrorMessage(adminsResult.reason, "No se pudieron cargar los administradores.")
-          : "",
-      );
+      if (staffOnly) {
+        setAdmins([]);
+        setAdminsLoading(false);
+        setAdminsError("");
+      } else {
+        const fromDashAdmins = asDashboardSuperAdmins(dash?.administrators);
+        const fromAdminsEndpoint =
+          adminsResult.status === "fulfilled" ? asDashboardSuperAdmins(adminsResult.value) : [];
+        const visibleAdmins = newestFirst(fromDashAdmins.length > 0 ? fromDashAdmins : fromAdminsEndpoint);
+        setAdmins(visibleAdmins);
+        setAdminsLoading(false);
+        setAdminsError(
+          visibleAdmins.length === 0 && dashResult.status === "rejected" && adminsResult.status === "rejected"
+            ? getApiErrorMessage(adminsResult.reason, "No se pudieron cargar los administradores.")
+            : "",
+        );
+      }
 
       if (dash && typeof dash.admins === "number") {
         setMetrics(dash);
@@ -235,7 +232,7 @@ export function DashboardPage() {
           experiences: 0,
           categories: 0,
           published: 0,
-          admins: countActiveTeam(fromAdminsEndpoint),
+          admins: 0,
         });
       }
 
@@ -251,7 +248,7 @@ export function DashboardPage() {
     return () => {
       cancelled = true;
     };
-  }, [user?.id]);
+  }, [user?.id, user?.role]);
 
   const fullName = user?.name?.trim() || "Administrador";
   const initial = fullName.charAt(0).toUpperCase() || "A";
@@ -275,7 +272,7 @@ export function DashboardPage() {
       await deleteExperience(pendingDelete.id);
       setExperiences((current) => current.filter((item) => item.id !== pendingDelete.id));
       setPendingDelete(null);
-      setToast({ tone: "success", text: "Experiencia eliminada." });
+      setDeletedOpen(true);
     } catch (err) {
       setToast({
         tone: "error",
@@ -352,7 +349,10 @@ export function DashboardPage() {
         })}
       </section>
 
-      <section className="dash-split" aria-label="Resumen de administradores y categorías">
+      <section
+        className={`dash-split${isStaffAdmin ? " dash-split--staff" : ""}`}
+        aria-label={isStaffAdmin ? "Resumen de categorías" : "Resumen de administradores y categorías"}
+      >
         <aside className="dash-split__media" aria-hidden="true">
           <video
             className="dash-split__video"
@@ -365,52 +365,54 @@ export function DashboardPage() {
           />
         </aside>
         <div className="dash-split__cards">
-          <article className="dash-split__panel">
-            <div className="dash-split__intro">
-              <h2 className="dash-section__title">Super administradores</h2>
-              <p className="dash-section__lead">Últimos registrados</p>
-            </div>
-            {adminsLoading ? (
-              <Panel className="dash-empty">
-                <p>Cargando administradores…</p>
-              </Panel>
-            ) : adminsError ? (
-              <Panel className="dash-empty">
-                <p>{adminsError}</p>
-              </Panel>
-            ) : admins.length === 0 ? (
-              <Panel className="dash-empty">
-                <p>No hay super administradores registrados.</p>
-              </Panel>
-            ) : (
-              <div className="dash-split__list">
-                {admins.map((admin) => {
-                  const avatar = resolveAvatarUrl(admin);
-                  const initial = admin.name.trim().charAt(0).toUpperCase() || "A";
-                  return (
-                    <article key={admin.id} className="dash-team-card">
-                      <span className="dash-team-card__avatar">
-                        {avatar ? <img src={avatar} alt="" /> : initial}
-                      </span>
-                      <div className="dash-team-card__info">
-                        <h3>{admin.name}</h3>
-                        <p className="dash-team-card__email">{admin.email}</p>
-                        <div className="dash-team-card__facts">
-                          <StatusDot active>{roleLabel(admin.role)}</StatusDot>
-                          <StatusDot active={admin.status === "ACTIVE"}>
-                            {admin.status === "ACTIVE" ? "Activo" : "Inactivo"}
-                          </StatusDot>
-                        </div>
-                      </div>
-                    </article>
-                  );
-                })}
+          {!isStaffAdmin ? (
+            <article className="dash-split__panel">
+              <div className="dash-split__intro">
+                <h2 className="dash-section__title">Super administradores</h2>
+                <p className="dash-section__lead">Últimos registrados</p>
               </div>
-            )}
-            <Link to="/admin/administradores" className="admin-cta dash-split__action">
-              {isStaffAdmin ? "Ver todos" : "Añadir administrador"}
-            </Link>
-          </article>
+              {adminsLoading ? (
+                <Panel className="dash-empty">
+                  <p>Cargando administradores…</p>
+                </Panel>
+              ) : adminsError ? (
+                <Panel className="dash-empty">
+                  <p>{adminsError}</p>
+                </Panel>
+              ) : admins.length === 0 ? (
+                <Panel className="dash-empty">
+                  <p>No hay super administradores registrados.</p>
+                </Panel>
+              ) : (
+                <div className="dash-split__list">
+                  {admins.map((admin) => {
+                    const avatar = resolveAvatarUrl(admin);
+                    const adminInitial = admin.name.trim().charAt(0).toUpperCase() || "A";
+                    return (
+                      <article key={admin.id} className="dash-team-card">
+                        <span className="dash-team-card__avatar">
+                          {avatar ? <img src={avatar} alt="" /> : adminInitial}
+                        </span>
+                        <div className="dash-team-card__info">
+                          <h3>{admin.name}</h3>
+                          <p className="dash-team-card__email">{admin.email}</p>
+                          <div className="dash-team-card__facts">
+                            <StatusDot active>{roleLabel(admin.role)}</StatusDot>
+                            <StatusDot active={admin.status === "ACTIVE"}>
+                              {admin.status === "ACTIVE" ? "Activo" : "Inactivo"}
+                            </StatusDot>
+                          </div>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              )}
+              <Link to="/admin/administradores" className="admin-cta dash-split__action">
+                Añadir administrador
+              </Link>
+            </article>
+          ) : null}
           <article className="dash-split__panel">
             <div className="dash-split__intro">
               <h2 className="dash-section__title">Categorías</h2>
@@ -496,40 +498,35 @@ export function DashboardPage() {
       </section>
 
       {pendingDelete ? (
-        <div
-          className="dash-team-confirm"
-          role="presentation"
-          onClick={() => {
+        <KeyConfirmDialog
+          open={Boolean(pendingDelete)}
+          title="¿Eliminar esta experiencia?"
+          description="Se borrará del catálogo de forma permanente. Esta acción no se puede deshacer."
+          confirmLabel="Eliminar"
+          busy={deleting}
+          onCancel={() => {
             if (!deleting) {
               setPendingDelete(null);
             }
           }}
-        >
-          <div
-            className="dash-team-confirm__card"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="dash-exp-delete-title"
-            aria-describedby="dash-exp-delete-copy"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <h2 id="dash-exp-delete-title" className="dash-team-confirm__title">
-              ¿Estás seguro de eliminar esta experiencia?
-            </h2>
-            <p id="dash-exp-delete-copy" className="dash-team-confirm__lead">
-              Esta acción quita la experiencia del catálogo y no se puede deshacer.
-            </p>
-            <div className="dash-team-confirm__actions">
-              <Button type="button" variant="secondary" disabled={deleting} onClick={() => setPendingDelete(null)}>
-                Cancelar
-              </Button>
-              <Button type="button" disabled={deleting} onClick={() => void confirmDelete()}>
-                {deleting ? "Eliminando..." : "Eliminar"}
-              </Button>
-            </div>
-          </div>
-        </div>
+          onConfirm={() => void confirmDelete()}
+        />
       ) : null}
+
+      <SuccessConfirmDialog
+        open={deletedOpen}
+        onClose={() => {
+          setDeletedOpen(false);
+          navigate("/admin/experiencias");
+        }}
+        className="contact-success--subtle"
+        title="Experiencia eliminada"
+        description="La experiencia se eliminó correctamente. Volverás al listado de experiencias."
+        actionLabel="Ver experiencias"
+        closeLabel="Cerrar"
+        initialFocus="action"
+        icon={<AuthKeyIcon className="auth-reset-success__mark" />}
+      />
     </div>
   );
 }

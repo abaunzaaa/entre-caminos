@@ -55,6 +55,7 @@ export type PublicUser = {
   city?: string | null;
   address?: string | null;
   avatarUrl?: string | null;
+  mustChangePassword?: boolean;
   profile?: UserOnboardingProfile | null;
 };
 

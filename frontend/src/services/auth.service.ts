@@ -72,6 +72,16 @@ export async function updateMyProfile(payload: UpdateProfileInput) {
   return data.data.user;
 }
 
+export async function changeMyPassword(payload: {
+  currentPassword?: string;
+  password: string;
+  confirmPassword: string;
+}) {
+  const { data } = await api.post<ApiResponse<{ user: PublicUser }>>("/auth/change-password", payload);
+  setStoredUser(data.data.user);
+  return data.data.user;
+}
+
 export async function restoreSession() {
   if (!getAccessToken()) {
     await refreshAccessToken({ silent: true });
