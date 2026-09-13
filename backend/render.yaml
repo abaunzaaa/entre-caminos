@@ -4,7 +4,8 @@ services:
     runtime: node
     plan: starter
     rootDir: backend
-    buildCommand: npm install && npx prisma generate && npm run build
+    # --include=dev: con NODE_ENV=production npm omite typescript/@types y el build falla (exit 2).
+    buildCommand: npm install --include=dev && npx prisma generate && npm run build
     startCommand: npx prisma migrate deploy && npm run start
     healthCheckPath: /api/health
     envVars:
