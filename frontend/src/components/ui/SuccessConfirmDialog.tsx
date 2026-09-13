@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
+import "../../styles/contact-modal.css";
 
 type SuccessConfirmDialogProps = {
   open: boolean;

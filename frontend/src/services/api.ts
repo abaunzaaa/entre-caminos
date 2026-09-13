@@ -139,12 +139,19 @@ export function markSessionExpired() {
   }
 }
 
+export function peekSessionExpired() {
+  return readStorage(window.sessionStorage, SESSION_FLAG) === "1";
+}
+
+export function clearSessionExpiredFlag() {
+  writeStorage(window.sessionStorage, SESSION_FLAG, null);
+}
+
 export function consumeSessionExpiredMessage() {
-  const flagged = readStorage(window.sessionStorage, SESSION_FLAG) === "1";
-  if (!flagged) {
+  if (!peekSessionExpired()) {
     return "";
   }
-  writeStorage(window.sessionStorage, SESSION_FLAG, null);
+  clearSessionExpiredFlag();
   return SESSION_ENDED_MESSAGE;
 }
 

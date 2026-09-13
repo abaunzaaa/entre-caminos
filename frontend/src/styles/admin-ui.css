@@ -1479,6 +1479,10 @@
   align-items: stretch;
 }
 
+.dash-split--staff .dash-split__cards {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .dash-split__panel {
   display: flex;
   flex-direction: column;

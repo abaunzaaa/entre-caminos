@@ -74,6 +74,7 @@ export async function createAdministrator(
       passwordHash: await hashPassword(input.password),
       roleId: role.id,
       emailVerified: true,
+      mustChangePassword: true,
     },
     include: { role: true },
   });

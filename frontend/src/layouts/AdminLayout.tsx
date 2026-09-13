@@ -7,6 +7,7 @@ import {
   AdminSidebar,
 } from "../components/admin/AdminSidebar";
 import { AdminTopbar } from "../components/admin/AdminTopbar";
+import { AdminFirstPasswordDialog } from "../components/admin/AdminFirstPasswordDialog";
 import "../styles/admin-sidebar.css";
 import "../styles/admin-ui.css";
 import "../styles/admin-access.css";
@@ -102,7 +103,17 @@ export function AdminLayout() {
     ) {
       return false;
     }
-    return !link.permission || hasPermission(link.permission);
+    if (!link.permission) {
+      return true;
+    }
+    if (hasPermission(link.permission)) {
+      return true;
+    }
+    // ADMIN always sees catalog nav; API still scopes content to what they created.
+    return (
+      user?.role === "ADMIN" &&
+      (link.permission === "categories.manage" || link.permission === "experiences.manage")
+    );
   });
   const isDashboard = location.pathname === "/admin";
   const isProfilePage = location.pathname === "/admin/perfil" || location.pathname === "/admin/profile";
@@ -198,6 +209,8 @@ export function AdminLayout() {
           </div>
         </main>
       </div>
+
+      <AdminFirstPasswordDialog open={Boolean(user?.mustChangePassword)} />
     </div>
   );
 }

@@ -803,7 +803,7 @@ export function AdministratorsPage() {
         onClose={() => setSuccessOpen(false)}
         className="contact-success--subtle"
         title="Administrador creado correctamente"
-        description="El nuevo usuario ya puede iniciar sesión en el panel con el correo y la contraseña registrados."
+        description="En su primer acceso deberá elegir una contraseña nueva. Mientras tanto puede entrar con el correo y la contraseña registrados."
         actionLabel="Entendido"
         closeLabel="Cerrar confirmación"
         initialFocus="action"

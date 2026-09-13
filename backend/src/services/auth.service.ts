@@ -165,6 +165,7 @@ export async function getProfile(userId: string) {
       city: cached.city ?? null,
       address: cached.address ?? null,
       avatarUrl: cached.avatarUrl ?? null,
+      mustChangePassword: Boolean(cached.mustChangePassword),
       profile: onboarding,
     };
   }
@@ -185,6 +186,7 @@ export async function getProfile(userId: string) {
       city: true,
       address: true,
       avatarUrl: true,
+      mustChangePassword: true,
       role: {
         select: {
           name: true,
@@ -332,7 +334,7 @@ export async function resetPassword(token: string, password: string) {
   await prisma.$transaction([
     prisma.user.update({
       where: { id: record.userId },
-      data: { passwordHash },
+      data: { passwordHash, mustChangePassword: false },
     }),
     prisma.passwordResetToken.update({
       where: { id: record.id },
@@ -346,6 +348,63 @@ export async function resetPassword(token: string, password: string) {
     entity: "User",
     entityId: record.userId,
   });
+}
+
+export async function changePassword(
+  userId: string,
+  input: { currentPassword?: string; password: string },
+) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: userInclude,
+  });
+
+  if (!user || isAccountRemoved(user)) {
+    throw ApiError.unauthorized("Sesión inválida");
+  }
+
+  if (user.status !== "ACTIVE") {
+    throw ApiError.forbidden(EMAIL_INACTIVE_LOGIN_MESSAGE);
+  }
+
+  if (!user.mustChangePassword) {
+    if (!input.currentPassword) {
+      throw ApiError.badRequest("Ingresa tu contraseña actual.");
+    }
+    const valid = await verifyPassword(input.currentPassword, user.passwordHash);
+    if (!valid) {
+      throw ApiError.badRequest("La contraseña actual no es correcta.");
+    }
+  } else if (input.currentPassword) {
+    const valid = await verifyPassword(input.currentPassword, user.passwordHash);
+    if (!valid) {
+      throw ApiError.badRequest("La contraseña actual no es correcta.");
+    }
+  }
+
+  const sameAsCurrent = await verifyPassword(input.password, user.passwordHash);
+  if (sameAsCurrent) {
+    throw ApiError.badRequest("La nueva contraseña debe ser distinta a la actual.");
+  }
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      passwordHash: await hashPassword(input.password),
+      mustChangePassword: false,
+    },
+  });
+
+  clearAuthUserCache(userId);
+
+  await recordAudit({
+    userId,
+    action: "PASSWORD_CHANGE",
+    entity: "User",
+    entityId: userId,
+  });
+
+  return getProfile(userId);
 }
 
 function genericResetResult(rawToken?: string) {
@@ -367,10 +426,7 @@ export async function verifyEmail(email: string, code: string) {
   }
 
   if (user.emailVerified) {
-    return {
-      ...publicUser(user),
-      permissions: [] as string[],
-    };
+    return getProfile(user.id);
   }
 
   if (!user.verificationCode || !user.verificationCodeExpires) {
@@ -386,14 +442,13 @@ export async function verifyEmail(email: string, code: string) {
     throw ApiError.badRequest("El código de verificación es incorrecto.");
   }
 
-  const updated = await prisma.user.update({
+  await prisma.user.update({
     where: { id: user.id },
     data: {
       emailVerified: true,
       verificationCode: null,
       verificationCodeExpires: null,
     },
-    include: userInclude,
   });
 
   clearAuthUserCache(user.id);
@@ -405,10 +460,7 @@ export async function verifyEmail(email: string, code: string) {
     entityId: user.id,
   });
 
-  return {
-    ...publicUser(updated),
-    permissions: [] as string[],
-  };
+  return getProfile(user.id);
 }
 
 export async function resendVerificationCode(email: string) {

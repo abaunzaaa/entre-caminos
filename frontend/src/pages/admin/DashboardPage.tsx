@@ -74,20 +74,6 @@ function asDashboardSuperAdmins(value: unknown): PublicUser[] {
   return asAdministratorList(value).filter((item) => readRole(item.role) === "SUPER_ADMIN");
 }
 
-function countActiveTeam(users: PublicUser[]): number {
-  const ids = new Set<string>();
-  for (const user of users) {
-    if (user.status !== "ACTIVE") {
-      continue;
-    }
-    if (!isAdministrator(user)) {
-      continue;
-    }
-    ids.add(user.id);
-  }
-  return ids.size;
-}
-
 const SUMMARY_LIMIT = 3;
 
 function newestFirst<T extends { createdAt?: string }>(items: T[], limit = SUMMARY_LIMIT): T[] {
@@ -188,10 +174,11 @@ export function DashboardPage() {
       setCategoriesError("");
       setExperiencesLoading(true);
 
+      const staffOnly = user?.role === "ADMIN";
       const [dashResult, categoriesResult, adminsResult, experiencesResult] = await Promise.allSettled([
         getDashboard(),
         getAdminCategories({ limit: SUMMARY_LIMIT }),
-        getAdministrators(),
+        staffOnly ? Promise.resolve([]) : getAdministrators(),
         getAdminExperiences({ limit: 10 }),
       ]);
       if (cancelled) {
@@ -219,17 +206,23 @@ export function DashboardPage() {
           : "",
       );
 
-      const fromDashAdmins = asDashboardSuperAdmins(dash?.administrators);
-      const fromAdminsEndpoint =
-        adminsResult.status === "fulfilled" ? asDashboardSuperAdmins(adminsResult.value) : [];
-      const visibleAdmins = newestFirst(fromDashAdmins.length > 0 ? fromDashAdmins : fromAdminsEndpoint);
-      setAdmins(visibleAdmins);
-      setAdminsLoading(false);
-      setAdminsError(
-        visibleAdmins.length === 0 && dashResult.status === "rejected" && adminsResult.status === "rejected"
-          ? getApiErrorMessage(adminsResult.reason, "No se pudieron cargar los administradores.")
-          : "",
-      );
+      if (staffOnly) {
+        setAdmins([]);
+        setAdminsLoading(false);
+        setAdminsError("");
+      } else {
+        const fromDashAdmins = asDashboardSuperAdmins(dash?.administrators);
+        const fromAdminsEndpoint =
+          adminsResult.status === "fulfilled" ? asDashboardSuperAdmins(adminsResult.value) : [];
+        const visibleAdmins = newestFirst(fromDashAdmins.length > 0 ? fromDashAdmins : fromAdminsEndpoint);
+        setAdmins(visibleAdmins);
+        setAdminsLoading(false);
+        setAdminsError(
+          visibleAdmins.length === 0 && dashResult.status === "rejected" && adminsResult.status === "rejected"
+            ? getApiErrorMessage(adminsResult.reason, "No se pudieron cargar los administradores.")
+            : "",
+        );
+      }
 
       if (dash && typeof dash.admins === "number") {
         setMetrics(dash);
@@ -239,7 +232,7 @@ export function DashboardPage() {
           experiences: 0,
           categories: 0,
           published: 0,
-          admins: countActiveTeam(fromAdminsEndpoint),
+          admins: 0,
         });
       }
 
@@ -255,7 +248,7 @@ export function DashboardPage() {
     return () => {
       cancelled = true;
     };
-  }, [user?.id]);
+  }, [user?.id, user?.role]);
 
   const fullName = user?.name?.trim() || "Administrador";
   const initial = fullName.charAt(0).toUpperCase() || "A";
@@ -356,7 +349,10 @@ export function DashboardPage() {
         })}
       </section>
 
-      <section className="dash-split" aria-label="Resumen de administradores y categorías">
+      <section
+        className={`dash-split${isStaffAdmin ? " dash-split--staff" : ""}`}
+        aria-label={isStaffAdmin ? "Resumen de categorías" : "Resumen de administradores y categorías"}
+      >
         <aside className="dash-split__media" aria-hidden="true">
           <video
             className="dash-split__video"
@@ -369,52 +365,54 @@ export function DashboardPage() {
           />
         </aside>
         <div className="dash-split__cards">
-          <article className="dash-split__panel">
-            <div className="dash-split__intro">
-              <h2 className="dash-section__title">Super administradores</h2>
-              <p className="dash-section__lead">Últimos registrados</p>
-            </div>
-            {adminsLoading ? (
-              <Panel className="dash-empty">
-                <p>Cargando administradores…</p>
-              </Panel>
-            ) : adminsError ? (
-              <Panel className="dash-empty">
-                <p>{adminsError}</p>
-              </Panel>
-            ) : admins.length === 0 ? (
-              <Panel className="dash-empty">
-                <p>No hay super administradores registrados.</p>
-              </Panel>
-            ) : (
-              <div className="dash-split__list">
-                {admins.map((admin) => {
-                  const avatar = resolveAvatarUrl(admin);
-                  const initial = admin.name.trim().charAt(0).toUpperCase() || "A";
-                  return (
-                    <article key={admin.id} className="dash-team-card">
-                      <span className="dash-team-card__avatar">
-                        {avatar ? <img src={avatar} alt="" /> : initial}
-                      </span>
-                      <div className="dash-team-card__info">
-                        <h3>{admin.name}</h3>
-                        <p className="dash-team-card__email">{admin.email}</p>
-                        <div className="dash-team-card__facts">
-                          <StatusDot active>{roleLabel(admin.role)}</StatusDot>
-                          <StatusDot active={admin.status === "ACTIVE"}>
-                            {admin.status === "ACTIVE" ? "Activo" : "Inactivo"}
-                          </StatusDot>
-                        </div>
-                      </div>
-                    </article>
-                  );
-                })}
+          {!isStaffAdmin ? (
+            <article className="dash-split__panel">
+              <div className="dash-split__intro">
+                <h2 className="dash-section__title">Super administradores</h2>
+                <p className="dash-section__lead">Últimos registrados</p>
               </div>
-            )}
-            <Link to="/admin/administradores" className="admin-cta dash-split__action">
-              {isStaffAdmin ? "Ver todos" : "Añadir administrador"}
-            </Link>
-          </article>
+              {adminsLoading ? (
+                <Panel className="dash-empty">
+                  <p>Cargando administradores…</p>
+                </Panel>
+              ) : adminsError ? (
+                <Panel className="dash-empty">
+                  <p>{adminsError}</p>
+                </Panel>
+              ) : admins.length === 0 ? (
+                <Panel className="dash-empty">
+                  <p>No hay super administradores registrados.</p>
+                </Panel>
+              ) : (
+                <div className="dash-split__list">
+                  {admins.map((admin) => {
+                    const avatar = resolveAvatarUrl(admin);
+                    const adminInitial = admin.name.trim().charAt(0).toUpperCase() || "A";
+                    return (
+                      <article key={admin.id} className="dash-team-card">
+                        <span className="dash-team-card__avatar">
+                          {avatar ? <img src={avatar} alt="" /> : adminInitial}
+                        </span>
+                        <div className="dash-team-card__info">
+                          <h3>{admin.name}</h3>
+                          <p className="dash-team-card__email">{admin.email}</p>
+                          <div className="dash-team-card__facts">
+                            <StatusDot active>{roleLabel(admin.role)}</StatusDot>
+                            <StatusDot active={admin.status === "ACTIVE"}>
+                              {admin.status === "ACTIVE" ? "Activo" : "Inactivo"}
+                            </StatusDot>
+                          </div>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              )}
+              <Link to="/admin/administradores" className="admin-cta dash-split__action">
+                Añadir administrador
+              </Link>
+            </article>
+          ) : null}
           <article className="dash-split__panel">
             <div className="dash-split__intro">
               <h2 className="dash-section__title">Categorías</h2>

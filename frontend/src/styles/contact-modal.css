@@ -543,6 +543,28 @@
   opacity: 0.72;
 }
 
+.admin-first-password {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  margin-top: 18px;
+  text-align: left;
+}
+
+.admin-first-password .contact-success__action {
+  width: 100%;
+  margin-top: 6px;
+}
+
+.admin-first-password__error {
+  margin: 0;
+  color: #b42318;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  text-align: center;
+}
+
 .contact-modal__visual {
   position: relative;
   min-height: 0;

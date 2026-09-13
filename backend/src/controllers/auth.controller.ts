@@ -142,6 +142,18 @@ export async function resetPassword(req: Request, res: Response) {
   });
 }
 
+export async function changePassword(req: Request, res: Response) {
+  const user = await authService.changePassword(req.user!.id, {
+    currentPassword: req.body.currentPassword,
+    password: req.body.password,
+  });
+  return res.json({
+    success: true,
+    message: "Contraseña actualizada correctamente.",
+    data: { user },
+  });
+}
+
 export async function verifyEmail(req: Request, res: Response) {
   const user = await authService.verifyEmail(req.body.email, req.body.code);
   const tokens = setAuthCookies(
