@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useId, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { AuthForgotModalLayout } from "../components/auth/AuthForgotModalLayout";
+import { AuthKeyIcon } from "../components/auth/AuthKeyIcon";
 import { AuthTextField } from "../components/auth/AuthTextField";
 import { PasswordRequirements } from "../components/auth/PasswordRequirements";
 import { resetPassword } from "../services/auth.service";
@@ -9,7 +10,6 @@ import {
   validateResetPasswordForm,
   type ResetPasswordFieldErrors,
 } from "../utils/register-validation";
-import keyIcon from "../assets/key-recovery-icon.png";
 import "../styles/auth-recovery-modal.css";
 
 export function ResetPasswordPage() {
@@ -68,9 +68,7 @@ export function ResetPasswordPage() {
       <div className={`auth-form auth-reset-form${success ? " is-success" : ""}`}>
         {success ? (
           <div className="auth-reset-success" role="status">
-            <span className="auth-reset-success__mark" aria-hidden="true">
-              <img src={keyIcon} alt="" width={76} height={76} decoding="async" />
-            </span>
+            <AuthKeyIcon className="auth-reset-success__mark" />
             <h1 id={titleId} className="auth-form__title">
               Contraseña actualizada
             </h1>
@@ -86,9 +84,7 @@ export function ResetPasswordPage() {
           </div>
         ) : (
           <>
-            <div className="auth-recovery-icon auth-reset-key" aria-hidden="true">
-              <img src={keyIcon} alt="" width={76} height={76} decoding="async" />
-            </div>
+            <AuthKeyIcon className="auth-recovery-icon auth-reset-key" />
             <header className="auth-form__header">
               <h1 id={titleId} className="auth-form__title">
                 Crea una nueva contraseña

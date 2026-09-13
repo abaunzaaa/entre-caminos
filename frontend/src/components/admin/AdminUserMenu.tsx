@@ -80,9 +80,14 @@ export function AdminUserMenu({ user }: { user: PublicUser | null }) {
       if (pickingRef.current || photoDialog) {
         return;
       }
-      if (!rootRef.current?.contains(event.target as Node)) {
-        setOpen(false);
+      const target = event.target as Node;
+      if (rootRef.current?.contains(target)) {
+        return;
       }
+      if ((target as Element).closest?.(".admin-usermenu__panel")) {
+        return;
+      }
+      setOpen(false);
     }
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape" && !photoDialog) {
@@ -316,6 +321,83 @@ export function AdminUserMenu({ user }: { user: PublicUser | null }) {
         )
       : null;
 
+  const menuLayer =
+    typeof document !== "undefined"
+      ? createPortal(
+          <>
+            <div
+              className={cn("admin-usermenu__backdrop", open && "is-open")}
+              aria-hidden={!open}
+              onClick={() => {
+                if (!photoDialog) {
+                  setOpen(false);
+                }
+              }}
+            />
+            <div
+              className={cn("admin-usermenu__panel", open && "is-open")}
+              aria-hidden={!open}
+              inert={!open}
+            >
+              <div className="admin-usermenu__profile">
+                <input
+                  ref={fileInputRef}
+                  className="admin-usermenu__file"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  tabIndex={-1}
+                  aria-hidden="true"
+                  onClick={() => {
+                    pickingRef.current = true;
+                  }}
+                  onChange={onPhotoChange}
+                />
+                <button
+                  type="button"
+                  className="admin-usermenu__photo-wrap"
+                  aria-label="Gestionar foto de perfil"
+                  onClick={openPhotoDialog}
+                >
+                  <span className="admin-usermenu__photo-ring">
+                    <AvatarMark src={photo} initial={initial} className="admin-usermenu__photo" />
+                    <span className="admin-usermenu__photo-badge" aria-hidden="true">
+                      <Camera size={10} strokeWidth={1.8} />
+                    </span>
+                  </span>
+                </button>
+                <p className="admin-usermenu__name">{fullName}</p>
+                <p className="admin-usermenu__role">{roleLabel(user?.role)}</p>
+              </div>
+
+              <div className="admin-usermenu__list" role="menu">
+                <button
+                  type="button"
+                  className="admin-usermenu__item"
+                  role="menuitem"
+                  onClick={() => {
+                    setOpen(false);
+                    navigate("/admin/perfil");
+                  }}
+                >
+                  <UserRoundPen size={18} strokeWidth={1.7} />
+                  Editar perfil
+                </button>
+                <button
+                  type="button"
+                  className="admin-usermenu__item admin-usermenu__item--logout"
+                  role="menuitem"
+                  onClick={() => void logout()}
+                >
+                  <LogOut size={18} strokeWidth={1.7} />
+                  Cerrar sesión
+                </button>
+              </div>
+            </div>
+          </>,
+          document.body,
+        )
+      : null;
+
   return (
     <div className="admin-usermenu" ref={rootRef}>
       <button
@@ -328,66 +410,7 @@ export function AdminUserMenu({ user }: { user: PublicUser | null }) {
       >
         <AvatarMark src={photo} initial={initial} className="admin-topbar__avatar" />
       </button>
-
-      <div
-        className={cn("admin-usermenu__panel", open && "is-open")}
-        aria-hidden={!open}
-        inert={!open}
-      >
-        <div className="admin-usermenu__profile">
-          <input
-            ref={fileInputRef}
-            className="admin-usermenu__file"
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            tabIndex={-1}
-            aria-hidden="true"
-            onClick={() => {
-              pickingRef.current = true;
-            }}
-            onChange={onPhotoChange}
-          />
-          <button
-            type="button"
-            className="admin-usermenu__photo-wrap"
-            aria-label="Gestionar foto de perfil"
-            onClick={openPhotoDialog}
-          >
-            <span className="admin-usermenu__photo-ring">
-              <AvatarMark src={photo} initial={initial} className="admin-usermenu__photo" />
-              <span className="admin-usermenu__photo-badge" aria-hidden="true">
-                <Camera size={10} strokeWidth={1.8} />
-              </span>
-            </span>
-          </button>
-          <p className="admin-usermenu__name">{fullName}</p>
-          <p className="admin-usermenu__role">{roleLabel(user?.role)}</p>
-        </div>
-
-        <div className="admin-usermenu__list" role="menu">
-          <button
-            type="button"
-            className="admin-usermenu__item"
-            role="menuitem"
-            onClick={() => {
-              setOpen(false);
-              navigate("/admin/perfil");
-            }}
-          >
-            <UserRoundPen size={18} strokeWidth={1.7} />
-            Editar perfil
-          </button>
-          <button
-            type="button"
-            className="admin-usermenu__item admin-usermenu__item--logout"
-            role="menuitem"
-            onClick={() => void logout()}
-          >
-            <LogOut size={18} strokeWidth={1.7} />
-            Cerrar sesión
-          </button>
-        </div>
-      </div>
+      {menuLayer}
       {dialog}
     </div>
   );

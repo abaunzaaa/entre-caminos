@@ -12,8 +12,62 @@
 .dash.dash--exps-preview > .dash-profile {
   position: relative;
   z-index: 3;
-  border: 0;
+  width: min(100%, 980px);
+  margin-inline: auto;
+  padding: 30px 36px;
+  border: 1px solid var(--border-soft, #dce3df);
   box-shadow: 0 16px 40px rgba(28, 51, 46, 0.07);
+}
+
+.dash.dash--exps-preview .dash-profile--review .dash-profile__name {
+  font-size: clamp(26px, 2.4vw, 32px);
+}
+
+.dash.dash--exps-preview .dash-profile--review .dash-profile__row {
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.dash.dash--exps-preview .dash-profile--review .dash-exps-preview-actions {
+  margin-top: 16px;
+}
+
+.dash-exps-preview-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.dash-exps-preview-heading .dash-profile__name {
+  min-width: 0;
+}
+
+.dash-exps-preview-back {
+  display: inline-grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin: 0 0 0 -6px;
+  border-radius: 999px;
+  color: var(--admin-forest, #294942);
+  text-decoration: none;
+  transition:
+    background-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.dash-exps-preview-back:hover,
+.dash-exps-preview-back:focus-visible {
+  background: rgba(41, 73, 66, 0.08);
+  color: #1c332e;
+  outline: none;
+}
+
+.dash-exps-preview-back:active {
+  transform: translateX(-1px);
 }
 
 .dash.dash--exps-preview > .dash-exps-preview-page,

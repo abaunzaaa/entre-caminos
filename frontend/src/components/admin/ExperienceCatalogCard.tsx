@@ -1,7 +1,7 @@
 import { MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
 import { parseStoredLocation } from "../../data/colombia-locations";
-import { experienceImages, optimizedMediaUrl } from "../../utils/media";
+import { experienceImages, mediaUrl } from "../../utils/media";
 import { formatPrice } from "../../utils/cn";
 import type { Experience, ExperienceStatus } from "../../types";
 import { StatusDot } from "./Panel";
@@ -71,8 +71,10 @@ export function ExperienceCatalogCard({
   onDelete?: () => void;
 }) {
   const active = isCatalogActive(experience.status);
-  const slides = experienceImages(experience).map((url) => optimizedMediaUrl(url, 720));
-  const gallery = slides.length ? slides : [optimizedMediaUrl(null, 720)];
+  const slides = experienceImages(experience)
+    .slice(0, 3)
+    .map((url) => mediaUrl(url, 720));
+  const gallery = slides.length ? slides : [mediaUrl(null, 720)];
   const place = catalogPlace(experience.location);
   const sent = formatSentAt(experience.submittedAt || experience.createdAt);
   const pending = experience.status === "PENDING";

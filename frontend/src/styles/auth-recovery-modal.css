@@ -60,16 +60,33 @@
     0 2px 8px rgba(24, 36, 32, 0.06);
 }
 
-.auth-reset-key {
-  width: 5rem;
-  height: 5rem;
-  margin: 0.15rem auto 1rem;
+.auth-key-icon {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 5.5rem;
+  height: 6.4rem;
+  margin: 0.1rem auto 0.95rem;
+  overflow: hidden;
+  pointer-events: none;
+  background: transparent;
 }
 
-.auth-reset-key img {
-  width: 76px;
-  height: 76px;
+.auth-key-icon img {
+  display: block;
+  width: auto;
+  height: 100%;
+  max-width: 100%;
   object-fit: contain;
+  object-position: center;
+  pointer-events: none;
+}
+
+.auth-key-icon.auth-reset-success__mark {
+  width: 4.75rem;
+  height: 5.25rem;
+  margin: 0 auto 0.35rem;
 }
 
 .auth-recovery-modal .auth-form {
@@ -103,29 +120,6 @@
 .auth-recovery-close:focus-visible {
   outline: 2px solid var(--recovery-green);
   outline-offset: 2px;
-}
-
-.auth-recovery-icon {
-  display: flex;
-  flex: none;
-  align-items: center;
-  justify-content: center;
-  width: 5.5rem;
-  height: 6.4rem;
-  margin: 0.1rem auto 0.95rem;
-  overflow: hidden;
-  background: none;
-  pointer-events: none;
-}
-
-.auth-recovery-icon img {
-  display: block;
-  width: auto;
-  height: 100%;
-  max-width: 100%;
-  object-fit: contain;
-  object-position: center;
-  pointer-events: none;
 }
 
 .auth-recovery-modal .auth-form__header {
@@ -314,24 +308,6 @@
 .auth-reset-success .auth-submit {
   width: 100%;
   margin-top: 0.55rem;
-}
-
-.auth-reset-success__mark {
-  display: grid;
-  place-items: center;
-  width: 4.75rem;
-  height: 4.75rem;
-  margin: 0 auto 0.35rem;
-  border-radius: 50%;
-  background: transparent;
-  color: var(--recovery-green);
-}
-
-.auth-reset-success__mark img {
-  display: block;
-  width: 76px;
-  height: 76px;
-  object-fit: contain;
 }
 
 @keyframes auth-reset-enter {

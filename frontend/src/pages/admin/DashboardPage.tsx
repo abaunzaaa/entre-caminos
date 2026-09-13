@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Clock,
@@ -22,7 +22,6 @@ import { CountUp } from "../../components/admin/CountUp";
 import { DashCardRail } from "../../components/admin/DashCardRail";
 import { ExperienceCatalogCard } from "../../components/admin/ExperienceCatalogCard";
 import { Panel, StatusDot } from "../../components/admin/Panel";
-import { Reveal } from "../../components/admin/Reveal";
 import { Button } from "../../components/ui/Button";
 import { useAuth } from "../../hooks/useAuth";
 import { getApiErrorMessage } from "../../utils/api-error";
@@ -288,80 +287,71 @@ export function DashboardPage() {
   }
 
   return (
-    <div className="dash dash--home">
+    <div className="dash">
       {toast ? (
         <p className={`dash-team-toast${toast.tone === "error" ? " is-error" : ""}`} role="status">
           {toast.text}
         </p>
       ) : null}
-      <Reveal>
-        <article id="admin-profile-summary-card" className="dash-profile">
-          <div className="dash-profile__top">
-            <span className="dash-profile__photo" aria-hidden="true">
-              {photo ? <img src={photo} alt="" /> : initial}
-            </span>
-            <div className="dash-profile__identity">
-              <h1 className="dash-profile__name">{greetingForName(fullName)}</h1>
+      <article id="admin-profile-summary-card" className="dash-profile">
+        <div className="dash-profile__top">
+          <span className="dash-profile__photo" aria-hidden="true">
+            {photo ? <img src={photo} alt="" /> : initial}
+          </span>
+          <div className="dash-profile__identity">
+            <h1 className="dash-profile__name">{greetingForName(fullName)}</h1>
+            <p className="dash-profile__row">
+              <Shield size={16} strokeWidth={1.7} aria-hidden="true" />
+              <span>{roleLabel(user?.role ?? "ADMIN")}</span>
+            </p>
+            <p className="dash-profile__row">
+              <Clock size={16} strokeWidth={1.7} aria-hidden="true" />
+              <span>{daysLabel(daysOnPlatform(user?.createdAt))}</span>
+            </p>
+            {user?.email ? (
               <p className="dash-profile__row">
-                <Shield size={16} strokeWidth={1.7} aria-hidden="true" />
-                <span>{roleLabel(user?.role ?? "ADMIN")}</span>
+                <Mail size={16} strokeWidth={1.7} aria-hidden="true" />
+                <span>{user.email}</span>
               </p>
-              <p className="dash-profile__row">
-                <Clock size={16} strokeWidth={1.7} aria-hidden="true" />
-                <span>{daysLabel(daysOnPlatform(user?.createdAt))}</span>
-              </p>
-              {user?.email ? (
-                <p className="dash-profile__row">
-                  <Mail size={16} strokeWidth={1.7} aria-hidden="true" />
-                  <span>{user.email}</span>
-                </p>
-              ) : null}
-            </div>
+            ) : null}
           </div>
-          <div id="dashboard-metrics-images" className="dash-profile__stats">
-            <div className="dash-profile__stat">
-              <img src={catAgregadas} alt="" className="dash-profile__stat-art dash-float-art" />
-              <p className="dash-profile__stat-label">Categorías creadas</p>
-              <p className="dash-profile__stat-value">
-                <CountUp value={createdCategories} />
-              </p>
-            </div>
-            <div className="dash-profile__stat">
-              <img src={expeAgregadas} alt="" className="dash-profile__stat-art dash-float-art" />
-              <p className="dash-profile__stat-label">Experiencias agregadas</p>
-              <p className="dash-profile__stat-value">
-                <CountUp value={createdExperiences} />
-              </p>
-            </div>
+        </div>
+        <div id="dashboard-metrics-images" className="dash-profile__stats">
+          <div className="dash-profile__stat">
+            <img src={catAgregadas} alt="" className="dash-profile__stat-art dash-float-art" />
+            <p className="dash-profile__stat-label">Categorías creadas</p>
+            <p className="dash-profile__stat-value">
+              <CountUp value={createdCategories} />
+            </p>
           </div>
-        </article>
-      </Reveal>
-      <Reveal delayMs={60}>
-        <section id="dashboard-summary-cards-layout" className="admin-kpi-grid" aria-label="Indicadores principales">
-          {KPI.map((card, index) => {
-            const Icon = card.icon;
-            return (
-              <article
-                key={card.key}
-                className="admin-kpi-card"
-                style={{ "--admin-stagger": index } as CSSProperties}
-              >
-                <div className="admin-kpi-card__head">
-                  <span className="dash-kpi__icon">
-                    <Icon size={18} strokeWidth={1.7} />
-                  </span>
-                  <p className="admin-kpi-card__label">{card.label}</p>
-                </div>
-                <p className="admin-kpi-card__value">
-                  <CountUp value={metrics?.[card.key] ?? 0} />
-                </p>
-              </article>
-            );
-          })}
-        </section>
-      </Reveal>
+          <div className="dash-profile__stat">
+            <img src={expeAgregadas} alt="" className="dash-profile__stat-art dash-float-art" />
+            <p className="dash-profile__stat-label">Experiencias agregadas</p>
+            <p className="dash-profile__stat-value">
+              <CountUp value={createdExperiences} />
+            </p>
+          </div>
+        </div>
+      </article>
+      <section id="dashboard-summary-cards-layout" className="admin-kpi-grid" aria-label="Indicadores principales">
+        {KPI.map((card) => {
+          const Icon = card.icon;
+          return (
+            <article key={card.key} className="admin-kpi-card">
+              <div className="admin-kpi-card__head">
+                <span className="dash-kpi__icon">
+                  <Icon size={18} strokeWidth={1.7} />
+                </span>
+                <p className="admin-kpi-card__label">{card.label}</p>
+              </div>
+              <p className="admin-kpi-card__value">
+                <CountUp value={metrics?.[card.key] ?? 0} />
+              </p>
+            </article>
+          );
+        })}
+      </section>
 
-      <Reveal delayMs={40}>
       <section className="dash-split" aria-label="Resumen de administradores y categorías">
         <aside className="dash-split__media" aria-hidden="true">
           <video
@@ -465,9 +455,7 @@ export function DashboardPage() {
           </article>
         </div>
       </section>
-      </Reveal>
 
-      <Reveal delayMs={80}>
       <section className="dash-section">
         <div className="dash-section__head">
           <div>
@@ -506,7 +494,6 @@ export function DashboardPage() {
           </DashCardRail>
         )}
       </section>
-      </Reveal>
 
       {pendingDelete ? (
         <div

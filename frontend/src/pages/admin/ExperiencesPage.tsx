@@ -13,7 +13,7 @@ import {
 } from "../../services/catalog.service";
 import { getApiErrorMessage } from "../../utils/api-error";
 import { canReviewExperiences } from "../../utils/admin-access";
-import { experienceImages, optimizedMediaUrl } from "../../utils/media";
+import { experienceImages, mediaUrl } from "../../utils/media";
 import type { Category, Experience, ExperienceStatus } from "../../types";
 import crearExp from "../../assets/crear-exp.png";
 import expeIlus from "../../assets/expe-agregadas.png";
@@ -72,7 +72,7 @@ const SUMMARY_PREVIEW_LIMIT = 3;
 const EXPERIENCE_DIRECTORY_ROWS = 2;
 
 function SummaryPreviewCard({ experience, meta }: { experience: Experience; meta: string }) {
-  const photo = optimizedMediaUrl(experienceImages(experience)[0] ?? null, 720);
+  const photo = mediaUrl(experienceImages(experience)[0] ?? null);
   return (
     <Link
       to={`/admin/experiencias/${experience.id}/ver`}

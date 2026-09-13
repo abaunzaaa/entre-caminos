@@ -9,6 +9,8 @@ import {
 import type { PublicUser } from "../../types";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
+import { SuccessConfirmDialog } from "../../components/ui/SuccessConfirmDialog";
+import { AuthKeyIcon } from "../../components/auth/AuthKeyIcon";
 import { CountUp } from "../../components/admin/CountUp";
 import { Panel, StatusDot } from "../../components/admin/Panel";
 import { TeamInviteCarousel } from "../../components/admin/TeamInviteCarousel";
@@ -17,6 +19,7 @@ import { getApiErrorMessage } from "../../utils/api-error";
 import { resolveAvatarUrl } from "../../utils/admin-avatar";
 import adminIlus from "../../assets/admin-ilus.png";
 import superadmIlus from "../../assets/superadm-ilus.png";
+import "../../styles/auth-recovery-modal.css";
 
 function readRole(value: unknown): PublicUser["role"] | "" {
   if (typeof value === "string") {
@@ -96,7 +99,7 @@ export function AdministratorsPage() {
   const canCreateAdmins = user?.role === "SUPER_ADMIN";
   const [admins, setAdmins] = useState<PublicUser[]>([]);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [successOpen, setSuccessOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [statusFilter, setStatusFilter] = useState<"all" | "ACTIVE" | "INACTIVE">("all");
   const [roleFilter, setRoleFilter] = useState<"" | "ADMIN" | "SUPER_ADMIN">("");
@@ -107,10 +110,12 @@ export function AdministratorsPage() {
   const [inviteName, setInviteName] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
   const [invitePassword, setInvitePassword] = useState("");
+  const [inviteConfirmPassword, setInviteConfirmPassword] = useState("");
   const [inviteFieldErrors, setInviteFieldErrors] = useState<{
     name?: string;
     email?: string;
     password?: string;
+    confirmPassword?: string;
     role?: string;
   }>({});
   const [inviteRoleOpen, setInviteRoleOpen] = useState(false);
@@ -227,6 +232,7 @@ export function AdministratorsPage() {
     setInviteName("");
     setInviteEmail("");
     setInvitePassword("");
+    setInviteConfirmPassword("");
     setInviteRole("");
     setInviteRoleOpen(false);
     setInviteFieldErrors({});
@@ -238,10 +244,10 @@ export function AdministratorsPage() {
       return;
     }
     setError("");
-    setSuccess("");
     const name = inviteName.trim();
     const email = inviteEmail.trim().toLowerCase();
     const password = invitePassword;
+    const confirmPassword = inviteConfirmPassword;
     const nextErrors: typeof inviteFieldErrors = {};
     if (!name) {
       nextErrors.name = "Ingresa el nombre.";
@@ -251,6 +257,11 @@ export function AdministratorsPage() {
     }
     if (!password || password.length < 8) {
       nextErrors.password = "La contraseña debe tener al menos 8 caracteres.";
+    }
+    if (!confirmPassword) {
+      nextErrors.confirmPassword = "Confirma la contraseña.";
+    } else if (password !== confirmPassword) {
+      nextErrors.confirmPassword = "Las contraseñas no coinciden.";
     }
     if (inviteRole !== "ADMIN" && inviteRole !== "SUPER_ADMIN") {
       nextErrors.role = "Selecciona un rol.";
@@ -268,7 +279,7 @@ export function AdministratorsPage() {
         role: inviteRole as "ADMIN" | "SUPER_ADMIN",
       });
       resetInviteForm();
-      setSuccess("Administrador creado correctamente.");
+      setSuccessOpen(true);
       try {
         await load();
       } catch {
@@ -432,7 +443,18 @@ export function AdministratorsPage() {
                 error={inviteFieldErrors.password}
                 required
               />
-              <div className="dash-team-role" ref={inviteRoleRef}>
+              <Input
+                name="confirmPassword"
+                type="password"
+                label="Confirmar contraseña"
+                placeholder="Repite la contraseña"
+                autoComplete="new-password"
+                value={inviteConfirmPassword}
+                onChange={(event) => setInviteConfirmPassword(event.target.value)}
+                error={inviteFieldErrors.confirmPassword}
+                required
+              />
+              <div className="dash-team-role dash-team-invite__full" ref={inviteRoleRef}>
                 <span className="dash-team-role__label">Rol</span>
                 <input type="hidden" name="role" value={inviteRole} />
                 <button
@@ -485,7 +507,6 @@ export function AdministratorsPage() {
                 La contraseña necesita mayúscula, minúscula, número y símbolo.
               </p>
               {error ? <p className="text-sm text-red-700 dash-team-invite__full">{error}</p> : null}
-              {success ? <p className="text-sm text-charcoal dash-team-invite__full">{success}</p> : null}
               <div className="dash-team-invite__full">
                 <Button type="submit" disabled={saving}>
                   {saving ? "Guardando..." : "Añadir usuario"}
@@ -776,6 +797,18 @@ export function AdministratorsPage() {
           </div>
         </div>
       ) : null}
+
+      <SuccessConfirmDialog
+        open={successOpen}
+        onClose={() => setSuccessOpen(false)}
+        className="contact-success--subtle"
+        title="Administrador creado correctamente"
+        description="El nuevo usuario ya puede iniciar sesión en el panel con el correo y la contraseña registrados."
+        actionLabel="Entendido"
+        closeLabel="Cerrar confirmación"
+        initialFocus="action"
+        icon={<AuthKeyIcon className="auth-reset-success__mark" />}
+      />
     </div>
   );
 }

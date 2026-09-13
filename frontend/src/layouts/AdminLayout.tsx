@@ -87,14 +87,19 @@ export function AdminLayout() {
     (
       location.pathname === "/admin/roles" ||
       location.pathname === "/admin/permissions" ||
-      location.pathname === "/admin/permisos"
+      location.pathname === "/admin/permisos" ||
+      location.pathname === "/admin/administradores" ||
+      location.pathname === "/admin/administrators"
     )
   ) {
     return <Navigate to="/admin" replace />;
   }
 
   const visibleLinks = ADMIN_NAV_ITEMS.filter((link) => {
-    if (link.to === "/admin/roles" && user?.role !== "SUPER_ADMIN") {
+    if (
+      (link.to === "/admin/roles" || link.to === "/admin/administradores") &&
+      user?.role !== "SUPER_ADMIN"
+    ) {
       return false;
     }
     return !link.permission || hasPermission(link.permission);

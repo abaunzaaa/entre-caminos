@@ -1,5 +1,6 @@
 import { FormEvent, useState } from "react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { LogIn } from "lucide-react";
 import { AuthFormBrand } from "../components/auth/AuthFormBrand";
 import { AuthTextField } from "../components/auth/AuthTextField";
 import { SocialButtons } from "../components/auth/SocialButtons";
@@ -8,12 +9,11 @@ import { SuccessConfirmDialog } from "../components/ui/SuccessConfirmDialog";
 import { useAuth } from "../hooks/useAuth";
 import { consumeSessionExpiredMessage } from "../services/api";
 import { resendVerificationCode } from "../services/auth.service";
-import { getApiErrorMessage } from "../utils/api-error";
+import { getApiErrorMessage, SESSION_ENDED_MESSAGE } from "../utils/api-error";
 import { INACTIVE_ACCOUNT_CONTACT_REASON, isInactiveAccountMessage } from "../utils/auth-messages";
 import { needsOnboarding } from "../utils/onboarding";
 import { setPendingVerificationEmail } from "../utils/pending-verification";
-import keyIcon from "../assets/key-recovery-icon.png";
-import "../styles/admin-cta.css";
+import "../styles/success-confirm-dialog.css";
 
 const UNVERIFIED_LOGIN_MESSAGE = "Debes verificar tu correo antes de iniciar sesión.";
 const RESENT_CODE_NOTICE = "Te enviamos un nuevo código de verificación a tu correo.";
@@ -24,12 +24,9 @@ export function LoginForm() {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const [remember, setRemember] = useState(false);
-  const [sessionNotice, setSessionNotice] = useState(() => consumeSessionExpiredMessage());
+  const [sessionEndedOpen, setSessionEndedOpen] = useState(() => Boolean(consumeSessionExpiredMessage()));
   const [error, setError] = useState(
-    () =>
-      searchParams.get("oauthError") ||
-      (location.state as { oauthError?: string } | null)?.oauthError ||
-      "",
+    () => searchParams.get("oauthError") || (location.state as { oauthError?: string } | null)?.oauthError || "",
   );
   const [pendingEmail, setPendingEmail] = useState("");
   const [attemptedEmail, setAttemptedEmail] = useState("");
@@ -55,6 +52,10 @@ export function LoginForm() {
       navigate(user.role !== "USER" ? "/admin" : needsOnboarding(user) ? "/onboarding" : "/explorar", { replace: true });
     } catch (err) {
       const message = getApiErrorMessage(err, "Credenciales incorrectas");
+      if (message === SESSION_ENDED_MESSAGE) {
+        setSessionEndedOpen(true);
+        return;
+      }
       setError(message);
       if (message === UNVERIFIED_LOGIN_MESSAGE && email) {
         setPendingEmail(email);
@@ -166,14 +167,13 @@ export function LoginForm() {
         defaultReason={INACTIVE_ACCOUNT_CONTACT_REASON}
       />
       <SuccessConfirmDialog
-        open={Boolean(sessionNotice)}
-        onClose={() => setSessionNotice("")}
-        icon={<img className="contact-success__icon" src={keyIcon} alt="" width={74} height={74} decoding="async" />}
+        open={sessionEndedOpen}
+        onClose={() => setSessionEndedOpen(false)}
+        icon={<LogIn size={42} strokeWidth={1.5} aria-hidden="true" />}
         title="Sesión finalizada"
-        description={sessionNotice || "Tu sesión ha finalizado. Por favor inicia sesión nuevamente."}
+        description={SESSION_ENDED_MESSAGE}
         actionLabel="Entendido"
         initialFocus="action"
-        className="contact-success--subtle"
       />
     </div>
   );

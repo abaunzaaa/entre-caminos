@@ -1,33 +1,39 @@
 const PLACEHOLDER =
-  "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1600&q=80";
+  "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=900&q=70";
 
-/** Resize/compress Cloudinary delivery URLs for faster admin thumbnails and galleries. */
-export function optimizedMediaUrl(url?: string | null, width = 960) {
-  const resolved = mediaUrl(url);
-  if (!/res\.cloudinary\.com\//i.test(resolved) || /\/upload\/(?:[^/]+,)*f_auto/.test(resolved)) {
-    return resolved;
+function withCloudinaryTransform(url: string, width: number) {
+  if (!url.includes("/upload/") || !/res\.cloudinary\.com|cloudinary/i.test(url)) {
+    return url;
   }
-  return resolved.replace("/upload/", `/upload/f_auto,q_auto:eco,c_limit,w_${width}/`);
+  if (/\/upload\/(?:[^/]+,)*?(?:f_auto|q_auto|w_\d+)/.test(url)) {
+    return url;
+  }
+  return url.replace("/upload/", `/upload/f_auto,q_auto:eco,c_limit,w_${width}/`);
 }
 
-export function mediaUrl(url?: string | null) {
+export function mediaUrl(url?: string | null, width = 960) {
   if (!url) {
     return PLACEHOLDER;
   }
+  let resolved = url;
   if (/^https?:\/\//i.test(url)) {
-    return url;
-  }
-  if (url.startsWith("/")) {
+    resolved = url;
+  } else if (url.startsWith("/")) {
     const api = import.meta.env.VITE_API_URL as string | undefined;
     if (api) {
       try {
-        return `${new URL(api).origin}${url}`;
+        resolved = `${new URL(api).origin}${url}`;
       } catch {
-        return url;
+        resolved = url;
       }
     }
   }
-  return url;
+  return withCloudinaryTransform(resolved, width);
+}
+
+/** Alias para thumbnails / galerías con ancho acotado. */
+export function optimizedMediaUrl(url?: string | null, width = 640) {
+  return mediaUrl(url, width);
 }
 
 export function experienceImages(experience: { imageUrl?: string | null; imageUrls?: string[] | null }) {

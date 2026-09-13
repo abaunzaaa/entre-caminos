@@ -1,6 +1,6 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { Heart } from "lucide-react";
+import { ArrowLeft, Heart } from "lucide-react";
 import { ExperienceEditorialNearby } from "../../components/admin/ExperienceEditorialNearby";
 import { ExperienceEditorialPlace } from "../../components/admin/ExperienceEditorialPlace";
 import { ExperienceEditorialDossier } from "../../components/admin/ExperienceEditorialDossier";
@@ -13,7 +13,7 @@ import { getApiErrorMessage } from "../../utils/api-error";
 import { canDeleteExperience, canEditExperience, canReviewExperiences } from "../../utils/admin-access";
 import { formatPrice } from "../../utils/cn";
 import { formatAvailability, displayExternalUrl, durationParts, formatDuration } from "../../utils/experience-details";
-import { experienceImages, optimizedMediaUrl } from "../../utils/media";
+import { experienceImages, mediaUrl } from "../../utils/media";
 import type { Experience, ExperienceStatus } from "../../types";
 import superadmIlus2 from "../../assets/superadm-ilus2.png";
 import "../../styles/admin-access.css";
@@ -91,7 +91,7 @@ export function ExperiencePreviewPage() {
       : "";
   const pending = experience?.status === "PENDING";
   const photos = experience ? experienceImages(experience) : [];
-  const mainPhoto = photos[0] ? optimizedMediaUrl(photos[0], 1400) : null;
+  const mainPhoto = photos[0] ? mediaUrl(photos[0], 1200) : null;
   const noteFacts = experience
     ? [
         ...(experience.creator?.name ? [{ label: "Creada por", value: experience.creator.name }] : []),
@@ -201,10 +201,22 @@ export function ExperiencePreviewPage() {
         </p>
       ) : null}
 
-      <article className="dash-profile">
+      <article className="dash-profile dash-profile--review">
         <div className="dash-profile__top">
           <div className="dash-profile__identity">
-            <h1 className="dash-profile__name">{pending && canReview ? "Revisar experiencia" : "Vista previa"}</h1>
+            <div className="dash-exps-preview-heading">
+              <Link
+                to="/admin/experiencias"
+                className="dash-exps-preview-back"
+                aria-label="Volver al listado"
+                title="Volver al listado"
+              >
+                <ArrowLeft size={20} strokeWidth={1.75} aria-hidden="true" />
+              </Link>
+              <h1 className="dash-profile__name">
+                {pending && canReview ? "Revisar experiencia" : "Vista previa"}
+              </h1>
+            </div>
             <p className="dash-profile__row">
               <span>
                 {pending && canReview
@@ -213,7 +225,7 @@ export function ExperiencePreviewPage() {
               </span>
             </p>
             {experience ? (
-              <div className="dash-cats-actions dash-exps-hero-actions">
+              <div className="dash-cats-actions dash-exps-preview-actions">
                 {pending && canReview ? (
                   <>
                     <Button type="button" disabled={busy || deleting} onClick={() => void onApprove()}>
@@ -242,9 +254,6 @@ export function ExperiencePreviewPage() {
                     Eliminar
                   </Button>
                 ) : null}
-                <Link to="/admin/experiencias" className="admin-cta inline-flex items-center justify-center">
-                  Volver al listado
-                </Link>
               </div>
             ) : null}
           </div>
@@ -272,7 +281,7 @@ export function ExperiencePreviewPage() {
                 <Heart size={18} strokeWidth={1.7} fill={favoriteOn ? "currentColor" : "none"} aria-hidden="true" />
               </button>
               <ExperienceEditorialGallery
-                slides={experienceImages(experience).map((url) => optimizedMediaUrl(url, 1100))}
+                slides={experienceImages(experience).map((url) => mediaUrl(url, 1400))}
                 label={experience.title}
               />
             </div>

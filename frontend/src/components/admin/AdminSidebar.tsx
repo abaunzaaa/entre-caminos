@@ -33,7 +33,7 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     to: "/admin/administradores",
     label: "Administradores",
     icon: Users,
-    permission: "admin.dashboard.view",
+    permission: "admins.manage",
     match: ["/admin/administradores", "/admin/administrators"],
   },
   {
@@ -105,14 +105,12 @@ export function AdminSidebar({
   items,
   onToggle,
   onCloseMobile,
-  onHoverExpandChange,
 }: {
   collapsed: boolean;
   mobileOpen: boolean;
   items: AdminNavItem[];
   onToggle: () => void;
   onCloseMobile: () => void;
-  onHoverExpandChange?: (expanded: boolean) => void;
 }) {
   const compactBrand = collapsed && !mobileOpen;
 
@@ -120,14 +118,6 @@ export function AdminSidebar({
     <aside
       className={cn("admin-sidebar", collapsed && "is-collapsed", mobileOpen && "is-mobile-open")}
       aria-label="Menú administrativo"
-      onMouseEnter={() => onHoverExpandChange?.(true)}
-      onMouseLeave={() => onHoverExpandChange?.(false)}
-      onFocusCapture={() => onHoverExpandChange?.(true)}
-      onBlurCapture={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
-          onHoverExpandChange?.(false);
-        }
-      }}
     >
       <div className="admin-sidebar__top">
         <div className="admin-sidebar__brand">
@@ -135,11 +125,10 @@ export function AdminSidebar({
             src={logoMonogram}
             alt="Entre Caminos"
             className="admin-sidebar__logo admin-sidebar__logo--mark"
-            width={96}
-            height={96}
+            width={64}
+            height={64}
             draggable={false}
             decoding="async"
-            fetchPriority="high"
           />
         </div>
         <button
