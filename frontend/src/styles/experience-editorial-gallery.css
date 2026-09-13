@@ -12,24 +12,12 @@
 .dash.dash--exps-preview > .dash-profile {
   position: relative;
   z-index: 3;
-  width: min(100%, 980px);
-  margin-inline: auto;
-  padding: 30px 36px;
   border: 1px solid var(--border-soft, #dce3df);
   box-shadow: 0 16px 40px rgba(28, 51, 46, 0.07);
 }
 
-.dash.dash--exps-preview .dash-profile--review .dash-profile__name {
-  font-size: clamp(26px, 2.4vw, 32px);
-}
-
-.dash.dash--exps-preview .dash-profile--review .dash-profile__row {
-  font-size: 15px;
-  line-height: 1.5;
-}
-
 .dash.dash--exps-preview .dash-profile--review .dash-exps-preview-actions {
-  margin-top: 16px;
+  margin-top: 14px;
 }
 
 .dash-exps-preview-heading {

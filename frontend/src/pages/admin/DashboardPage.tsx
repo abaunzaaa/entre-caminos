@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Clock,
   Compass,
@@ -22,7 +22,9 @@ import { CountUp } from "../../components/admin/CountUp";
 import { DashCardRail } from "../../components/admin/DashCardRail";
 import { ExperienceCatalogCard } from "../../components/admin/ExperienceCatalogCard";
 import { Panel, StatusDot } from "../../components/admin/Panel";
-import { Button } from "../../components/ui/Button";
+import { KeyConfirmDialog } from "../../components/ui/KeyConfirmDialog";
+import { SuccessConfirmDialog } from "../../components/ui/SuccessConfirmDialog";
+import { AuthKeyIcon } from "../../components/auth/AuthKeyIcon";
 import { useAuth } from "../../hooks/useAuth";
 import { getApiErrorMessage } from "../../utils/api-error";
 import { canReviewExperiences } from "../../utils/admin-access";
@@ -138,6 +140,7 @@ const KPI: Array<{
 
 export function DashboardPage() {
   const { user, hasPermission } = useAuth();
+  const navigate = useNavigate();
   const canReview = canReviewExperiences(hasPermission);
   const isStaffAdmin = user?.role === "ADMIN";
   const [metrics, setMetrics] = useState<DashboardStats | null>(null);
@@ -151,6 +154,7 @@ export function DashboardPage() {
   const [experiencesLoading, setExperiencesLoading] = useState(true);
   const [pendingDelete, setPendingDelete] = useState<Experience | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [deletedOpen, setDeletedOpen] = useState(false);
   const [toast, setToast] = useState<{ text: string; tone: "success" | "error" } | null>(null);
   const [photo, setPhoto] = useState<string | null>(() => resolveAvatarUrl(user));
 
@@ -275,7 +279,7 @@ export function DashboardPage() {
       await deleteExperience(pendingDelete.id);
       setExperiences((current) => current.filter((item) => item.id !== pendingDelete.id));
       setPendingDelete(null);
-      setToast({ tone: "success", text: "Experiencia eliminada." });
+      setDeletedOpen(true);
     } catch (err) {
       setToast({
         tone: "error",
@@ -496,40 +500,35 @@ export function DashboardPage() {
       </section>
 
       {pendingDelete ? (
-        <div
-          className="dash-team-confirm"
-          role="presentation"
-          onClick={() => {
+        <KeyConfirmDialog
+          open={Boolean(pendingDelete)}
+          title="¿Eliminar esta experiencia?"
+          description="Se borrará del catálogo de forma permanente. Esta acción no se puede deshacer."
+          confirmLabel="Eliminar"
+          busy={deleting}
+          onCancel={() => {
             if (!deleting) {
               setPendingDelete(null);
             }
           }}
-        >
-          <div
-            className="dash-team-confirm__card"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="dash-exp-delete-title"
-            aria-describedby="dash-exp-delete-copy"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <h2 id="dash-exp-delete-title" className="dash-team-confirm__title">
-              ¿Estás seguro de eliminar esta experiencia?
-            </h2>
-            <p id="dash-exp-delete-copy" className="dash-team-confirm__lead">
-              Esta acción quita la experiencia del catálogo y no se puede deshacer.
-            </p>
-            <div className="dash-team-confirm__actions">
-              <Button type="button" variant="secondary" disabled={deleting} onClick={() => setPendingDelete(null)}>
-                Cancelar
-              </Button>
-              <Button type="button" disabled={deleting} onClick={() => void confirmDelete()}>
-                {deleting ? "Eliminando..." : "Eliminar"}
-              </Button>
-            </div>
-          </div>
-        </div>
+          onConfirm={() => void confirmDelete()}
+        />
       ) : null}
+
+      <SuccessConfirmDialog
+        open={deletedOpen}
+        onClose={() => {
+          setDeletedOpen(false);
+          navigate("/admin/experiencias");
+        }}
+        className="contact-success--subtle"
+        title="Experiencia eliminada"
+        description="La experiencia se eliminó correctamente. Volverás al listado de experiencias."
+        actionLabel="Ver experiencias"
+        closeLabel="Cerrar"
+        initialFocus="action"
+        icon={<AuthKeyIcon className="auth-reset-success__mark" />}
+      />
     </div>
   );
 }

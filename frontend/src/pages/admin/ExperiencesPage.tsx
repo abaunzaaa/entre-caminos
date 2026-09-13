@@ -2,6 +2,9 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { ChevronDown, Clock, Compass, Plus, Search } from "lucide-react";
 import { Button } from "../../components/ui/Button";
+import { KeyConfirmDialog } from "../../components/ui/KeyConfirmDialog";
+import { SuccessConfirmDialog } from "../../components/ui/SuccessConfirmDialog";
+import { AuthKeyIcon } from "../../components/auth/AuthKeyIcon";
 import { ExperienceCatalogCard } from "../../components/admin/ExperienceCatalogCard";
 import { Panel } from "../../components/admin/Panel";
 import { useAuth } from "../../hooks/useAuth";
@@ -21,6 +24,7 @@ import sinRevisar from "../../assets/sinrevisar.png";
 import sinRevisar2 from "../../assets/sinrevisar2.png";
 import superadmIlus2 from "../../assets/superadm-ilus2.png";
 import "../../styles/admin-access.css";
+import "../../styles/auth-recovery-modal.css";
 
 type FilterMenuOption<T extends string> = { value: T; label: string };
 
@@ -109,6 +113,7 @@ export function ExperiencesPage() {
   const [pendingDelete, setPendingDelete] = useState<Experience | null>(null);
   const [pendingDeactivate, setPendingDeactivate] = useState<Experience | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [deletedOpen, setDeletedOpen] = useState(false);
   const [statusBusyId, setStatusBusyId] = useState("");
   const [toast, setToast] = useState<{ text: string; tone: "success" | "error" } | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -245,7 +250,7 @@ export function ExperiencesPage() {
       setExperiences((current) => current.filter((item) => item.id !== pendingDelete.id));
       setPendingDelete(null);
       await refreshSummaryPreviews().catch(() => undefined);
-      setToast({ tone: "success", text: "Experiencia eliminada." });
+      setDeletedOpen(true);
     } catch (err) {
       const message = getApiErrorMessage(err, "No se pudo eliminar");
       setError(message);
@@ -719,40 +724,32 @@ export function ExperiencesPage() {
       ) : null}
 
       {pendingDelete ? (
-        <div
-          className="dash-team-confirm"
-          role="presentation"
-          onClick={() => {
+        <KeyConfirmDialog
+          open={Boolean(pendingDelete)}
+          title="¿Eliminar esta experiencia?"
+          description="Se borrará del catálogo de forma permanente. Esta acción no se puede deshacer."
+          confirmLabel="Eliminar"
+          busy={deleting}
+          onCancel={() => {
             if (!deleting) {
               setPendingDelete(null);
             }
           }}
-        >
-          <div
-            className="dash-team-confirm__card"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="exp-delete-title"
-            aria-describedby="exp-delete-copy"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <h2 id="exp-delete-title" className="dash-team-confirm__title">
-              ¿Estás seguro de eliminar esta experiencia?
-            </h2>
-            <p id="exp-delete-copy" className="dash-team-confirm__lead">
-              Esta acción quita la experiencia del catálogo y no se puede deshacer.
-            </p>
-            <div className="dash-team-confirm__actions">
-              <Button type="button" variant="secondary" disabled={deleting} onClick={() => setPendingDelete(null)}>
-                Cancelar
-              </Button>
-              <Button type="button" disabled={deleting} onClick={() => void confirmDelete()}>
-                {deleting ? "Eliminando..." : "Eliminar"}
-              </Button>
-            </div>
-          </div>
-        </div>
+          onConfirm={() => void confirmDelete()}
+        />
       ) : null}
+
+      <SuccessConfirmDialog
+        open={deletedOpen}
+        onClose={() => setDeletedOpen(false)}
+        className="contact-success--subtle"
+        title="Experiencia eliminada"
+        description="La experiencia se eliminó correctamente del catálogo."
+        actionLabel="Entendido"
+        closeLabel="Cerrar"
+        initialFocus="action"
+        icon={<AuthKeyIcon className="auth-reset-success__mark" />}
+      />
     </div>
   );
 }
