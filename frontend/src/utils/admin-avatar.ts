@@ -24,7 +24,7 @@ export function resolveAvatarUrl(user?: { id?: string; avatarUrl?: string | null
     }
     if (url.startsWith("/")) {
       const api = import.meta.env.VITE_API_URL as string | undefined;
-      if (api) {
+      if (api && /^https?:\/\//i.test(api)) {
         try {
           return `${new URL(api).origin}${url}`;
         } catch {

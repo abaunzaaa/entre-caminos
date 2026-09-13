@@ -5,6 +5,7 @@ import {
   type ContactKindName,
 } from "../config/constants.js";
 import { logger } from "../utils/logger.js";
+import { parseMailFrom } from "../utils/mail-from.js";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -36,6 +37,9 @@ export function escapeHtml(value: string) {
     .replaceAll("'", "&#39;");
 }
 
+/** Accepts `email@domain` or `Display Name <email@domain>`. */
+export { parseMailFrom } from "../utils/mail-from.js";
+
 function formatSentAt(date: Date) {
   return new Intl.DateTimeFormat("es-CO", {
     dateStyle: "long",
@@ -53,6 +57,12 @@ export async function sendMail(payload: MailPayload): Promise<boolean> {
     return false;
   }
 
+  const from = parseMailFrom(env.SENDGRID_FROM_EMAIL);
+  if (!EMAIL_PATTERN.test(from.email)) {
+    logger.error("SENDGRID_FROM_EMAIL inválido", { hasName: Boolean(from.name) });
+    return false;
+  }
+
   try {
     const response = await fetch("https://api.sendgrid.com/v3/mail/send", {
       method: "POST",
@@ -62,7 +72,7 @@ export async function sendMail(payload: MailPayload): Promise<boolean> {
       },
       body: JSON.stringify({
         personalizations: [{ to: [{ email: payload.to }] }],
-        from: { email: env.SENDGRID_FROM_EMAIL },
+        from,
         ...(payload.replyTo ? { reply_to: { email: payload.replyTo } } : {}),
         subject: payload.subject,
         content: [
@@ -73,7 +83,8 @@ export async function sendMail(payload: MailPayload): Promise<boolean> {
     });
 
     if (!response.ok) {
-      logger.error("SendGrid falló", { status: response.status });
+      const detail = (await response.text().catch(() => "")).slice(0, 280);
+      logger.error("SendGrid falló", { status: response.status, detail });
       return false;
     }
 

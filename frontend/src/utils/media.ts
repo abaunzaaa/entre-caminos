@@ -16,16 +16,19 @@ export function mediaUrl(url?: string | null, width = 960) {
     return PLACEHOLDER;
   }
   let resolved = url;
-  if (/^https?:\/\//i.test(url)) {
+  if (/^https?:\/\//i.test(url) || url.startsWith("data:") || url.startsWith("blob:")) {
     resolved = url;
   } else if (url.startsWith("/")) {
     const api = import.meta.env.VITE_API_URL as string | undefined;
-    if (api) {
+    // Absolute API host → prefix origin. Relative `/api` → keep path (Vite proxies `/uploads`).
+    if (api && /^https?:\/\//i.test(api)) {
       try {
         resolved = `${new URL(api).origin}${url}`;
       } catch {
         resolved = url;
       }
+    } else {
+      resolved = url;
     }
   }
   return withCloudinaryTransform(resolved, width);
