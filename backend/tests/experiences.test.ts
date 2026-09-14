@@ -17,7 +17,7 @@ function experiencePayload(categoryId: string, title: string, extra?: Record<str
 }
 
 describe("Revisión de experiencias", () => {
-  it("impide crear o enviar una experiencia con menos de 5 imágenes", async () => {
+  it("CP-S1-026: impide crear o enviar una experiencia con menos de 5 imágenes", async () => {
     const { adminToken, superToken, email } = await createAndLoginStaffAdmin();
     const category = await api()
       .post("/api/admin/categories")
@@ -113,7 +113,7 @@ describe("Revisión de experiencias", () => {
     expect(forcedUpdate.body.data.experience.status).toBe("PENDING");
   });
 
-  it("publica de inmediato las experiencias creadas por un Super Administrador", async () => {
+  it("CP-S1-021: publica de inmediato las experiencias creadas por un Super Administrador", async () => {
     const superToken = (await loginAsAdmin()).body.data.accessToken as string;
     const category = await api()
       .post("/api/admin/categories")
@@ -250,7 +250,7 @@ describe("Revisión de experiencias", () => {
 });
 
 describe("Listado admin de experiencias publicadas", () => {
-  it("filtra PUBLICADAS, ordena por fecha descendente y limita en la consulta", async () => {
+  it("CP-S1-022: filtra PUBLICADAS, ordena por fecha descendente y limita en la consulta", async () => {
     const superToken = (await loginAsAdmin()).body.data.accessToken as string;
     const { adminToken } = await createAndLoginStaffAdmin();
     const stamp = Date.now();
@@ -312,7 +312,31 @@ describe("Listado admin de experiencias publicadas", () => {
 });
 
 describe("Disponibilidad activa/inactiva", () => {
-  it("oculta una experiencia inactiva del catálogo público y la restaura al activarla", async () => {
+  it("CP-S1-025: elimina una publicación y deja de mostrarla públicamente", async () => {
+    const superToken = (await loginAsAdmin()).body.data.accessToken as string;
+    const stamp = Date.now();
+    const category = await api()
+      .post("/api/admin/categories")
+      .set("Authorization", `Bearer ${superToken}`)
+      .send({ name: `Eliminar exp ${stamp}` });
+    const categoryId = category.body.data.category.id as string;
+
+    const created = await api()
+      .post("/api/admin/experiences")
+      .set("Authorization", `Bearer ${superToken}`)
+      .send(experiencePayload(categoryId, `Para eliminar ${stamp}`));
+    expect(created.status).toBe(201);
+    const id = created.body.data.experience.id as string;
+    expect((await api().get(`/api/experiences/${id}`)).status).toBe(200);
+
+    const removed = await api()
+      .delete(`/api/admin/experiences/${id}`)
+      .set("Authorization", `Bearer ${superToken}`);
+    expect(removed.status).toBe(200);
+    expect((await api().get(`/api/experiences/${id}`)).status).toBe(404);
+  });
+
+  it("CP-S1-024: oculta una experiencia inactiva del catálogo público y la restaura al activarla", async () => {
     const superToken = (await loginAsAdmin()).body.data.accessToken as string;
     const stamp = Date.now();
     const category = await api()
@@ -422,7 +446,7 @@ describe("Disponibilidad activa/inactiva", () => {
 });
 
 describe("Detalles de visita de experiencias", () => {
-  it("guarda enlace, duración, disponibilidad y cómo llegar", async () => {
+  it("CP-S1-023: guarda enlace, duración, disponibilidad y cómo llegar", async () => {
     const superToken = (await loginAsAdmin()).body.data.accessToken as string;
     const category = await api()
       .post("/api/admin/categories")

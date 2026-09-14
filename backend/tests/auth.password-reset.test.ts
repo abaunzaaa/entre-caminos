@@ -18,8 +18,8 @@ async function registerForReset(email = uniqueEmail("reset")) {
   return email;
 }
 
-describe("Recuperación de contraseña", () => {
-  it("acepta un correo registrado con el mensaje genérico y guarda solo el hash del token", async () => {
+describe("HU-03 Recuperación de contraseña (CP-S1-009)", () => {
+  it("CP-S1-009: acepta un correo registrado con el mensaje genérico y guarda solo el hash del token", async () => {
     const email = await registerForReset();
     const forgot = await api().post("/api/auth/forgot-password").send({ email: ` ${email.toUpperCase()} ` });
 
@@ -81,7 +81,7 @@ describe("Recuperación de contraseña", () => {
     expect(reset.status).toBe(200);
   });
 
-  it("restablece la contraseña con un enlace válido y deja de aceptar la anterior", async () => {
+  it("CP-S1-009: restablece la contraseña con un enlace válido y deja de aceptar la anterior", async () => {
     const email = await registerForReset();
     const forgot = await api().post("/api/auth/forgot-password").send({ email });
 
