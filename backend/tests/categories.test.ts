@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { api, createAndLoginStaffAdmin, loginAsAdmin, sampleExperienceImages } from "./helpers.js";
 
 describe("HU-20 Categorías", () => {
-  it("deja pendiente la categoría de un administrador y no la muestra en el catálogo público", async () => {
+  it("CP-S1-016: deja pendiente la categoría de un administrador y no la muestra en el catálogo público", async () => {
     const { adminToken } = await createAndLoginStaffAdmin();
     const name = `Gastronomía ${Date.now()}`;
     const response = await api()
@@ -140,7 +140,7 @@ describe("HU-20 Categorías", () => {
     expect(visible).toBe(false);
   });
 
-  it("aprueba de inmediato las categorías creadas por un Super Administrador", async () => {
+  it("CP-S1-016: aprueba de inmediato las categorías creadas por un Super Administrador", async () => {
     const token = (await loginAsAdmin()).body.data.accessToken as string;
     const response = await api()
       .post("/api/admin/categories")
@@ -176,7 +176,7 @@ describe("HU-20 Categorías", () => {
     expect(response.body.data.category.icon).toBe("coffee");
   });
 
-  it("edita una categoría", async () => {
+  it("CP-S1-018: edita una categoría", async () => {
     const token = (await loginAsAdmin()).body.data.accessToken as string;
     const created = await api()
       .post("/api/admin/categories")
@@ -294,7 +294,27 @@ describe("HU-20 Categorías", () => {
     expect(deleted.status).toBe(403);
   });
 
-  it("impide eliminar una categoría asociada a experiencias", async () => {
+  it("CP-S1-019: elimina una categoría sin experiencias asociadas", async () => {
+    const token = (await loginAsAdmin()).body.data.accessToken as string;
+    const created = await api()
+      .post("/api/admin/categories")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ name: `Libre ${Date.now()}` });
+    expect(created.status).toBe(201);
+    const categoryId = created.body.data.category.id as string;
+
+    const deleted = await api()
+      .delete(`/api/admin/categories/${categoryId}`)
+      .set("Authorization", `Bearer ${token}`);
+    expect(deleted.status).toBe(200);
+
+    const listed = await api().get("/api/admin/categories").set("Authorization", `Bearer ${token}`);
+    expect(
+      (listed.body.data.categories as Array<{ id: string }>).some((item) => item.id === categoryId),
+    ).toBe(false);
+  });
+
+  it("CP-S1-020: impide eliminar una categoría asociada a experiencias", async () => {
     const token = (await loginAsAdmin()).body.data.accessToken as string;
     const category = await api()
       .post("/api/admin/categories")
@@ -324,7 +344,7 @@ describe("HU-20 Categorías", () => {
     expect(deleted.body.error.message).toMatch(/experiencias asociadas/i);
   });
 
-  it("permite consultar solo las últimas categorías para el resumen", async () => {
+  it("CP-S1-017: permite consultar solo las últimas categorías para el resumen", async () => {
     const token = (await loginAsAdmin()).body.data.accessToken as string;
     const recent = await api()
       .get("/api/admin/categories")

@@ -15,7 +15,7 @@ function registerPayload(overrides?: Record<string, unknown>) {
 }
 
 describe("HU-02 Registro", () => {
-  it("crea un usuario USER y nunca guarda la contraseña en texto plano", async () => {
+  it("CP-S1-001: crea un usuario USER y nunca guarda la contraseña en texto plano", async () => {
     const payload = registerPayload();
     const response = await api().post("/api/auth/register").send(payload);
 
@@ -35,7 +35,7 @@ describe("HU-02 Registro", () => {
     expect(stored?.verificationCodeExpires).toBeTruthy();
   });
 
-  it("rechaza un correo repetido", async () => {
+  it("CP-S1-003: rechaza un correo repetido", async () => {
     const email = uniqueEmail("duplicado");
     await api().post("/api/auth/register").send(registerPayload({ email }));
 
@@ -45,28 +45,28 @@ describe("HU-02 Registro", () => {
     expect(response.body.error.message).toMatch(/correo electrónico/i);
   });
 
-  it("rechaza un correo inválido", async () => {
+  it("CP-S1-002: rechaza un correo inválido", async () => {
     const response = await api().post("/api/auth/register").send(
       registerPayload({ email: "no-es-un-correo" }),
     );
     expect(response.status).toBe(422);
   });
 
-  it("rechaza una contraseña inválida", async () => {
+  it("CP-S1-004: rechaza una contraseña inválida", async () => {
     const response = await api().post("/api/auth/register").send(
       registerPayload({ password: "123456", confirmPassword: "123456" }),
     );
     expect(response.status).toBe(422);
   });
 
-  it("rechaza si la confirmación no coincide", async () => {
+  it("CP-S1-002: rechaza si la confirmación no coincide", async () => {
     const response = await api().post("/api/auth/register").send(
       registerPayload({ confirmPassword: "OtraClave#2026" }),
     );
     expect(response.status).toBe(422);
   });
 
-  it("rechaza si no acepta términos", async () => {
+  it("CP-S1-002: rechaza si no acepta términos", async () => {
     const response = await api().post("/api/auth/register").send(
       registerPayload({ termsAccepted: false }),
     );

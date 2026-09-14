@@ -2,8 +2,8 @@ import request from "supertest";
 import { describe, expect, it } from "vitest";
 import { app, adminCredentials } from "./helpers.js";
 
-describe("Auth refresh", () => {
-  it("renueva el access token con la cookie de refresh", async () => {
+describe("HU-03 Mantenimiento de sesión (CP-S1-008)", () => {
+  it("CP-S1-008: renueva el access token con la cookie de refresh", async () => {
     const agent = request.agent(app);
     const login = await agent.post("/api/auth/login").send(adminCredentials);
     expect(login.status).toBe(200);

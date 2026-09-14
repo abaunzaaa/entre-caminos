@@ -14,7 +14,7 @@ async function countActiveAdministratorsInDb() {
 }
 
 describe("HU-21 Administración", () => {
-  it("bloquea a un usuario sin permisos", async () => {
+  it("CP-S1-015: bloquea a un usuario sin permisos", async () => {
     const { payload } = await registerUser();
     const login = await api().post("/api/auth/login").send({
       email: payload.email,
@@ -29,7 +29,7 @@ describe("HU-21 Administración", () => {
     expect(response.status).toBe(403);
   });
 
-  it("permite al SUPER_ADMIN gestionar administradores", async () => {
+  it("CP-S1-010/011/012/013/014: permite al SUPER_ADMIN gestionar administradores", async () => {
     const adminLogin = await loginAsAdmin();
     const token = adminLogin.body.data.accessToken as string;
 
@@ -207,7 +207,7 @@ describe("HU-21 Administración", () => {
     expect(restored.body.data.createdCategories).toBe(cats0);
   });
 
-  it("elimina un administrador de forma persistente e invalida su sesión", async () => {
+  it("CP-S1-014: elimina un administrador de forma persistente e invalida su sesión", async () => {
     const superLogin = await loginAsAdmin();
     const superToken = superLogin.body.data.accessToken as string;
     const superId = superLogin.body.data.user.id as string;
@@ -348,7 +348,7 @@ describe("HU-21 Administración", () => {
     }
   });
 
-  it("impide que un administrador cree cuentas administrativas o gestione roles", async () => {
+  it("CP-S1-015: impide que un administrador cree cuentas administrativas o gestione roles", async () => {
     const { adminToken, superToken } = await createAndLoginStaffAdmin();
     const email = uniqueEmail("admin.blocked");
 

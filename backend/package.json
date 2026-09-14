@@ -16,6 +16,10 @@
     "prisma:studio": "prisma studio",
     "db:verify": "tsx scripts/verify-db.ts",
     "test": "vitest run --reporter=verbose",
+    "test:local": "vitest run --config vitest.unit.config.ts --reporter=verbose",
+    "test:unit": "vitest run --config vitest.unit.config.ts --reporter=verbose",
+    "test:integration": "vitest run --reporter=verbose",
+    "test:coverage": "vitest run --coverage --reporter=verbose",
     "test:watch": "vitest",
     "dev:fast": "tsx watch src/index.ts"
   },
