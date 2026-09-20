@@ -1,9 +1,25 @@
-import { Link, Outlet } from "react-router-dom";
+import { Link, Outlet, useLocation } from "react-router-dom";
 import { MapHeartLogo } from "../components/brand/MapHeartLogo";
+import { ExplorerNavbar } from "../components/explorer/ExplorerNavbar";
+import { LandingFooter } from "../components/landing/LandingFooter";
 import { useAuth } from "../hooks/useAuth";
+import "../styles/explorer.css";
 
 export function PublicLayout() {
   const { user, isAdmin, logout } = useAuth();
+  const { pathname } = useLocation();
+  const isExplorer = pathname.startsWith("/explorar");
+  const isExploreDetail = /^\/explorar\/[^/]+/.test(pathname);
+
+  if (isExplorer) {
+    return (
+      <div className="explorer-page explorer-page--shell min-h-screen text-ink">
+        <ExplorerNavbar />
+        <Outlet />
+        {isExploreDetail ? null : <LandingFooter variant="compact" />}
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white text-ink">

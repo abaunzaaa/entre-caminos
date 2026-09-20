@@ -83,9 +83,13 @@ function pickNearbyExperiences(current: Experience, list: Experience[]) {
 export function ExperienceEditorialNearby({
   experience,
   footer,
+  hrefFor = (id) => `/admin/experiencias/${id}/ver`,
+  fetchPublished,
 }: {
   experience: Experience;
   footer?: ReactNode;
+  hrefFor?: (id: string) => string;
+  fetchPublished?: () => Promise<Experience[]>;
 }) {
   const [nearby, setNearby] = useState<Experience[]>([]);
   const [loaded, setLoaded] = useState(false);
@@ -93,7 +97,8 @@ export function ExperienceEditorialNearby({
   useEffect(() => {
     let active = true;
     setLoaded(false);
-    getAdminExperiences({ status: "PUBLISHED" })
+    const load = fetchPublished ?? (() => getAdminExperiences({ status: "PUBLISHED" }));
+    load()
       .then((list) => {
         if (!active) {
           return;
@@ -110,7 +115,7 @@ export function ExperienceEditorialNearby({
     return () => {
       active = false;
     };
-  }, [experience]);
+  }, [experience, fetchPublished]);
 
   if (!loaded || (!nearby.length && !footer)) {
     return null;
@@ -131,7 +136,7 @@ export function ExperienceEditorialNearby({
               const itemPlace = parseStoredLocation(item.location || "");
               const caption = [itemPlace.municipality, itemPlace.department].filter(Boolean).join(" · ");
               return (
-                <Link key={item.id} className="dash-exps-nearby__card" to={`/admin/experiencias/${item.id}/ver`}>
+                <Link key={item.id} className="dash-exps-nearby__card" to={hrefFor(item.id)}>
                   <span className="dash-exps-nearby__photo">
                     <img src={photo} alt="" />
                     <span className="dash-exps-nearby__glass">Ver</span>

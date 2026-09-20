@@ -13,9 +13,11 @@ function staggerClass(index: number) {
 export function ExperienceEditorialGallery({
   slides,
   label,
+  onImageClick,
 }: {
   slides: string[];
   label: string;
+  onImageClick?: (index: number) => void;
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const shiftRef = useRef<HTMLDivElement>(null);
@@ -218,13 +220,30 @@ export function ExperienceEditorialGallery({
                   className={staggerClass(index)}
                   aria-hidden={copy > 0 ? true : undefined}
                 >
-                  <img
-                    src={src}
-                    alt={copy > 0 ? "" : `${label}, fotografía ${index + 1}`}
-                    loading={copy === 0 && index < 3 ? "eager" : "lazy"}
-                    decoding="async"
-                    fetchPriority={copy === 0 && index === 0 ? "high" : "low"}
-                  />
+                  {onImageClick && copy === 0 ? (
+                    <button
+                      type="button"
+                      className="dash-exps-editorial__shot-btn"
+                      onClick={() => onImageClick(index)}
+                      aria-label={`Ampliar fotografía ${index + 1} de ${label}`}
+                    >
+                      <img
+                        src={src}
+                        alt={`${label}, fotografía ${index + 1}`}
+                        loading={index < 3 ? "eager" : "lazy"}
+                        decoding="async"
+                        fetchPriority={index === 0 ? "high" : "low"}
+                      />
+                    </button>
+                  ) : (
+                    <img
+                      src={src}
+                      alt={copy > 0 ? "" : `${label}, fotografía ${index + 1}`}
+                      loading={copy === 0 && index < 3 ? "eager" : "lazy"}
+                      decoding="async"
+                      fetchPriority={copy === 0 && index === 0 ? "high" : "low"}
+                    />
+                  )}
                 </figure>
               )),
             )}

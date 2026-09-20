@@ -4,7 +4,6 @@ import { useAuth } from "../hooks/useAuth";
 import encabezado from "../assets/encabezado.png";
 import keyIcon from "../assets/key-icon.png";
 import tituloEncabezado from "../assets/titulo-encabezado.png";
-import logoEntreCaminos from "../assets/logo.png";
 import bicicletaExp from "../assets/bicicleta-exp.jpg";
 import soloMuseoExp from "../assets/solomuseo-esp.jpg";
 import museoExp from "../assets/museo-exp.jpg";
@@ -22,14 +21,11 @@ import billarExp from "../assets/billar-exp.jpg";
 import carroExp from "../assets/carro-exp.jpg";
 import padelExp from "../assets/padel-exp.jpg";
 import golfExp from "../assets/golf-exp.jpg";
-import { ContactModal } from "../components/contact/ContactModal";
-import { HowItWorksModal } from "../components/how-it-works/HowItWorksModal";
-import { TermsModal } from "../components/legal/TermsModal";
+import { LandingFooter } from "../components/landing/LandingFooter";
 import "../styles/landing-hero.css";
 import "../styles/landing-intro.css";
 import "../styles/landing-featured.css";
 import "../styles/landing-values.css";
-import "../styles/landing-footer.css";
 
 const featuredShowcase = [
   {
@@ -230,9 +226,6 @@ export function LandingPage() {
   const featuredPointerX = useRef(0);
   const [flippedCard, setFlippedCard] = useState<number | null>(null);
   const [activeFeatured, setActiveFeatured] = useState(0);
-  const [contactOpen, setContactOpen] = useState(false);
-  const [howItWorksOpen, setHowItWorksOpen] = useState(false);
-  const [legalDocument, setLegalDocument] = useState<"terms" | "privacy" | null>(null);
 
   useEffect(() => {
     const sections = [heroRef.current, introRef.current, featuredRef.current, valuesRef.current].filter(
@@ -476,77 +469,7 @@ export function LandingPage() {
         </div>
       </section>
 
-      <footer id="contacto" className="landing-footer">
-        <div className="landing-footer__crest">
-          <img src={logoEntreCaminos} alt="Entre Caminos" className="landing-footer__logo" />
-        </div>
-        <div className="landing-footer__inner">
-          <div className="landing-footer__columns">
-            <div className="landing-footer__col landing-footer__col--left">
-              <h3 className="landing-footer__col-title">ACERCA DE</h3>
-              <ul className="landing-footer__links">
-                <li>
-                  <a
-                    href="#como-funciona"
-                    onClick={(event) => {
-                      event.preventDefault();
-                      setHowItWorksOpen(true);
-                    }}
-                  >
-                    Cómo funciona
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#contacto"
-                    onClick={(event) => {
-                      event.preventDefault();
-                      setContactOpen(true);
-                    }}
-                  >
-                    Contacto
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div className="landing-footer__col landing-footer__col--right">
-              <h3 className="landing-footer__col-title">LEGAL</h3>
-              <ul className="landing-footer__links">
-                <li>
-                  <a
-                    href="#contacto"
-                    onClick={(event) => {
-                      event.preventDefault();
-                      setLegalDocument("terms");
-                    }}
-                  >
-                    Términos y condiciones
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#contacto"
-                    onClick={(event) => {
-                      event.preventDefault();
-                      setLegalDocument("privacy");
-                    }}
-                  >
-                    Tratamiento de datos personales
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <p className="landing-footer__copy">© 2026 Entre Caminos. Todos los derechos reservados.</p>
-        </div>
-      </footer>
-      <ContactModal open={contactOpen} onClose={() => setContactOpen(false)} />
-      <HowItWorksModal open={howItWorksOpen} onClose={() => setHowItWorksOpen(false)} />
-      <TermsModal
-        open={legalDocument !== null}
-        kind={legalDocument ?? "terms"}
-        onClose={() => setLegalDocument(null)}
-      />
+      <LandingFooter />
     </div>
   );
 }

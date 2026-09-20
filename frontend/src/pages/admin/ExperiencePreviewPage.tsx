@@ -1,23 +1,21 @@
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Heart } from "lucide-react";
-import { ExperienceEditorialNearby } from "../../components/admin/ExperienceEditorialNearby";
-import { ExperienceEditorialPlace } from "../../components/admin/ExperienceEditorialPlace";
-import { ExperienceEditorialDossier } from "../../components/admin/ExperienceEditorialDossier";
-import { ExperienceEditorialGallery } from "../../components/admin/ExperienceEditorialGallery";
+import { ArrowLeft } from "lucide-react";
+import { ExperienceEditorialView } from "../../components/admin/ExperienceEditorialView";
 import { Button } from "../../components/ui/Button";
 import { KeyConfirmDialog } from "../../components/ui/KeyConfirmDialog";
 import { SuccessConfirmDialog } from "../../components/ui/SuccessConfirmDialog";
 import { AuthKeyIcon } from "../../components/auth/AuthKeyIcon";
-import { formatDepartmentMunicipality } from "../../data/colombia-locations";
 import { useAuth } from "../../hooks/useAuth";
-import { approveExperience, deleteExperience, getAdminExperience, rejectExperience } from "../../services/catalog.service";
+import {
+  approveExperience,
+  deleteExperience,
+  getAdminExperience,
+  rejectExperience,
+} from "../../services/catalog.service";
 import { getApiErrorMessage } from "../../utils/api-error";
 import { canDeleteExperience, canEditExperience, canReviewExperiences } from "../../utils/admin-access";
-import { formatPrice } from "../../utils/cn";
-import { formatAvailability, displayExternalUrl, durationParts, formatDuration } from "../../utils/experience-details";
-import { experienceImages, mediaUrl } from "../../utils/media";
-import type { Experience, ExperienceStatus } from "../../types";
+import type { Experience } from "../../types";
 import superadmIlus2 from "../../assets/superadm-ilus2.png";
 import "../../styles/admin-access.css";
 import "../../styles/auth-recovery-modal.css";
@@ -25,29 +23,6 @@ import "../../styles/experience-editorial-gallery.css";
 import "../../styles/experience-editorial-dossier.css";
 import "../../styles/experience-editorial-map.css";
 import "../../styles/experience-editorial-nearby.css";
-
-const STATUS_LABEL: Record<ExperienceStatus, string> = {
-  DRAFT: "Borrador",
-  PENDING: "Pendiente de revisión",
-  PUBLISHED: "Activa",
-  ARCHIVED: "Inactiva",
-  REJECTED: "Rechazada",
-};
-
-function formatPublishedDate(value?: string | null) {
-  if (!value) {
-    return "";
-  }
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
-  return new Intl.DateTimeFormat("es-CO", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  }).format(date);
-}
 
 export function ExperiencePreviewPage() {
   const { id } = useParams();
@@ -84,56 +59,9 @@ export function ExperiencePreviewPage() {
     return () => window.clearTimeout(timer);
   }, [toast]);
 
-  const locationByline = experience ? formatDepartmentMunicipality(experience.location) : "";
-  const lat = experience?.latitude ? Number(experience.latitude) : null;
-  const lng = experience?.longitude ? Number(experience.longitude) : null;
-  const hasPoint = Number.isFinite(lat) && Number.isFinite(lng);
   const canEdit = experience ? canEditExperience(experience.status, hasPermission, user?.role) : false;
   const canDelete = experience ? canDeleteExperience(experience.status, hasPermission, user?.role) : false;
-  const published =
-    experience?.status === "PUBLISHED"
-      ? formatPublishedDate(experience.reviewedAt || experience.createdAt)
-      : "";
   const pending = experience?.status === "PENDING";
-  const photos = experience ? experienceImages(experience) : [];
-  const mainPhoto = photos[0] ? mediaUrl(photos[0], 1200) : null;
-  const noteFacts = experience
-    ? [
-        ...(experience.creator?.name ? [{ label: "Creada por", value: experience.creator.name }] : []),
-        ...(experience.creator?.email ? [{ label: "Contacto", value: experience.creator.email }] : []),
-        ...(published ? [{ label: "Fecha de publicación", value: published }] : []),
-      ]
-    : [];
-  const durationChoice = experience
-    ? durationParts(experience.durationValue, experience.durationUnit)
-    : null;
-  const durationText = durationChoice
-    ? `${durationChoice.value} ${durationChoice.unitLabel}`
-    : experience
-      ? formatDuration(experience.durationValue, experience.durationUnit, experience.duration)
-      : "";
-  const detailFacts = experience
-    ? [
-        ...(experience.description.trim() ? [{ label: "Descripción", value: experience.description }] : []),
-        { label: "Precio", value: formatPrice(experience.price) },
-        { label: "Categoría", value: experience.category?.name || "Sin categoría" },
-        { label: "Estado", value: STATUS_LABEL[experience.status] },
-        { label: "Ubicación", value: experience.location || "—" },
-        ...(durationText ? [{ label: "Duración", value: durationText }] : []),
-        ...(formatAvailability(experience.availability)
-          ? [{ label: "Disponibilidad", value: formatAvailability(experience.availability) }]
-          : []),
-        ...(experience.howToGetThere?.trim()
-          ? [{ label: "Cómo llegar", value: experience.howToGetThere.trim() }]
-          : []),
-        ...(experience.externalUrl
-          ? [{ label: "Enlace", value: displayExternalUrl(experience.externalUrl) }]
-          : []),
-        ...(experience.rejectionReason
-          ? [{ label: "Motivo del rechazo", value: experience.rejectionReason }]
-          : []),
-      ]
-    : [];
 
   function onPreviewFavorite() {
     setFavoriteOn((on) => !on);
@@ -197,10 +125,7 @@ export function ExperiencePreviewPage() {
   }
 
   return (
-    <div
-      className="dash dash--exps dash--exps-preview"
-      style={mainPhoto ? ({ "--preview-glow": `url(${JSON.stringify(mainPhoto)})` } as CSSProperties) : undefined}
-    >
+    <div className="dash dash--exps dash--exps-preview">
       {toast ? (
         <p className="dash-team-toast" role="status">
           {toast}
@@ -274,38 +199,12 @@ export function ExperiencePreviewPage() {
       {error ? <p className="text-sm text-red-700">{error}</p> : null}
 
       {experience ? (
-        <section className="dash-exps-preview-page" aria-label="Detalle de la experiencia">
-          <section className="dash-exps-editorial" aria-label="Galería de la experiencia">
-            <div className="dash-exps-editorial__hero">
-              <button
-                type="button"
-                className={`dash-exps-preview-fav${favoriteOn ? " is-on" : ""}`}
-                aria-label="Guardar en favoritos"
-                aria-pressed={favoriteOn}
-                onClick={onPreviewFavorite}
-              >
-                <Heart size={18} strokeWidth={1.7} fill={favoriteOn ? "currentColor" : "none"} aria-hidden="true" />
-              </button>
-              <ExperienceEditorialGallery
-                slides={experienceImages(experience).map((url) => mediaUrl(url, 1400))}
-                label={experience.title}
-              />
-            </div>
-            <h2 className="dash-exps-editorial__title">{experience.title}</h2>
-            {locationByline ? <p className="dash-exps-editorial__byline">{locationByline}</p> : null}
-          </section>
-
-          <ExperienceEditorialDossier
-            photoUrl={mainPhoto}
-            photoLabel={experience.title}
-            noteFacts={noteFacts}
-            facts={detailFacts}
-          />
-
-          <ExperienceEditorialPlace experience={experience} latitude={lat} longitude={lng} hasPoint={hasPoint} />
-
-          <ExperienceEditorialNearby experience={experience} />
-        </section>
+        <ExperienceEditorialView
+          experience={experience}
+          mode="admin"
+          favoriteOn={favoriteOn}
+          onFavoriteToggle={onPreviewFavorite}
+        />
       ) : !error ? (
         <p className="dash-section__lead">Cargando experiencia…</p>
       ) : null}
