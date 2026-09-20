@@ -33,7 +33,6 @@ export function ExplorerRecommendedSection({
   );
 
   const [activeId, setActiveId] = useState(tabs[0]?.id ?? "");
-  const [motionKey, setMotionKey] = useState(0);
 
   useEffect(() => {
     if (!tabs.length) {
@@ -57,11 +56,7 @@ export function ExplorerRecommendedSection({
   const interestLine = preferred.slice(0, 4).join(" · ");
 
   function selectTab(id: string) {
-    if (id === activeId) {
-      return;
-    }
     setActiveId(id);
-    setMotionKey((value) => value + 1);
   }
 
   return (
@@ -73,7 +68,9 @@ export function ExplorerRecommendedSection({
       <div className="explorer-recs">
         <div className="explorer-recs__copy">
           <h2 className="explorer-recs__title" id="explorer-recs-title">
-            Nuestros recomendados para ti
+            <span>Nuestros</span>
+            <span>recomendados</span>
+            <span>para ti</span>
           </h2>
           <p className="explorer-recs__lead">
             Experiencias elegidas según tus gustos e intereses.
@@ -91,12 +88,8 @@ export function ExplorerRecommendedSection({
         </div>
 
         <div className="explorer-recs__stage">
-          <div className="explorer-recs__deck">
-            <article
-              className="explorer-recs__panel"
-              key={`${active.id}-${motionKey}`}
-              aria-labelledby={`${tablistId}-heading`}
-            >
+          <div className="explorer-recs__shell">
+            <article className="explorer-recs__panel" aria-labelledby={`${tablistId}-heading`}>
               <div className="explorer-recs__photo">
                 <img src={experienceCoverUrl(experience, 960)} alt="" />
               </div>
@@ -131,7 +124,7 @@ export function ExplorerRecommendedSection({
                 aria-label="Categorías recomendadas"
                 aria-orientation="vertical"
               >
-                {tabs.map((tab) => {
+                {tabs.map((tab, index) => {
                   const selected = tab.id === active.id;
                   return (
                     <button
@@ -140,8 +133,11 @@ export function ExplorerRecommendedSection({
                       role="tab"
                       id={`${tablistId}-${tab.id}`}
                       className={`explorer-recs__tab${selected ? " is-active" : ""}`}
+                      style={{ zIndex: selected ? tabs.length + 1 : index + 1 }}
                       aria-selected={selected}
                       tabIndex={selected ? 0 : -1}
+                      onMouseEnter={() => selectTab(tab.id)}
+                      onFocus={() => selectTab(tab.id)}
                       onClick={() => selectTab(tab.id)}
                     >
                       <span className="explorer-recs__tab-label">{tab.shortLabel}</span>
