@@ -103,7 +103,8 @@ export function ExperienceEditorialNearby({
         if (!active) {
           return;
         }
-        setNearby(pickNearbyExperiences(experience, list));
+        const catalog = Array.isArray(list) ? list : [];
+        setNearby(pickNearbyExperiences(experience, catalog));
         setLoaded(true);
       })
       .catch(() => {
@@ -115,7 +116,7 @@ export function ExperienceEditorialNearby({
     return () => {
       active = false;
     };
-  }, [experience, fetchPublished]);
+  }, [experience.id, experience.location, experience.latitude, experience.longitude, fetchPublished]);
 
   if (!loaded || (!nearby.length && !footer)) {
     return null;

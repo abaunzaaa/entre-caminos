@@ -56,6 +56,8 @@ export function ExperienceCatalogCard({
   canReview,
   role,
   showManage = true,
+  viewHref,
+  variant = "admin",
   onToggleStatus,
   onChangeStatus,
   onDelete,
@@ -66,10 +68,14 @@ export function ExperienceCatalogCard({
   canReview: boolean;
   role?: string | null;
   showManage?: boolean;
+  /** Override detail link (defaults to admin preview). */
+  viewHref?: string;
+  variant?: "admin" | "tourist";
   onToggleStatus?: () => void;
   onChangeStatus?: (status: ExperienceStatus) => void;
   onDelete?: () => void;
 }) {
+  const isTourist = variant === "tourist";
   const active = isCatalogActive(experience.status);
   const slides = experienceImages(experience)
     .slice(0, 3)
@@ -78,19 +84,22 @@ export function ExperienceCatalogCard({
   const place = catalogPlace(experience.location);
   const sent = formatSentAt(experience.submittedAt || experience.createdAt);
   const pending = experience.status === "PENDING";
-  const viewLabel = pending && canReview ? "Revisar" : "Ver";
+  const detailPath = viewHref ?? `/admin/experiencias/${experience.id}/ver`;
+  const viewLabel = isTourist ? "Ver" : pending && canReview ? "Revisar" : "Ver";
   const permissionCheck = (permission: string) =>
     permission === "experiences.review" ? canReview : false;
-  const canEdit = canEditExperience(experience.status, permissionCheck, role);
-  const canDelete = Boolean(onDelete) && canDeleteExperience(experience.status, permissionCheck, role);
-  const canChangeStatus = experience.status === "PUBLISHED" || experience.status === "ARCHIVED";
+  const canEdit = !isTourist && canEditExperience(experience.status, permissionCheck, role);
+  const canDelete =
+    !isTourist && Boolean(onDelete) && canDeleteExperience(experience.status, permissionCheck, role);
+  const canChangeStatus =
+    !isTourist && (experience.status === "PUBLISHED" || experience.status === "ARCHIVED");
 
   return (
     <article className="dash-exps-tile">
       <div className="dash-exps-tile__photo">
         <TeamInviteCarousel className="dash-exps-tile__gallery" slides={gallery} label={experience.title} />
         <Link
-          to={`/admin/experiencias/${experience.id}/ver`}
+          to={detailPath}
           className="dash-exps-tile__glass"
           onClick={(event) => event.stopPropagation()}
         >
@@ -100,7 +109,7 @@ export function ExperienceCatalogCard({
       <div className="dash-exps-tile__body">
         <div className="dash-exps-tile__chips">
           <StatusDot active>{experience.category?.name || "Sin categoría"}</StatusDot>
-          <StatusDot active={active}>{STATUS_LABEL[experience.status]}</StatusDot>
+          {isTourist ? null : <StatusDot active={active}>{STATUS_LABEL[experience.status]}</StatusDot>}
           <StatusDot active>{catalogPrice(experience.price)}</StatusDot>
         </div>
         <h3>{experience.title}</h3>
@@ -110,12 +119,15 @@ export function ExperienceCatalogCard({
             <span>{place}</span>
           </p>
         ) : null}
-        {experience.creator?.name ? (
-          <p className="dash-exps-tile__place">Creada por {experience.creator.name}{sent ? ` · ${sent}` : ""}</p>
+        {isTourist ? null : experience.creator?.name ? (
+          <p className="dash-exps-tile__place">
+            Creada por {experience.creator.name}
+            {sent ? ` · ${sent}` : ""}
+          </p>
         ) : sent ? (
           <p className="dash-exps-tile__place">Enviada el {sent}</p>
         ) : null}
-        {showManage ? (
+        {showManage && !isTourist ? (
           <div className="dash-exps-tile__manage">
           {canEdit ? <Link to={`/admin/experiencias/${experience.id}`}>Editar</Link> : null}
           {canChangeStatus ? (

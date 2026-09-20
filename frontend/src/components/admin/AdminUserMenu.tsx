@@ -24,6 +24,9 @@ function roleLabel(role: PublicUser["role"] | undefined) {
   if (role === "ADMIN") {
     return "Administrador";
   }
+  if (role === "USER") {
+    return "Explorador";
+  }
   return "Administración";
 }
 
@@ -43,7 +46,13 @@ function AvatarMark({
   );
 }
 
-export function AdminUserMenu({ user }: { user: PublicUser | null }) {
+export function AdminUserMenu({
+  user,
+  showName = false,
+}: {
+  user: PublicUser | null;
+  showName?: boolean;
+}) {
   const { logout, updateProfile } = useAuth();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -55,9 +64,10 @@ export function AdminUserMenu({ user }: { user: PublicUser | null }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pickingRef = useRef(false);
-  const fullName = user?.name?.trim() || "Administrador";
+  const fullName = user?.name?.trim() || (user?.role === "USER" ? "Explorador" : "Administrador");
   const firstName = fullName.split(/\s+/)[0] || "Admin";
   const initial = firstName.charAt(0).toUpperCase();
+  const profilePath = user?.role === "USER" ? "/onboarding" : "/admin/perfil";
 
   useEffect(() => {
     function syncPhoto() {
@@ -70,7 +80,7 @@ export function AdminUserMenu({ user }: { user: PublicUser | null }) {
       window.removeEventListener(ADMIN_AVATAR_EVENT, syncPhoto);
       window.removeEventListener("storage", syncPhoto);
     };
-  }, [user, user?.id, user?.avatarUrl]);
+  }, [user, user?.id, user?.avatarUrl, user?.profile?.profileImageUrl]);
 
   useEffect(() => {
     if (!open) {
@@ -327,6 +337,11 @@ export function AdminUserMenu({ user }: { user: PublicUser | null }) {
         onClick={() => setOpen((value) => !value)}
       >
         <AvatarMark src={photo} initial={initial} className="admin-topbar__avatar" />
+        {showName ? (
+          <p className="admin-topbar__hello">
+            <span>{fullName}</span>
+          </p>
+        ) : null}
       </button>
 
       <div
@@ -371,7 +386,7 @@ export function AdminUserMenu({ user }: { user: PublicUser | null }) {
             role="menuitem"
             onClick={() => {
               setOpen(false);
-              navigate("/admin/perfil");
+              navigate(profilePath);
             }}
           >
             <UserRoundPen size={18} strokeWidth={1.7} />

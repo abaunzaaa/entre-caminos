@@ -64,12 +64,19 @@ function canManageAvailability(actor: AuthUser, experience: { createdBy: string 
   return canReviewExperiences(actor) || experience.createdBy === actor.id;
 }
 
-export async function listPublicExperiences() {
-  return prisma.experience.findMany({
-    where: publicCatalogWhere,
-    include: { category: true },
-    orderBy: { createdAt: "desc" },
-  });
+export async function listPublicExperiences(opts?: { take?: number; skip?: number }) {
+  const where = publicCatalogWhere;
+  const [experiences, total] = await prisma.$transaction([
+    prisma.experience.findMany({
+      where,
+      include: { category: true },
+      orderBy: { createdAt: "desc" },
+      ...(opts?.take != null ? { take: opts.take } : {}),
+      ...(opts?.skip != null ? { skip: opts.skip } : {}),
+    }),
+    prisma.experience.count({ where }),
+  ]);
+  return { experiences, total };
 }
 
 export async function listFeaturedExperiences() {

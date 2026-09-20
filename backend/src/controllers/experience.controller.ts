@@ -1,11 +1,24 @@
 import type { ExperienceStatus } from "@prisma/client";
 import type { Request, Response } from "express";
 import * as experienceService from "../services/experience.service.js";
-import { parseLimitQuery } from "../utils/query.js";
+import { parseLimitQuery, parseOffsetQuery } from "../utils/query.js";
 
-export async function listPublic(_req: Request, res: Response) {
-  const experiences = await experienceService.listPublicExperiences();
-  return res.json({ success: true, data: { experiences } });
+export async function listPublic(req: Request, res: Response) {
+  const take = parseLimitQuery(req.query.limit, 100);
+  const skip = take != null ? parseOffsetQuery(req.query.offset) : undefined;
+  const { experiences, total } = await experienceService.listPublicExperiences({
+    take,
+    skip,
+  });
+  const loaded = skip != null ? skip + experiences.length : experiences.length;
+  return res.json({
+    success: true,
+    data: {
+      experiences,
+      total,
+      hasMore: loaded < total,
+    },
+  });
 }
 
 export async function featured(_req: Request, res: Response) {

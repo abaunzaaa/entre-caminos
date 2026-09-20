@@ -16,8 +16,10 @@ export function readAdminAvatar(userId: string | undefined | null) {
   }
 }
 
-export function resolveAvatarUrl(user?: { id?: string; avatarUrl?: string | null } | null) {
-  const url = user?.avatarUrl?.trim();
+export function resolveAvatarUrl(
+  user?: { id?: string; avatarUrl?: string | null; profile?: { profileImageUrl?: string | null } | null } | null,
+) {
+  const url = user?.avatarUrl?.trim() || user?.profile?.profileImageUrl?.trim();
   if (url) {
     if (url.startsWith("data:") || url.startsWith("blob:") || /^https?:\/\//i.test(url)) {
       return url;

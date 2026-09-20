@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import {
   Compass,
@@ -10,9 +10,11 @@ import {
   Users,
   X,
 } from "lucide-react";
-import keyIcon from "../../assets/key-icon.png";
+import logoMark from "../../assets/logo.png";
+import { AdminNotifications } from "../admin/AdminNotifications";
+import { AdminUserMenu } from "../admin/AdminUserMenu";
 import { useAuth } from "../../hooks/useAuth";
-import { mediaUrl } from "../../utils/media";
+import "../../styles/admin-topbar.css";
 
 const NAV_LINKS: Array<{
   to: string;
@@ -28,12 +30,10 @@ const NAV_LINKS: Array<{
 ];
 
 export function ExplorerNavbar() {
-  const { user, logout, isAdmin } = useAuth();
+  const { user, logout } = useAuth();
   const { pathname, hash } = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [profileOpen, setProfileOpen] = useState(false);
-  const profileRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function onScroll() {
@@ -46,7 +46,6 @@ export function ExplorerNavbar() {
 
   useEffect(() => {
     setMenuOpen(false);
-    setProfileOpen(false);
   }, [pathname, hash]);
 
   useEffect(() => {
@@ -64,20 +63,6 @@ export function ExplorerNavbar() {
     return () => window.cancelAnimationFrame(frame);
   }, [hash, pathname]);
 
-  useEffect(() => {
-    function onPointerDown(event: MouseEvent) {
-      if (!profileRef.current?.contains(event.target as Node)) {
-        setProfileOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", onPointerDown);
-    return () => document.removeEventListener("mousedown", onPointerDown);
-  }, []);
-
-  const avatarUrl = user?.avatarUrl || user?.profile?.profileImageUrl || null;
-  const displayName = user?.name?.trim() || "Viajero";
-  const initial = displayName.charAt(0).toUpperCase() || "V";
-
   const isExplorer = pathname.startsWith("/explorar");
 
   return (
@@ -86,8 +71,15 @@ export function ExplorerNavbar() {
     >
       <div className="explorer-nav__inner">
         <Link to="/explorar" className="explorer-nav__brand" aria-label="Entre Caminos">
-          <img src={keyIcon} alt="" className="explorer-nav__logo" />
-          <span>Entre Caminos</span>
+          <img
+            src={logoMark}
+            alt="Entre Caminos"
+            className="explorer-nav__logo"
+            width={48}
+            height={48}
+            draggable={false}
+            decoding="async"
+          />
         </Link>
 
         <nav className="explorer-nav__links" aria-label="Navegación del explorador">
@@ -113,39 +105,9 @@ export function ExplorerNavbar() {
 
         <div className="explorer-nav__actions">
           {user ? (
-            <div className="explorer-nav__profile" ref={profileRef}>
-              <button
-                type="button"
-                className="explorer-nav__profile-btn"
-                aria-expanded={profileOpen}
-                aria-haspopup="menu"
-                onClick={() => setProfileOpen((open) => !open)}
-              >
-                <span className="explorer-nav__avatar" aria-hidden="true">
-                  {avatarUrl ? <img src={mediaUrl(avatarUrl, 96)} alt="" /> : initial}
-                </span>
-                <span className="explorer-nav__name">{displayName}</span>
-              </button>
-              {profileOpen ? (
-                <div className="explorer-nav__menu" role="menu">
-                  {isAdmin ? (
-                    <Link to="/admin" role="menuitem" onClick={() => setProfileOpen(false)}>
-                      Panel administrativo
-                    </Link>
-                  ) : null}
-                  <button
-                    type="button"
-                    role="menuitem"
-                    onClick={() => {
-                      setProfileOpen(false);
-                      void logout();
-                    }}
-                  >
-                    <LogOut size={15} strokeWidth={1.8} aria-hidden="true" />
-                    Cerrar sesión
-                  </button>
-                </div>
-              ) : null}
+            <div className="explorer-nav__account admin-topbar__end">
+              <AdminNotifications />
+              <AdminUserMenu user={user} showName />
             </div>
           ) : (
             <div className="explorer-nav__auth">

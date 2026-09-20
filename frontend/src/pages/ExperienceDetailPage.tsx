@@ -18,7 +18,10 @@ export function ExperienceDetailPage() {
   const [error, setError] = useState("");
   const [favoriteOn, setFavoriteOn] = useState(false);
 
-  const fetchNearby = useCallback(() => getPublicExperiences(), []);
+  const fetchNearby = useCallback(async () => {
+    const { experiences } = await getPublicExperiences();
+    return experiences;
+  }, []);
 
   useEffect(() => {
     if (!id) {

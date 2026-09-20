@@ -6,9 +6,20 @@ export async function getFeaturedExperiences() {
   return data.data.experiences;
 }
 
-export async function getPublicExperiences() {
-  const { data } = await api.get<ApiResponse<{ experiences: Experience[] }>>("/experiences");
-  return data.data.experiences;
+export async function getPublicExperiences(options?: { limit?: number; offset?: number }) {
+  const { data } = await api.get<
+    ApiResponse<{ experiences: Experience[]; total: number; hasMore: boolean }>
+  >("/experiences", {
+    params:
+      options?.limit != null
+        ? { limit: options.limit, offset: options.offset ?? 0 }
+        : undefined,
+  });
+  return {
+    experiences: data.data.experiences,
+    total: data.data.total ?? data.data.experiences.length,
+    hasMore: Boolean(data.data.hasMore),
+  };
 }
 
 export async function getPublicExperience(id: string) {
