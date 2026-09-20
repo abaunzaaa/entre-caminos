@@ -98,7 +98,7 @@ export type Experience = {
   reviewedById?: string | null;
   createdAt: string;
   category?: Category;
-  creator?: { id: string; name: string; email: string };
+  creator?: { id: string; name: string; email: string; avatarUrl?: string | null };
   reviewedBy?: { id: string; name: string; email: string } | null;
 };
 

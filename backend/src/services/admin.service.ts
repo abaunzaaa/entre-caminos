@@ -267,7 +267,7 @@ export async function getDashboardMetrics(actor: AuthUser) {
         submittedAt: true,
         createdAt: true,
         category: { select: { id: true, name: true, icon: true, status: true } },
-        creator: { select: { id: true, name: true, email: true } },
+        creator: { select: { id: true, name: true, email: true, avatarUrl: true } },
       },
     }),
   ]);

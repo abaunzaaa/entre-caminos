@@ -59,17 +59,25 @@ export function buildExperienceEditorialFacts(
   const durationText = durationChoice
     ? `${durationChoice.value} ${durationChoice.unitLabel}`
     : formatDuration(experience.durationValue, experience.durationUnit, experience.duration);
+  const publisherName = experience.creator?.name?.trim() || "";
+  const publisherAvatar = experience.creator?.avatarUrl ?? null;
+  const publisherFact: ExperienceEditorialFact | null = publisherName
+    ? { label: "Publicado por", value: publisherName, avatarUrl: publisherAvatar }
+    : null;
 
   const noteFacts: ExperienceEditorialFact[] =
     mode === "admin"
       ? [
-          ...(experience.creator?.name ? [{ label: "Creada por", value: experience.creator.name }] : []),
+          ...(experience.creator?.name
+            ? [{ label: "Creada por", value: experience.creator.name, avatarUrl: publisherAvatar }]
+            : []),
           ...(experience.creator?.email ? [{ label: "Contacto", value: experience.creator.email }] : []),
           ...(published ? [{ label: "Fecha de publicación", value: published }] : []),
         ]
-      : published
-        ? [{ label: "Fecha de publicación", value: published }]
-        : [];
+      : [
+          ...(publisherFact ? [publisherFact] : []),
+          ...(published ? [{ label: "Fecha de publicación", value: published }] : []),
+        ];
 
   const detailFacts: ExperienceEditorialFact[] = [
     ...(experience.description.trim() ? [{ label: "Descripción", value: experience.description }] : []),

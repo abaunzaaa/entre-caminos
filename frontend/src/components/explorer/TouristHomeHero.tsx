@@ -1,10 +1,8 @@
 import { Link } from "react-router-dom";
 import { MapPin } from "lucide-react";
 import type { Experience } from "../../types";
-import floresIcon from "../../assets/flores-icon.png";
 import { ExperienceGallery } from "./ExperienceGallery";
 import { municipalityLabel } from "./explorer-media";
-
 type TouristHomeHeroProps = {
   experiences: Experience[];
   selected: Experience | null;
@@ -86,7 +84,7 @@ export function TouristHomeHero({ experiences, selected, onSelect }: TouristHome
         <div className="tourist-hero__copy" key={selected?.id ?? "empty"}>
           {selected ? (
             <>
-              <img className="tourist-hero__bloom" src={floresIcon} alt="" aria-hidden="true" />
+              <span className="tourist-hero__bloom" aria-hidden="true" />
               <p className="tourist-hero__kicker">{category}</p>
               <h1 className="tourist-hero__title">{selected.title}</h1>
               {place ? (
@@ -102,7 +100,7 @@ export function TouristHomeHero({ experiences, selected, onSelect }: TouristHome
             </>
           ) : (
             <>
-              <img className="tourist-hero__bloom" src={floresIcon} alt="" aria-hidden="true" />
+              <span className="tourist-hero__bloom" aria-hidden="true" />
               <p className="tourist-hero__kicker">Entre Caminos</p>
               <h1 className="tourist-hero__title">Descubre tu próximo camino</h1>
               <p className="tourist-hero__lead">

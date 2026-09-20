@@ -185,6 +185,42 @@
   white-space: pre-wrap;
 }
 
+.dash-exps-dossier__value--publisher {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  white-space: normal;
+}
+
+.dash-exps-dossier__note-value.dash-exps-dossier__value--publisher {
+  justify-content: center;
+  gap: 0.45rem;
+}
+
+.dash-exps-dossier__note-value .dash-exps-dossier__publisher-avatar {
+  width: 1.55rem;
+  height: 1.55rem;
+}
+
+.dash-exps-dossier__publisher-avatar {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e8e9e4;
+}
+
+.dash-exps-dossier__publisher-avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
 @media (max-width: 1100px) {
   .dash-exps-dossier {
     gap: 2.4rem;

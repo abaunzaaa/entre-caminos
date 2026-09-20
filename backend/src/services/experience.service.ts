@@ -18,7 +18,7 @@ import {
 
 const experienceInclude = {
   category: true,
-  creator: { select: { id: true, name: true, email: true } },
+  creator: { select: { id: true, name: true, email: true, avatarUrl: true } },
   reviewedBy: { select: { id: true, name: true, email: true } },
 } as const;
 
@@ -48,7 +48,7 @@ const experienceListSelect = {
   createdAt: true,
   updatedAt: true,
   category: { select: { id: true, name: true, icon: true, status: true } },
-  creator: { select: { id: true, name: true, email: true } },
+  creator: { select: { id: true, name: true, email: true, avatarUrl: true } },
   reviewedBy: { select: { id: true, name: true, email: true } },
 } as const;
 

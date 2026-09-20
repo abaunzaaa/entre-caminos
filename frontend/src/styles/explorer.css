@@ -371,9 +371,19 @@
 
 .tourist-hero__bloom {
   display: block;
-  width: 2.85rem;
+  width: 5.4rem;
   height: auto;
-  margin: 0 0 1.15rem;
+  aspect-ratio: 1604 / 980;
+  margin: 0 auto 1.15rem;
+  background-color: var(--explorer-forest-mid, #294942);
+  -webkit-mask-image: url("../assets/rollo-icon.png");
+  mask-image: url("../assets/rollo-icon.png");
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
   pointer-events: none;
   user-select: none;
 }
@@ -993,6 +1003,18 @@
 .tourist-editorial-shell.dash--exps-preview .dash-exps-editorial {
   margin-top: 0;
   padding: 3.35rem clamp(1.25rem, 4vw, 3.25rem) 2.35rem;
+  background: #ffffff;
+  background-image: none;
+}
+
+.tourist-editorial-shell.dash--exps-preview .dash-exps-editorial::before,
+.tourist-editorial-shell.dash--exps-preview .dash-exps-editorial::after {
+  content: none;
+  display: none;
+}
+
+.tourist-editorial-shell .experience-gallery {
+  background: #ffffff;
 }
 
 .tourist-editorial-shell .dash-exps-editorial__title {
