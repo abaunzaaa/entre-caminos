@@ -298,42 +298,6 @@ export function ExplorePage() {
         interests={user?.profile?.interests ?? []}
       />
 
-      <section className="explorer-section" id="favoritos" aria-labelledby="explorer-favorites-title">
-        <div className="explorer-section__head">
-          <div>
-            <h2 className="explorer-section__title" id="explorer-favorites-title">
-              Favoritos
-            </h2>
-            <p className="explorer-section__lead">Guarda lo que quieres vivir más adelante.</p>
-          </div>
-        </div>
-        <p className="explorer-empty">Aún no tienes favoritos. Explora una experiencia y márcala cuando esté disponible.</p>
-      </section>
-
-      <section className="explorer-section" id="planes" aria-labelledby="explorer-plans-title">
-        <div className="explorer-section__head">
-          <div>
-            <h2 className="explorer-section__title" id="explorer-plans-title">
-              Plan con amigos
-            </h2>
-            <p className="explorer-section__lead">Próximamente podrás armar rutas compartidas desde aquí.</p>
-          </div>
-        </div>
-        <p className="explorer-empty">Todavía no hay planes recientes. Vuelve cuando invites a alguien a descubrir juntos.</p>
-      </section>
-
-      <section className="explorer-section" id="visitados" aria-labelledby="explorer-visited-title">
-        <div className="explorer-section__head">
-          <div>
-            <h2 className="explorer-section__title" id="explorer-visited-title">
-              Visitados
-            </h2>
-            <p className="explorer-section__lead">Tu historial de caminos recorridos aparecerá aquí.</p>
-          </div>
-        </div>
-        <p className="explorer-empty">Aún no registras visitas. Cada experiencia vivida irá sumándose a este espacio.</p>
-      </section>
-
       <section className="explorer-section" id="mapa" aria-labelledby="explorer-map-title">
         <div className="explorer-section__head">
           <div>

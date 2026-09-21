@@ -11,6 +11,27 @@ type ExplorerRecommendedSectionProps = {
   interests?: string[] | null;
 };
 
+const JOURNAL_BLOCKS = [
+  {
+    id: "favoritos",
+    title: "Favoritos",
+    lead: "Guarda lo que quieres vivir más adelante.",
+    empty: "Aún no tienes favoritos. Explora una experiencia y márcala cuando esté disponible.",
+  },
+  {
+    id: "planes",
+    title: "Plan con amigos",
+    lead: "Próximamente podrás armar rutas compartidas desde aquí.",
+    empty: "Todavía no hay planes recientes. Vuelve cuando invites a alguien a descubrir juntos.",
+  },
+  {
+    id: "visitados",
+    title: "Visitados",
+    lead: "Tu historial de caminos recorridos aparecerá aquí.",
+    empty: "Aún no registras visitas. Cada experiencia vivida irá sumándose a este espacio.",
+  },
+] as const;
+
 function briefDescription(value: string, max = 140) {
   const clean = value.replace(/\s+/g, " ").trim();
   if (clean.length <= max) {
@@ -26,7 +47,6 @@ export function ExplorerRecommendedSection({
 }: ExplorerRecommendedSectionProps) {
   const tablistId = useId();
   const preferred = useMemo(() => (interests ?? []).filter(Boolean), [interests]);
-  const personalized = preferred.length > 0;
   const tabs = useMemo(
     () => buildRecommendationTabs(experiences, preferred, 5),
     [experiences, preferred],
@@ -53,43 +73,35 @@ export function ExplorerRecommendedSection({
   const experience = active.experience;
   const place = municipalityLabel(experience.location);
   const category = experience.category?.name?.trim() || active.label;
-  const interestLine = preferred.slice(0, 4).join(" · ");
 
   function selectTab(id: string) {
     setActiveId(id);
   }
 
   return (
-    <section
-      className="explorer-section explorer-section--recs"
-      id="recomendados"
-      aria-labelledby="explorer-recs-title"
-    >
+    <section className="explorer-section explorer-section--recs" id="recomendados">
       <div className="explorer-recs">
-        <div className="explorer-recs__copy">
-          <h2 className="explorer-recs__title" id="explorer-recs-title">
-            <span>Nuestros</span>
-            <span>recomendados</span>
-            <span>para ti</span>
-          </h2>
-          <p className="explorer-recs__lead">
-            Experiencias elegidas según tus gustos e intereses.
-          </p>
-          {personalized ? (
-            <p className="explorer-recs__note">
-              Pensados a partir de tus intereses: {interestLine}
-              {preferred.length > 4 ? "…" : ""}
-            </p>
-          ) : (
-            <p className="explorer-recs__note">
-              Una selección reciente para empezar a descubrir caminos con sentido.
-            </p>
-          )}
-        </div>
+        <aside className="explorer-recs__journal" aria-label="Tu espacio personal">
+          {JOURNAL_BLOCKS.map((block) => (
+            <div key={block.id} className="explorer-recs__entry" id={block.id}>
+              <h2 className="explorer-recs__entry-title">{block.title}</h2>
+              <p className="explorer-recs__entry-lead">{block.lead}</p>
+              <p className="explorer-recs__entry-empty">{block.empty}</p>
+            </div>
+          ))}
+        </aside>
 
         <div className="explorer-recs__stage">
           <div className="explorer-recs__shell">
-            <article className="explorer-recs__panel" aria-labelledby={`${tablistId}-heading`}>
+            <article className="explorer-recs__panel" aria-labelledby="explorer-recs-title">
+              <header className="explorer-recs__headline">
+                <h2 className="explorer-recs__title" id="explorer-recs-title">
+                  Elegidos para ti
+                </h2>
+                <p className="explorer-recs__lead">
+                  Experiencias que conectan contigo
+                </p>
+              </header>
               <div className="explorer-recs__photo">
                 <img src={experienceCoverUrl(experience, 960)} alt="" />
               </div>
