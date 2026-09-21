@@ -951,22 +951,43 @@
   margin-bottom: 1.4rem;
 }
 
-.explorer-section__title {
-  margin: 0;
-  font-family: "Cormorant Garamond", "Playfair Display", Georgia, serif;
-  font-size: clamp(1.8rem, 3vw, 2.4rem);
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  color: var(--explorer-forest);
+#mapa.explorer-section {
+  padding: 5rem 1.25rem 4.25rem;
+}
+
+#mapa .explorer-section__head {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+#mapa .explorer-section__head > div {
+  width: 100%;
+}
+
+#mapa .explorer-discover-title {
+  max-width: none;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+
+#mapa .explorer-section__lead {
+  margin-top: 1.55rem;
 }
 
 .explorer-section__lead {
-  margin: 0.35rem 0 0;
-  max-width: 34rem;
-  color: #68736e;
-  font-family: Inter, system-ui, sans-serif;
+  max-width: 700px;
+  margin: 1.15rem auto 0;
+  color: #6b746f;
+  font-family: Poppins, Nunito, system-ui, sans-serif;
   font-size: 0.95rem;
-  line-height: 1.55;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  line-height: 1.5;
+  text-align: center;
+  text-transform: none;
 }
 
 .explorer-filter-rail {
@@ -1456,7 +1477,8 @@
 .explorer-section--discover {
   max-width: 1180px;
   padding-top: 3.5rem;
-  padding-bottom: 2rem;
+  /* Extra white air before the gray scalloped edge of the recs section */
+  padding-bottom: calc(2rem + 45px);
 }
 
 
@@ -1615,25 +1637,6 @@
   background: var(--recs-surface);
 }
 
-.explorer-section--recs::before {
-  content: "";
-  position: absolute;
-  top: -14px;
-  left: 0;
-  right: 0;
-  z-index: 1;
-  height: 14px;
-  pointer-events: none;
-  background-image: radial-gradient(
-    14px 14px at 50% 100%,
-    var(--recs-surface) 99%,
-    transparent 100%
-  );
-  background-size: 28px 14px;
-  background-position: 0 0;
-  background-repeat: repeat-x;
-}
-
 .explorer-recs {
   box-sizing: border-box;
   display: grid;
@@ -1655,14 +1658,49 @@
 }
 
 .explorer-recs__entry {
+  --recs-entry-icon: 1.5rem;
+  --recs-entry-gap: 0.8rem;
   padding: 1.2rem 0 1.3rem;
-  border-top: 1px solid rgba(41, 73, 66, 0.14);
   scroll-margin-top: 5.5rem;
+}
+
+.explorer-recs__entry:not(:first-child) {
+  position: relative;
+}
+
+.explorer-recs__entry:not(:first-child)::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: calc(var(--recs-entry-icon) + var(--recs-entry-gap));
+  right: 0;
+  height: 1px;
+  background: rgba(41, 73, 66, 0.14);
 }
 
 .explorer-recs__entry:first-child {
   padding-top: 0.25rem;
-  border-top: 0;
+}
+
+.explorer-recs__entry-heading {
+  display: flex;
+  align-items: center;
+  gap: var(--recs-entry-gap);
+}
+
+.explorer-recs__entry-icon {
+  display: grid;
+  flex: 0 0 var(--recs-entry-icon);
+  place-items: center;
+  width: var(--recs-entry-icon);
+  height: var(--recs-entry-icon);
+  color: #1c332e;
+}
+
+.explorer-recs__entry-glyph {
+  display: block;
+  width: var(--recs-entry-icon);
+  height: var(--recs-entry-icon);
 }
 
 .explorer-recs__entry-title {
@@ -1678,6 +1716,7 @@
 
 .explorer-recs__entry-lead {
   margin: 0.78rem 0 0;
+  margin-left: calc(var(--recs-entry-icon) + var(--recs-entry-gap));
   color: #6b746f;
   font-family: Poppins, Nunito, system-ui, sans-serif;
   font-size: 0.92rem;
@@ -1688,6 +1727,7 @@
 
 .explorer-recs__entry-empty {
   margin: 0.6rem 0 0;
+  margin-left: calc(var(--recs-entry-icon) + var(--recs-entry-gap));
   color: #8a938e;
   font-family: Poppins, Nunito, system-ui, sans-serif;
   font-size: 0.86rem;
@@ -1710,11 +1750,11 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.45rem;
   width: 100%;
   box-sizing: border-box;
   margin: 0;
-  padding: 1.05rem 1.35rem 0;
+  padding: 1.9rem 1.3rem 0;
   text-align: center;
 }
 
@@ -1733,22 +1773,22 @@
 
 .explorer-recs__lead {
   max-width: 100%;
-  margin: 0 0 1.15rem;
+  margin: 0 0 2.05rem;
   color: #6b746f;
   font-family: Poppins, Nunito, system-ui, sans-serif;
-  font-size: 0.89rem;
-  font-weight: 400;
-  letter-spacing: 0.01em;
+  font-size: 0.74rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
   line-height: 1.35;
   text-align: center;
-  text-transform: none;
+  text-transform: uppercase;
   white-space: nowrap;
 }
 
 .explorer-recs__shell {
   display: flex;
   align-items: stretch;
-  width: min(100%, 31.65rem);
+  width: min(100%, 32.1rem);
 }
 
 .explorer-recs__panel {
@@ -1766,14 +1806,82 @@
     0 3px 10px rgba(28, 51, 46, 0.04);
 }
 
+.explorer-recs__gallery {
+  --recs-gallery-gap: 0.4rem;
+  --recs-primary-w: calc((100% - var(--recs-gallery-gap)) * 0.7);
+  --recs-secondary-w: calc((100% - var(--recs-gallery-gap)) * 0.3);
+  display: flex;
+  flex: 0 0 auto;
+  align-items: stretch;
+  gap: var(--recs-gallery-gap);
+  box-sizing: border-box;
+  width: auto;
+  height: 11.75rem;
+  margin: 0 1.3rem;
+  overflow: hidden;
+}
+
 .explorer-recs__photo {
   position: relative;
+  display: block;
+  flex: 0 0 auto;
   overflow: hidden;
-  aspect-ratio: 16 / 10;
-  max-height: 13.5rem;
-  margin: 0 1.15rem;
+  width: var(--recs-primary-w);
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
   border-radius: var(--recommendation-radius-inner);
+  appearance: none;
   background: #e8eee9;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  line-height: 0;
+  text-align: inherit;
+}
+
+.explorer-recs__photo--primary {
+  width: var(--recs-primary-w);
+}
+
+.explorer-recs__photo--secondary {
+  width: var(--recs-secondary-w);
+}
+
+.explorer-recs__photo--flush {
+  width: 0;
+  margin-left: calc(var(--recs-gallery-gap) * -1);
+  pointer-events: none;
+}
+
+.explorer-recs__photo--flush:first-child {
+  margin-left: 0;
+  margin-right: calc(var(--recs-gallery-gap) * -1);
+}
+
+.explorer-recs__photo:focus {
+  outline: none;
+}
+
+.explorer-recs__photo:focus-visible {
+  outline: 2px solid #294942;
+  outline-offset: 2px;
+}
+
+.explorer-recs__gallery.is-shifting .explorer-recs__photo {
+  transition:
+    width 420ms ease-in-out,
+    margin 420ms ease-in-out;
+}
+
+.explorer-recs__gallery.is-single {
+  gap: 0;
+}
+
+.explorer-recs__gallery.is-single .explorer-recs__photo--primary {
+  width: 100%;
+  cursor: default;
 }
 
 .explorer-recs__photo img {
@@ -1782,13 +1890,24 @@
   height: 100%;
   object-fit: cover;
   object-position: center;
+  pointer-events: none;
+  user-select: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .explorer-recs__gallery.is-shifting .explorer-recs__photo {
+    transition: none;
+  }
 }
 
 .explorer-recs__body {
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
-  gap: 0.55rem;
-  padding: 1.15rem 1.35rem 1.35rem;
+  align-items: center;
+  min-height: 16.7rem;
+  padding: 1.45rem 1.35rem 1.4rem;
+  text-align: center;
 }
 
 .explorer-recs__category {
@@ -1799,30 +1918,39 @@
   font-weight: 500;
   letter-spacing: 0.12em;
   line-height: 1.25;
+  text-align: center;
   text-transform: uppercase;
 }
 
 .explorer-recs__heading {
-  margin: 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  max-width: 21.5rem;
+  margin: 0.95rem 0 0;
   color: #1c332e;
   font-family: Poppins, Nunito, system-ui, sans-serif;
   font-size: 1.24rem;
   font-weight: 600;
   letter-spacing: 0.01em;
   line-height: 1.3;
+  text-align: center;
 }
 
 .explorer-recs__place {
-  display: flex;
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.31rem;
-  margin: 0.1rem 0 0;
+  margin: 1rem 0 0;
   color: #7d8b85;
   font-family: Poppins, Nunito, system-ui, sans-serif;
   font-size: 0.87rem;
   font-weight: 500;
   letter-spacing: 0.01em;
   line-height: 1.3;
+  text-align: center;
 }
 
 .explorer-recs__place svg {
@@ -1830,26 +1958,13 @@
   color: #8a938e;
 }
 
-.explorer-recs__excerpt {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
-  margin: 0.2rem 0 0;
-  color: #68736e;
-  font-family: Poppins, Nunito, system-ui, sans-serif;
-  font-size: 0.93rem;
-  font-weight: 400;
-  letter-spacing: 0.01em;
-  line-height: 1.45;
-}
-
 .explorer-recs__footer {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.83rem;
-  margin-top: 0.85rem;
+  gap: 21px;
+  width: 100%;
+  padding-top: 26px;
 }
 
 .explorer-recs__price {
@@ -1858,13 +1973,14 @@
   font-size: 1rem;
   font-weight: 600;
   letter-spacing: 0.02em;
+  text-align: center;
 }
 
 .explorer-recs__cta {
   display: inline-flex;
   align-items: center;
   gap: 0.27rem;
-  padding: 0.51rem 1.05rem;
+  padding: 0.48rem 1rem;
   border-radius: 999px;
   background: var(--explorer-forest-mid, #294942);
   color: #ffffff;
@@ -1956,19 +2072,33 @@
     white-space: normal;
   }
 
-  .explorer-recs__photo {
-    max-height: 14.25rem;
+  .explorer-recs__gallery {
+    height: 12.4rem;
   }
 }
 
 @media (max-width: 640px) {
   .explorer-recs__shell {
     flex-direction: column;
-    width: min(100%, 26.65rem);
+    width: min(100%, 25.05rem);
   }
 
   .explorer-recs__panel {
     border-radius: var(--recommendation-radius);
+  }
+
+  .explorer-recs__gallery {
+    height: 10.25rem;
+  }
+
+  .explorer-recs__entry {
+    --recs-entry-icon: 1.375rem;
+    --recs-entry-gap: 0.7rem;
+  }
+
+  .explorer-recs__body {
+    min-height: 14.35rem;
+    padding: 1.25rem 1.15rem 1.25rem;
   }
 
   .explorer-recs__tabs {
@@ -2099,20 +2229,103 @@
 }
 
 .explorer-soft-card h3 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
   margin: 0;
-  font-family: "Cormorant Garamond", Georgia, serif;
-  font-size: 1.15rem;
-  color: var(--explorer-forest);
+  color: #1c332e;
+  font-family: Poppins, Nunito, system-ui, sans-serif;
+  font-size: 1rem;
+  font-weight: 400;
+  font-style: normal;
+  letter-spacing: 0.01em;
+  line-height: 1.3;
 }
 
 .explorer-soft-card p {
   margin: 0.25rem 0 0;
   color: #68736e;
+  font-family: Poppins, Nunito, system-ui, sans-serif;
   font-size: 0.82rem;
+  font-weight: 400;
+  font-style: normal;
+  letter-spacing: 0.01em;
+  line-height: 1.4;
 }
 
-.explorer-footer-space {
-  height: 1.75rem;
+.explorer-stories {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 1.6rem 1.25rem 1.75rem;
+  background: var(--recs-surface, #f1f1ee);
+}
+
+.explorer-stories__inner {
+  position: relative;
+  box-sizing: border-box;
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: 2.15rem 5.25rem 2.25rem;
+  text-align: center;
+}
+
+.explorer-stories .explorer-discover-title {
+  max-width: 42rem;
+  margin-left: auto;
+  margin-right: auto;
+  font-size: clamp(1.08rem, 1.8vw, 1.36rem);
+}
+
+.explorer-stories .explorer-section__lead {
+  max-width: 38rem;
+  margin-top: 0.85rem;
+}
+
+.explorer-stories__icon {
+  position: absolute;
+  z-index: 1;
+  display: block;
+  height: auto;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+
+.explorer-stories__icon--cam {
+  top: 0.1rem;
+  left: 1.05rem;
+  width: 4.6rem;
+}
+
+.explorer-stories__icon--plane {
+  right: 0.7rem;
+  bottom: 0.15rem;
+  width: 4.5rem;
+}
+
+@media (max-width: 720px) {
+  .explorer-stories {
+    padding: 1.35rem 1.1rem 1.5rem;
+  }
+
+  .explorer-stories__inner {
+    padding: 1.85rem 1.35rem 2rem;
+  }
+
+  .explorer-stories__icon--cam {
+    top: 0;
+    left: 0.3rem;
+    width: 3.45rem;
+  }
+
+  .explorer-stories__icon--plane {
+    right: 0.15rem;
+    bottom: 0;
+    width: 3.3rem;
+  }
 }
 
 @media (min-width: 720px) {

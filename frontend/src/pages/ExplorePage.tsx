@@ -11,6 +11,8 @@ import { ExplorerRecommendedSection } from "../components/explorer/ExplorerRecom
 import { TouristHomeHero } from "../components/explorer/TouristHomeHero";
 import { experienceCoverUrl } from "../components/explorer/explorer-media";
 import { useAuth } from "../hooks/useAuth";
+import avionIcon from "../assets/avion-icon.png";
+import camIcon from "../assets/cam-icon.png";
 import { getPublicExperiences } from "../services/catalog.service";
 import { formatDepartmentMunicipality } from "../data/colombia-locations";
 import type { Experience } from "../types";
@@ -301,7 +303,7 @@ export function ExplorePage() {
       <section className="explorer-section" id="mapa" aria-labelledby="explorer-map-title">
         <div className="explorer-section__head">
           <div>
-            <h2 className="explorer-section__title" id="explorer-map-title">
+            <h2 className="explorer-discover-title" id="explorer-map-title">
               Mapa
             </h2>
             <p className="explorer-section__lead">
@@ -330,7 +332,18 @@ export function ExplorePage() {
         )}
       </section>
 
-      <div className="explorer-footer-space" />
+      <section className="explorer-stories" aria-labelledby="explorer-stories-title">
+        <div className="explorer-stories__inner">
+          <img className="explorer-stories__icon explorer-stories__icon--cam" src={camIcon} alt="" aria-hidden="true" />
+          <h2 className="explorer-discover-title" id="explorer-stories-title">
+            Entre caminos, nacen historias
+          </h2>
+          <p className="explorer-section__lead">
+            A veces, solo hace falta elegir un lugar, salir de la rutina y dejar que una nueva experiencia te encuentre.
+          </p>
+          <img className="explorer-stories__icon explorer-stories__icon--plane" src={avionIcon} alt="" aria-hidden="true" />
+        </div>
+      </section>
     </div>
   );
 }
