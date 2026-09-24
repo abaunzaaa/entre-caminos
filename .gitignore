@@ -40,5 +40,8 @@ Thumbs.db
 .vscode/
 *.swp
 
+# Vercel (el proyecto se enlaza al repo de GitHub; no versionar credenciales locales)
+.vercel/
+
 # Test
 .vitest/
