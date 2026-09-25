@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { Camera, LogOut, UserRoundPen } from "lucide-react";
+import { Camera, KeyRound, LogOut, UserRoundPen } from "lucide-react";
 import { Button } from "../ui/Button";
 import { useAuth } from "../../hooks/useAuth";
 import type { PublicUser } from "../../types";
@@ -392,6 +392,20 @@ export function AdminUserMenu({
             <UserRoundPen size={18} strokeWidth={1.7} />
             Editar perfil
           </button>
+          {user?.role === "USER" ? (
+            <button
+              type="button"
+              className="admin-usermenu__item"
+              role="menuitem"
+              onClick={() => {
+                setOpen(false);
+                navigate("/cambiar-contrasena");
+              }}
+            >
+              <KeyRound size={18} strokeWidth={1.7} />
+              Cambiar contraseña
+            </button>
+          ) : null}
           <button
             type="button"
             className="admin-usermenu__item admin-usermenu__item--logout"
