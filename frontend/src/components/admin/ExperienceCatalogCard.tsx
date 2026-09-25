@@ -22,8 +22,8 @@ function isCatalogActive(status: ExperienceStatus) {
   return status === "PUBLISHED";
 }
 
-function catalogPrice(value: string | number) {
-  return formatPrice(value).replace(/\s/g, "");
+function catalogPrice(value: string | number, currency?: string) {
+  return formatPrice(value, currency);
 }
 
 function catalogPlace(location: string) {
@@ -111,7 +111,7 @@ export function ExperienceCatalogCard({
         <div className="dash-exps-tile__chips">
           <StatusDot active>{experience.category?.name || "Sin categoría"}</StatusDot>
           {isTourist ? null : <StatusDot active={active}>{STATUS_LABEL[experience.status]}</StatusDot>}
-          <StatusDot active>{catalogPrice(experience.price)}</StatusDot>
+          <StatusDot active>{catalogPrice(experience.price, experience.currency)}</StatusDot>
         </div>
         <h3>{experience.title}</h3>
         {place ? (

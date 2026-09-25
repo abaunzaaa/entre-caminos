@@ -81,7 +81,7 @@ export function buildExperienceEditorialFacts(
 
   const detailFacts: ExperienceEditorialFact[] = [
     ...(experience.description.trim() ? [{ label: "Descripción", value: experience.description }] : []),
-    { label: "Precio", value: formatPrice(experience.price) },
+    { label: "Precio", value: formatPrice(experience.price, experience.currency) },
     { label: "Categoría", value: experience.category?.name || "Sin categoría" },
     ...(mode === "admin" ? [{ label: "Estado", value: STATUS_LABEL[experience.status] }] : []),
     { label: "Ubicación", value: experience.location || "—" },

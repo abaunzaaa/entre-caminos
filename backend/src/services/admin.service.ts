@@ -259,6 +259,7 @@ export async function getDashboardMetrics(actor: AuthUser) {
         description: true,
         categoryId: true,
         price: true,
+        currency: true,
         location: true,
         imageUrl: true,
         imageUrls: true,

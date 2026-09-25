@@ -238,10 +238,25 @@ export function OnboardingPage() {
     }
   }
 
+  function hasUnsavedChanges() {
+    const saved = profileToForm(user?.profile);
+    const current = { ...formRef.current, localPhotoUrl: null };
+    const baseline = { ...saved, localPhotoUrl: null };
+    return JSON.stringify(current) !== JSON.stringify(baseline);
+  }
+
+  function requestLeave() {
+    if (!hasUnsavedChanges()) {
+      navigate("/explorar", { replace: true });
+      return;
+    }
+    setExitOpen(true);
+  }
+
   async function onLeave() {
     try {
       await persistDraft();
-      navigate("/", { replace: true });
+      navigate("/explorar", { replace: true });
     } catch (error) {
       setExitOpen(false);
       setFormError(getApiErrorMessage(error, "No pudimos guardar. Inténtalo de nuevo."));
@@ -373,7 +388,7 @@ export function OnboardingPage() {
             <span className="onboarding-header__step">
               Paso {step} de {ONBOARDING_STEPS.length}
             </span>
-            <button type="button" className="onboarding-header__exit" onClick={() => setExitOpen(true)}>
+            <button type="button" className="onboarding-header__exit" onClick={requestLeave}>
               Salir
             </button>
           </div>

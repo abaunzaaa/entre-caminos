@@ -1,5 +1,5 @@
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { ChevronDown, Clock, ImagePlus, MapPin, Plus, X } from "lucide-react";
 import { ExperienceLocationMap } from "../../components/admin/ExperienceLocationMap";
 import { SuccessConfirm } from "../../components/feedback/SuccessConfirm";
@@ -36,6 +36,7 @@ import {
   type DurationUnit,
   type ExperienceAvailability,
 } from "../../utils/experience-details";
+import { EXPERIENCE_CURRENCIES, isExperienceCurrency, type ExperienceCurrency } from "../../utils/currencies";
 import type { Category, ExperienceStatus } from "../../types";
 import superadmIlus2 from "../../assets/superadm-ilus2.png";
 import "../../styles/admin-access.css";
@@ -189,6 +190,7 @@ export function ExperienceFormPage() {
   const [description, setDescription] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [price, setPrice] = useState("");
+  const [currency, setCurrency] = useState<ExperienceCurrency>("COP");
   const [department, setDepartment] = useState("");
   const [municipality, setMunicipality] = useState("");
   const [address, setAddress] = useState("");
@@ -268,6 +270,7 @@ export function ExperienceFormPage() {
           setDescription(experience.description);
           setCategoryId(experience.categoryId);
           setPrice(String(experience.price));
+          setCurrency(experience.currency && isExperienceCurrency(experience.currency) ? experience.currency : "COP");
           setDepartment(loadedDepartment);
           setMunicipality(loadedMunicipality);
           setAddress(parsed.address);
@@ -458,11 +461,24 @@ export function ExperienceFormPage() {
       setError("Agrega al menos una fecha disponible.");
       return;
     }
+    if (!price.trim()) {
+      setError("Ingresa el precio de la experiencia.");
+      return;
+    }
+    if (!/^\d+([.,]\d+)?$/.test(price.trim())) {
+      setError("El precio debe ser un valor numérico.");
+      return;
+    }
+    if (!isExperienceCurrency(currency)) {
+      setError("Selecciona una moneda.");
+      return;
+    }
     const payload = {
       title,
       description,
       categoryId,
-      price: Number(price),
+      price: Number(price.replace(",", ".")),
+      currency,
       location: locationLabel,
       latitude: latitude ? Number(latitude) : null,
       longitude: longitude ? Number(longitude) : null,
@@ -953,15 +969,52 @@ export function ExperienceFormPage() {
               />
             </div>
             <div className="dash-exps-form__grid">
-              <Input
-                label="Precio (COP)"
-                type="number"
-                min="0"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                placeholder="0"
-                required
-              />
+              <label className="dash-exps-duration">
+                <span className="dash-exps-duration__label">Precio de la experiencia</span>
+                <input
+                  className="dash-exps-duration__value"
+                  type="text"
+                  inputMode="decimal"
+                  name="price"
+                  aria-label="Precio de la experiencia"
+                  value={price}
+                  autoComplete="off"
+                  placeholder="50000"
+                  required
+                  onKeyDown={(event) => {
+                    if (["e", "E", "+", "-", " "].includes(event.key)) {
+                      event.preventDefault();
+                    }
+                  }}
+                  onChange={(event) => {
+                    const next = event.target.value;
+                    if (next === "" || /^\d*[.,]?\d*$/.test(next)) {
+                      setPrice(next);
+                    }
+                  }}
+                />
+              </label>
+              <label className="dash-exps-duration">
+                <span className="dash-exps-duration__label">Moneda</span>
+                <select
+                  className="dash-exps-duration__unit"
+                  name="currency"
+                  aria-label="Moneda"
+                  value={currency}
+                  required
+                  onChange={(event) => {
+                    if (isExperienceCurrency(event.target.value)) {
+                      setCurrency(event.target.value);
+                    }
+                  }}
+                >
+                  {EXPERIENCE_CURRENCIES.map((item) => (
+                    <option key={item.code} value={item.code}>
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
             </div>
           </div>
           {status === "REJECTED" && rejectionReason ? (
@@ -991,12 +1044,13 @@ export function ExperienceFormPage() {
                 {saving ? "Guardando..." : id ? "Guardar cambios" : isSuperAdmin ? "Publicar experiencia" : "Enviar a revisión"}
               </Button>
             )}
-            <Link
-              to="/admin/experiencias"
+            <button
+              type="button"
               className="admin-cta-hover inline-flex items-center justify-center rounded-full border border-forest/15 bg-white px-[22px] py-2 font-poppins text-[13.5px] font-medium tracking-[0.03em] text-ink"
+              onClick={() => navigate("/admin/experiencias")}
             >
               Cancelar
-            </Link>
+            </button>
           </div>
         </form>
       </section>

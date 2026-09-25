@@ -79,6 +79,7 @@ export type Experience = {
   description: string;
   categoryId: string;
   price: string | number;
+  currency?: string;
   location: string;
   latitude: string | number | null;
   longitude: string | number | null;
