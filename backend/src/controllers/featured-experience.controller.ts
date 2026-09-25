@@ -13,6 +13,19 @@ export async function list(_req: Request, res: Response) {
   return res.json({ success: true, data: { experiences } });
 }
 
+export async function generate(req: Request, res: Response) {
+  const experiences = await featuredService.generateFeaturedFromRanking(
+    req.user!,
+    req.body.criterion,
+    req.body.limit ?? 10,
+  );
+  return res.status(201).json({
+    success: true,
+    message: "Destacadas generadas por métricas",
+    data: { experiences },
+  });
+}
+
 export async function feature(req: Request, res: Response) {
   const experience = await featuredService.featureExperience(req.user!, req.params.id, req.body);
   return res.status(201).json({

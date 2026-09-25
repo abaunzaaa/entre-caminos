@@ -22,6 +22,11 @@ export const featuredRankingQuerySchema = z.object({
   criterion: z.enum(["visits", "favorites", "reviews", "rating", "trending"]),
 });
 
+export const generateFeaturedSchema = z.object({
+  criterion: z.enum(["visits", "favorites", "reviews", "rating", "trending"]),
+  limit: z.number().int().min(1).max(10).optional(),
+});
+
 export const featureExperienceSchema = z.object({
   featuredOrder: z.number().int().min(0).max(999).nullable().optional(),
   featuredFrom: optionalDate,

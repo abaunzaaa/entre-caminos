@@ -27,6 +27,14 @@ export async function getAdminFeaturedExperiences() {
   return data.data.experiences;
 }
 
+export async function generateFeaturedExperiences(criterion: FeaturedRankingCriterion, limit = 10) {
+  const { data } = await api.post<ApiResponse<{ experiences: FeaturedExperienceCard[] }>>(
+    "/admin/featured-experiences/generate",
+    { criterion, limit },
+  );
+  return data.data.experiences;
+}
+
 export async function featureExperience(
   id: string,
   payload: { featuredOrder?: number | null; featuredFrom?: string | null; featuredUntil?: string | null },
@@ -52,11 +60,6 @@ export async function unfeatureExperience(id: string) {
 
 export async function getCoverFeaturedExperiences() {
   const { data } = await api.get<ApiResponse<{ experiences: Experience[] }>>("/catalog/featured-experiences");
-  return data.data.experiences;
-}
-
-export async function getRecommendedExperiences() {
-  const { data } = await api.get<ApiResponse<{ experiences: Experience[] }>>("/catalog/recommended-experiences");
   return data.data.experiences;
 }
 

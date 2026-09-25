@@ -21,6 +21,7 @@ import {
   featureExperienceSchema,
   featuredOrderSchema,
   featuredRankingQuerySchema,
+  generateFeaturedSchema,
 } from "../validators/featured-experience.validator.js";
 
 export const adminRouter = Router();
@@ -107,6 +108,12 @@ adminRouter.get(
   asyncHandler(featuredController.ranking),
 );
 adminRouter.get("/featured-experiences", asyncHandler(featuredController.list));
+adminRouter.post(
+  "/featured-experiences/generate",
+  roleMiddleware([ROLES.SUPER_ADMIN]),
+  validate(generateFeaturedSchema),
+  asyncHandler(featuredController.generate),
+);
 adminRouter.post(
   "/featured-experiences/:id",
   roleMiddleware([ROLES.SUPER_ADMIN]),

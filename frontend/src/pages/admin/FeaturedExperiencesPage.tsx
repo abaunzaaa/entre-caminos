@@ -4,6 +4,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { Button } from "../../components/ui/Button";
 import {
   featureExperience,
+  generateFeaturedExperiences,
   getAdminExperiences,
   getAdminFeaturedExperiences,
   getFeaturedRanking,
@@ -16,15 +17,14 @@ import { mediaUrl } from "../../utils/media";
 import type { Experience, FeaturedExperienceCard } from "../../types";
 import "../../styles/admin-featured.css";
 
-type FinderMode = FeaturedRankingCriterion | "editorial";
+type HighlightMode = "metrics" | "editorial";
 
-const CRITERIA: Array<{ value: FinderMode; label: string }> = [
-  { value: "rating", label: "⭐ Mejor calificadas" },
-  { value: "visits", label: "👁 Más visitadas" },
-  { value: "favorites", label: "❤️ Más guardadas" },
-  { value: "reviews", label: "💬 Más reseñadas" },
-  { value: "trending", label: "🔥 Mayor interacción reciente" },
-  { value: "editorial", label: "✨ Selección editorial" },
+const CRITERIA: Array<{ value: FeaturedRankingCriterion; label: string }> = [
+  { value: "visits", label: "Más visitadas" },
+  { value: "favorites", label: "Más guardadas" },
+  { value: "reviews", label: "Más reseñadas" },
+  { value: "rating", label: "Mejor calificadas" },
+  { value: "trending", label: "Mayor interacción reciente" },
 ];
 
 function toIso(value: string) {
@@ -56,7 +56,7 @@ function periodLabel(from: string | null, until: string | null) {
   return `${formatDay(from) || "sin inicio"} - ${formatDay(until) || "sin fin"}`;
 }
 
-function MetricList({ card, emphasize }: { card: FeaturedExperienceCard; emphasize?: FinderMode }) {
+function MetricList({ card, emphasize }: { card: FeaturedExperienceCard; emphasize?: FeaturedRankingCriterion }) {
   return (
     <ul className="featured-admin__metrics">
       <li className={emphasize === "visits" ? "is-emphasis" : undefined}>👁 {card.metrics.visits} visitas</li>
@@ -71,7 +71,9 @@ function MetricList({ card, emphasize }: { card: FeaturedExperienceCard; emphasi
 export function FeaturedExperiencesPage() {
   const { user } = useAuth();
   const canEdit = user?.role === "SUPER_ADMIN";
-  const [criterion, setCriterion] = useState<FinderMode>("visits");
+  const [mode, setMode] = useState<HighlightMode>("metrics");
+  const [criterion, setCriterion] = useState<FeaturedRankingCriterion>("visits");
+  const [count, setCount] = useState("10");
   const [ranking, setRanking] = useState<FeaturedExperienceCard[]>([]);
   const [rankingLoading, setRankingLoading] = useState(false);
   const [featured, setFeatured] = useState<FeaturedExperienceCard[]>([]);
@@ -109,7 +111,7 @@ export function FeaturedExperiencesPage() {
   }, []);
 
   useEffect(() => {
-    if (criterion === "editorial") {
+    if (mode !== "metrics") {
       setRanking([]);
       return;
     }
@@ -135,10 +137,10 @@ export function FeaturedExperiencesPage() {
     return () => {
       cancelled = true;
     };
-  }, [criterion]);
+  }, [criterion, mode]);
 
   useEffect(() => {
-    if (criterion !== "editorial") {
+    if (mode !== "editorial") {
       return;
     }
     let cancelled = false;
@@ -156,7 +158,7 @@ export function FeaturedExperiencesPage() {
     return () => {
       cancelled = true;
     };
-  }, [criterion]);
+  }, [mode]);
 
   const editorialOptions = useMemo(() => {
     const taken = new Set(featured.map((item) => item.experience.id));
@@ -169,11 +171,26 @@ export function FeaturedExperiencesPage() {
     try {
       await featureExperience(id, payload);
       await loadFeatured();
-      if (criterion !== "editorial") {
-        setRanking(await getFeaturedRanking(criterion));
-      }
     } catch (err) {
       setError(getApiErrorMessage(err, "No se pudo destacar la experiencia"));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function onGenerate(event: FormEvent) {
+    event.preventDefault();
+    const limit = Number(count);
+    if (!Number.isInteger(limit) || limit < 1 || limit > 10) {
+      setError("La cantidad debe estar entre 1 y 10");
+      return;
+    }
+    setSaving(true);
+    setError("");
+    try {
+      setFeatured(await generateFeaturedExperiences(criterion, limit));
+    } catch (err) {
+      setError(getApiErrorMessage(err, "No se pudieron generar las destacadas"));
     } finally {
       setSaving(false);
     }
@@ -224,9 +241,6 @@ export function FeaturedExperiencesPage() {
     try {
       await unfeatureExperience(id);
       await loadFeatured();
-      if (criterion !== "editorial") {
-        setRanking(await getFeaturedRanking(criterion));
-      }
     } catch (err) {
       setError(getApiErrorMessage(err, "No se pudo retirar la experiencia destacada"));
     } finally {
@@ -241,7 +255,7 @@ export function FeaturedExperiencesPage() {
         <h1 className="admin-pagehead__title">Experiencias destacadas</h1>
         <p className="admin-pagehead__meta">
           {canEdit
-            ? "Encuentra experiencias por rendimiento y decide cuáles destacar."
+            ? "Genera el carrusel por métricas o arma una selección editorial."
             : "Consulta rankings y destacadas. Solo un super administrador puede modificarlas."}
         </p>
       </header>
@@ -249,19 +263,42 @@ export function FeaturedExperiencesPage() {
       {error ? <p className="featured-admin__error">{error}</p> : null}
 
       <section className="featured-admin__finder" aria-labelledby="featured-finder-title">
-        <h2 id="featured-finder-title">Encontrar experiencias para destacar</h2>
+        <h2 id="featured-finder-title">Modo de destacado</h2>
         <label>
-          Buscar experiencias por
-          <select value={criterion} onChange={(event) => setCriterion(event.target.value as FinderMode)}>
-            {CRITERIA.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
+          Modo de destacado
+          <select value={mode} onChange={(event) => setMode(event.target.value as HighlightMode)}>
+            <option value="metrics">Por métricas</option>
+            <option value="editorial">Selección editorial</option>
           </select>
         </label>
 
-        {criterion === "editorial" && canEdit ? (
+        {mode === "metrics" ? (
+          <form className="featured-admin__form featured-admin__form--metrics" onSubmit={(event) => void onGenerate(event)}>
+            <label>
+              Criterio
+              <select value={criterion} onChange={(event) => setCriterion(event.target.value as FeaturedRankingCriterion)}>
+                {CRITERIA.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Cantidad
+              <input type="number" min={1} max={10} value={count} onChange={(event) => setCount(event.target.value)} />
+            </label>
+            {canEdit ? (
+              <Button type="submit" disabled={saving || rankingLoading || ranking.length === 0}>
+                Generar destacadas
+              </Button>
+            ) : (
+              <p className="featured-admin__empty">Solo un super administrador puede generar destacadas.</p>
+            )}
+          </form>
+        ) : null}
+
+        {mode === "editorial" && canEdit ? (
           <form className="featured-admin__form" onSubmit={(event) => void onEditorialFeature(event)}>
             <label>
               Experiencia publicada
@@ -292,42 +329,31 @@ export function FeaturedExperiencesPage() {
           </form>
         ) : null}
 
-        {criterion === "editorial" && !canEdit ? (
+        {mode === "editorial" && !canEdit ? (
           <p className="featured-admin__empty">La selección editorial está reservada al super administrador.</p>
         ) : null}
 
-        {criterion !== "editorial" && rankingLoading ? <p className="featured-admin__empty">Buscando experiencias…</p> : null}
-        {criterion !== "editorial" && !rankingLoading && ranking.length === 0 ? (
+        {mode === "metrics" && rankingLoading ? <p className="featured-admin__empty">Buscando experiencias…</p> : null}
+        {mode === "metrics" && !rankingLoading && ranking.length === 0 ? (
           <p className="featured-admin__empty">No hay experiencias publicadas para este criterio.</p>
         ) : null}
 
-        {criterion !== "editorial" ? (
+        {mode === "metrics" && ranking.length > 0 ? (
           <div className="featured-admin__grid">
-            {ranking.map((card) => (
+            {ranking.slice(0, Number(count) || 10).map((card, index) => (
               <article key={card.experience.id} className="featured-admin__card">
                 <img src={mediaUrl(card.imageUrl, 640)} alt="" />
                 <div className="featured-admin__body">
                   <p className="featured-admin__category">{card.category.name}</p>
-                  <h2>{card.experience.title}</h2>
+                  <h2>
+                    {index + 1}. {card.experience.title}
+                  </h2>
                   <p className="featured-admin__place">{card.experience.location}</p>
                   <MetricList card={card} emphasize={criterion} />
                   <p className="featured-admin__score">
                     Puntaje de destacamiento
                     <span>{card.score.toFixed(1)} puntos</span>
                   </p>
-                  {canEdit ? (
-                    <Button
-                      type="button"
-                      disabled={saving || card.experience.isFeatured}
-                      onClick={() =>
-                        void featureWith(card.experience.id, {
-                          featuredOrder: card.experience.featuredOrder ?? featured.length + 1,
-                        })
-                      }
-                    >
-                      {card.experience.isFeatured ? "Ya destacada" : "Destacar"}
-                    </Button>
-                  ) : null}
                 </div>
               </article>
             ))}
@@ -342,7 +368,7 @@ export function FeaturedExperiencesPage() {
         {loading ? <p className="featured-admin__empty">Cargando destacadas…</p> : null}
         {!loading && featured.length === 0 ? (
           <p className="featured-admin__empty">
-            No hay experiencias destacadas. En explorar se mostrarán automáticamente las mejores por puntuación.
+            No hay experiencias destacadas en el carrusel.
           </p>
         ) : null}
         <div className="featured-admin__grid">
@@ -363,7 +389,7 @@ export function FeaturedExperiencesPage() {
                   Visible: {periodLabel(card.experience.featuredFrom, card.experience.featuredUntil)}
                 </p>
                 <MetricList card={card} />
-                {canEdit ? (
+                {canEdit && mode === "editorial" ? (
                   <div className="featured-admin__actions">
                     <button type="button" onClick={() => void move(index, -1)} disabled={saving || index === 0} aria-label="Subir prioridad">
                       <ArrowUp size={16} />

@@ -189,6 +189,50 @@ export async function listFeaturedRanking(criterion: FeaturedRankingCriterion) {
     );
 }
 
+export async function generateFeaturedFromRanking(
+  actor: AuthUser,
+  criterion: FeaturedRankingCriterion,
+  limit = 10,
+) {
+  const ranked = await listFeaturedRanking(criterion);
+  const selected = ranked.slice(0, limit);
+  const selectedIds = selected.map((card) => card.experience.id);
+
+  await prisma.$transaction(async (tx) => {
+    await tx.experience.updateMany({
+      where: {
+        isFeatured: true,
+        ...(selectedIds.length ? { id: { notIn: selectedIds } } : {}),
+      },
+      data: {
+        isFeatured: false,
+        featuredOrder: null,
+        featuredFrom: null,
+        featuredUntil: null,
+      },
+    });
+    for (const [index, card] of selected.entries()) {
+      await tx.experience.update({
+        where: { id: card.experience.id },
+        data: {
+          isFeatured: true,
+          featuredOrder: index + 1,
+          featuredFrom: null,
+          featuredUntil: null,
+        },
+      });
+    }
+  });
+
+  await recordAudit({
+    userId: actor.id,
+    action: "GENERATE_FEATURED_EXPERIENCES",
+    entity: "Experience",
+    entityId: selectedIds[0] ?? "featured",
+  });
+  return listAdminFeaturedExperiences();
+}
+
 export async function listAdminFeaturedExperiences() {
   const experiences = await prisma.experience.findMany({
     where: { isFeatured: true },

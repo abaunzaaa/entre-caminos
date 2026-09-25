@@ -13,7 +13,7 @@ import { experienceCoverUrl } from "../components/explorer/explorer-media";
 import { useAuth } from "../hooks/useAuth";
 import avionIcon from "../assets/avion-icon.png";
 import camIcon from "../assets/cam-icon.png";
-import { getCoverFeaturedExperiences, getPublicExperiences, getRecommendedExperiences } from "../services/catalog.service";
+import { getCoverFeaturedExperiences, getPublicExperiences } from "../services/catalog.service";
 import { formatDepartmentMunicipality } from "../data/colombia-locations";
 import type { Experience } from "../types";
 import "../styles/admin-ui.css";
@@ -42,7 +42,6 @@ export function ExplorePage() {
   const { user } = useAuth();
   const [experiences, setExperiences] = useState<Experience[]>([]);
   const [coverFeatured, setCoverFeatured] = useState<Experience[]>([]);
-  const [recommended, setRecommended] = useState<Experience[]>([]);
   const [total, setTotal] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [filters, setFilters] = useState<DiscoverFiltersState>(DEFAULT_DISCOVER_FILTERS);
@@ -67,17 +66,6 @@ export function ExplorePage() {
       .catch(() => {
         if (!cancelled) {
           setCoverFeatured([]);
-        }
-      });
-    getRecommendedExperiences()
-      .then((items) => {
-        if (!cancelled) {
-          setRecommended(items);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setRecommended([]);
         }
       });
     getPublicExperiences({ limit: FETCH_SIZE, offset: 0 })
@@ -325,7 +313,7 @@ export function ExplorePage() {
       </section>
 
       <ExplorerRecommendedSection
-        experiences={recommended}
+        experiences={experiences}
         interests={user?.profile?.interests ?? []}
       />
 

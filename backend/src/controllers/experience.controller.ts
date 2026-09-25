@@ -4,11 +4,6 @@ import * as experienceService from "../services/experience.service.js";
 import { listCoverFeaturedExperiences, recordDetailView } from "../services/featured-experience.service.js";
 import { parseLimitQuery, parseOffsetQuery } from "../utils/query.js";
 
-function withoutFeaturedFields<T extends Record<string, unknown>>(experience: T) {
-  const { isFeatured: _isFeatured, featuredOrder: _featuredOrder, featuredFrom: _featuredFrom, featuredUntil: _featuredUntil, ...rest } = experience;
-  return rest;
-}
-
 export async function listPublic(req: Request, res: Response) {
   const take = parseLimitQuery(req.query.limit, 100);
   const skip = take != null ? parseOffsetQuery(req.query.offset) : undefined;
@@ -20,7 +15,7 @@ export async function listPublic(req: Request, res: Response) {
   return res.json({
     success: true,
     data: {
-      experiences: experiences.map((experience) => withoutFeaturedFields(experience)),
+      experiences,
       total,
       hasMore: loaded < total,
     },
@@ -30,14 +25,6 @@ export async function listPublic(req: Request, res: Response) {
 export async function featured(_req: Request, res: Response) {
   const experiences = await listCoverFeaturedExperiences();
   return res.json({ success: true, data: { experiences } });
-}
-
-export async function recommended(_req: Request, res: Response) {
-  const experiences = await experienceService.listRecommendedExperiences();
-  return res.json({
-    success: true,
-    data: { experiences: experiences.map((experience) => withoutFeaturedFields(experience)) },
-  });
 }
 
 export async function getPublic(req: Request, res: Response) {

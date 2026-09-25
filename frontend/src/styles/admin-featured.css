@@ -61,6 +61,10 @@
   font-size: 14px;
 }
 
+.featured-admin__form--metrics {
+  grid-template-columns: minmax(220px, 1fr) 120px auto;
+}
+
 .featured-admin__form {
   display: grid;
   grid-template-columns: minmax(220px, 2fr) 120px 1fr 1fr auto;
