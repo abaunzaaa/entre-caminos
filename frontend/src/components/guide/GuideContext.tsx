@@ -1,0 +1,57 @@
+import { createContext, useContext } from "react";
+import type { GuideFolder, GuideStoredMessage, GuideThread } from "../../utils/guide-storage";
+
+export type GuideView = "home" | "chat" | "history";
+
+export type GuideContextValue = {
+  open: boolean;
+  expanded: boolean;
+  view: GuideView;
+  sending: boolean;
+  error: string;
+  unread: boolean;
+  plusOpen: boolean;
+  thread: GuideThread | null;
+  threads: GuideThread[];
+  folders: GuideFolder[];
+  folderFilter?: string;
+  threadQuery: string;
+  draft: string;
+  experienceId?: string;
+  experienceTitle?: string;
+  experienceImage?: string;
+  experienceLocation?: string;
+  favorites: string[];
+  savedPlans: NonNullable<GuideStoredMessage["plan"]>[];
+  setDraft: (value: string) => void;
+  setPlusOpen: (value: boolean) => void;
+  openGuide: (opts?: { prompt?: string; view?: GuideView }) => void;
+  closeGuide: () => void;
+  minimizeGuide: () => void;
+  toggleExpand: () => void;
+  newConversation: () => void;
+  startThread: (prompt?: string) => void;
+  send: (text?: string) => Promise<void>;
+  regenerate: () => Promise<void>;
+  openThread: (id: string) => void;
+  deleteThread: (id: string) => void;
+  setView: (view: GuideView) => void;
+  toggleFavorite: (id: string) => void;
+  persistPlan: (plan: NonNullable<GuideStoredMessage["plan"]>) => void;
+  setThreadQuery: (value: string) => void;
+  setFolderFilter: (id?: string) => void;
+  createFolder: (name: string) => void;
+  renameFolder: (id: string, name: string) => void;
+  deleteFolder: (id: string) => void;
+  assignThreadFolder: (threadId: string, folderId?: string) => void;
+};
+
+export const GuideContext = createContext<GuideContextValue | null>(null);
+
+export function useGuide() {
+  const value = useContext(GuideContext);
+  if (!value) {
+    throw new Error("useGuide debe usarse dentro de GuideProvider");
+  }
+  return value;
+}

@@ -2,12 +2,17 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   CalendarRange,
+  Check,
   ChevronDown,
   Clock,
   Copy,
+  Folder,
+  FolderPlus,
   Heart,
   MapPin,
+  Maximize2,
   Mic,
+  Minimize2,
   Minus,
   Pencil,
   Plus,
@@ -15,22 +20,25 @@ import {
   Save,
   Search,
   Send,
+  Settings,
+  Share2,
   ThumbsDown,
   ThumbsUp,
+  Trash2,
   X,
 } from "lucide-react";
-import logo from "../../assets/logo.png";
 import { useAuth } from "../../hooks/useAuth";
 import { mediaUrl } from "../../utils/media";
 import { formatPrice } from "../../utils/cn";
-import { useGuide } from "./GuideProvider";
+import { GuideMark } from "./GuideMark";
+import { useGuide } from "./GuideContext";
 import "../../styles/guide.css";
 
 const CAPABILITIES = [
-  { icon: CalendarRange, label: "Crear un plan", prompt: "Créame un plan para este sábado" },
-  { icon: Search, label: "Buscar experiencias", prompt: "Encuéntrame experiencias que encajen con mis gustos" },
-  { icon: MapPin, label: "Explorar cerca", prompt: "Qué puedo hacer cerca de mí" },
-  { icon: Heart, label: "Mis intereses", prompt: "Recomiéndame algo según mis intereses" },
+  { icon: CalendarRange, label: "Crear un plan", hint: "Ruta personalizada", prompt: "Créame un plan para este sábado" },
+  { icon: Search, label: "Buscar experiencias", hint: "Según tus gustos", prompt: "Encuéntrame experiencias que encajen con mis gustos" },
+  { icon: MapPin, label: "Explorar cerca", hint: "Cerca de ti", prompt: "Qué puedo hacer cerca de mí" },
+  { icon: Heart, label: "Mis intereses", hint: "A tu medida", prompt: "Recomiéndame algo según mis intereses" },
 ] as const;
 
 function hiddenPath(pathname: string) {
@@ -48,10 +56,6 @@ function hiddenPath(pathname: string) {
 
 function formatTime(value: string) {
   return new Date(value).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" });
-}
-
-function firstName(name?: string) {
-  return name?.trim().split(/\s+/)[0] || "";
 }
 
 function relativeDay(value: string) {
@@ -79,12 +83,26 @@ export function GuideHost() {
   const [listening, setListening] = useState(false);
   const [planOpen, setPlanOpen] = useState(true);
   const [votes, setVotes] = useState<Record<string, "up" | "down">>({});
-  const greet = firstName(user?.name);
-  const visible = Boolean(user) && !hiddenPath(pathname);
+  const [folderName, setFolderName] = useState("");
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const settingsRef = useRef<HTMLDivElement>(null);
+  const homePreview = pathname === "/";
+  const visible = (Boolean(user) || homePreview) && !hiddenPath(pathname);
+  const makingPlan = guide.sending && /plan/i.test(guide.thread?.messages.slice().reverse().find((item) => item.role === "user")?.content ?? "");
+  const statusLabel = makingPlan ? "Generando plan" : guide.sending ? "Pensando" : "Disponible";
 
   useEffect(() => {
-    streamRef.current?.scrollTo({ top: streamRef.current.scrollHeight, behavior: "smooth" });
-  }, [guide.thread?.messages.length, guide.sending]);
+    if (!settingsOpen) {
+      return;
+    }
+    function onPointer(event: MouseEvent) {
+      if (!settingsRef.current?.contains(event.target as Node)) {
+        setSettingsOpen(false);
+      }
+    }
+    window.addEventListener("mousedown", onPointer);
+    return () => window.removeEventListener("mousedown", onPointer);
+  }, [settingsOpen]);
 
   useEffect(() => {
     if (!guide.open) {
@@ -93,7 +111,15 @@ export function GuideHost() {
     const id = window.setTimeout(() => inputRef.current?.focus(), 280);
     function onKey(event: KeyboardEvent) {
       if (event.key === "Escape") {
-        guide.minimizeGuide();
+        if (settingsOpen) {
+          setSettingsOpen(false);
+          return;
+        }
+        if (guide.expanded) {
+          guide.toggleExpand();
+        } else {
+          guide.minimizeGuide();
+        }
       }
     }
     window.addEventListener("keydown", onKey);
@@ -101,7 +127,11 @@ export function GuideHost() {
       window.clearTimeout(id);
       window.removeEventListener("keydown", onKey);
     };
-  }, [guide.open, guide.minimizeGuide, guide.view]);
+  }, [guide.open, guide.expanded, guide.minimizeGuide, guide.toggleExpand, guide.view, settingsOpen]);
+
+  useEffect(() => {
+    streamRef.current?.scrollTo({ top: streamRef.current.scrollHeight, behavior: "smooth" });
+  }, [guide.thread?.messages.length, guide.sending]);
 
   function listen() {
     const Speech =
@@ -126,111 +156,124 @@ export function GuideHost() {
     recognition.start();
   }
 
+  function sharePlan(plan: NonNullable<NonNullable<typeof guide.thread>["messages"][number]["plan"]>) {
+    const text = [plan.title, [plan.date, plan.city, plan.people].filter(Boolean).join(" · "), plan.experiences.join(", ")]
+      .filter(Boolean)
+      .join("\n");
+    if (navigator.share) {
+      void navigator.share({ title: plan.title, text });
+      return;
+    }
+    void navigator.clipboard.writeText(text);
+  }
+
   if (!visible) {
     return null;
   }
 
   const composer = (
     <form
-      className={`guide-composer${guide.view === "home" ? " guide-composer--hero" : ""}`}
+      className="guide-composer"
       onSubmit={(event) => {
         event.preventDefault();
         void guide.send();
       }}
     >
-      <button
-        type="button"
-        className="guide-plus"
-        aria-label="Más acciones"
-        aria-expanded={guide.plusOpen}
-        onClick={() => guide.setPlusOpen(!guide.plusOpen)}
-      >
-        <Plus size={18} strokeWidth={1.8} />
-      </button>
-      <textarea
-        ref={inputRef}
-        rows={guide.view === "home" ? 2 : 1}
-        value={guide.draft}
-        placeholder={
-          guide.view === "home" ? "Pregúntame por experiencias, lugares o crea un plan..." : "Escribe tu mensaje..."
-        }
-        aria-label="Pregunta a Tu guía"
-        onChange={(event) => guide.setDraft(event.target.value)}
-        onKeyDown={(event) => {
-          if (event.key === "Enter" && !event.shiftKey) {
-            event.preventDefault();
-            void guide.send();
-          }
-        }}
-      />
-      {guide.view === "chat" ? (
+      <div className="guide-composer__bar">
+        <button
+          type="button"
+          className="guide-plus"
+          aria-label="Más acciones"
+          aria-expanded={guide.plusOpen}
+          onClick={() => guide.setPlusOpen(!guide.plusOpen)}
+        >
+          <Plus size={16} strokeWidth={1.8} />
+        </button>
+        <textarea
+          ref={inputRef}
+          rows={1}
+          value={guide.draft}
+          placeholder="Pregúntame por experiencias o crea un plan..."
+          aria-label="Pregunta a Tu guía"
+          className="guide-composer__field"
+          wrap="soft"
+          onChange={(event) => guide.setDraft(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" && !event.shiftKey) {
+              event.preventDefault();
+              void guide.send();
+            }
+          }}
+        />
         <button
           type="button"
           className={`guide-mic${listening ? " is-on" : ""}`}
           aria-label="Dictar mensaje"
           onClick={listen}
         >
-          <Mic size={16} strokeWidth={1.8} />
+          <Mic size={15} strokeWidth={1.8} />
         </button>
-      ) : null}
-      <button type="submit" className="guide-send" aria-label="Enviar" disabled={guide.sending || !guide.draft.trim()}>
-        <Send size={16} strokeWidth={1.8} />
-      </button>
-      {guide.plusOpen ? (
-        <div className="guide-plus-menu" role="menu">
-          <button
-            type="button"
-            role="menuitem"
-            onClick={() => {
-              guide.setPlusOpen(false);
-              void guide.send("Créame un plan para este sábado");
-            }}
-          >
-            Crear plan
-          </button>
-          <button
-            type="button"
-            role="menuitem"
-            onClick={() => {
-              guide.setPlusOpen(false);
-              void guide.send("Busca una experiencia para mí");
-            }}
-          >
-            Buscar experiencia
-          </button>
-          <button
-            type="button"
-            role="menuitem"
-            onClick={() => {
-              guide.setPlusOpen(false);
-              guide.closeGuide();
-              navigate("/explorar#favoritos");
-            }}
-          >
-            Mis favoritos
-          </button>
-          <button
-            type="button"
-            role="menuitem"
-            onClick={() => {
-              guide.setPlusOpen(false);
-              void guide.send("Qué hay cerca de mí");
-            }}
-          >
-            Explorar cerca
-          </button>
-          <button
-            type="button"
-            role="menuitem"
-            onClick={() => {
-              guide.setPlusOpen(false);
-              guide.setView("history");
-            }}
-          >
-            Conversaciones
-          </button>
-        </div>
-      ) : null}
+        <button type="submit" className="guide-send" aria-label="Enviar" disabled={guide.sending || !guide.draft.trim()}>
+          <Send size={14} strokeWidth={2.1} />
+        </button>
+        {guide.plusOpen ? (
+          <div className="guide-plus-menu" role="menu">
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                guide.setPlusOpen(false);
+                void guide.send("Créame un plan para este sábado");
+              }}
+            >
+              Crear plan
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                guide.setPlusOpen(false);
+                void guide.send("Busca una experiencia para mí");
+              }}
+            >
+              Buscar experiencia
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                guide.setPlusOpen(false);
+                guide.closeGuide();
+                navigate("/explorar#favoritos");
+              }}
+            >
+              Mis favoritos
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                guide.setPlusOpen(false);
+                void guide.send("Qué hay cerca de mí");
+              }}
+            >
+              Explorar cerca
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                guide.setPlusOpen(false);
+                if (!guide.expanded) {
+                  guide.setView("history");
+                }
+              }}
+            >
+              Conversaciones
+            </button>
+          </div>
+        ) : null}
+      </div>
     </form>
   );
 
@@ -243,55 +286,255 @@ export function GuideHost() {
         hidden={guide.open}
         onClick={() => guide.openGuide()}
       >
-        <img src={logo} alt="" />
+        <GuideMark />
         {guide.unread ? <span className="guide-fab__dot" /> : null}
       </button>
 
       {guide.open ? (
-        <>
-          <button type="button" className="guide-overlay" aria-label="Cerrar guía" onClick={guide.minimizeGuide} />
-          <section className={`guide-panel${guide.view === "home" ? " guide-panel--home" : ""}`} role="dialog" aria-modal="true" aria-label="Tu guía">
-            <header className="guide-panel__top">
-              <div className="guide-panel__brand">
-                <span className="guide-mark" aria-hidden="true">
-                  <img src={logo} alt="" />
-                </span>
-                <div>
-                  <strong>Tu guía</strong>
-                  <span>
-                    Asistente inteligente
-                    <em>
-                      <i />
-                      Disponible
-                    </em>
-                  </span>
-                </div>
-              </div>
-              <button type="button" className="guide-icon-btn" aria-label="Minimizar" onClick={guide.minimizeGuide}>
-                <Minus size={16} />
-              </button>
-              <button type="button" className="guide-icon-btn" aria-label="Cerrar" onClick={guide.closeGuide}>
-                <X size={16} />
-              </button>
-            </header>
-
-            {guide.view === "home" ? (
-              <div className="guide-home">
-                <div className="guide-home__stage">
-                  <p className="guide-hello">{greet ? `Hola ${greet} 👋` : "Hola 👋"}</p>
-                  <h2>¿Qué quieres descubrir hoy?</h2>
-                  {composer}
-                </div>
-                <div className="guide-pills">
-                  {CAPABILITIES.map((item) => {
-                    const Icon = item.icon;
+        <section
+            className={`guide-panel${guide.view === "home" ? " guide-panel--home" : ""}${guide.expanded ? " is-expanded" : ""}`}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Tu guía"
+          >
+            {guide.expanded ? (
+              <aside className="guide-rail">
+                <p className="guide-rail__app">Entre Caminos</p>
+                <button type="button" className="guide-rail__new" onClick={guide.newConversation}>
+                  Nueva conversación
+                </button>
+                <label className="guide-rail__search">
+                  <Search size={13} strokeWidth={1.8} />
+                  <input
+                    value={guide.threadQuery}
+                    onChange={(event) => guide.setThreadQuery(event.target.value)}
+                    placeholder="Buscar conversaciones..."
+                    aria-label="Buscar conversaciones"
+                  />
+                </label>
+                <p className="guide-rail__label">Carpetas</p>
+                <div className="guide-rail__list guide-rail__list--folders">
+                  {guide.folders.map((folder) => {
+                    const count = guide.threads.filter((item) => item.folderId === folder.id).length;
                     return (
-                      <button key={item.label} type="button" className="guide-pill" onClick={() => void guide.send(item.prompt)}>
-                        <Icon size={14} strokeWidth={1.8} aria-hidden="true" />
-                        {item.label}
-                      </button>
+                    <button
+                      key={folder.id}
+                      type="button"
+                      className={guide.folderFilter === folder.id ? "is-on" : ""}
+                      onClick={() => guide.setFolderFilter(guide.folderFilter === folder.id ? undefined : folder.id)}
+                    >
+                      <span className="guide-rail__folder">
+                        <Folder size={14} strokeWidth={1.7} />
+                        <span>
+                          <strong>{folder.name}</strong>
+                          <em>{count} {count === 1 ? "conversación" : "conversaciones"}</em>
+                        </span>
+                      </span>
+                      <X
+                        size={12}
+                        aria-label="Eliminar carpeta"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          guide.deleteFolder(folder.id);
+                        }}
+                      />
+                    </button>
                     );
                   })}
+                  <form
+                    className="guide-rail__create"
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      if (folderName.trim()) {
+                        guide.createFolder(folderName.trim());
+                        setFolderName("");
+                      }
+                    }}
+                  >
+                    <FolderPlus size={13} strokeWidth={1.8} />
+                    <input
+                      value={folderName}
+                      onChange={(event) => setFolderName(event.target.value)}
+                      placeholder="Nueva carpeta"
+                      aria-label="Nombre de carpeta"
+                    />
+                  </form>
+                </div>
+                <p className="guide-rail__label">Conversaciones recientes</p>
+                <div className="guide-rail__list guide-rail__list--threads">
+                  {guide.threads
+                    .filter((item) => !guide.folderFilter || item.folderId === guide.folderFilter)
+                    .filter((item) => item.title.toLowerCase().includes(guide.threadQuery.toLowerCase()))
+                    .map((item) => {
+                      const last = item.messages[item.messages.length - 1];
+                      return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        className={item.id === guide.thread?.id ? "is-on" : ""}
+                        onClick={() => guide.openThread(item.id)}
+                      >
+                        <span>
+                          <strong>{item.title}</strong>
+                          <em>{relativeDay(item.updatedAt)}</em>
+                          {last?.content ? <b>{last.content}</b> : null}
+                        </span>
+                        <X
+                          size={12}
+                          aria-label="Eliminar conversación"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            guide.deleteThread(item.id);
+                          }}
+                        />
+                      </button>
+                      );
+                    })}
+                </div>
+                <div className="guide-rail__user" ref={settingsRef}>
+                  <span className="guide-rail__avatar" aria-hidden="true">
+                    {(user?.name?.trim().charAt(0) || "U").toUpperCase()}
+                  </span>
+                  <span>{user?.name || "Cuenta"}</span>
+                  <button
+                    type="button"
+                    className="guide-rail__settings"
+                    aria-label="Opciones del chat"
+                    aria-expanded={settingsOpen}
+                    onClick={() => setSettingsOpen((open) => !open)}
+                  >
+                    <Settings size={13} strokeWidth={1.8} />
+                  </button>
+                  {settingsOpen ? (
+                    <div className="guide-settings" role="menu" aria-label="Opciones del chat">
+                      <p className="guide-settings__title">Opciones del chat</p>
+                      <button
+                        type="button"
+                        className="guide-settings__row"
+                        onClick={() => {
+                          setSettingsOpen(false);
+                          guide.newConversation();
+                        }}
+                      >
+                        <span className="guide-settings__icon">
+                          <Plus size={14} strokeWidth={1.8} />
+                        </span>
+                        <span>
+                          <strong>Nueva conversación</strong>
+                          <em>Empieza un chat nuevo.</em>
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        className="guide-settings__row"
+                        onClick={() => {
+                          setSettingsOpen(false);
+                          if (!guide.expanded) {
+                            guide.setView("history");
+                          }
+                        }}
+                      >
+                        <span className="guide-settings__icon">
+                          <Clock size={14} strokeWidth={1.8} />
+                        </span>
+                        <span>
+                          <strong>Historial</strong>
+                          <em>Conversaciones recientes.</em>
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        className="guide-settings__row"
+                        disabled={!guide.thread}
+                        onClick={() => {
+                          if (!guide.thread) {
+                            return;
+                          }
+                          setSettingsOpen(false);
+                          guide.deleteThread(guide.thread.id);
+                        }}
+                      >
+                        <span className="guide-settings__icon">
+                          <Trash2 size={14} strokeWidth={1.8} />
+                        </span>
+                        <span>
+                          <strong>Limpiar conversación</strong>
+                          <em>Elimina el chat actual.</em>
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        className="guide-settings__row"
+                        onClick={() => setSettingsOpen(false)}
+                      >
+                        <span className="guide-settings__icon">
+                          <X size={14} strokeWidth={1.8} />
+                        </span>
+                        <span>
+                          <strong>Cerrar menú</strong>
+                        </span>
+                      </button>
+                    </div>
+                  ) : null}
+                </div>
+              </aside>
+            ) : null}
+            <div className="guide-shell">
+            <header className="guide-panel__top">
+              <div className="guide-panel__brand">
+                <div className="guide-panel__id">
+                  <strong>Tu guía IA</strong>
+                  <em className={guide.sending ? "is-busy" : "is-live"}>
+                    <i />
+                    {statusLabel}
+                  </em>
+                </div>
+              </div>
+              <div className="guide-win">
+                <button type="button" className="guide-icon-btn" aria-label="Minimizar" onClick={guide.minimizeGuide}>
+                  <Minus size={12} strokeWidth={2.2} />
+                </button>
+                <button
+                  type="button"
+                  className="guide-icon-btn"
+                  aria-label={guide.expanded ? "Reducir" : "Expandir"}
+                  onClick={guide.toggleExpand}
+                >
+                  {guide.expanded ? <Minimize2 size={12} strokeWidth={2.2} /> : <Maximize2 size={12} strokeWidth={2.2} />}
+                </button>
+                <button type="button" className="guide-icon-btn guide-icon-btn--close" aria-label="Cerrar" onClick={guide.closeGuide}>
+                  <X size={12} strokeWidth={2.2} />
+                </button>
+              </div>
+            </header>
+
+            {guide.view === "home" || (guide.expanded && guide.view === "history") ? (
+              <div className="guide-home">
+                <div className="guide-home__intro">
+                  <span className="guide-home__pin" aria-hidden="true">
+                    <GuideMark />
+                  </span>
+                  <h2>¿Qué descubrimos hoy?</h2>
+                  <p className="guide-home__copy">Encuentra experiencias, lugares y planes según tus gustos.</p>
+                </div>
+                <div className="guide-home__dock">
+                  <div className="guide-actions">
+                    {CAPABILITIES.map((item) => {
+                      const Icon = item.icon;
+                      return (
+                        <button key={item.label} type="button" className="guide-action" onClick={() => void guide.send(item.prompt)}>
+                          <span className="guide-action__icon">
+                            <Icon size={15} strokeWidth={1.7} aria-hidden="true" />
+                          </span>
+                          <span>
+                            <strong>{item.label}</strong>
+                            <em>{item.hint}</em>
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {composer}
                 </div>
               </div>
             ) : null}
@@ -317,17 +560,19 @@ export function GuideHost() {
                   ) : null;
                 })()}
                 <div className="guide-stream" ref={streamRef}>
+                  {guide.thread?.messages.length ? <p className="guide-day">Hoy</p> : null}
                   {guide.thread?.messages.map((message) => (
                     <article key={message.id} className={`guide-row${message.role === "user" ? " guide-row--user" : ""}`}>
                       {message.role === "assistant" ? (
                         <span className="guide-avatar" aria-hidden="true">
-                          <img src={logo} alt="" />
+                          <GuideMark />
                         </span>
                       ) : null}
                       <div className="guide-row__body">
                         <div className="guide-bubble">{message.content}</div>
                         <div className="guide-meta">
                           <time>{formatTime(message.createdAt)}</time>
+                          {message.role === "user" ? <Check size={11} strokeWidth={2.4} aria-hidden="true" /> : null}
                           {message.role === "assistant" ? (
                             <>
                               <button type="button" aria-label="Copiar" onClick={() => void navigator.clipboard.writeText(message.content)}>
@@ -463,6 +708,10 @@ export function GuideHost() {
                                   <Save size={13} />
                                   Guardar
                                 </button>
+                                <button type="button" onClick={() => sharePlan(message.plan!)}>
+                                  <Share2 size={13} />
+                                  Compartir
+                                </button>
                               </div>
                             </div>
                           </div>
@@ -482,10 +731,11 @@ export function GuideHost() {
                   {guide.sending ? (
                     <div className="guide-row">
                       <span className="guide-avatar" aria-hidden="true">
-                        <img src={logo} alt="" />
+                        <GuideMark />
                       </span>
                       <p className="guide-typing" aria-live="polite">
                         <span />
+                        Escribiendo
                       </p>
                     </div>
                   ) : null}
@@ -496,7 +746,7 @@ export function GuideHost() {
               </div>
             ) : null}
 
-            {guide.view === "history" ? (
+            {guide.view === "history" && !guide.expanded ? (
               <div className="guide-history">
                 <p className="guide-status">Conversaciones recientes</p>
                 {guide.threads.length ? (
@@ -524,8 +774,8 @@ export function GuideHost() {
                 </button>
               </div>
             ) : null}
+            </div>
           </section>
-        </>
       ) : null}
     </>
   );

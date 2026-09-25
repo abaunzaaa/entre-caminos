@@ -1,5 +1,5 @@
-import { prisma } from "../database/prisma.js";
 import { ApiError } from "../utils/api-error.js";
+import { loadGuideContext, type GuideCatalogItem } from "./context.service.js";
 import { generateGeminiText, parseGeminiJson } from "./gemini.service.js";
 
 export type AssistantChatMessage = { role: "user" | "assistant"; content: string };
@@ -44,18 +44,9 @@ export type AssistantReply = {
   experiences: AssistantExperienceCard[];
 };
 
-type CatalogItem = {
-  id: string;
-  title: string;
-  description: string;
-  location: string;
-  price: unknown;
-  duration: string | null;
-  imageUrl: string | null;
-  category: string | null;
-};
+type CatalogItem = GuideCatalogItem;
 
-const SYSTEM = `Eres "Tu guía", el asistente de Entre Caminos. Ayudas a las personas a descubrir experiencias en Colombia y a crear planes personalizados.
+const SYSTEM = `Eres Tu guía, el asistente inteligente de Entre Caminos. Ayudas a usuarios a descubrir experiencias, resolver dudas y crear planes personalizados.
 
 Habla en español, con tono cercano, calmado y premium. No eres un buscador: conversas, pides lo que falta y recomiendas con criterio.
 
@@ -93,10 +84,6 @@ function asStringArray(value: unknown) {
     return [];
   }
   return value.map((item) => asString(item)).filter(Boolean);
-}
-
-function catalogLine(item: CatalogItem) {
-  return `- ${item.id} | ${item.title} | ${item.category ?? "Experiencia"} | ${item.location} | ${String(item.price)} | ${item.duration ?? "duración variable"}`;
 }
 
 function hydrate(ids: string[], catalog: CatalogItem[]): AssistantExperienceCard[] {
@@ -189,70 +176,11 @@ export async function chatWithGuide(input: {
   experienceId?: string;
   location?: { latitude?: number; longitude?: number; city?: string };
 }) {
-  const [profile, focus, published] = await Promise.all([
-    prisma.userProfile.findUnique({
-      where: { userId: input.userId },
-      select: {
-        city: true,
-        department: true,
-        interests: true,
-        companions: true,
-        places: true,
-        budget: true,
-        climate: true,
-        latitude: true,
-        longitude: true,
-      },
-    }),
-    input.experienceId
-      ? prisma.experience.findFirst({
-          where: { id: input.experienceId, status: "PUBLISHED" },
-          include: { category: true },
-        })
-      : Promise.resolve(null),
-    prisma.experience.findMany({
-      where: { status: "PUBLISHED" },
-      include: { category: true },
-      orderBy: { createdAt: "desc" },
-      take: 40,
-    }),
-  ]);
-
-  const catalog: CatalogItem[] = published.map((item) => ({
-    id: item.id,
-    title: item.title,
-    description: item.description.slice(0, 280),
-    location: item.location,
-    price: item.price,
-    duration: item.duration,
-    imageUrl: item.imageUrl,
-    category: item.category?.name ?? null,
-  }));
-
-  const history = input.history
-    .slice(-12)
-    .map((item) => `${item.role === "user" ? "Persona" : "Guía"}: ${item.content}`)
-    .join("\n");
-
-  const userBlock = [
-    profile
-      ? `Perfil: ciudad ${profile.city ?? "sin definir"}, intereses ${profile.interests.join(", ") || "sin definir"}, compañía ${profile.companions.join(", ") || "sin definir"}, presupuesto ${profile.budget.join(", ") || "sin definir"}, climas ${profile.climate.join(", ") || "sin definir"}.`
-      : "Perfil: aún no hay preferencias guardadas.",
-    input.location?.city ? `Ubicación actual declarada: ${input.location.city}.` : "",
-    focus
-      ? `Estás hablando de esta experiencia: ${focus.title}. Categoría: ${focus.category?.name ?? "N/A"}. Lugar: ${focus.location}. Precio: ${String(focus.price)}. Duración: ${focus.duration ?? "variable"}. Descripción: ${focus.description.slice(0, 500)}. Cómo llegar: ${focus.howToGetThere ?? "no indicado"}.`
-      : "No hay una experiencia abierta. Eres el guía general.",
-    "Catálogo (id | título | categoría | lugar | precio | duración):",
-    catalog.map(catalogLine).join("\n") || "(vacío)",
-    history ? `Conversación:\n${history}` : "",
-    `Mensaje nuevo: ${input.message}`,
-  ]
-    .filter(Boolean)
-    .join("\n\n");
+  const { catalog, cityFallback, prompt } = await loadGuideContext(input);
 
   let parsed: Record<string, unknown> | null = null;
   try {
-    parsed = parseGeminiJson(await generateGeminiText(SYSTEM, userBlock));
+    parsed = parseGeminiJson(await generateGeminiText(SYSTEM, prompt));
   } catch (error) {
     if (error instanceof ApiError) {
       throw error;
@@ -287,7 +215,7 @@ export async function chatWithGuide(input: {
     }
   }
 
-  const plan = planRaw ? buildPlan(planRaw, cards, profile?.city || "") : null;
+  const plan = planRaw ? buildPlan(planRaw, cards, cityFallback) : null;
 
   return {
     reply:

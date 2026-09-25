@@ -40,7 +40,13 @@ export type GuideThread = {
   title: string;
   updatedAt: string;
   experienceId?: string;
+  folderId?: string;
   messages: GuideStoredMessage[];
+};
+
+export type GuideFolder = {
+  id: string;
+  name: string;
 };
 
 function key(userId: string) {
@@ -51,8 +57,32 @@ function favoritesKey(userId: string) {
   return `${PREFIX}favorites_${userId}`;
 }
 
+function foldersKey(userId: string) {
+  return `${PREFIX}folders_${userId}`;
+}
+
 function plansKey(userId: string) {
   return `${PREFIX}plans_${userId}`;
+}
+
+const DEFAULT_FOLDERS: GuideFolder[] = [
+  { id: "f_planes", name: "Mis planes" },
+  { id: "f_destinos", name: "Destinos" },
+  { id: "f_favoritas", name: "Experiencias favoritas" },
+  { id: "f_ideas", name: "Ideas de viaje" },
+];
+
+export function loadFolders(userId: string): GuideFolder[] {
+  const stored = readJson<GuideFolder[]>(foldersKey(userId), []);
+  return stored.length ? stored : DEFAULT_FOLDERS;
+}
+
+export function saveFolders(userId: string, folders: GuideFolder[]) {
+  writeJson(foldersKey(userId), folders.slice(0, 16));
+}
+
+export function newFolderId() {
+  return `f_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
 }
 
 function readJson<T>(storageKey: string, fallback: T): T {

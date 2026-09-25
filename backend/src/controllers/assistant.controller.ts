@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { chatWithGuide } from "../services/assistant.service.js";
+import { chatWithGuide } from "../services/conversation.service.js";
 
 export async function chat(req: Request, res: Response) {
   const payload = await chatWithGuide({

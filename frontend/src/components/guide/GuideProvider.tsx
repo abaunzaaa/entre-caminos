@@ -1,56 +1,26 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { getApiErrorMessage } from "../../utils/api-error";
 import {
   loadFavoriteIds,
+  loadFolders,
   loadSavedPlans,
   loadThreads,
+  newFolderId,
   newMessageId,
   newThreadId,
+  saveFolders,
   savePlan,
   saveThreads,
   titleFromText,
   toggleFavoriteId,
+  type GuideFolder,
   type GuideStoredMessage,
   type GuideThread,
 } from "../../utils/guide-storage";
 import { sendGuideMessage, type GuideReply } from "../../services/guide.service";
-
-type GuideView = "home" | "chat" | "history";
-
-type GuideContextValue = {
-  open: boolean;
-  view: GuideView;
-  sending: boolean;
-  error: string;
-  unread: boolean;
-  plusOpen: boolean;
-  thread: GuideThread | null;
-  threads: GuideThread[];
-  draft: string;
-  experienceId?: string;
-  experienceTitle?: string;
-  experienceImage?: string;
-  experienceLocation?: string;
-  favorites: string[];
-  savedPlans: NonNullable<GuideStoredMessage["plan"]>[];
-  setDraft: (value: string) => void;
-  setPlusOpen: (value: boolean) => void;
-  openGuide: (opts?: { prompt?: string; view?: GuideView }) => void;
-  closeGuide: () => void;
-  minimizeGuide: () => void;
-  startThread: (prompt?: string) => void;
-  send: (text?: string) => Promise<void>;
-  regenerate: () => Promise<void>;
-  openThread: (id: string) => void;
-  deleteThread: (id: string) => void;
-  setView: (view: GuideView) => void;
-  toggleFavorite: (id: string) => void;
-  persistPlan: (plan: NonNullable<GuideStoredMessage["plan"]>) => void;
-};
-
-const GuideContext = createContext<GuideContextValue | null>(null);
+import { GuideContext, type GuideContextValue, type GuideView } from "./GuideContext";
 
 function emptyThread(experienceId?: string, experienceTitle?: string): GuideThread {
   const welcome: GuideStoredMessage[] = experienceTitle
@@ -60,7 +30,7 @@ function emptyThread(experienceId?: string, experienceTitle?: string): GuideThre
           role: "assistant",
           content: `Estoy lista para ayudarte con esta experiencia.\n\n¿Qué quieres saber?`,
           createdAt: new Date().toISOString(),
-          suggestions: ["¿Qué incluye?", "¿Cuánto dura?", "¿Qué debo llevar?", "Agregar al plan"],
+          suggestions: ["¿Qué incluye?", "¿Cuánto dura?", "¿Cómo llegar?", "¿Qué debo llevar?", "Agregar al plan"],
         },
       ]
     : [];
@@ -78,6 +48,7 @@ export function GuideProvider({ children }: { children: ReactNode }) {
   const location = useLocation();
   const experienceId = location.pathname.match(/^\/explorar\/([^/]+)$/)?.[1];
   const [open, setOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const [view, setView] = useState<GuideView>("home");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
@@ -86,6 +57,9 @@ export function GuideProvider({ children }: { children: ReactNode }) {
   const [draft, setDraft] = useState("");
   const [thread, setThread] = useState<GuideThread | null>(null);
   const [threads, setThreads] = useState<GuideThread[]>([]);
+  const [folders, setFolders] = useState<GuideFolder[]>([]);
+  const [folderFilter, setFolderFilter] = useState<string>();
+  const [threadQuery, setThreadQuery] = useState("");
   const [favorites, setFavorites] = useState<string[]>([]);
   const [savedPlans, setSavedPlans] = useState<NonNullable<GuideStoredMessage["plan"]>[]>([]);
   const [experienceTitle, setExperienceTitle] = useState<string>();
@@ -95,13 +69,22 @@ export function GuideProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!user) {
       setThreads([]);
+      setFolders([]);
       setFavorites([]);
       setSavedPlans([]);
       return;
     }
-    setThreads(loadThreads(user.id));
-    setFavorites(loadFavoriteIds(user.id));
-    setSavedPlans(loadSavedPlans(user.id).filter(Boolean) as NonNullable<GuideStoredMessage["plan"]>[]);
+    try {
+      setThreads(loadThreads(user.id));
+      setFolders(loadFolders(user.id));
+      setFavorites(loadFavoriteIds(user.id));
+      setSavedPlans(loadSavedPlans(user.id).filter(Boolean) as NonNullable<GuideStoredMessage["plan"]>[]);
+    } catch {
+      setThreads([]);
+      setFolders([]);
+      setFavorites([]);
+      setSavedPlans([]);
+    }
   }, [user?.id]);
 
   useEffect(() => {
@@ -151,16 +134,35 @@ export function GuideProvider({ children }: { children: ReactNode }) {
 
   const closeGuide = useCallback(() => {
     setOpen(false);
+    setExpanded(false);
     setPlusOpen(false);
   }, []);
 
   const minimizeGuide = useCallback(() => {
     setOpen(false);
+    setExpanded(false);
     setPlusOpen(false);
     if (thread?.messages.length) {
       setUnread(true);
     }
   }, [thread]);
+
+  const toggleExpand = useCallback(() => {
+    setExpanded((current) => !current);
+  }, []);
+
+  const newConversation = useCallback(() => {
+    setPlusOpen(false);
+    setError("");
+    setDraft("");
+    if (experienceId) {
+      persist(emptyThread(experienceId, experienceTitle));
+      setView("chat");
+      return;
+    }
+    setThread(null);
+    setView("home");
+  }, [experienceId, experienceTitle, persist]);
 
   const openGuide = useCallback(
     (opts?: { prompt?: string; view?: GuideView }) => {
@@ -272,6 +274,7 @@ export function GuideProvider({ children }: { children: ReactNode }) {
   const value = useMemo<GuideContextValue>(
     () => ({
       open,
+      expanded,
       view,
       sending,
       error,
@@ -279,6 +282,9 @@ export function GuideProvider({ children }: { children: ReactNode }) {
       plusOpen,
       thread,
       threads,
+      folders,
+      folderFilter,
+      threadQuery,
       draft,
       experienceId,
       experienceTitle,
@@ -291,6 +297,8 @@ export function GuideProvider({ children }: { children: ReactNode }) {
       openGuide,
       closeGuide,
       minimizeGuide,
+      toggleExpand,
+      newConversation,
       startThread,
       send,
       regenerate,
@@ -327,17 +335,64 @@ export function GuideProvider({ children }: { children: ReactNode }) {
         }
         setSavedPlans(savePlan(user.id, plan).filter(Boolean) as NonNullable<GuideStoredMessage["plan"]>[]);
       },
+      setThreadQuery,
+      setFolderFilter,
+      createFolder: (name) => {
+        if (!user) {
+          return;
+        }
+        const next = [...folders, { id: newFolderId(), name: name.trim() || "Nueva carpeta" }].slice(0, 16);
+        setFolders(next);
+        saveFolders(user.id, next);
+      },
+      renameFolder: (id, name) => {
+        if (!user) {
+          return;
+        }
+        const next = folders.map((item) => (item.id === id ? { ...item, name } : item));
+        setFolders(next);
+        saveFolders(user.id, next);
+      },
+      deleteFolder: (id) => {
+        if (!user) {
+          return;
+        }
+        const next = folders.filter((item) => item.id !== id);
+        setFolders(next);
+        saveFolders(user.id, next);
+        const moved = threads.map((item) => (item.folderId === id ? { ...item, folderId: undefined } : item));
+        setThreads(moved);
+        saveThreads(user.id, moved);
+        if (folderFilter === id) {
+          setFolderFilter(undefined);
+        }
+      },
+      assignThreadFolder: (threadId, folderId) => {
+        if (!user) {
+          return;
+        }
+        const next = threads.map((item) => (item.id === threadId ? { ...item, folderId } : item));
+        setThreads(next);
+        saveThreads(user.id, next);
+        if (thread?.id === threadId) {
+          setThread((current) => (current ? { ...current, folderId } : current));
+        }
+      },
     }),
     [
       closeGuide,
       draft,
       error,
+      expanded,
       experienceId,
       experienceImage,
       experienceLocation,
       experienceTitle,
       favorites,
+      folderFilter,
+      folders,
       minimizeGuide,
+      newConversation,
       open,
       openGuide,
       plusOpen,
@@ -347,7 +402,9 @@ export function GuideProvider({ children }: { children: ReactNode }) {
       sending,
       startThread,
       thread,
+      threadQuery,
       threads,
+      toggleExpand,
       unread,
       user,
       view,
@@ -355,12 +412,4 @@ export function GuideProvider({ children }: { children: ReactNode }) {
   );
 
   return <GuideContext.Provider value={value}>{children}</GuideContext.Provider>;
-}
-
-export function useGuide() {
-  const value = useContext(GuideContext);
-  if (!value) {
-    throw new Error("useGuide debe usarse dentro de GuideProvider");
-  }
-  return value;
 }

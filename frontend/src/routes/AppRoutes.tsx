@@ -1,5 +1,6 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { EntreCaminosIntro } from "../components/intro/EntreCaminosIntro";
 import { AdminLayout } from "../layouts/AdminLayout";
 import { PublicLayout } from "../layouts/PublicLayout";
 import { LandingPage } from "../pages/LandingPage";
@@ -37,6 +38,8 @@ const PAGE_TITLES: Record<string, string> = {
   "/onboarding/listo": "Personaliza tu experiencia | Entre Caminos",
 };
 
+const INTRO_SEEN_KEY = "ec-intro-seen";
+
 function DocumentTitle() {
   const { pathname } = useLocation();
 
@@ -47,10 +50,39 @@ function DocumentTitle() {
   return null;
 }
 
+function LandingIntro() {
+  const { pathname } = useLocation();
+  const [done, setDone] = useState(() => {
+    try {
+      return sessionStorage.getItem(INTRO_SEEN_KEY) === "1";
+    } catch {
+      return false;
+    }
+  });
+
+  if (done || pathname !== "/") {
+    return null;
+  }
+
+  return (
+    <EntreCaminosIntro
+      onFinish={() => {
+        try {
+          sessionStorage.setItem(INTRO_SEEN_KEY, "1");
+        } catch {
+          /* private mode */
+        }
+        setDone(true);
+      }}
+    />
+  );
+}
+
 export function AppRoutes() {
   return (
     <BrowserRouter>
       <DocumentTitle />
+      <LandingIntro />
       <GuideProvider>
         <Routes>
         <Route path="/" element={<LandingPage />} />
