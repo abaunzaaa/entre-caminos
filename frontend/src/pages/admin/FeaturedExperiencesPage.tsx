@@ -16,6 +16,7 @@ import {
 import { getApiErrorMessage } from "../../utils/api-error";
 import { mediaUrl } from "../../utils/media";
 import type { Experience, FeaturedExperienceCard } from "../../types";
+import featuredHeader from "../../assets/images/admin/featured-experiences-header.png";
 import viewsIcon from "../../assets/icons/metrics/views.svg";
 import favoritesIcon from "../../assets/icons/metrics/favorites.svg";
 import reviewsIcon from "../../assets/icons/metrics/reviews.svg";
@@ -60,6 +61,26 @@ function periodLabel(from: string | null, until: string | null) {
     return "Sin periodo definido";
   }
   return `${formatDay(from) || "sin inicio"} - ${formatDay(until) || "sin fin"}`;
+}
+
+function FeaturedPageHeader({ title, description }: { title: string; description: string }) {
+  return (
+    <article className="dash-profile">
+      <div className="dash-profile__top">
+        <div className="dash-profile__identity">
+          <h1 className="dash-profile__name">{title}</h1>
+          <p className="dash-profile__row">
+            <span>{description}</span>
+          </p>
+        </div>
+      </div>
+      <div className="dash-access-hero" aria-hidden="true">
+        <div className="dash-profile__stat dash-access-hero__frame">
+          <img src={featuredHeader} alt="" className="dash-profile__stat-art dash-access-hero__art dash-float-art featured-header__art" />
+        </div>
+      </div>
+    </article>
+  );
 }
 
 function MetricIcon({ src }: { src: string }) {
@@ -136,12 +157,12 @@ function AdminOwnPerformance() {
   }, [criterion]);
 
   return (
+    <div className="dash dash--exps">
+      <FeaturedPageHeader
+        title="Rendimiento de tus experiencias"
+        description="Solo ves las experiencias publicadas que tú creaste."
+      />
     <section className="featured-admin">
-      <header className="featured-admin__head">
-        <p className="admin-pagehead__kicker">Catálogo</p>
-        <h1 className="admin-pagehead__title">Rendimiento de tus experiencias</h1>
-        <p className="admin-pagehead__meta">Solo ves las experiencias publicadas que tú creaste.</p>
-      </header>
       {error ? <p className="featured-admin__error">{error}</p> : null}
       <section className="featured-admin__finder">
         <label>
@@ -193,6 +214,7 @@ function AdminOwnPerformance() {
         </div>
       </section>
     </section>
+    </div>
   );
 }
 
@@ -213,6 +235,8 @@ function SuperAdminFeaturedPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [page, setPage] = useState(1);
+  const [rankingPage, setRankingPage] = useState(1);
 
   async function loadFeatured() {
     const cards = await getAdminFeaturedExperiences();
@@ -287,6 +311,17 @@ function SuperAdminFeaturedPage() {
       cancelled = true;
     };
   }, [mode]);
+
+  const pageSize = 8;
+  const rankingPageCount = Math.max(1, Math.ceil(ranking.length / pageSize));
+  const rankingCurrentPage = Math.min(rankingPage, rankingPageCount);
+  const rankingStart = (rankingCurrentPage - 1) * pageSize;
+  const visibleRanking = ranking.slice(rankingStart, rankingStart + pageSize);
+
+  const pageCount = Math.max(1, Math.ceil(featured.length / pageSize));
+  const currentPage = Math.min(page, pageCount);
+  const pageStart = (currentPage - 1) * pageSize;
+  const visibleFeatured = featured.slice(pageStart, pageStart + pageSize);
 
   const editorialOptions = useMemo(() => {
     const taken = new Set(featured.map((item) => item.experience.id));
@@ -377,16 +412,12 @@ function SuperAdminFeaturedPage() {
   }
 
   return (
+    <div className="dash dash--exps">
+      <FeaturedPageHeader
+        title="Experiencias destacadas"
+        description="Genera el carrusel por métricas o arma una selección editorial."
+      />
     <section className="featured-admin">
-      <header className="featured-admin__head">
-        <p className="admin-pagehead__kicker">Catálogo</p>
-        <h1 className="admin-pagehead__title">Experiencias destacadas</h1>
-        <p className="admin-pagehead__meta">
-          {canEdit
-            ? "Genera el carrusel por métricas o arma una selección editorial."
-            : "Consulta rankings y destacadas. Solo un super administrador puede modificarlas."}
-        </p>
-      </header>
 
       {error ? <p className="featured-admin__error">{error}</p> : null}
 
@@ -404,7 +435,13 @@ function SuperAdminFeaturedPage() {
           <form className="featured-admin__form featured-admin__form--metrics" onSubmit={(event) => void onGenerate(event)}>
             <label>
               Criterio
-              <select value={criterion} onChange={(event) => setCriterion(event.target.value as FeaturedRankingCriterion)}>
+              <select
+                value={criterion}
+                onChange={(event) => {
+                  setCriterion(event.target.value as FeaturedRankingCriterion);
+                  setRankingPage(1);
+                }}
+              >
                 {CRITERIA.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
@@ -467,14 +504,15 @@ function SuperAdminFeaturedPage() {
         ) : null}
 
         {mode === "metrics" && ranking.length > 0 ? (
+          <>
           <div className="featured-admin__grid">
-            {ranking.slice(0, Number(count) || 10).map((card, index) => (
+            {visibleRanking.map((card, index) => (
               <article key={card.experience.id} className="featured-admin__card">
                 <img src={mediaUrl(card.imageUrl, 640)} alt="" />
                 <div className="featured-admin__body">
                   <p className="featured-admin__category">{card.category.name}</p>
                   <h2>
-                    {index + 1}. {card.experience.title}
+                    {rankingStart + index + 1}. {card.experience.title}
                   </h2>
                   <p className="featured-admin__place">{card.experience.location}</p>
                   <MetricList card={card} emphasize={criterion} />
@@ -486,10 +524,24 @@ function SuperAdminFeaturedPage() {
               </article>
             ))}
           </div>
+          <div className="featured-admin__pager">
+            <button type="button" onClick={() => setRankingPage(rankingCurrentPage - 1)} disabled={rankingCurrentPage <= 1}>
+              Anterior
+            </button>
+            <span>Página {rankingCurrentPage}</span>
+            <button
+              type="button"
+              onClick={() => setRankingPage(rankingCurrentPage + 1)}
+              disabled={rankingCurrentPage >= rankingPageCount}
+            >
+              Siguiente
+            </button>
+          </div>
+          </>
         ) : null}
       </section>
 
-      <section aria-labelledby="featured-current-title">
+      <section className="featured-admin__current" aria-labelledby="featured-current-title">
         <h2 id="featured-current-title" className="featured-admin__section-title">
           Experiencias destacadas actualmente
         </h2>
@@ -500,13 +552,15 @@ function SuperAdminFeaturedPage() {
           </p>
         ) : null}
         <div className="featured-admin__grid">
-          {featured.map((card, index) => (
+          {visibleFeatured.map((card, index) => {
+            const position = pageStart + index;
+            return (
             <article key={card.experience.id} className="featured-admin__card">
               <img src={mediaUrl(card.imageUrl, 640)} alt="" />
               <div className="featured-admin__body">
                 <p className="featured-admin__category">{card.category.name}</p>
                 <h2>
-                  {index + 1}. {card.experience.title}
+                  {position + 1}. {card.experience.title}
                 </h2>
                 <p className="featured-admin__period">Orden: {card.experience.featuredOrder ?? "—"}</p>
                 <p className="featured-admin__period">
@@ -515,13 +569,13 @@ function SuperAdminFeaturedPage() {
                 <MetricList card={card} />
                 {canEdit && mode === "editorial" ? (
                   <div className="featured-admin__actions">
-                    <button type="button" onClick={() => void move(index, -1)} disabled={saving || index === 0} aria-label="Subir prioridad">
+                    <button type="button" onClick={() => void move(position, -1)} disabled={saving || position === 0} aria-label="Subir prioridad">
                       <ArrowUp size={16} />
                     </button>
                     <button
                       type="button"
-                      onClick={() => void move(index, 1)}
-                      disabled={saving || index === featured.length - 1}
+                      onClick={() => void move(position, 1)}
+                      disabled={saving || position === featured.length - 1}
                       aria-label="Bajar prioridad"
                     >
                       <ArrowDown size={16} />
@@ -533,9 +587,22 @@ function SuperAdminFeaturedPage() {
                 ) : null}
               </div>
             </article>
-          ))}
+            );
+          })}
         </div>
+        {featured.length > 0 ? (
+          <div className="featured-admin__pager">
+            <button type="button" onClick={() => setPage(currentPage - 1)} disabled={currentPage <= 1}>
+              Anterior
+            </button>
+            <span>Página {currentPage}</span>
+            <button type="button" onClick={() => setPage(currentPage + 1)} disabled={currentPage >= pageCount}>
+              Siguiente
+            </button>
+          </div>
+        ) : null}
       </section>
     </section>
+    </div>
   );
 }
