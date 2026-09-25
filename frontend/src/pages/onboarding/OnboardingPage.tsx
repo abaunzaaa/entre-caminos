@@ -351,7 +351,25 @@ export function OnboardingPage() {
         />
       );
     }
-    return <SummaryStep form={form} userName={user?.name ?? ""} onChangeImage={() => goTo(2)} />;
+    return (
+      <SummaryStep
+        form={form}
+        userName={user?.name ?? ""}
+        onChangeImage={() => goTo(2)}
+        onEdit={(section) => {
+          if (section === "interests") {
+            goTo(3);
+            return;
+          }
+          if (section === "company") {
+            goTo(4);
+            return;
+          }
+          setPrefTab(section);
+          goTo(5);
+        }}
+      />
+    );
   }, [avatarTab, form, locating, locationError, locationStatus, photoError, photoLoading, photoProgress, prefTab, step, user?.name]);
 
   if (!hydrated) {
@@ -403,7 +421,7 @@ export function OnboardingPage() {
                 </p>
               ) : null}
             </div>
-            <div className={`onboarding-body${step === 2 || step === 4 ? " onboarding-body--fit" : ""}`}>{body}</div>
+            <div className={`onboarding-body${step === 2 || step === 6 ? " onboarding-body--fit" : ""}`}>{body}</div>
           </div>
           </div>
         </div>

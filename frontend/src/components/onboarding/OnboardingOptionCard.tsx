@@ -31,7 +31,7 @@ export function OnboardingOptionCard({
           </span>
         ) : null}
         <span className="onboarding-choice__icon" aria-hidden="true">
-          <Icon size={16} strokeWidth={1.7} />
+          <Icon size={18} strokeWidth={1.7} />
         </span>
         <span className="onboarding-company-card__copy">
           <span className="onboarding-choice__name">{label}</span>
