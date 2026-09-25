@@ -8,6 +8,7 @@ import {
   getAdminExperiences,
   getAdminFeaturedExperiences,
   getFeaturedRanking,
+  getOwnExperiencePerformance,
   reorderFeaturedExperiences,
   unfeatureExperience,
   type FeaturedRankingCriterion,
@@ -69,6 +70,94 @@ function MetricList({ card, emphasize }: { card: FeaturedExperienceCard; emphasi
 }
 
 export function FeaturedExperiencesPage() {
+  const { user } = useAuth();
+  if (user?.role === "ADMIN") {
+    return <AdminOwnPerformance />;
+  }
+  return <SuperAdminFeaturedPage />;
+}
+
+function AdminOwnPerformance() {
+  const [criterion, setCriterion] = useState<FeaturedRankingCriterion>("visits");
+  const [items, setItems] = useState<FeaturedExperienceCard[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    getOwnExperiencePerformance(criterion)
+      .then((cards) => {
+        if (!cancelled) {
+          setItems(cards);
+          setError("");
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setItems([]);
+          setError(getApiErrorMessage(err, "No se pudo cargar el rendimiento de tus experiencias"));
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [criterion]);
+
+  return (
+    <section className="featured-admin">
+      <header className="featured-admin__head">
+        <p className="admin-pagehead__kicker">Catálogo</p>
+        <h1 className="admin-pagehead__title">Rendimiento de tus experiencias</h1>
+        <p className="admin-pagehead__meta">Solo ves las experiencias publicadas que tú creaste.</p>
+      </header>
+      {error ? <p className="featured-admin__error">{error}</p> : null}
+      <section className="featured-admin__finder">
+        <label>
+          Ordenar por
+          <select value={criterion} onChange={(event) => setCriterion(event.target.value as FeaturedRankingCriterion)}>
+            {CRITERIA.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        {loading ? <p className="featured-admin__empty">Cargando tus experiencias…</p> : null}
+        {!loading && items.length === 0 ? (
+          <p className="featured-admin__empty">Todavía no tienes experiencias publicadas.</p>
+        ) : null}
+        <div className="featured-admin__grid">
+          {items.map((card) => (
+            <article key={card.experience.id} className="featured-admin__card">
+              <img src={mediaUrl(card.imageUrl, 640)} alt="" />
+              <div className="featured-admin__body">
+                <p className="featured-admin__category">{card.category.name}</p>
+                <h2>{card.experience.title}</h2>
+                <ul className="featured-admin__metrics">
+                  <li className={criterion === "visits" ? "is-emphasis" : undefined}>👁 {card.metrics.visits} visitas</li>
+                  <li className={criterion === "favorites" ? "is-emphasis" : undefined}>❤️ {card.metrics.favorites} guardados</li>
+                  <li className={criterion === "reviews" ? "is-emphasis" : undefined}>💬 {card.metrics.reviews} reseñas</li>
+                  <li className={criterion === "rating" ? "is-emphasis" : undefined}>⭐ {card.metrics.rating.toFixed(1)} promedio</li>
+                  <li className={criterion === "trending" ? "is-emphasis" : undefined}>
+                    🔥 {card.metrics.recentActivity ?? 0} interacción reciente
+                  </li>
+                </ul>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+    </section>
+  );
+}
+
+function SuperAdminFeaturedPage() {
   const { user } = useAuth();
   const canEdit = user?.role === "SUPER_ADMIN";
   const [mode, setMode] = useState<HighlightMode>("metrics");

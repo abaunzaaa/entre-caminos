@@ -189,6 +189,27 @@ export async function listFeaturedRanking(criterion: FeaturedRankingCriterion) {
     );
 }
 
+export async function listOwnExperiencePerformance(actor: AuthUser, criterion: FeaturedRankingCriterion) {
+  const experiences = await prisma.experience.findMany({
+    where: { status: "PUBLISHED", createdBy: actor.id },
+    include: { category: { select: { id: true, name: true, icon: true } } },
+  });
+  const maps = await loadMetricMaps(experiences.map((item) => item.id));
+  return experiences
+    .map((experience) => toAdminCard(experience, metricsFor(experience.id, maps)))
+    .sort((left, right) =>
+      compareFeaturedRanking(criterion, {
+        title: left.experience.title,
+        score: left.score,
+        metrics: { ...left.metrics, recentActivity: left.metrics.recentActivity },
+      }, {
+        title: right.experience.title,
+        score: right.score,
+        metrics: { ...right.metrics, recentActivity: right.metrics.recentActivity },
+      }),
+    );
+}
+
 export async function generateFeaturedFromRanking(
   actor: AuthUser,
   criterion: FeaturedRankingCriterion,

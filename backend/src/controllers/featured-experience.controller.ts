@@ -8,6 +8,12 @@ export async function ranking(req: Request, res: Response) {
   return res.json({ success: true, data: { experiences, criterion: req.query.criterion } });
 }
 
+export async function ownPerformance(req: Request, res: Response) {
+  const criterion = req.query.criterion as FeaturedRankingCriterion;
+  const experiences = await featuredService.listOwnExperiencePerformance(req.user!, criterion);
+  return res.json({ success: true, data: { experiences, criterion } });
+}
+
 export async function list(_req: Request, res: Response) {
   const experiences = await featuredService.listAdminFeaturedExperiences();
   return res.json({ success: true, data: { experiences } });

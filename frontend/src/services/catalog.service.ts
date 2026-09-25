@@ -20,6 +20,14 @@ export async function getFeaturedRanking(criterion: FeaturedRankingCriterion) {
   return data.data.experiences;
 }
 
+export async function getOwnExperiencePerformance(criterion: FeaturedRankingCriterion) {
+  const { data } = await api.get<ApiResponse<{ experiences: FeaturedExperienceCard[]; criterion: string }>>(
+    "/admin/featured-experiences/performance",
+    { params: { criterion } },
+  );
+  return data.data.experiences;
+}
+
 export async function getAdminFeaturedExperiences() {
   const { data } = await api.get<ApiResponse<{ experiences: FeaturedExperienceCard[] }>>(
     "/admin/featured-experiences",

@@ -107,6 +107,11 @@ adminRouter.get(
   validate(featuredRankingQuerySchema, "query"),
   asyncHandler(featuredController.ranking),
 );
+adminRouter.get(
+  "/featured-experiences/performance",
+  validate(featuredRankingQuerySchema, "query"),
+  asyncHandler(featuredController.ownPerformance),
+);
 adminRouter.get("/featured-experiences", asyncHandler(featuredController.list));
 adminRouter.post(
   "/featured-experiences/generate",
