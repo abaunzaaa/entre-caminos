@@ -4,6 +4,7 @@ import { authRouter } from "./auth.routes.js";
 import { adminRouter } from "./admin.routes.js";
 import { categoryRouter } from "./category.routes.js";
 import { contactRouter } from "./contact.routes.js";
+import { catalogRouter } from "./catalog.routes.js";
 import { experienceRouter } from "./experience.routes.js";
 import { uploadRouter } from "./upload.routes.js";
 
@@ -14,5 +15,6 @@ apiRouter.use("/auth", authRouter);
 apiRouter.use("/admin", adminRouter);
 apiRouter.use("/categories", categoryRouter);
 apiRouter.use("/contact", contactRouter);
+apiRouter.use("/catalog", catalogRouter);
 apiRouter.use("/experiences", experienceRouter);
 apiRouter.use("/uploads", uploadRouter);

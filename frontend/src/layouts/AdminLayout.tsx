@@ -16,6 +16,7 @@ import "../styles/admin-motion.css";
 const SIDEBAR_KEY = "ec_admin_sidebar_collapsed";
 
 const titles: Record<string, { kicker: string; title: string }> = {
+  "/admin/destacadas": { kicker: "Catálogo", title: "Experiencias destacadas" },
   "/admin/experiencias": { kicker: "Catálogo", title: "Publicaciones" },
   "/admin/experiencias/nueva": { kicker: "Estudio", title: "Nueva experiencia" },
   "/admin/experiences": { kicker: "Catálogo", title: "Publicaciones" },
@@ -124,6 +125,7 @@ export function AdminLayout() {
     location.pathname === "/admin/categorias" || location.pathname === "/admin/categories";
   const isExperiencesList =
     location.pathname === "/admin/experiencias" || location.pathname === "/admin/experiences";
+  const isFeaturedPage = location.pathname === "/admin/destacadas";
   const isExperienceStudio =
     !isExperiencesList &&
     (location.pathname.includes("/experiencias/") || location.pathname.includes("/experiences/"));
@@ -134,7 +136,8 @@ export function AdminLayout() {
     isAccessPage ||
     isCategoriesPage ||
     isExperiencesList ||
-    isExperienceStudio;
+    isExperienceStudio ||
+    isFeaturedPage;
   const heading = useDashCanvas
     ? null
     : (titles[location.pathname] ??

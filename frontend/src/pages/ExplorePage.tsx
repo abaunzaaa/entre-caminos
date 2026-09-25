@@ -13,7 +13,7 @@ import { experienceCoverUrl } from "../components/explorer/explorer-media";
 import { useAuth } from "../hooks/useAuth";
 import avionIcon from "../assets/avion-icon.png";
 import camIcon from "../assets/cam-icon.png";
-import { getPublicExperiences } from "../services/catalog.service";
+import { getCoverFeaturedExperiences, getPublicExperiences } from "../services/catalog.service";
 import { formatDepartmentMunicipality } from "../data/colombia-locations";
 import type { Experience } from "../types";
 import "../styles/admin-ui.css";
@@ -41,6 +41,7 @@ function mergeExperiences(current: Experience[], incoming: Experience[]) {
 export function ExplorePage() {
   const { user } = useAuth();
   const [experiences, setExperiences] = useState<Experience[]>([]);
+  const [coverFeatured, setCoverFeatured] = useState<Experience[]>([]);
   const [total, setTotal] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [filters, setFilters] = useState<DiscoverFiltersState>(DEFAULT_DISCOVER_FILTERS);
@@ -54,6 +55,19 @@ export function ExplorePage() {
 
   useEffect(() => {
     let cancelled = false;
+    getCoverFeaturedExperiences()
+      .then((items) => {
+        if (cancelled || items.length === 0) {
+          return;
+        }
+        setCoverFeatured(items);
+        setSelectedId(items[0]?.id ?? null);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setCoverFeatured([]);
+        }
+      });
     getPublicExperiences({ limit: FETCH_SIZE, offset: 0 })
       .then((page) => {
         if (cancelled) {
@@ -83,12 +97,15 @@ export function ExplorePage() {
     revealFromRef.current = 0;
   }, [filters, activeSearch]);
 
-  const selected = useMemo(
-    () => experiences.find((item) => item.id === selectedId) ?? experiences[0] ?? null,
-    [experiences, selectedId],
+  const heroExperiences = useMemo(
+    () => (coverFeatured.length > 0 ? coverFeatured : experiences.slice(0, 12)),
+    [coverFeatured, experiences],
   );
 
-  const heroExperiences = useMemo(() => experiences.slice(0, 12), [experiences]);
+  const selected = useMemo(
+    () => heroExperiences.find((item) => item.id === selectedId) ?? heroExperiences[0] ?? null,
+    [heroExperiences, selectedId],
+  );
 
   const filtered = useMemo(
     () => applyDiscoverFilters(experiences, filters, activeSearch),

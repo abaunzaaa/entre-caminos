@@ -20,6 +20,7 @@ import { RolesPage } from "../pages/admin/RolesPage";
 import { PermissionsPage } from "../pages/admin/PermissionsPage";
 import { CategoriesPage } from "../pages/admin/CategoriesPage";
 import { ExperiencesPage } from "../pages/admin/ExperiencesPage";
+import { FeaturedExperiencesPage } from "../pages/admin/FeaturedExperiencesPage";
 import { ExperienceFormPage } from "../pages/admin/ExperienceFormPage";
 import { ExperiencePreviewPage } from "../pages/admin/ExperiencePreviewPage";
 import { ProtectedRoute } from "./ProtectedRoute";
@@ -86,6 +87,7 @@ export function AppRoutes() {
             <Route path="categorias" element={<CategoriesPage />} />
             <Route path="experiences" element={<ExperiencesPage />} />
             <Route path="experiencias" element={<ExperiencesPage />} />
+            <Route path="destacadas" element={<FeaturedExperiencesPage />} />
             <Route path="experiencias/nueva" element={<ExperienceFormPage />} />
             <Route path="experiencias/:id/ver" element={<ExperiencePreviewPage />} />
             <Route path="experiencias/:id" element={<ExperienceFormPage />} />

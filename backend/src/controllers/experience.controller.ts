@@ -1,6 +1,7 @@
 import type { ExperienceStatus } from "@prisma/client";
 import type { Request, Response } from "express";
 import * as experienceService from "../services/experience.service.js";
+import { listCoverFeaturedExperiences, recordDetailView } from "../services/featured-experience.service.js";
 import { parseLimitQuery, parseOffsetQuery } from "../utils/query.js";
 
 export async function listPublic(req: Request, res: Response) {
@@ -22,12 +23,13 @@ export async function listPublic(req: Request, res: Response) {
 }
 
 export async function featured(_req: Request, res: Response) {
-  const experiences = await experienceService.listFeaturedExperiences();
+  const experiences = await listCoverFeaturedExperiences();
   return res.json({ success: true, data: { experiences } });
 }
 
 export async function getPublic(req: Request, res: Response) {
   const experience = await experienceService.getExperience(req.params.id, { publishedOnly: true });
+  await recordDetailView(experience.id).catch(() => undefined);
   return res.json({ success: true, data: { experience } });
 }
 
