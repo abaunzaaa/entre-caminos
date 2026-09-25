@@ -9,7 +9,6 @@ import type { Experience } from "../../types";
 type ExplorerRecommendedSectionProps = {
   experiences: Experience[];
   interests?: string[] | null;
-  featured?: Experience[] | null;
 };
 
 const JOURNAL_BLOCKS = [
@@ -167,25 +166,13 @@ function RecsExperienceGallery({ urls }: { urls: string[] }) {
 export function ExplorerRecommendedSection({
   experiences,
   interests = [],
-  featured = null,
 }: ExplorerRecommendedSectionProps) {
   const tablistId = useId();
   const preferred = useMemo(() => (interests ?? []).filter(Boolean), [interests]);
-  const tabs = useMemo(() => {
-    if (featured && featured.length > 0) {
-      return featured.slice(0, 5).map((experience) => {
-        const category = experience.category?.name?.trim() || "Para ti";
-        return {
-          id: experience.id,
-          interest: category,
-          label: category,
-          shortLabel: category.split(/\s+/)[0] || category,
-          experience,
-        };
-      });
-    }
-    return buildRecommendationTabs(experiences, preferred, 5);
-  }, [experiences, preferred, featured]);
+  const tabs = useMemo(
+    () => buildRecommendationTabs(experiences, preferred, 5),
+    [experiences, preferred],
+  );
 
   const [activeId, setActiveId] = useState(tabs[0]?.id ?? "");
 

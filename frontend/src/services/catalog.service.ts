@@ -50,8 +50,13 @@ export async function unfeatureExperience(id: string) {
   await api.delete(`/admin/featured-experiences/${id}`);
 }
 
-export async function getFeaturedExperiences() {
-  const { data } = await api.get<ApiResponse<{ experiences: Experience[] }>>("/experiences/featured");
+export async function getCoverFeaturedExperiences() {
+  const { data } = await api.get<ApiResponse<{ experiences: Experience[] }>>("/catalog/featured-experiences");
+  return data.data.experiences;
+}
+
+export async function getRecommendedExperiences() {
+  const { data } = await api.get<ApiResponse<{ experiences: Experience[] }>>("/catalog/recommended-experiences");
   return data.data.experiences;
 }
 

@@ -1,10 +1,9 @@
 import type { ExperienceStatus } from "@prisma/client";
-import { FEATURED_PUBLIC_LIMIT, FEATURED_RECENT_ACTIVITY_DAYS } from "../config/featured-score.js";
+import { FEATURED_RECENT_ACTIVITY_DAYS } from "../config/featured-score.js";
 import {
   calculateFeaturedScore,
   compareFeaturedRanking,
   featuredHighlight,
-  selectPublicFeatured,
   type FeaturedMetrics,
   type FeaturedRankingCriterion,
 } from "../config/featured-score.js";
@@ -112,39 +111,16 @@ function activeFeaturedWhere(now: Date) {
   };
 }
 
+const COVER_CAROUSEL_LIMIT = 12;
+
 /** Portada: solo destacadas vigentes, en el orden editorial. */
 export async function listCoverFeaturedExperiences(now = new Date()) {
   return prisma.experience.findMany({
     where: activeFeaturedWhere(now),
     include: coverInclude,
     orderBy: [{ featuredOrder: { sort: "asc", nulls: "last" } }, { updatedAt: "desc" }],
-    take: FEATURED_PUBLIC_LIMIT,
+    take: COVER_CAROUSEL_LIMIT,
   });
-}
-
-/** Fallback de portada cuando no hay destacadas vigentes. No lo usa el catálogo. */
-async function listAutomaticCoverExperiences() {
-  const experiences = await prisma.experience.findMany({
-    where: { status: "PUBLISHED", isFeatured: false },
-    include: coverInclude,
-  });
-  if (!experiences.length) {
-    return [];
-  }
-  const maps = await loadMetricMaps(experiences.map((item) => item.id));
-  const ranked = experiences.map((experience) => ({
-    ...experience,
-    score: calculateFeaturedScore(metricsFor(experience.id, maps)),
-  }));
-  return selectPublicFeatured(ranked).map(({ score: _score, ...experience }) => experience);
-}
-
-export async function listPublicFeaturedExperiences() {
-  const manual = await listCoverFeaturedExperiences();
-  if (manual.length > 0) {
-    return manual;
-  }
-  return listAutomaticCoverExperiences();
 }
 
 function toAdminCard(

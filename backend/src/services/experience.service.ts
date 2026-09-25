@@ -15,8 +15,6 @@ import {
   notifyExperienceRejected,
   notifyExperienceSubmitted,
 } from "./notification.service.js";
-import { listPublicFeaturedExperiences } from "./featured-experience.service.js";
-
 const experienceInclude = {
   category: true,
   creator: { select: { id: true, name: true, email: true, avatarUrl: true } },
@@ -55,6 +53,19 @@ const experienceListSelect = {
 
 const publicCatalogWhere = { status: "PUBLISHED" as const };
 
+function catalogWhere(now = new Date()) {
+  return {
+    status: "PUBLISHED" as const,
+    NOT: {
+      isFeatured: true,
+      AND: [
+        { OR: [{ featuredFrom: null }, { featuredFrom: { lte: now } }] },
+        { OR: [{ featuredUntil: null }, { featuredUntil: { gte: now } }] },
+      ],
+    },
+  };
+}
+
 function assertCanAccess(experience: { createdBy: string }, actor: AuthUser) {
   if (!canReviewExperiences(actor) && experience.createdBy !== actor.id) {
     throw ApiError.forbidden("Solo puedes consultar tus propias experiencias");
@@ -66,7 +77,7 @@ function canManageAvailability(actor: AuthUser, experience: { createdBy: string 
 }
 
 export async function listPublicExperiences(opts?: { take?: number; skip?: number }) {
-  const where = publicCatalogWhere;
+  const where = catalogWhere();
   const [experiences, total] = await prisma.$transaction([
     prisma.experience.findMany({
       where,
@@ -80,8 +91,21 @@ export async function listPublicExperiences(opts?: { take?: number; skip?: numbe
   return { experiences, total };
 }
 
-export async function listFeaturedExperiences() {
-  return listPublicFeaturedExperiences();
+export async function listRecommendedExperiences(now = new Date()) {
+  return prisma.experience.findMany({
+    where: {
+      status: "PUBLISHED",
+      NOT: {
+        isFeatured: true,
+        AND: [
+          { OR: [{ featuredFrom: null }, { featuredFrom: { lte: now } }] },
+          { OR: [{ featuredUntil: null }, { featuredUntil: { gte: now } }] },
+        ],
+      },
+    },
+    include: { category: true },
+    orderBy: { createdAt: "desc" },
+  });
 }
 
 export async function listAdminExperiences(
