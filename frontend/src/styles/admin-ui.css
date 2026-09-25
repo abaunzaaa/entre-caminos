@@ -2198,6 +2198,7 @@
 }
 
 .dash-exps-tile {
+  position: relative;
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -2217,6 +2218,25 @@
 
 .dash-exps-tile:has(.is-open) {
   z-index: 8;
+}
+
+.dash-exps-tile__link {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+}
+
+.dash-exps-tile__manage {
+  position: relative;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.dash-exps-tile__manage a,
+.dash-exps-tile__manage button,
+.dash-exps-tile__manage .dash-exps-status {
+  pointer-events: auto;
 }
 
 .dash-exps-tile__photo {
@@ -3935,5 +3955,89 @@
     height: auto;
     aspect-ratio: 3 / 4;
     justify-self: start;
+  }
+}
+
+.dash--password {
+  gap: 20px;
+}
+
+.dash-split__panel.dash-password {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  align-items: center;
+  gap: 8px 16px;
+  padding: 22px 28px 18px;
+  border-radius: 24px;
+  overflow: visible;
+}
+
+.dash-password__form {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  justify-self: start;
+  width: 70%;
+  max-width: none;
+  margin-right: 0;
+  margin-left: 24px;
+}
+
+.dash-password__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-field__control {
+  position: relative;
+  display: block;
+}
+
+.admin-field__toggle {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--admin-forest, #294942);
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+
+.dash-password__art {
+  justify-self: center;
+  align-self: center;
+  width: auto;
+  height: 380px;
+  max-width: none;
+  margin: 0 72px -48px 0;
+  object-fit: contain;
+  object-position: center;
+  pointer-events: none;
+  scale: -1 1;
+}
+
+@media (max-width: 900px) {
+  .dash-split__panel.dash-password {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dash-password__form {
+    justify-self: stretch;
+    width: 100%;
+    margin-right: 0;
+    margin-left: 0;
+  }
+
+  .dash-password__art {
+    height: 260px;
+    margin: 8px auto -24px;
   }
 }

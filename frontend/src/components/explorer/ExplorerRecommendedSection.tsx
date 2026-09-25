@@ -246,7 +246,7 @@ export function ExplorerRecommendedSection({
                   </p>
                 ) : null}
                 <div className="explorer-recs__footer">
-                  <span className="explorer-recs__price">{formatPrice(experience.price)}</span>
+                  <span className="explorer-recs__price">{formatPrice(experience.price, experience.currency)}</span>
                   <Link to={`/explorar/${experience.id}`} className="explorer-recs__cta">
                     Ver experiencia
                     <ArrowUpRight size={15} strokeWidth={2.15} aria-hidden="true" />

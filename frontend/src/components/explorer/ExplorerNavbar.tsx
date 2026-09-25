@@ -63,7 +63,7 @@ export function ExplorerNavbar() {
     return () => window.cancelAnimationFrame(frame);
   }, [hash, pathname]);
 
-  const isExplorer = pathname.startsWith("/explorar");
+  const isExplorer = pathname.startsWith("/explorar") || pathname.endsWith("/cambiar-contrasena");
 
   return (
     <header

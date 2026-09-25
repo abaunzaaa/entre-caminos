@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import type { Experience } from "../types";
-import { formatPrice } from "../services/api";
+import { formatPrice } from "../utils/cn";
 
 export function ExperienceCard({ experience }: { experience: Experience }) {
   return (
@@ -20,7 +20,7 @@ export function ExperienceCard({ experience }: { experience: Experience }) {
         <h3 className="font-serif text-2xl leading-tight text-forest">{experience.title}</h3>
         <p className="line-clamp-3 text-sm leading-relaxed text-forest/70">{experience.description}</p>
         <div className="flex items-center justify-between pt-2">
-          <span className="text-sm font-medium text-forest">{formatPrice(experience.price)}</span>
+          <span className="text-sm font-medium text-forest">{formatPrice(experience.price, experience.currency)}</span>
           <Link to={`/explorar/${experience.id}`} className="text-sm text-forest/70 underline">
             Ver detalle
           </Link>

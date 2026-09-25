@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { ChevronDown, Clock, Compass, Plus, Search } from "lucide-react";
 import { Button } from "../../components/ui/Button";
 import { KeyConfirmDialog } from "../../components/ui/KeyConfirmDialog";
@@ -95,6 +95,7 @@ function SummaryPreviewCard({ experience, meta }: { experience: Experience; meta
 }
 
 export function ExperiencesPage() {
+  const location = useLocation();
   const { hasPermission, user } = useAuth();
   const canReview = canReviewExperiences(hasPermission);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -142,8 +143,17 @@ export function ExperiencesPage() {
   }
 
   useEffect(() => {
-    load().catch((err) => setError(getApiErrorMessage(err, "No se pudieron cargar las experiencias")));
-  }, []);
+    let active = true;
+    setError("");
+    load().catch((err) => {
+      if (active) {
+        setError(getApiErrorMessage(err, "No se pudieron cargar las experiencias"));
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, [location.key]);
 
   useEffect(() => {
     if (searchParams.get("vista") === "pendientes" && canReview) {

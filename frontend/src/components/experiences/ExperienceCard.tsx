@@ -20,7 +20,7 @@ export function ExperienceCard({ experience }: { experience: Experience }) {
           </p>
           <h3 className="font-serif text-2xl leading-tight group-hover:underline">{experience.title}</h3>
           <p className="line-clamp-3 text-sm leading-6 text-neutral-600">{experience.description}</p>
-          <p className="pt-1 font-serif text-lg">{formatPrice(experience.price)}</p>
+          <p className="pt-1 font-serif text-lg">{formatPrice(experience.price, experience.currency)}</p>
         </div>
       </article>
     </Link>

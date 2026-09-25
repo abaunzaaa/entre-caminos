@@ -27,6 +27,7 @@ const experienceListSelect = {
   description: true,
   categoryId: true,
   price: true,
+  currency: true,
   location: true,
   latitude: true,
   longitude: true,
@@ -167,6 +168,7 @@ export async function createExperience(
     description: string;
     categoryId: string;
     price: number;
+    currency?: string;
     location: string;
     latitude?: number | null;
     longitude?: number | null;
@@ -207,6 +209,7 @@ export async function createExperience(
       description: input.description,
       categoryId: input.categoryId,
       price: input.price,
+      currency: input.currency ?? "COP",
       location: input.location,
       latitude: input.latitude ?? null,
       longitude: input.longitude ?? null,
@@ -253,6 +256,7 @@ function pickExperienceUpdate(input: Prisma.ExperienceUncheckedUpdateInput) {
     "description",
     "categoryId",
     "price",
+    "currency",
     "location",
     "latitude",
     "longitude",

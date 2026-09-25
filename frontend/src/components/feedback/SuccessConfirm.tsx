@@ -14,21 +14,23 @@ export function SuccessConfirm({
   open,
   title,
   text,
-  variant,
+  variant = "experience",
+  image,
   actionLabel = "Continuar",
   onClose,
 }: {
   open: boolean;
   title: string;
   text: string;
-  variant: keyof typeof SUCCESS_BANNERS;
+  variant?: keyof typeof SUCCESS_BANNERS;
+  image?: string;
   actionLabel?: string;
   onClose: () => void;
 }) {
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
-  const icon = SUCCESS_BANNERS[variant];
+  const icon = image ?? SUCCESS_BANNERS[variant];
 
   useEffect(() => {
     if (!open) {
@@ -98,7 +100,7 @@ export function SuccessConfirm({
         <img
           src={icon}
           alt=""
-          className={`contact-success__icon contact-success__icon--${variant}`}
+          className={`contact-success__icon contact-success__icon--${image ? "password" : variant}`}
           aria-hidden="true"
         />
         <h2 id={titleId} className="contact-success__title">
