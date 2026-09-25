@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { ArrowDown, ArrowUp, Sparkles } from "lucide-react";
+import { ArrowDown, ArrowUp } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { Button } from "../../components/ui/Button";
 import {
@@ -16,6 +16,11 @@ import {
 import { getApiErrorMessage } from "../../utils/api-error";
 import { mediaUrl } from "../../utils/media";
 import type { Experience, FeaturedExperienceCard } from "../../types";
+import viewsIcon from "../../assets/icons/metrics/views.svg";
+import favoritesIcon from "../../assets/icons/metrics/favorites.svg";
+import reviewsIcon from "../../assets/icons/metrics/reviews.svg";
+import ratingIcon from "../../assets/icons/metrics/rating.svg";
+import trendingIcon from "../../assets/icons/metrics/trending.svg";
 import "../../styles/admin-featured.css";
 
 type HighlightMode = "metrics" | "editorial";
@@ -57,14 +62,35 @@ function periodLabel(from: string | null, until: string | null) {
   return `${formatDay(from) || "sin inicio"} - ${formatDay(until) || "sin fin"}`;
 }
 
+function MetricIcon({ src }: { src: string }) {
+  return <img className="metric-icon" src={src} alt="" />;
+}
+
 function MetricList({ card, emphasize }: { card: FeaturedExperienceCard; emphasize?: FeaturedRankingCriterion }) {
   return (
     <ul className="featured-admin__metrics">
-      <li className={emphasize === "visits" ? "is-emphasis" : undefined}>👁 {card.metrics.visits} visitas</li>
-      <li className={emphasize === "favorites" ? "is-emphasis" : undefined}>❤️ {card.metrics.favorites} favoritos</li>
-      <li className={emphasize === "reviews" ? "is-emphasis" : undefined}>💬 {card.metrics.reviews} reseñas</li>
-      <li className={emphasize === "rating" ? "is-emphasis" : undefined}>⭐ {card.metrics.rating.toFixed(1)} promedio</li>
-      {emphasize === "trending" ? <li className="is-emphasis">🔥 Tendencia · {card.metrics.recentActivity ?? 0}</li> : null}
+      <li className={emphasize === "visits" ? "is-emphasis" : undefined}>
+        <MetricIcon src={viewsIcon} />
+        {card.metrics.visits} visitas
+      </li>
+      <li className={emphasize === "favorites" ? "is-emphasis" : undefined}>
+        <MetricIcon src={favoritesIcon} />
+        {card.metrics.favorites} favoritos
+      </li>
+      <li className={emphasize === "reviews" ? "is-emphasis" : undefined}>
+        <MetricIcon src={reviewsIcon} />
+        {card.metrics.reviews} reseñas
+      </li>
+      <li className={emphasize === "rating" ? "is-emphasis" : undefined}>
+        <MetricIcon src={ratingIcon} />
+        {card.metrics.rating.toFixed(1)} promedio
+      </li>
+      {emphasize === "trending" ? (
+        <li className="is-emphasis">
+          <MetricIcon src={trendingIcon} />
+          Tendencia · {card.metrics.recentActivity ?? 0}
+        </li>
+      ) : null}
     </ul>
   );
 }
@@ -140,12 +166,25 @@ function AdminOwnPerformance() {
                 <p className="featured-admin__category">{card.category.name}</p>
                 <h2>{card.experience.title}</h2>
                 <ul className="featured-admin__metrics">
-                  <li className={criterion === "visits" ? "is-emphasis" : undefined}>👁 {card.metrics.visits} visitas</li>
-                  <li className={criterion === "favorites" ? "is-emphasis" : undefined}>❤️ {card.metrics.favorites} guardados</li>
-                  <li className={criterion === "reviews" ? "is-emphasis" : undefined}>💬 {card.metrics.reviews} reseñas</li>
-                  <li className={criterion === "rating" ? "is-emphasis" : undefined}>⭐ {card.metrics.rating.toFixed(1)} promedio</li>
+                  <li className={criterion === "visits" ? "is-emphasis" : undefined}>
+                    <MetricIcon src={viewsIcon} />
+                    {card.metrics.visits} visitas
+                  </li>
+                  <li className={criterion === "favorites" ? "is-emphasis" : undefined}>
+                    <MetricIcon src={favoritesIcon} />
+                    {card.metrics.favorites} guardados
+                  </li>
+                  <li className={criterion === "reviews" ? "is-emphasis" : undefined}>
+                    <MetricIcon src={reviewsIcon} />
+                    {card.metrics.reviews} reseñas
+                  </li>
+                  <li className={criterion === "rating" ? "is-emphasis" : undefined}>
+                    <MetricIcon src={ratingIcon} />
+                    {card.metrics.rating.toFixed(1)} promedio
+                  </li>
                   <li className={criterion === "trending" ? "is-emphasis" : undefined}>
-                    🔥 {card.metrics.recentActivity ?? 0} interacción reciente
+                    <MetricIcon src={trendingIcon} />
+                    {card.metrics.recentActivity ?? 0} interacción reciente
                   </li>
                 </ul>
               </div>
@@ -469,10 +508,6 @@ function SuperAdminFeaturedPage() {
                 <h2>
                   {index + 1}. {card.experience.title}
                 </h2>
-                <p className="featured-admin__why">
-                  <Sparkles size={14} aria-hidden="true" />
-                  {card.highlight.emoji} {card.highlight.label}
-                </p>
                 <p className="featured-admin__period">Orden: {card.experience.featuredOrder ?? "—"}</p>
                 <p className="featured-admin__period">
                   Visible: {periodLabel(card.experience.featuredFrom, card.experience.featuredUntil)}
