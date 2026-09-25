@@ -2198,6 +2198,7 @@
 }
 
 .dash-exps-tile {
+  position: relative;
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -2217,6 +2218,25 @@
 
 .dash-exps-tile:has(.is-open) {
   z-index: 8;
+}
+
+.dash-exps-tile__link {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+}
+
+.dash-exps-tile__manage {
+  position: relative;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.dash-exps-tile__manage a,
+.dash-exps-tile__manage button,
+.dash-exps-tile__manage .dash-exps-status {
+  pointer-events: auto;
 }
 
 .dash-exps-tile__photo {

@@ -96,6 +96,7 @@ export function ExperienceCatalogCard({
 
   return (
     <article className="dash-exps-tile">
+      <Link to={detailPath} className="dash-exps-tile__link" aria-label={`${viewLabel} ${experience.title}`} />
       <div className="dash-exps-tile__photo">
         <TeamInviteCarousel className="dash-exps-tile__gallery" slides={gallery} label={experience.title} />
         <Link
