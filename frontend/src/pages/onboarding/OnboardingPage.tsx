@@ -403,7 +403,7 @@ export function OnboardingPage() {
                 </p>
               ) : null}
             </div>
-            <div className="onboarding-body">{body}</div>
+            <div className={`onboarding-body${step === 2 ? " onboarding-body--fit" : ""}`}>{body}</div>
           </div>
           </div>
         </div>

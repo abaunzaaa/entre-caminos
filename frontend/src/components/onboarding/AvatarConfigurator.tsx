@@ -1,5 +1,5 @@
-import { Check, Shuffle } from "lucide-react";
-import type { ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Check, RotateCcw, Scissors, Shirt, Smile, Sparkles, Shuffle, type LucideIcon } from "lucide-react";
 import {
   AVATAR_ACCESSORIES,
   AVATAR_EYEBROWS,
@@ -20,11 +20,11 @@ import { AvatarPreview } from "./AvatarPreview";
 
 type TabId = "face" | "hair" | "outfit" | "accessories";
 
-const TABS: { id: TabId; label: string }[] = [
-  { id: "face", label: "Rostro" },
-  { id: "hair", label: "Cabello" },
-  { id: "outfit", label: "Ropa" },
-  { id: "accessories", label: "Accesorios" },
+const TABS: { id: TabId; label: string; icon: LucideIcon }[] = [
+  { id: "face", label: "Rostro", icon: Smile },
+  { id: "hair", label: "Cabello", icon: Scissors },
+  { id: "outfit", label: "Ropa", icon: Shirt },
+  { id: "accessories", label: "Accesorios", icon: Sparkles },
 ];
 
 type AvatarConfiguratorProps = {
@@ -55,7 +55,7 @@ function ColorDot({
       onClick={onClick}
     >
       <span style={{ background: color }} />
-      {selected ? <Check size={11} strokeWidth={2.8} aria-hidden="true" /> : null}
+      {selected ? <Check size={12} strokeWidth={2.8} aria-hidden="true" /> : null}
     </button>
   );
 }
@@ -81,9 +81,9 @@ function Choice({
   );
 }
 
-function Field({ label, children, wide = false }: { label: string; children: ReactNode; wide?: boolean }) {
+function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className={`onboarding-avatar-field${wide ? " onboarding-avatar-field--wide" : ""}`}>
+    <div className="onboarding-avatar-row">
       <p>{label}</p>
       <div className="onboarding-avatar-field__options">{children}</div>
     </div>
@@ -91,41 +91,77 @@ function Field({ label, children, wide = false }: { label: string; children: Rea
 }
 
 export function AvatarConfigurator({ config, tab, onTabChange, onChange }: AvatarConfiguratorProps) {
+  const [live, setLive] = useState(false);
+  const liveTimer = useRef<ReturnType<typeof window.setTimeout> | undefined>(undefined);
+
+  useEffect(() => {
+    return () => window.clearTimeout(liveTimer.current);
+  }, []);
+
+  function bump() {
+    window.clearTimeout(liveTimer.current);
+    setLive(true);
+    liveTimer.current = window.setTimeout(() => setLive(false), 420);
+  }
+
   function patch(partial: Partial<AvatarConfig>) {
     onChange({ ...config, ...partial, version: 2 });
+    bump();
   }
 
   return (
     <div className="onboarding-avatar-studio">
       <div className="onboarding-avatar-studio__preview">
-        <AvatarPreview config={config} size={220} />
+        <div className={`onboarding-avatar-frame${live ? " is-live" : ""}`}>
+          <AvatarPreview config={config} size={168} />
+        </div>
+        <p className="onboarding-avatar-note">Así te verán en las experiencias.</p>
         <div className="onboarding-avatar-studio__tools">
-          <button type="button" className="onboarding-text-btn" onClick={() => onChange(randomAvatarConfig())}>
+          <button
+            type="button"
+            className="onboarding-text-btn"
+            onClick={() => {
+              onChange(randomAvatarConfig());
+              bump();
+            }}
+          >
             <Shuffle size={14} strokeWidth={1.8} aria-hidden="true" />
-            Aleatorio
+            Al azar
           </button>
-          <button type="button" className="onboarding-text-btn" onClick={() => onChange(DEFAULT_AVATAR_CONFIG)}>
-            Restablecer
+          <button
+            type="button"
+            className="onboarding-text-btn"
+            onClick={() => {
+              onChange(DEFAULT_AVATAR_CONFIG);
+              bump();
+            }}
+          >
+            <RotateCcw size={14} strokeWidth={1.8} aria-hidden="true" />
+            Inicio
           </button>
         </div>
       </div>
       <div className="onboarding-avatar-studio__panel">
         <div className="onboarding-segment onboarding-segment--four" role="tablist" aria-label="Personalización del avatar">
-          {TABS.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              role="tab"
-              aria-selected={tab === item.id}
-              className={`onboarding-segment__btn${tab === item.id ? " is-active" : ""}`}
-              onClick={() => onTabChange(item.id)}
-            >
-              {item.label}
-            </button>
-          ))}
+          {TABS.map((item) => {
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                role="tab"
+                aria-selected={tab === item.id}
+                className={`onboarding-segment__btn${tab === item.id ? " is-active" : ""}`}
+                onClick={() => onTabChange(item.id)}
+              >
+                <Icon size={15} strokeWidth={1.8} aria-hidden="true" />
+                {item.label}
+              </button>
+            );
+          })}
         </div>
         {tab === "face" ? (
-          <div className="onboarding-avatar-fields">
+          <div className="onboarding-avatar-rows">
             <Field label="Tono de piel">
               {AVATAR_SKIN_TONES.map((item) => (
                 <ColorDot
@@ -175,8 +211,8 @@ export function AvatarConfigurator({ config, tab, onTabChange, onChange }: Avata
           </div>
         ) : null}
         {tab === "hair" ? (
-          <div className="onboarding-avatar-fields">
-            <Field label="Cabello" wide>
+          <div className="onboarding-avatar-rows">
+            <Field label="Estilo de cabello">
               {AVATAR_HAIR_STYLES.map((item) => (
                 <Choice key={item.id} label={item.label} selected={config.hairStyle === item.id} onClick={() => patch({ hairStyle: item.id })} />
               ))}
@@ -195,7 +231,7 @@ export function AvatarConfigurator({ config, tab, onTabChange, onChange }: Avata
           </div>
         ) : null}
         {tab === "outfit" ? (
-          <div className="onboarding-avatar-fields">
+          <div className="onboarding-avatar-rows">
             <Field label="Prenda">
               {AVATAR_OUTFITS.map((item) => (
                 <Choice key={item.id} label={item.label} selected={config.outfit === item.id} onClick={() => patch({ outfit: item.id })} />
@@ -215,7 +251,7 @@ export function AvatarConfigurator({ config, tab, onTabChange, onChange }: Avata
           </div>
         ) : null}
         {tab === "accessories" ? (
-          <div className="onboarding-avatar-fields">
+          <div className="onboarding-avatar-rows">
             <Field label="Gafas">
               {AVATAR_GLASSES.map((item) => (
                 <Choice
