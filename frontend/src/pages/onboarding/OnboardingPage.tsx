@@ -9,6 +9,7 @@ import { OnboardingStepper } from "../../components/onboarding/OnboardingStepper
 import { PreferencesStep } from "../../components/onboarding/PreferencesStep";
 import { ProfileStep } from "../../components/onboarding/ProfileStep";
 import { SummaryStep } from "../../components/onboarding/SummaryStep";
+import { KeyConfirmDialog } from "../../components/ui/KeyConfirmDialog";
 import { INTEREST_OPTIONS } from "../../data/onboarding";
 import { useAuth } from "../../hooks/useAuth";
 import {
@@ -463,26 +464,15 @@ export function OnboardingPage() {
         </footer>
       </section>
 
-      {exitOpen ? (
-        <div className="onboarding-modal" role="dialog" aria-modal="true" aria-labelledby="onboarding-exit-title">
-          <div className="onboarding-modal__card">
-            <h2 id="onboarding-exit-title">¿Salir del perfil?</h2>
-            <p>Podrás continuar más tarde. El catálogo se abre cuando el perfil esté completo.</p>
-            <div className="onboarding-modal__actions">
-              <button type="button" className="onboarding-nav__btn onboarding-nav__btn--ghost" onClick={() => setExitOpen(false)}>
-                Seguir personalizando
-              </button>
-              <button
-                type="button"
-                className="onboarding-nav__btn onboarding-nav__btn--primary"
-                onClick={() => void onLeave()}
-              >
-                Salir
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <KeyConfirmDialog
+        open={exitOpen}
+        title="¿Salir del perfil?"
+        description="Podrás continuar más tarde. El catálogo se abre cuando el perfil esté completo."
+        cancelLabel="Seguir personalizando"
+        confirmLabel="Salir"
+        onCancel={() => setExitOpen(false)}
+        onConfirm={() => void onLeave()}
+      />
     </div>
   );
 }

@@ -20,7 +20,9 @@ Los secretos **nunca** van a GitHub.
 | `SENDGRID_API_KEY` | No | Si vacía, el correo se simula |
 | `CLOUDINARY_*` | No | Si vacías, upload local |
 | `MAPBOX_ACCESS_TOKEN` | No | Mapas |
-| `OPENAI_API_KEY` | No | IA futura |
+| `OPENAI_API_KEY` | No | IA futura (no usar en el frontend) |
+| `GEMINI_API_KEY` | No | Asistente “Tu guía”. Solo backend |
+| `GEMINI_MODEL` | No | Default `gemini-2.0-flash` |
 
 Guía completa: [database.md](database.md).
 

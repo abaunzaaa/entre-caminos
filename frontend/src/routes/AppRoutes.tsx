@@ -22,6 +22,8 @@ import { CategoriesPage } from "../pages/admin/CategoriesPage";
 import { ExperiencesPage } from "../pages/admin/ExperiencesPage";
 import { ExperienceFormPage } from "../pages/admin/ExperienceFormPage";
 import { ExperiencePreviewPage } from "../pages/admin/ExperiencePreviewPage";
+import { GuideHost } from "../components/guide/GuideHost";
+import { GuideProvider } from "../components/guide/GuideProvider";
 import { ProtectedRoute } from "./ProtectedRoute";
 
 const PAGE_TITLES: Record<string, string> = {
@@ -49,7 +51,8 @@ export function AppRoutes() {
   return (
     <BrowserRouter>
       <DocumentTitle />
-      <Routes>
+      <GuideProvider>
+        <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route element={<AuthPage />}>
           <Route path="/register" element={<></>} />
@@ -95,7 +98,9 @@ export function AppRoutes() {
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+        </Routes>
+        <GuideHost />
+      </GuideProvider>
     </BrowserRouter>
   );
 }
