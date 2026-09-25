@@ -6,6 +6,7 @@ import { ArrowLeft, Camera, Lock, Trash2, UserRound, X } from "lucide-react";
 import { Button } from "../../components/ui/Button";
 import { Spinner } from "../../components/ui/Spinner";
 import { SuccessConfirmDialog } from "../../components/ui/SuccessConfirmDialog";
+import { AdminChangePasswordDialog } from "../../components/admin/AdminChangePasswordDialog";
 import { AdminProfileHeroArt } from "../../components/admin/AdminProfileHeroArt";
 import { useAuth } from "../../hooks/useAuth";
 import type { PublicUser } from "../../types";
@@ -264,6 +265,7 @@ export function AdminProfilePage() {
     null,
   );
   const [discardOpen, setDiscardOpen] = useState(false);
+  const [passwordOpen, setPasswordOpen] = useState(false);
   const [successOpen, setSuccessOpen] = useState(false);
   const [photo, setPhoto] = useState<string | null>(() => resolveAvatarUrl(user));
   const [savedPhoto, setSavedPhoto] = useState<string | null>(() => resolveAvatarUrl(user));
@@ -833,6 +835,11 @@ export function AdminProfilePage() {
             </div>
 
             <div className="admin-profile-edit__actions">
+              {user.role === "ADMIN" || user.role === "SUPER_ADMIN" ? (
+                <Button type="button" variant="secondary" className="admin-profile-edit__password" onClick={() => setPasswordOpen(true)}>
+                  Cambiar contraseña
+                </Button>
+              ) : null}
               <Button type="button" variant="secondary" className="admin-profile-edit__cancel" onClick={requestLeave}>
                 Cancelar
               </Button>
@@ -1017,6 +1024,8 @@ export function AdminProfilePage() {
             document.body,
           )
         : null}
+
+      <AdminChangePasswordDialog open={passwordOpen} onClose={() => setPasswordOpen(false)} />
 
       <SuccessConfirmDialog
         open={successOpen}

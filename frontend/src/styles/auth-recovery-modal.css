@@ -23,6 +23,11 @@
   height: 100%;
 }
 
+.auth-recovery-layer.is-fixed {
+  position: fixed;
+  z-index: 70;
+}
+
 .auth-recovery-layer {
   position: absolute;
   inset: 0;
@@ -326,5 +331,48 @@
     height: 3.1rem;
     margin-bottom: 0.85rem;
   }
+}
+
+.auth-recovery-modal:has(.auth-form--change-password) {
+  padding: 1.45rem 2.1rem 1.2rem;
+  overflow: visible;
+}
+
+.auth-form--change-password {
+  --auth-stack-gap: 0.55rem;
+  --auth-label-gap: 0.28rem;
+  --auth-action-gap: 0;
+}
+
+.auth-form--change-password .auth-key-icon {
+  margin-bottom: 0.45rem;
+}
+
+.auth-form--change-password .auth-form__header {
+  margin-bottom: 0.7rem;
+}
+
+.auth-form--change-password .auth-form__lead {
+  margin-top: 0.28rem;
+}
+
+.auth-form--change-password .auth-form__stack {
+  gap: 0.55rem;
+}
+
+.auth-change-actions {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+  margin-top: 0.35rem;
+}
+
+.auth-change-actions .admin-cta-hover,
+.auth-change-actions .auth-submit {
+  flex: 1 1 0;
+  width: auto;
+  height: var(--auth-field-h);
+  min-height: var(--auth-field-h);
+  margin-top: 0;
 }
 
