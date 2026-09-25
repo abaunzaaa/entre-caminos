@@ -1,5 +1,54 @@
 import { api } from "./api";
-import type { ApiResponse, Category, DashboardStats, Experience, Permission, PublicUser, Role } from "../types";
+import type {
+  ApiResponse,
+  Category,
+  DashboardStats,
+  Experience,
+  FeaturedExperienceCard,
+  Permission,
+  PublicUser,
+  Role,
+} from "../types";
+
+export type FeaturedRankingCriterion = "visits" | "favorites" | "reviews" | "rating" | "trending";
+
+export async function getFeaturedRanking(criterion: FeaturedRankingCriterion) {
+  const { data } = await api.get<ApiResponse<{ experiences: FeaturedExperienceCard[]; criterion: string }>>(
+    "/admin/featured-experiences/ranking",
+    { params: { criterion } },
+  );
+  return data.data.experiences;
+}
+
+export async function getAdminFeaturedExperiences() {
+  const { data } = await api.get<ApiResponse<{ experiences: FeaturedExperienceCard[] }>>(
+    "/admin/featured-experiences",
+  );
+  return data.data.experiences;
+}
+
+export async function featureExperience(
+  id: string,
+  payload: { featuredOrder?: number | null; featuredFrom?: string | null; featuredUntil?: string | null },
+) {
+  const { data } = await api.post<ApiResponse<{ experience: FeaturedExperienceCard }>>(
+    `/admin/featured-experiences/${id}`,
+    payload,
+  );
+  return data.data.experience;
+}
+
+export async function reorderFeaturedExperiences(items: Array<{ id: string; featuredOrder: number }>) {
+  const { data } = await api.patch<ApiResponse<{ experiences: FeaturedExperienceCard[] }>>(
+    "/admin/featured-experiences/order",
+    { items },
+  );
+  return data.data.experiences;
+}
+
+export async function unfeatureExperience(id: string) {
+  await api.delete(`/admin/featured-experiences/${id}`);
+}
 
 export async function getFeaturedExperiences() {
   const { data } = await api.get<ApiResponse<{ experiences: Experience[] }>>("/experiences/featured");

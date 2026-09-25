@@ -110,6 +110,8 @@ model User {
   emailVerificationTokens EmailVerificationToken[]
   oauthAccounts           OAuthAccount[]
   profile                 UserProfile?
+  experienceFavorites     ExperienceFavorite[]
+  experienceVisitorReviews ExperienceVisitorReview[]
 
   @@index([roleId])
   @@index([status])
@@ -162,6 +164,10 @@ model Experience {
   rejectionReason String?          @map("rejection_reason")
   reviewedAt      DateTime?        @map("reviewed_at")
   reviewedById    String?          @map("reviewed_by")
+  isFeatured      Boolean          @default(false) @map("is_featured")
+  featuredOrder   Int?             @map("featured_order")
+  featuredFrom    DateTime?        @map("featured_from")
+  featuredUntil   DateTime?        @map("featured_until")
   createdAt       DateTime         @default(now()) @map("created_at")
   updatedAt       DateTime         @updatedAt @map("updated_at")
 
@@ -169,12 +175,16 @@ model Experience {
   creator  User                @relation(fields: [createdBy], references: [id])
   reviewedBy User?             @relation("ExperienceReviewedBy", fields: [reviewedById], references: [id])
   reviews  ExperienceReview[]
+  detailViews ExperienceDetailView[]
+  favorites ExperienceFavorite[]
+  visitorReviews ExperienceVisitorReview[]
 
   @@index([status])
   @@index([categoryId])
   @@index([createdBy])
   @@index([createdAt])
   @@index([submittedAt])
+  @@index([isFeatured, featuredOrder])
   @@map("experiences")
 }
 
@@ -192,6 +202,46 @@ model ExperienceReview {
   @@index([experienceId, createdAt])
   @@index([reviewerId])
   @@map("experience_reviews")
+}
+
+model ExperienceDetailView {
+  id           String   @id @default(uuid())
+  experienceId String   @map("experience_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  experience Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+
+  @@index([experienceId, createdAt])
+  @@map("experience_detail_views")
+}
+
+model ExperienceFavorite {
+  id           String   @id @default(uuid())
+  experienceId String   @map("experience_id")
+  userId       String   @map("user_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  experience Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([experienceId, userId])
+  @@index([experienceId])
+  @@map("experience_favorites")
+}
+
+model ExperienceVisitorReview {
+  id           String   @id @default(uuid())
+  experienceId String   @map("experience_id")
+  userId       String   @map("user_id")
+  rating       Int
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  experience Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([experienceId, userId])
+  @@index([experienceId, createdAt])
+  @@map("experience_visitor_reviews")
 }
 
 model Notification {

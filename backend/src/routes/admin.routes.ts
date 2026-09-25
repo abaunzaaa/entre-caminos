@@ -5,6 +5,7 @@ import { validate } from "../middleware/validate.middleware.js";
 import { asyncHandler } from "../utils/async-handler.js";
 import { PERMISSIONS, ROLES } from "../config/constants.js";
 import * as adminController from "../controllers/admin.controller.js";
+import * as featuredController from "../controllers/featured-experience.controller.js";
 import * as roleController from "../controllers/role.controller.js";
 import { adminCategoryRouter } from "./category.routes.js";
 import { adminExperienceRouter } from "./experience.routes.js";
@@ -16,6 +17,11 @@ import {
   createRoleSchema,
   updateAdminSchema,
 } from "../validators/admin.validator.js";
+import {
+  featureExperienceSchema,
+  featuredOrderSchema,
+  featuredRankingQuerySchema,
+} from "../validators/featured-experience.validator.js";
 
 export const adminRouter = Router();
 
@@ -93,6 +99,30 @@ adminRouter.post(
   permissionMiddleware(PERMISSIONS.PERMISSIONS_MANAGE),
   validate(createPermissionSchema),
   asyncHandler(roleController.createPermission),
+);
+
+adminRouter.get(
+  "/featured-experiences/ranking",
+  validate(featuredRankingQuerySchema, "query"),
+  asyncHandler(featuredController.ranking),
+);
+adminRouter.get("/featured-experiences", asyncHandler(featuredController.list));
+adminRouter.post(
+  "/featured-experiences/:id",
+  roleMiddleware([ROLES.SUPER_ADMIN]),
+  validate(featureExperienceSchema),
+  asyncHandler(featuredController.feature),
+);
+adminRouter.patch(
+  "/featured-experiences/order",
+  roleMiddleware([ROLES.SUPER_ADMIN]),
+  validate(featuredOrderSchema),
+  asyncHandler(featuredController.reorder),
+);
+adminRouter.delete(
+  "/featured-experiences/:id",
+  roleMiddleware([ROLES.SUPER_ADMIN]),
+  asyncHandler(featuredController.unfeature),
 );
 
 adminRouter.get("/notifications", asyncHandler(notificationController.list));

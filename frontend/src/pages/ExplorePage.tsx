@@ -13,7 +13,7 @@ import { experienceCoverUrl } from "../components/explorer/explorer-media";
 import { useAuth } from "../hooks/useAuth";
 import avionIcon from "../assets/avion-icon.png";
 import camIcon from "../assets/cam-icon.png";
-import { getPublicExperiences } from "../services/catalog.service";
+import { getFeaturedExperiences, getPublicExperiences } from "../services/catalog.service";
 import { formatDepartmentMunicipality } from "../data/colombia-locations";
 import type { Experience } from "../types";
 import "../styles/admin-ui.css";
@@ -41,6 +41,8 @@ function mergeExperiences(current: Experience[], incoming: Experience[]) {
 export function ExplorePage() {
   const { user } = useAuth();
   const [experiences, setExperiences] = useState<Experience[]>([]);
+  const [featured, setFeatured] = useState<Experience[] | null>(null);
+  const [featuredReady, setFeaturedReady] = useState(false);
   const [total, setTotal] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [filters, setFilters] = useState<DiscoverFiltersState>(DEFAULT_DISCOVER_FILTERS);
@@ -54,6 +56,22 @@ export function ExplorePage() {
 
   useEffect(() => {
     let cancelled = false;
+    getFeaturedExperiences()
+      .then((items) => {
+        if (!cancelled) {
+          setFeatured(items.slice(0, 5));
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setFeatured(null);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setFeaturedReady(true);
+        }
+      });
     getPublicExperiences({ limit: FETCH_SIZE, offset: 0 })
       .then((page) => {
         if (cancelled) {
@@ -298,6 +316,7 @@ export function ExplorePage() {
       <ExplorerRecommendedSection
         experiences={experiences}
         interests={user?.profile?.interests ?? []}
+        featured={featuredReady ? featured : null}
       />
 
       <section className="explorer-section" id="mapa" aria-labelledby="explorer-map-title">

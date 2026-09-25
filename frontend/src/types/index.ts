@@ -149,6 +149,32 @@ export type DashboardStats = {
   }>;
 };
 
+export type FeaturedExperienceCard = {
+  experience: {
+    id: string;
+    title: string;
+    description: string;
+    location: string;
+    status: ExperienceStatus;
+    imageUrl: string | null;
+    isFeatured: boolean;
+    featuredOrder: number | null;
+    featuredFrom: string | null;
+    featuredUntil: string | null;
+  };
+  imageUrl: string | null;
+  category: { id: string; name: string; icon: string };
+  score: number;
+  metrics: {
+    visits: number;
+    favorites: number;
+    reviews: number;
+    rating: number;
+    recentActivity?: number;
+  };
+  highlight: { label: string; emoji: string };
+};
+
 export type ApiResponse<T> = {
   success: boolean;
   message?: string;

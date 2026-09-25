@@ -2,6 +2,7 @@ import { NavLink, Link, useLocation } from "react-router-dom";
 import {
   Compass,
   LayoutDashboard,
+  Sparkles,
   Menu,
   Shield,
   Tags,
@@ -56,6 +57,13 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     icon: Compass,
     permission: "experiences.manage",
     match: ["/admin/experiencias", "/admin/experiences"],
+  },
+  {
+    to: "/admin/destacadas",
+    label: "Destacadas",
+    icon: Sparkles,
+    permission: "experiences.manage",
+    match: ["/admin/destacadas"],
   },
 ];
 

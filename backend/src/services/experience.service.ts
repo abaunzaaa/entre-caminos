@@ -15,6 +15,7 @@ import {
   notifyExperienceRejected,
   notifyExperienceSubmitted,
 } from "./notification.service.js";
+import { listPublicFeaturedExperiences } from "./featured-experience.service.js";
 
 const experienceInclude = {
   category: true,
@@ -80,12 +81,7 @@ export async function listPublicExperiences(opts?: { take?: number; skip?: numbe
 }
 
 export async function listFeaturedExperiences() {
-  return prisma.experience.findMany({
-    where: publicCatalogWhere,
-    include: { category: true },
-    orderBy: { createdAt: "desc" },
-    take: 6,
-  });
+  return listPublicFeaturedExperiences();
 }
 
 export async function listAdminExperiences(

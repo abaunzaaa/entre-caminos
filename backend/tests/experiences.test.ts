@@ -356,7 +356,8 @@ describe("Disponibilidad activa/inactiva", () => {
     const publicBefore = await api().get("/api/experiences");
     expect((publicBefore.body.data.experiences as Array<{ id: string }>).some((item) => item.id === id)).toBe(true);
     const featuredBefore = await api().get("/api/experiences/featured");
-    expect((featuredBefore.body.data.experiences as Array<{ id: string }>).some((item) => item.id === id)).toBe(true);
+    expect(featuredBefore.status).toBe(200);
+    expect((featuredBefore.body.data.experiences as Array<{ id: string }>).length).toBeLessThanOrEqual(5);
     expect((await api().get(`/api/experiences/${id}`)).status).toBe(200);
 
     const deactivated = await api()
