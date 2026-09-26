@@ -10,6 +10,7 @@ import { ForgotPasswordPage } from "../pages/ForgotPasswordPage";
 import { ResetPasswordPage } from "../pages/ResetPasswordPage";
 import { VerifyEmailPage } from "../pages/VerifyEmailPage";
 import { OAuthCallbackPage } from "../pages/OAuthCallbackPage";
+import { ChangePasswordPage } from "../pages/ChangePasswordPage";
 import { OnboardingCatalogGuard } from "../components/onboarding/OnboardingCatalogGuard";
 import { OnboardingLayout } from "../components/onboarding/OnboardingLayout";
 import { OnboardingPage } from "../pages/onboarding/OnboardingPage";
