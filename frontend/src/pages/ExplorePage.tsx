@@ -11,6 +11,7 @@ import { TouristHomeHero } from "../components/explorer/TouristHomeHero";
 import { experienceCoverUrl } from "../components/explorer/explorer-media";
 import camIcon from "../assets/cam-icon.png";
 import avionIcon from "../assets/avion-icon.png";
+import { useAuth } from "../hooks/useAuth";
 import { getCoverFeaturedExperiences, getPublicExperiences, getRecommendedExperiences } from "../services/catalog.service";
 import { formatDepartmentMunicipality } from "../data/colombia-locations";
 import type { Experience } from "../types";
@@ -21,6 +22,8 @@ import "../styles/explorer.css";
 const PAGE_SIZE = 8;
 
 export function ExplorePage() {
+  const { user } = useAuth();
+  const interestKey = user?.profile?.interests?.join("\u0001") ?? "";
   const [experiences, setExperiences] = useState<Experience[]>([]);
   const [coverFeatured, setCoverFeatured] = useState<Experience[]>([]);
   const [recommended, setRecommended] = useState<Experience[]>([]);
@@ -50,8 +53,16 @@ export function ExplorePage() {
       .catch(() => {
         if (!cancelled) {
           setRecommended([]);
+          setSelectedId(null);
         }
       });
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id, interestKey]);
+
+  useEffect(() => {
+    let cancelled = false;
     getCoverFeaturedExperiences()
       .then((items) => {
         if (cancelled || items.length === 0) {
@@ -124,10 +135,7 @@ export function ExplorePage() {
     };
   }, [page, filters, activeSearch]);
 
-  const heroExperiences = useMemo(
-    () => (recommended.length > 0 ? recommended : experiences.slice(0, 12)),
-    [recommended, experiences],
-  );
+  const heroExperiences = recommended;
 
   const selected = useMemo(
     () => heroExperiences.find((item) => item.id === selectedId) ?? heroExperiences[0] ?? null,

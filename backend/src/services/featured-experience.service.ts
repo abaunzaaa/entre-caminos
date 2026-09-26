@@ -1,5 +1,6 @@
 import type { ExperienceStatus } from "@prisma/client";
 import { FEATURED_PUBLIC_LIMIT, FEATURED_RECENT_ACTIVITY_DAYS } from "../config/featured-score.js";
+import { COVER_RECOMMENDATION_LIMIT, selectExperiencesForInterests } from "../config/interest-carousel.js";
 import {
   calculateFeaturedScore,
   compareFeaturedRanking,
@@ -118,54 +119,6 @@ export async function listCoverFeaturedExperiences() {
   });
 }
 
-const RECOMMENDATION_LIMIT = 12;
-
-const INTEREST_HINTS: Record<string, string[]> = {
-  naturaleza: ["naturaleza", "outdoor", "aire libre"],
-  gastronomia: ["gastronomia", "comida", "cocina", "cafe"],
-  cultura: ["cultura", "patrimonio", "museo"],
-  aventura: ["aventura", "extremo"],
-  relajacion: ["relajacion", "bienestar", "spa"],
-  "arte y creatividad": ["arte", "creatividad", "taller"],
-  deportes: ["deporte", "deportes"],
-  "historia y patrimonio": ["historia", "patrimonio", "museo"],
-  musica: ["musica", "concierto"],
-  talleres: ["taller", "talleres"],
-  "planes urbanos": ["urbano", "ciudad"],
-  cafe: ["cafe", "cafeteria"],
-  fotografia: ["fotografia", "foto"],
-  danza: ["danza", "baile"],
-  literatura: ["literatura", "lectura"],
-  "fiesta / vida nocturna": ["fiesta", "nocturna"],
-};
-
-function foldText(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim();
-}
-
-function matchesInterest(
-  interest: string,
-  experience: { title: string; description: string; category: { name: string } | null },
-) {
-  const key = foldText(interest);
-  if (!key) {
-    return false;
-  }
-  const category = foldText(experience.category?.name ?? "");
-  const haystack = foldText(`${experience.title} ${experience.description} ${category}`);
-  if (category && (category === key || category.includes(key) || key.includes(category))) {
-    return true;
-  }
-  if (haystack.includes(key)) {
-    return true;
-  }
-  return (INTEREST_HINTS[key] ?? []).some((hint) => category.includes(hint) || haystack.includes(hint));
-}
-
 function recommendationTie(seed: string, id: string) {
   let hash = 0;
   const value = `${seed}:${id}`;
@@ -175,7 +128,7 @@ function recommendationTie(seed: string, id: string) {
   return hash;
 }
 
-/** Carrusel personalizado. Sin intereses, usa el puntaje general y no la selección editorial. */
+/** Carrusel de portada. Con intereses, solo sus categorías. Sin intereses, puntaje general y no la selección editorial. */
 export async function listRecommendedExperiences(userId?: string) {
   const interests = userId
     ? ((await prisma.userProfile.findUnique({ where: { userId }, select: { interests: true } }))?.interests ?? [])
@@ -184,28 +137,27 @@ export async function listRecommendedExperiences(userId?: string) {
     where: { status: "PUBLISHED" },
     include: coverInclude,
   });
+  const activeInterests = interests.map((interest) => interest.trim()).filter(Boolean);
+  if (activeInterests.length > 0) {
+    return {
+      source: "interests" as const,
+      experiences: selectExperiencesForInterests(experiences, activeInterests, COVER_RECOMMENDATION_LIMIT),
+    };
+  }
+
   const maps = await loadMetricMaps(experiences.map((item) => item.id));
   const day = new Date().toISOString().slice(0, 10);
   const seed = `${userId ?? "anon"}:${day}`;
   const ranked = [...experiences].sort((left, right) => {
-    const leftMatches = interests.reduce((count, interest) => count + (matchesInterest(interest, left) ? 1 : 0), 0);
-    const rightMatches = interests.reduce((count, interest) => count + (matchesInterest(interest, right) ? 1 : 0), 0);
-    if (rightMatches !== leftMatches) {
-      return rightMatches - leftMatches;
-    }
     const byScore = calculateFeaturedScore(metricsFor(right.id, maps)) - calculateFeaturedScore(metricsFor(left.id, maps));
     if (byScore !== 0) {
       return byScore;
     }
     return recommendationTie(seed, left.id) - recommendationTie(seed, right.id);
   });
-  const matched = interests.length
-    ? ranked.filter((item) => interests.some((interest) => matchesInterest(interest, item)))
-    : [];
-  const source = matched.length > 0 ? "interests" : "popular";
   return {
-    source,
-    experiences: (source === "interests" ? matched : ranked).slice(0, RECOMMENDATION_LIMIT),
+    source: "popular" as const,
+    experiences: ranked.slice(0, COVER_RECOMMENDATION_LIMIT),
   };
 }
 
