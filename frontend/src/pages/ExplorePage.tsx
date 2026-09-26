@@ -226,7 +226,6 @@ export function ExplorePage() {
             <div className="explorer-discover-pager">
               <button
                 type="button"
-                className="explorer-discover-more__btn"
                 onClick={() => setPage((current) => Math.max(1, current - 1))}
                 disabled={loading || page <= 1}
               >
@@ -235,7 +234,6 @@ export function ExplorePage() {
               <span className="explorer-discover-pager__page">Página {page}</span>
               <button
                 type="button"
-                className="explorer-discover-more__btn"
                 onClick={() => setPage((current) => current + 1)}
                 disabled={loading || pageCount === 0 || page >= pageCount}
               >

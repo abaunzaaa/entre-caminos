@@ -202,8 +202,8 @@ function SuperAdminFeaturedPage() {
   const [published, setPublished] = useState<Experience[]>([]);
   const [catalogCategories, setCatalogCategories] = useState<string[]>([]);
   const [editorialIds, setEditorialIds] = useState<string[]>([]);
-  const [limitOpen, setLimitOpen] = useState(false);
-  const [featuredSaved, setFeaturedSaved] = useState(false);
+  const [editorialNotice, setEditorialNotice] = useState<"limit" | "category" | null>(null);
+  const [featuredSaved, setFeaturedSaved] = useState<"editorial" | "metrics" | null>(null);
   const [editorialQuery, setEditorialQuery] = useState("");
   const [editorialCategory, setEditorialCategory] = useState("");
   const [error, setError] = useState("");
@@ -336,6 +336,7 @@ function SuperAdminFeaturedPage() {
     setError("");
     try {
       setFeatured(await generateFeaturedExperiences(criterion, limit));
+      setFeaturedSaved("metrics");
     } catch (err) {
       setError(getApiErrorMessage(err, "No se pudieron generar las destacadas"));
     } finally {
@@ -344,18 +345,34 @@ function SuperAdminFeaturedPage() {
   }
 
   function toggleEditorial(id: string) {
-    setEditorialIds((current) => {
-      const index = current.indexOf(id);
-      if (index >= 0) {
-        return current.filter((item) => item !== id);
+    const index = editorialIds.indexOf(id);
+    if (index >= 0) {
+      setEditorialIds(editorialIds.filter((item) => item !== id));
+      return;
+    }
+    const next = published.find((item) => item.id === id);
+    if (!next) {
+      return;
+    }
+    const nextCategory = next.categoryId || next.category?.name?.trim().toLocaleLowerCase("es") || "sin-categoria";
+    const categoryTaken = editorialIds.some((selectedId) => {
+      const selected = published.find((item) => item.id === selectedId);
+      if (!selected) {
+        return false;
       }
-      if (current.length >= 5) {
-        setLimitOpen(true);
-        return current;
-      }
-      setError("");
-      return [...current, id];
+      const selectedCategory = selected.categoryId || selected.category?.name?.trim().toLocaleLowerCase("es") || "sin-categoria";
+      return selectedCategory === nextCategory;
     });
+    if (categoryTaken) {
+      setEditorialNotice("category");
+      return;
+    }
+    if (editorialIds.length >= 5) {
+      setEditorialNotice("limit");
+      return;
+    }
+    setError("");
+    setEditorialIds([...editorialIds, id]);
   }
 
   async function onEditorialFeature(event: FormEvent) {
@@ -378,7 +395,7 @@ function SuperAdminFeaturedPage() {
       }
       setFeatured(await getAdminFeaturedExperiences());
       setEditorialIds([]);
-      setFeaturedSaved(true);
+      setFeaturedSaved("editorial");
     } catch (err) {
       setError(getApiErrorMessage(err, "No se pudo destacar la experiencia"));
     } finally {
@@ -432,24 +449,34 @@ function SuperAdminFeaturedPage() {
 
       {error ? <p className="featured-admin__error">{error}</p> : null}
       <SuccessConfirmDialog
-        open={limitOpen}
+        open={editorialNotice !== null}
         className="contact-success--subtle"
         icon={<AuthKeyIcon className="auth-reset-success__mark" />}
-        title="Máximo de experiencias alcanzado"
-        description="Solo puedes seleccionar hasta 5 experiencias destacadas."
-        actionLabel="Entendido"
+        title={
+          editorialNotice === "category" ? "Selecciona categorías diferentes" : "Máximo de experiencias alcanzado"
+        }
+        description={
+          editorialNotice === "category"
+            ? "Solo puedes seleccionar una experiencia por categoría. Elige una experiencia de otra categoría para continuar."
+            : "Solo puedes seleccionar hasta 5 experiencias destacadas."
+        }
+        actionLabel="Aceptar"
         initialFocus="action"
-        onClose={() => setLimitOpen(false)}
+        onClose={() => setEditorialNotice(null)}
       />
       <SuccessConfirmDialog
-        open={featuredSaved}
+        open={featuredSaved !== null}
         className="contact-success--subtle"
         icon={<AuthKeyIcon className="auth-reset-success__mark" />}
         title="Experiencias destacadas exitosamente"
-        description="Las experiencias seleccionadas ahora hacen parte de las experiencias destacadas."
+        description={
+          featuredSaved === "metrics"
+            ? "Las experiencias seleccionadas mediante métricas ahora hacen parte de las experiencias destacadas."
+            : "Las experiencias seleccionadas ahora hacen parte de las experiencias destacadas."
+        }
         actionLabel="Aceptar"
         initialFocus="action"
-        onClose={() => setFeaturedSaved(false)}
+        onClose={() => setFeaturedSaved(null)}
       />
 
       <section className="featured-admin__finder" aria-labelledby="featured-finder-title">
