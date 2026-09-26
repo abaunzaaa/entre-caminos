@@ -110,8 +110,8 @@ model User {
   emailVerificationTokens EmailVerificationToken[]
   oauthAccounts           OAuthAccount[]
   profile                 UserProfile?
-  experienceFavorites     ExperienceFavorite[]
-  experienceVisitorReviews ExperienceVisitorReview[]
+  conversations           Conversation[]
+  folders                 Folder[]
 
   @@index([roleId])
   @@index([status])
@@ -179,10 +179,8 @@ model Experience {
   experienceCategories ExperienceCategory[]
   creator  User                @relation(fields: [createdBy], references: [id])
   reviewedBy User?             @relation("ExperienceReviewedBy", fields: [reviewedById], references: [id])
-  reviews  ExperienceReview[]
-  detailViews ExperienceDetailView[]
-  favorites ExperienceFavorite[]
-  visitorReviews ExperienceVisitorReview[]
+  reviews       ExperienceReview[]
+  conversations Conversation[]
 
   @@index([status])
   @@index([categoryId])
@@ -380,6 +378,61 @@ model OAuthAccount {
   @@unique([provider, providerAccountId])
   @@index([userId])
   @@map("oauth_accounts")
+}
+
+model Folder {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  name      String
+  icon      String?  @default("folder")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversations Conversation[]
+
+  @@index([userId, createdAt])
+  @@map("folders")
+}
+
+model Conversation {
+  id             String   @id @default(uuid())
+  userId         String   @map("user_id")
+  title          String   @default("Nueva conversación")
+  contextType    String   @default("general") @map("context_type")
+  experienceId   String?  @map("experience_id")
+  experienceName String?  @map("experience_name")
+  experienceData Json?    @map("experience_data")
+  favorite       Boolean  @default(false)
+  pinned         Boolean  @default(false)
+  folderId       String?  @map("folder_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  user       User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  experience Experience?           @relation(fields: [experienceId], references: [id], onDelete: SetNull)
+  folder     Folder?               @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  messages   ConversationMessage[]
+
+  @@index([userId, updatedAt])
+  @@index([userId, favorite])
+  @@index([userId, pinned])
+  @@index([experienceId])
+  @@index([folderId])
+  @@map("conversations")
+}
+
+model ConversationMessage {
+  id             String   @id @default(uuid())
+  conversationId String   @map("conversation_id")
+  role           String
+  content        String
+  metadata       Json?
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+  @@map("messages")
 }
 
 model Contact {

@@ -8,6 +8,7 @@ import { Spinner } from "../../components/ui/Spinner";
 import { SuccessConfirmDialog } from "../../components/ui/SuccessConfirmDialog";
 import { AdminChangePasswordDialog } from "../../components/admin/AdminChangePasswordDialog";
 import { AdminProfileHeroArt } from "../../components/admin/AdminProfileHeroArt";
+import { UserAvatar } from "../../components/user/UserAvatar";
 import { useAuth } from "../../hooks/useAuth";
 import type { PublicUser } from "../../types";
 import perfilActualizadoIcon from "../../assets/perfil-actualizado-icon.svg";
@@ -219,25 +220,26 @@ function ProfilePhotoModalAvatar({
   src,
   initials,
   name,
+  user,
   onPick,
 }: {
   src: string | null;
   initials: string;
   name: string;
+  user: PublicUser | null;
   onPick: () => void;
 }) {
   return (
     <div className="admin-profile-photo__stage">
       <div className="admin-profile-photo__avatar-wrap">
-        {src ? (
-          <span className="admin-profile-photo__avatar">
-            <img src={src} alt={`Foto de ${name}`} />
-          </span>
-        ) : (
-          <span className="admin-profile-photo__avatar" aria-hidden="true">
-            {initials}
-          </span>
-        )}
+        <UserAvatar
+          user={user}
+          src={src}
+          initial={initials}
+          size={160}
+          className="admin-profile-photo__avatar"
+          alt={src ? `Foto de ${name}` : ""}
+        />
         {!src ? <span className="sr-only">Iniciales de {name}</span> : null}
         <button
           type="button"
@@ -306,7 +308,7 @@ export function AdminProfilePage() {
       window.removeEventListener(ADMIN_AVATAR_EVENT, syncPhoto);
       window.removeEventListener("storage", syncPhoto);
     };
-  }, [user, user?.id, user?.avatarUrl]);
+  }, [user, user?.id, user?.avatarUrl, user?.profile?.profileImageUrl, user?.profile?.profileImageType]);
 
   useEffect(() => {
     let cancelled = false;
@@ -650,15 +652,14 @@ export function AdminProfilePage() {
                 aria-hidden="true"
                 onChange={onPhotoChange}
               />
-              {photo ? (
-                <span className="admin-profile-edit__avatar">
-                  <img src={photo} alt={`Foto de ${fullName}`} />
-                </span>
-              ) : (
-                <span className="admin-profile-edit__avatar" aria-hidden="true">
-                  {initials}
-                </span>
-              )}
+              <UserAvatar
+                user={user}
+                src={photo}
+                initial={initials}
+                size={76}
+                className="admin-profile-edit__avatar"
+                alt={`Foto de ${fullName}`}
+              />
               <button
                 ref={photoTriggerRef}
                 type="button"
@@ -950,7 +951,7 @@ export function AdminProfilePage() {
 
                 {photoDialog === "choose" ? (
                   <>
-                    <ProfilePhotoModalAvatar src={photo} initials={initials} name={fullName} onPick={pickPhoto} />
+                    <ProfilePhotoModalAvatar src={photo} initials={initials} name={fullName} user={user} onPick={pickPhoto} />
                     {photoError ? (
                       <p id="admin-profile-photo-error" className="admin-profile-photo__error" role="alert">
                         {photoError}
@@ -983,6 +984,7 @@ export function AdminProfilePage() {
                       src={pendingPhoto}
                       initials={initials}
                       name={fullName}
+                      user={user}
                       onPick={pickPhoto}
                     />
                     {photoError ? (

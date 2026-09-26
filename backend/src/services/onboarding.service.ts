@@ -208,6 +208,10 @@ export async function saveOnboarding(userId: string, input: OnboardingSaveInput)
       });
     });
 
+    if (profile.profileImageType === "PHOTO" && profile.profileImageUrl) {
+      await mirrorPhotoToUserAvatar(userId, profile.profileImageUrl);
+    }
+
     clearAuthUserCache(userId);
     return serializeProfile(profile);
   } finally {
@@ -215,6 +219,13 @@ export async function saveOnboarding(userId: string, input: OnboardingSaveInput)
       completingUsers.delete(userId);
     }
   }
+}
+
+async function mirrorPhotoToUserAvatar(userId: string, avatarUrl: string | null) {
+  await prisma.user.update({
+    where: { id: userId },
+    data: { avatarUrl },
+  });
 }
 
 export async function uploadOnboardingPhoto(userId: string, file: Express.Multer.File) {
@@ -239,6 +250,7 @@ export async function uploadOnboardingPhoto(userId: string, file: Express.Multer
     select: profileSelect,
   });
 
+  await mirrorPhotoToUserAvatar(userId, stored.url);
   if (previousId && previousId !== stored.publicId) {
     await destroyStoredImage(previousId);
   }
@@ -261,6 +273,10 @@ export async function deleteOnboardingPhoto(userId: string) {
       profileImageType: "AVATAR",
     },
     select: profileSelect,
+  });
+  await prisma.user.update({
+    where: { id: userId },
+    data: { avatarUrl: null },
   });
   await destroyStoredImage(current?.profileImagePublicId);
   clearAuthUserCache(userId);

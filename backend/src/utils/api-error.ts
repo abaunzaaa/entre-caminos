@@ -34,4 +34,8 @@ export class ApiError extends Error {
   static unprocessable(message: string, details?: unknown) {
     return new ApiError(422, message, "UNPROCESSABLE_ENTITY", details);
   }
+
+  static unavailable(message: string, details?: unknown) {
+    return new ApiError(503, message, "SERVICE_UNAVAILABLE", details);
+  }
 }

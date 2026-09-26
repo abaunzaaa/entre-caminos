@@ -46,6 +46,7 @@ export type ExperienceEditorialViewProps = {
   onFavoriteToggle?: () => void;
   nearbyHref?: (id: string) => string;
   fetchNearby?: () => Promise<Experience[]>;
+  onConsultAi?: () => void;
 };
 
 export function buildExperienceEditorialFacts(
@@ -114,6 +115,7 @@ export function ExperienceEditorialView({
   onFavoriteToggle,
   nearbyHref,
   fetchNearby,
+  onConsultAi,
 }: ExperienceEditorialViewProps) {
   const [localFavorite, setLocalFavorite] = useState(false);
   const isFavorite = onFavoriteToggle ? favoriteOn : localFavorite;
@@ -162,6 +164,11 @@ export function ExperienceEditorialView({
         </div>
         <h2 className="dash-exps-editorial__title">{experience.title}</h2>
         {locationByline ? <p className="dash-exps-editorial__byline">{locationByline}</p> : null}
+        {mode === "tourist" && onConsultAi ? (
+          <button type="button" className="dash-exps-editorial__guide" onClick={onConsultAi}>
+            Cómo consultar a la IA
+          </button>
+        ) : null}
       </section>
 
       <ExperienceEditorialDossier

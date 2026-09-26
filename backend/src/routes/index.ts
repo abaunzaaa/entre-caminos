@@ -7,6 +7,7 @@ import { contactRouter } from "./contact.routes.js";
 import { catalogRouter } from "./catalog.routes.js";
 import { experienceRouter } from "./experience.routes.js";
 import { uploadRouter } from "./upload.routes.js";
+import { assistantRouter } from "./assistant.routes.js";
 
 export const apiRouter = Router();
 
@@ -18,3 +19,5 @@ apiRouter.use("/contact", contactRouter);
 apiRouter.use("/catalog", catalogRouter);
 apiRouter.use("/experiences", experienceRouter);
 apiRouter.use("/uploads", uploadRouter);
+apiRouter.use("/assistant", assistantRouter);
+apiRouter.use(assistantRouter);

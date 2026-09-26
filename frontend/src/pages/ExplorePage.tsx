@@ -9,6 +9,9 @@ import {
 import { ExplorerRecommendedSection } from "../components/explorer/ExplorerRecommendedSection";
 import { TouristHomeHero } from "../components/explorer/TouristHomeHero";
 import { experienceCoverUrl } from "../components/explorer/explorer-media";
+import { useAuth } from "../hooks/useAuth";
+import { useGuide } from "../components/guide/GuideContext";
+import avionIcon from "../assets/avion-icon.png";
 import camIcon from "../assets/cam-icon.png";
 import avionIcon from "../assets/avion-icon.png";
 import { useAuth } from "../hooks/useAuth";
@@ -23,7 +26,7 @@ const PAGE_SIZE = 8;
 
 export function ExplorePage() {
   const { user } = useAuth();
-  const interestKey = user?.profile?.interests?.join("\u0001") ?? "";
+  const guide = useGuide();
   const [experiences, setExperiences] = useState<Experience[]>([]);
   const [coverFeatured, setCoverFeatured] = useState<Experience[]>([]);
   const [recommended, setRecommended] = useState<Experience[]>([]);
@@ -151,7 +154,10 @@ export function ExplorePage() {
       <TouristHomeHero
         experiences={heroExperiences}
         selected={selected}
-        onSelect={(experience) => setSelectedId(experience.id)}
+        onSelect={(experience) => {
+          setSelectedId(experience.id);
+          guide.setCatalogFocus(experience);
+        }}
       />
 
       <section

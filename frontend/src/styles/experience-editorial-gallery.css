@@ -374,6 +374,47 @@
   text-transform: uppercase;
 }
 
+.dash-exps-editorial__guide {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  margin: 1.45rem auto 0;
+  padding: 0.72rem 1.4rem;
+  border: 1px solid rgba(41, 73, 66, 0.22);
+  border-radius: 999px;
+  background: #ffffff;
+  color: #294942;
+  font-family: inherit;
+  font-size: 0.68rem;
+  font-weight: 550;
+  letter-spacing: 0.14em;
+  line-height: 1.2;
+  text-align: center;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
+}
+
+.dash-exps-editorial {
+  text-align: center;
+}
+
+.dash-exps-editorial__hero {
+  text-align: initial;
+}
+
+.dash-exps-editorial__guide:hover,
+.dash-exps-editorial__guide:focus-visible {
+  border-color: rgba(41, 73, 66, 0.45);
+  background: rgba(255, 255, 255, 0.92);
+  color: #1c332e;
+  outline: none;
+}
+
 @media (max-width: 1100px) {
   .dash-exps-editorial__shot,
   .dash-exps-editorial__shot--s1,

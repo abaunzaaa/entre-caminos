@@ -20,7 +20,9 @@ Los secretos **nunca** van a GitHub.
 | `SENDGRID_API_KEY` | No | Si vacía, el correo se simula |
 | `CLOUDINARY_*` | No | Si vacías, upload local |
 | `MAPBOX_ACCESS_TOKEN` | No | Mapas |
-| `OPENAI_API_KEY` | No | IA futura |
+| `OPENAI_API_KEY` | No | IA futura (no usar en el frontend) |
+| `GEMINI_API_KEY` | No | Asistente “Tu guía”. Solo backend |
+| `GEMINI_MODEL` | No | Default `gemini-2.0-flash` |
 
 Guía completa: [database.md](database.md).
 
@@ -40,9 +42,13 @@ Archivo `frontend/.env`:
 - `COOKIE_SECURE=true`
 - `NODE_ENV=production`
 - PostgreSQL en Supabase (`entre-caminos-db` u otro proyecto de prod).
-- Frontend en **Vercel** (root `frontend/`, build `npm run build`, output `dist`).
+- Frontend en **Vercel**, enlazado al **mismo repositorio de GitHub** (no a una carpeta suelta ni a un zip).
+  - Framework: Vite
+  - Root Directory: vacío (la raíz del repo)
+  - Vercel usa el `vercel.json` de la raíz: instala y construye solo `frontend/`
+  - Output: `frontend/dist`
 - API en **Render** (root `backend/`, ver `backend/render.yaml`).
-- En Vercel, variable de build: `VITE_API_URL=https://<servicio-render>/api` (URL pública del API).
+- En Vercel, variable de **build**: `VITE_API_URL=https://<servicio-render>/api` (URL pública del API, sin barra final de más).
 - En Render, `FRONTEND_URL=https://<proyecto-vercel>` (origen CORS, sin barra final).
 - Cloudinary obligatorio en producción (disco de Render es efímero).
 - SendGrid recomendado para verificación y recuperación de correo.

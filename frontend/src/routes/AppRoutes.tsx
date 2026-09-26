@@ -1,5 +1,6 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { EntreCaminosIntro } from "../components/intro/EntreCaminosIntro";
 import { AdminLayout } from "../layouts/AdminLayout";
 import { UserAccountLayout } from "../layouts/UserAccountLayout";
 import { PublicLayout } from "../layouts/PublicLayout";
@@ -24,7 +25,8 @@ import { ExperiencesPage } from "../pages/admin/ExperiencesPage";
 import { FeaturedExperiencesPage } from "../pages/admin/FeaturedExperiencesPage";
 import { ExperienceFormPage } from "../pages/admin/ExperienceFormPage";
 import { ExperiencePreviewPage } from "../pages/admin/ExperiencePreviewPage";
-import { ChangePasswordPage } from "../pages/ChangePasswordPage";
+import { GuideHost } from "../components/guide/GuideHost";
+import { GuideProvider } from "../components/guide/GuideProvider";
 import { ProtectedRoute } from "./ProtectedRoute";
 
 const PAGE_TITLES: Record<string, string> = {
@@ -38,6 +40,8 @@ const PAGE_TITLES: Record<string, string> = {
   "/onboarding/listo": "Personaliza tu experiencia | Entre Caminos",
 };
 
+const INTRO_SEEN_KEY = "ec-intro-seen";
+
 function DocumentTitle() {
   const { pathname } = useLocation();
 
@@ -48,11 +52,41 @@ function DocumentTitle() {
   return null;
 }
 
+function LandingIntro() {
+  const { pathname } = useLocation();
+  const [done, setDone] = useState(() => {
+    try {
+      return sessionStorage.getItem(INTRO_SEEN_KEY) === "1";
+    } catch {
+      return false;
+    }
+  });
+
+  if (done || pathname !== "/") {
+    return null;
+  }
+
+  return (
+    <EntreCaminosIntro
+      onFinish={() => {
+        try {
+          sessionStorage.setItem(INTRO_SEEN_KEY, "1");
+        } catch {
+          /* private mode */
+        }
+        setDone(true);
+      }}
+    />
+  );
+}
+
 export function AppRoutes() {
   return (
     <BrowserRouter>
       <DocumentTitle />
-      <Routes>
+      <LandingIntro />
+      <GuideProvider>
+        <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route element={<AuthPage />}>
           <Route path="/register" element={<></>} />
@@ -102,7 +136,9 @@ export function AppRoutes() {
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+        </Routes>
+        <GuideHost />
+      </GuideProvider>
     </BrowserRouter>
   );
 }

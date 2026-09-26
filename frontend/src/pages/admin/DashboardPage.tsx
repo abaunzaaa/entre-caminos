@@ -17,7 +17,8 @@ import {
   getDashboard,
   deleteExperience,
 } from "../../services/catalog.service";
-import { ADMIN_AVATAR_EVENT, resolveAvatarUrl } from "../../utils/admin-avatar";
+import { UserAvatar } from "../../components/user/UserAvatar";
+import { ADMIN_AVATAR_EVENT, nameInitial, resolveAvatarUrl } from "../../utils/admin-avatar";
 import { CountUp } from "../../components/admin/CountUp";
 import { DashCardRail } from "../../components/admin/DashCardRail";
 import { ExperienceCatalogCard } from "../../components/admin/ExperienceCatalogCard";
@@ -146,7 +147,7 @@ export function DashboardPage() {
 
   useEffect(() => {
     setPhoto(resolveAvatarUrl(user));
-  }, [user, user?.id, user?.avatarUrl]);
+  }, [user, user?.id, user?.avatarUrl, user?.profile?.profileImageUrl, user?.profile?.profileImageType]);
 
   useEffect(() => {
     function syncPhoto() {
@@ -158,7 +159,7 @@ export function DashboardPage() {
       window.removeEventListener(ADMIN_AVATAR_EVENT, syncPhoto);
       window.removeEventListener("storage", syncPhoto);
     };
-  }, [user, user?.id, user?.avatarUrl]);
+  }, [user, user?.id, user?.avatarUrl, user?.profile?.profileImageUrl, user?.profile?.profileImageType]);
 
   useEffect(() => {
     if (!user?.id) {
@@ -251,7 +252,7 @@ export function DashboardPage() {
   }, [user?.id, user?.role]);
 
   const fullName = user?.name?.trim() || "Administrador";
-  const initial = fullName.charAt(0).toUpperCase() || "A";
+  const initial = nameInitial(fullName, "A");
   const createdCategories = metrics?.createdCategories ?? 0;
   const createdExperiences = metrics?.createdExperiences ?? 0;
 
@@ -292,9 +293,14 @@ export function DashboardPage() {
       ) : null}
       <article id="admin-profile-summary-card" className="dash-profile">
         <div className="dash-profile__top">
-          <span className="dash-profile__photo" aria-hidden="true">
-            {photo ? <img src={photo} alt="" /> : initial}
-          </span>
+          <UserAvatar
+            user={user}
+            src={photo}
+            initial={initial}
+            size={112}
+            className="dash-profile__photo"
+            alt=""
+          />
           <div className="dash-profile__identity">
             <h1 className="dash-profile__name">{greetingForName(fullName)}</h1>
             <p className="dash-profile__row">
@@ -387,7 +393,7 @@ export function DashboardPage() {
                 <div className="dash-split__list">
                   {admins.map((admin) => {
                     const avatar = resolveAvatarUrl(admin);
-                    const adminInitial = admin.name.trim().charAt(0).toUpperCase() || "A";
+                    const adminInitial = nameInitial(admin.name, "A");
                     return (
                       <article key={admin.id} className="dash-team-card">
                         <span className="dash-team-card__avatar">

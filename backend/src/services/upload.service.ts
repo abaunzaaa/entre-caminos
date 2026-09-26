@@ -97,6 +97,24 @@ export async function persistExperienceImage(file?: Express.Multer.File): Promis
   return stored.url;
 }
 
+/** Sube un JPEG local a Cloudinary (catálogo). Falla si Cloudinary no está en .env. */
+export async function persistExperienceJpegFromDisk(filePath: string, originalname: string): Promise<string> {
+  if (!cloudinaryConfigured()) {
+    throw new Error("Configura CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY y CLOUDINARY_API_SECRET en backend/.env");
+  }
+  const buffer = await fs.readFile(filePath);
+  const stored = await uploadToCloudinary(
+    {
+      buffer,
+      originalname,
+      mimetype: "image/jpeg",
+      size: buffer.length,
+    } as Express.Multer.File,
+    "entre-caminos/experiences",
+  );
+  return stored.url;
+}
+
 export async function persistProfileImage(file: Express.Multer.File): Promise<StoredImage> {
   return persistImage(file, "entre-caminos/profiles");
 }

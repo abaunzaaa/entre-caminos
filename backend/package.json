@@ -15,6 +15,7 @@
     "prisma:seed": "tsx prisma/seed.ts",
     "prisma:studio": "prisma studio",
     "db:verify": "tsx scripts/verify-db.ts",
+    "catalog:restore": "tsx scripts/restore-catalog.ts",
     "test": "vitest run --reporter=verbose",
     "test:local": "vitest run --config vitest.unit.config.ts --reporter=verbose",
     "test:unit": "vitest run --config vitest.unit.config.ts --reporter=verbose",

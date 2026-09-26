@@ -16,10 +16,21 @@ export function readAdminAvatar(userId: string | undefined | null) {
   }
 }
 
+export function nameInitial(name?: string | null, fallback = "U") {
+  return (name?.trim().charAt(0) || fallback).toUpperCase();
+}
+
 export function resolveAvatarUrl(
-  user?: { id?: string; avatarUrl?: string | null; profile?: { profileImageUrl?: string | null } | null } | null,
+  user?: {
+    id?: string;
+    avatarUrl?: string | null;
+    profile?: { profileImageUrl?: string | null; profileImageType?: string | null } | null;
+  } | null,
 ) {
-  const url = user?.avatarUrl?.trim() || user?.profile?.profileImageUrl?.trim();
+  const stored = user?.avatarUrl?.trim() || "";
+  const profileUrl = user?.profile?.profileImageUrl?.trim() || "";
+  const preferPhoto = user?.profile?.profileImageType !== "AVATAR";
+  const url = stored || (preferPhoto ? profileUrl : "") || "";
   if (url) {
     if (url.startsWith("data:") || url.startsWith("blob:") || /^https?:\/\//i.test(url)) {
       return url;
