@@ -53,6 +53,7 @@ Habla en español, con tono cercano, calmado y premium. No eres un buscador: con
 Reglas:
 - Si falta ciudad, fecha, compañía, presupuesto o interés para armar un plan, pregunta UNA cosa a la vez.
 - Nunca inventes experiencias que no estén en el catálogo. Usa solo los id del catálogo.
+- Si el catálogo está vacío, dilo con claridad: aún no hay experiencias publicadas. No inventes lugares ni precios.
 - Si no hay coincidencias, dilo y ofrece alternativas del catálogo.
 - Responde SOLO un JSON con esta forma:
 {
@@ -84,6 +85,30 @@ function asStringArray(value: unknown) {
     return [];
   }
   return value.map((item) => asString(item)).filter(Boolean);
+}
+
+function extractIds(value: unknown): string[] {
+  if (!value) {
+    return [];
+  }
+  if (typeof value === "string") {
+    return value.trim() ? [value.trim()] : [];
+  }
+  if (Array.isArray(value)) {
+    return value.flatMap(extractIds);
+  }
+  if (typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    return extractIds(record.id ?? record.experienceId ?? record.title ?? record.name);
+  }
+  return [];
+}
+
+function idsFromText(text: string, catalog: CatalogItem[]) {
+  const lower = text.toLowerCase();
+  return catalog
+    .filter((item) => item.title.length > 3 && lower.includes(item.title.toLowerCase()))
+    .map((item) => item.id);
 }
 
 function hydrate(ids: string[], catalog: CatalogItem[]): AssistantExperienceCard[] {
@@ -154,19 +179,25 @@ function buildPlan(planRaw: Record<string, unknown>, cards: AssistantExperienceC
 function fallbackSearch(query: string, catalog: CatalogItem[]) {
   const terms = query
     .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
     .split(/\s+/)
-    .filter((term) => term.length > 3);
+    .filter((term) => term.length > 3)
+    .filter((term) => !["encuentra", "encuentreme", "experiencia", "experiencias", "encajen", "gustos", "quiero", "recomiendame", "recomienda", "cerca", "plan", "planes", "lugar", "lugares", "segun", "mis"].includes(term));
   const scored = catalog
     .map((item) => {
-      const hay = `${item.title} ${item.description} ${item.location} ${item.category ?? ""}`.toLowerCase();
+      const hay = `${item.title} ${item.description} ${item.location} ${item.category ?? ""}`
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
       const score = terms.reduce((sum, term) => sum + (hay.includes(term) ? 1 : 0), 0);
       return { item, score };
     })
     .filter((row) => row.score > 0)
     .sort((a, b) => b.score - a.score)
-    .slice(0, 3)
+    .slice(0, 4)
     .map((row) => row.item.id);
-  return scored;
+  return scored.length ? scored : catalog.slice(0, 4).map((item) => item.id);
 }
 
 export async function chatWithGuide(input: {
@@ -192,7 +223,11 @@ export async function chatWithGuide(input: {
     throw ApiError.unavailable("No pude encontrar información en este momento.");
   }
 
-  const ids = asStringArray(parsed.experienceIds);
+  const ids = [
+    ...extractIds(parsed.experienceIds),
+    ...extractIds(parsed.experiences),
+    ...idsFromText(asString(parsed.reply), catalog),
+  ];
   const planRaw = parsed.plan && typeof parsed.plan === "object" ? (parsed.plan as Record<string, unknown>) : null;
   const progressRaw =
     parsed.planProgress && typeof parsed.planProgress === "object"
@@ -200,7 +235,7 @@ export async function chatWithGuide(input: {
       : null;
   let cards = hydrate(ids, catalog);
   if (planRaw) {
-    const fromPlan = hydrate(asStringArray(planRaw.experiences), catalog);
+    const fromPlan = hydrate(extractIds(planRaw.experiences), catalog);
     cards = [...cards, ...fromPlan.filter((item) => !cards.some((card) => card.id === item.id))].slice(0, 4);
   }
 
@@ -208,21 +243,31 @@ export async function chatWithGuide(input: {
   if (status !== "empty" && status !== "need_info") {
     status = "ok";
   }
-  if (!cards.length && (asString(parsed.intent) === "recommend" || asString(parsed.intent) === "plan")) {
+  const wantsCatalog =
+    asString(parsed.intent) === "recommend" ||
+    asString(parsed.intent) === "plan" ||
+    asString(parsed.intent) === "experience" ||
+    /experiencia|recomiend|buscar|gustos|cerca|plan|lugar/i.test(input.message);
+  if (!cards.length && wantsCatalog && catalog.length) {
     cards = hydrate(fallbackSearch(input.message, catalog), catalog);
-    if (!cards.length) {
-      status = "empty";
-    }
+  }
+  if (!cards.length && wantsCatalog) {
+    status = "empty";
   }
 
-  const plan = planRaw ? buildPlan(planRaw, cards, cityFallback) : null;
+  const emptyCatalog = catalog.length === 0;
+  if (emptyCatalog) {
+    status = "empty";
+  }
+  const plan = emptyCatalog || !planRaw ? null : buildPlan(planRaw, cards, cityFallback);
 
   return {
-    reply:
-      asString(parsed.reply) ||
-      (status === "empty"
-        ? "No encontré experiencias exactas, pero puedo buscar alternativas."
-        : "Cuéntame un poco más para afinarte el plan."),
+    reply: emptyCatalog
+      ? "Aún no hay experiencias publicadas en Entre Caminos, así que no puedo mostrarte tarjetas ahora. Cuando el equipo publique el catálogo, aquí aparecerán recomendaciones reales."
+      : asString(parsed.reply) ||
+        (status === "empty"
+          ? "No encontré experiencias exactas en el catálogo publicado. ¿Quieres que busque con otra ciudad, interés o presupuesto?"
+          : "Cuéntame un poco más para afinarte el plan."),
     intent: (["chat", "clarify", "recommend", "plan", "experience"].includes(asString(parsed.intent))
       ? asString(parsed.intent)
       : "chat") as AssistantReply["intent"],

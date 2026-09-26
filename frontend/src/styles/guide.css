@@ -1,24 +1,26 @@
 .guide-fab {
   position: fixed;
-  right: 22px;
-  bottom: 22px;
-  z-index: 1200;
+  right: 24px;
+  bottom: 28px;
+  z-index: 10060;
   display: grid;
   place-items: center;
   width: 56px;
   height: 56px;
   padding: 0;
   overflow: hidden;
-  border: 1.2px solid rgba(33, 78, 59, 0.55);
+  border: 1.5px solid #214e3b;
   border-radius: 50%;
-  background: rgba(255, 253, 249, 0.58);
+  background: #fffdf9;
   box-shadow:
-    0 0 0 8px rgba(33, 78, 59, 0.08),
-    0 14px 32px -16px rgba(23, 60, 47, 0.5);
-  backdrop-filter: blur(16px) saturate(1.2);
-  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+    0 0 0 6px rgba(33, 78, 59, 0.1),
+    0 14px 32px -14px rgba(23, 60, 47, 0.5);
   cursor: pointer;
   animation: guide-fab-live 3.8s ease-in-out infinite;
+}
+
+.guide-fab[hidden] {
+  display: none !important;
 }
 
 .guide-fab svg {
@@ -30,7 +32,7 @@
 .guide-fab:hover {
   transform: scale(1.04);
   box-shadow:
-    0 0 0 10px rgba(33, 78, 59, 0.12),
+    0 0 0 8px rgba(33, 78, 59, 0.14),
     0 16px 32px -14px rgba(23, 60, 47, 0.48);
 }
 
@@ -56,33 +58,47 @@
 
 .guide-panel {
   position: fixed;
-  right: 20px;
-  bottom: 20px;
-  z-index: 1190;
+  right: 24px;
+  bottom: 28px;
+  z-index: 10040;
   display: flex;
-  width: 352px;
-  max-width: calc(100vw - 40px);
-  height: 396px;
-  max-height: min(396px, calc(100dvh - 100px));
+  width: 346px;
+  max-width: calc(100vw - 32px);
+  height: min(476px, calc(100dvh - 128px));
+  max-height: calc(100dvh - 128px);
   flex-direction: column;
   overflow: hidden;
   isolation: isolate;
-  border: 1px solid rgba(33, 78, 59, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.86);
   border-radius: 22px;
-  background: rgba(255, 255, 255, 0.62);
+  background:
+    radial-gradient(920px 360px at 8% -18%, rgba(247, 243, 234, 0.55), transparent 58%),
+    linear-gradient(180deg, rgba(255, 253, 249, 0.86), rgba(255, 252, 247, 0.82));
   box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.7) inset,
-    0 18px 40px -22px rgba(23, 60, 47, 0.42),
-    0 6px 16px -14px rgba(23, 60, 47, 0.22);
-  backdrop-filter: blur(28px) saturate(1.18);
-  -webkit-backdrop-filter: blur(28px) saturate(1.18);
+    0 1px 0 rgba(255, 255, 255, 0.95) inset,
+    0 24px 52px -24px rgba(23, 60, 47, 0.36),
+    0 10px 22px -16px rgba(23, 60, 47, 0.14);
+  backdrop-filter: blur(40px) saturate(1.22);
+  -webkit-backdrop-filter: blur(40px) saturate(1.22);
   color: #173c2f;
   font-family: inherit;
   animation: guide-rise 280ms cubic-bezier(0.22, 1, 0.36, 1);
+  --guide-accent: #214e3b;
+}
+
+.guide-panel.guide-panel--home:not(.is-expanded),
+.guide-panel:not(.guide-panel--home):not(.is-expanded) {
+  height: min(476px, calc(100dvh - 128px));
 }
 
 .guide-panel::before {
-  display: none;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 253, 249, 0.08) 42%, rgba(247, 243, 234, 0.16) 100%);
+  content: "";
 }
 
 .guide-panel::after {
@@ -106,11 +122,18 @@
   display: flex;
   flex-shrink: 0;
   align-items: center;
-  gap: 10px;
-  padding: 8px 12px 8px 16px;
-  border-bottom: 0;
-  background: #214e3b;
-  color: #ffffff;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px 10px 16px;
+  border-bottom: 1px solid rgba(31, 41, 51, 0.08);
+  border-radius: 22px 22px 0 0;
+  background: rgba(255, 255, 255, 0.92);
+  color: #111827;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    0 8px 16px -20px rgba(31, 41, 51, 0.2);
+  backdrop-filter: blur(22px) saturate(1.2);
+  -webkit-backdrop-filter: blur(22px) saturate(1.2);
 }
 
 .guide-panel__brand {
@@ -252,10 +275,10 @@
 
 .guide-panel__brand strong {
   display: block;
-  color: #ffffff;
-  font-size: 0.78rem;
+  color: #111827;
+  font-size: 13px;
   font-weight: 600;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.014em;
   line-height: 1.2;
 }
 
@@ -264,15 +287,7 @@
 }
 
 .guide-panel__brand em {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  margin-top: 3px;
-  color: rgba(255, 255, 255, 0.78);
-  font-size: 0.58rem;
-  font-style: normal;
-  font-weight: 500;
-  letter-spacing: 0.02em;
+  display: none;
 }
 
 .guide-panel__brand em i {
@@ -280,8 +295,8 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #b7e0c4;
-  box-shadow: 0 0 0 3px rgba(183, 224, 196, 0.22);
+  background: #b7e8c6;
+  box-shadow: 0 0 0 0 rgba(183, 232, 198, 0.55);
 }
 
 .guide-panel__brand em.is-live i {
@@ -290,7 +305,7 @@
 
 .guide-panel__brand em.is-busy i {
   background: #e8d5a3;
-  box-shadow: 0 0 0 3px rgba(232, 213, 163, 0.22);
+  box-shadow: none;
   animation: guide-pulse 0.9s ease-in-out infinite;
 }
 
@@ -298,43 +313,52 @@
   display: flex;
   flex-shrink: 0;
   align-items: center;
-  gap: 6px;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-right: 2px;
 }
 
 .guide-icon-btn svg {
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
 }
 
 .guide-icon-btn {
   display: grid;
   place-items: center;
-  width: 26px;
-  height: 26px;
+  width: 22px;
+  height: 22px;
   padding: 0;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 50%;
+  border: 0;
+  border-radius: 0;
   background: transparent;
-  color: #ffffff;
+  color: #4b5563;
+  opacity: 1;
   cursor: pointer;
   backdrop-filter: none;
-  transition: transform 140ms ease, background 140ms ease, border-color 140ms ease;
+  box-shadow: none;
+  transition: color 140ms ease, opacity 140ms ease;
 }
 
 .guide-icon-btn:hover,
 .guide-icon-btn:focus-visible {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.28);
+  background: transparent;
+  border-color: transparent;
   outline: none;
   transform: none;
+  color: #1f2933;
+  opacity: 1;
 }
 
 .guide-icon-btn--close:hover {
-  background: rgba(255, 255, 255, 0.16);
-  color: #ffffff;
+  background: transparent;
+  color: #1f2933;
+  opacity: 1;
 }
 
 .guide-shell {
+  position: relative;
+  z-index: 1;
   display: flex;
   min-width: 0;
   min-height: 0;
@@ -344,7 +368,7 @@
 }
 
 .guide-panel.is-expanded {
-  top: 80px;
+  top: 96px;
   right: 2.5vw;
   bottom: 2.5vh;
   left: 2.5vw;
@@ -353,9 +377,9 @@
   max-height: none;
   flex-direction: row;
   border-radius: 24px;
-  background: rgba(255, 255, 255, 0.68);
-  backdrop-filter: blur(30px) saturate(1.2);
-  -webkit-backdrop-filter: blur(30px) saturate(1.2);
+  background: rgba(255, 253, 249, 0.84);
+  backdrop-filter: blur(40px) saturate(1.22);
+  -webkit-backdrop-filter: blur(40px) saturate(1.22);
 }
 
 .guide-rail {
@@ -368,12 +392,12 @@
   border-right: 1px solid rgba(255, 255, 255, 0.28);
   background: rgba(247, 243, 234, 0.14);
   backdrop-filter: blur(18px);
-  font-family: Poppins, Nunito, system-ui, sans-serif;
+  font-family: inherit;
 }
 
 .guide-rail__app {
   margin: 0 2px 10px;
-  color: #173c2f;
+  color: #1f2933;
   font-size: 13px;
   font-weight: 600;
   letter-spacing: -0.02em;
@@ -386,7 +410,7 @@
   margin-bottom: 8px;
   border: 0;
   border-radius: 999px;
-  background: #214e3b;
+  background: #234f3d;
   color: #ffffff;
   font: inherit;
   font-size: 12px;
@@ -412,7 +436,7 @@
   border: 1px solid rgba(255, 255, 255, 0.55);
   border-radius: 10px;
   background: rgba(255, 253, 249, 0.38);
-  color: #214e3b;
+  color: #1f2933;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(12px);
 }
@@ -836,51 +860,37 @@
   flex-direction: column;
 }
 
+.guide-panel--home:not(.is-expanded) .guide-home {
+  flex: 1;
+  justify-content: flex-start;
+}
+
 .guide-home {
-  justify-content: space-between;
-  gap: 10px;
+  justify-content: flex-start;
+  gap: 14px;
   overflow: hidden;
-  padding: 14px 14px 12px;
+  padding: 28px 16px 16px;
 }
 
 .guide-home__intro {
   display: flex;
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 4px;
-  padding: 4px 8px 0;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 4px 8px 2px;
   text-align: center;
-}
-
-.guide-home__pin {
-  display: grid;
-  width: 28px;
-  height: 28px;
-  margin: 0 auto 2px;
-  overflow: hidden;
-  border: 1px solid rgba(33, 78, 59, 0.16);
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.48);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    0 6px 12px -10px rgba(23, 60, 47, 0.3);
-  backdrop-filter: blur(10px);
-  color: #214e3b;
-  place-items: center;
-}
-
-.guide-home__pin svg {
-  width: 16px;
-  height: 16px;
 }
 
 .guide-home__dock {
   display: flex;
-  flex-shrink: 0;
+  flex: 1 1 auto;
+  min-height: 0;
   flex-direction: column;
-  gap: 10px;
+  justify-content: flex-start;
+  gap: 12px;
+  padding: 0;
 }
 
 .guide-hello {
@@ -889,46 +899,72 @@
 
 .guide-home h2 {
   margin: 0;
+  max-width: 18em;
+  overflow: hidden;
   font-family: inherit;
-  font-size: 0.98rem;
+  font-size: 18px;
   font-weight: 600;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.032em;
   line-height: 1.3;
+  color: #111827;
+  text-align: center;
+  white-space: nowrap;
 }
 
 .guide-home__copy {
-  max-width: 30ch;
   margin: 0;
-  color: #6a7b73;
-  font-size: 0.7rem;
-  font-weight: 400;
-  line-height: 1.4;
+  max-width: 100%;
+  overflow: hidden;
+  color: #4b5563;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.35;
+  text-align: center;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.guide-home .guide-composer {
+  margin-top: auto;
+  margin-bottom: 0;
+  padding-top: 4px;
 }
 
 .guide-panel.is-expanded .guide-home {
-  max-width: 640px;
+  max-width: 520px;
   margin: 0 auto;
   width: 100%;
-  justify-content: flex-start;
-  padding: 28px 28px 24px;
-  gap: 16px;
+  justify-content: center;
+  padding: 28px 20px 20px;
+  gap: 18px;
 }
 
 .guide-panel.is-expanded .guide-home h2 {
-  max-width: 24ch;
-  font-size: 1.22rem;
+  max-width: 16em;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.032em;
+  line-height: 1.36;
+  color: #111827;
+}
+
+.guide-panel.is-expanded .guide-home__copy {
+  font-size: 13px;
+  color: #4b5563;
 }
 
 .guide-panel.is-expanded .guide-home__dock {
-  gap: 10px;
+  flex: 0 0 auto;
+  gap: 16px;
+  padding: 0;
 }
 
 .guide-panel.is-expanded .guide-actions {
   grid-template-columns: 1fr 1fr;
-  max-width: none;
-  margin-inline: 0;
+  max-width: 300px;
+  margin-inline: auto;
   width: 100%;
-  gap: 8px;
+  gap: 10px 12px;
 }
 
 .guide-composer {
@@ -946,46 +982,46 @@
   position: relative;
   display: flex;
   min-width: 0;
+  width: 100%;
   align-items: center;
-  height: 54px;
-  min-height: 54px;
-  padding: 6px 6px 6px 12px;
+  height: 66px;
+  min-height: 66px;
+  padding: 8px 8px 8px 16px;
   border: 1px solid rgba(33, 78, 59, 0.12);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.92);
   box-shadow:
-    inset 0 1px 2px rgba(23, 60, 47, 0.05),
-    inset 0 1px 0 rgba(255, 255, 255, 0.92),
-    0 8px 18px -14px rgba(23, 60, 47, 0.3);
-  backdrop-filter: blur(18px) saturate(1.1);
-  -webkit-backdrop-filter: blur(18px) saturate(1.1);
-  transition: border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    0 8px 22px -16px rgba(31, 41, 51, 0.16);
+  backdrop-filter: blur(16px) saturate(1.12);
+  -webkit-backdrop-filter: blur(16px) saturate(1.12);
+  transition: border-color 180ms ease, box-shadow 180ms ease;
 }
 
 .guide-composer:focus-within .guide-composer__bar {
   border-color: rgba(33, 78, 59, 0.28);
-  background: rgba(255, 255, 255, 0.68);
+  background: rgba(255, 255, 255, 0.96);
   box-shadow:
-    inset 0 1px 2px rgba(23, 60, 47, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.95),
-    0 0 0 4px rgba(33, 78, 59, 0.08);
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    0 8px 22px -14px rgba(53, 106, 85, 0.22),
+    0 0 0 3px rgba(53, 106, 85, 0.1);
 }
 
 .guide-composer textarea,
 .guide-composer__field {
   flex: 1;
   width: 100%;
-  height: 22px;
-  min-height: 22px;
-  max-height: 22px;
+  height: 32px;
+  min-height: 32px;
+  max-height: 32px;
   margin: 0;
-  padding: 0 8px;
+  padding: 0 6px;
   border: 0;
   background: transparent;
-  color: #173c2f;
+  color: #111827;
   font: inherit;
-  font-size: 0.74rem;
-  line-height: 22px;
+  font-size: 12.5px;
+  line-height: 16px;
   resize: none !important;
   overflow: hidden;
   appearance: none;
@@ -1007,7 +1043,8 @@
 
 .guide-composer textarea::placeholder,
 .guide-composer__field::placeholder {
-  color: #8a968f;
+  color: #374151;
+  opacity: 1;
 }
 
 .guide-composer textarea:focus,
@@ -1028,10 +1065,10 @@
 
 .guide-plus,
 .guide-mic {
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   background: transparent;
-  color: #214e3b;
+  color: #4b5563;
 }
 
 .guide-mic.is-on {
@@ -1039,24 +1076,24 @@
 }
 
 .guide-send {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border: 0;
-  background: #214e3b;
+  background: var(--guide-accent);
   color: #ffffff;
-  box-shadow: 0 8px 16px -8px rgba(33, 78, 59, 0.9);
+  box-shadow: 0 8px 16px -8px rgba(33, 78, 59, 0.55);
   transition: transform 160ms ease, box-shadow 160ms ease;
 }
 
 .guide-send:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 14px 24px -12px rgba(33, 78, 59, 0.85);
+  box-shadow: 0 14px 24px -12px rgba(33, 78, 59, 0.7);
 }
 
 .guide-send:disabled {
-  background: #214e3b;
+  background: var(--guide-accent);
   color: #ffffff;
-  opacity: 0.78;
+  opacity: 0.9;
   cursor: not-allowed;
 }
 
@@ -1080,7 +1117,7 @@
   border: 0;
   border-radius: 12px;
   background: transparent;
-  color: #173c2f;
+  color: #1f2933;
   text-align: left;
   cursor: pointer;
 }
@@ -1093,63 +1130,90 @@
   display: grid;
   flex-shrink: 0;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  grid-auto-rows: minmax(56px, auto);
+  gap: 10px;
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
 }
 
 .guide-action {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 8px;
-  min-height: 42px;
+  width: 100%;
+  height: auto;
+  min-height: 56px;
+  max-height: none;
   padding: 8px 10px;
-  border: 1px solid rgba(33, 78, 59, 0.12);
+  overflow: visible;
+  border: 1px solid rgba(33, 78, 59, 0.08);
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.92);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.72),
-    0 6px 12px -12px rgba(23, 60, 47, 0.28);
-  backdrop-filter: blur(12px);
-  color: #173c2f;
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    0 6px 14px -10px rgba(23, 60, 47, 0.22);
+  backdrop-filter: blur(12px) saturate(1.08);
+  -webkit-backdrop-filter: blur(12px) saturate(1.08);
+  color: #111827;
   text-align: left;
   cursor: pointer;
-  transition: transform 160ms ease, background 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+  transition: background 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
 }
 
 .guide-action:hover {
-  border-color: rgba(33, 78, 59, 0.2);
-  background: rgba(255, 255, 255, 0.48);
+  border-color: rgba(33, 78, 59, 0.16);
+  background: rgba(255, 255, 255, 0.98);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.85),
-    0 8px 16px -12px rgba(23, 60, 47, 0.36);
-  transform: translateY(-1px);
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    0 8px 16px -10px rgba(23, 60, 47, 0.26);
+  transform: none;
 }
 
-.guide-action strong,
-.guide-action em {
-  display: block;
-  font-style: normal;
+.guide-action > span:last-child {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2px;
+  overflow: visible;
 }
 
 .guide-action strong {
-  font-size: 0.68rem;
+  display: block;
+  width: 100%;
+  color: #111827;
+  font-size: 11.5px;
   font-weight: 600;
   letter-spacing: -0.02em;
+  line-height: 1.2;
+  white-space: normal;
+  overflow: visible;
+  word-break: break-word;
 }
 
 .guide-action em {
-  margin-top: 1px;
-  color: #6a7b73;
-  font-size: 0.56rem;
+  display: block;
+  width: 100%;
+  color: #6b7280;
+  font-size: 9.5px;
+  font-style: normal;
   font-weight: 400;
+  letter-spacing: -0.01em;
   line-height: 1.25;
+  white-space: normal;
+  overflow: visible;
 }
 
 .guide-action__icon {
   display: grid;
   flex-shrink: 0;
   place-items: center;
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   border: 0;
   border-radius: 0;
   background: transparent;
@@ -1183,14 +1247,14 @@
   padding: 7px 2px;
   border: 0;
   background: transparent;
-  color: #214e3b;
+  color: #1f2933;
   font-size: 0.76rem;
   text-align: left;
   cursor: pointer;
 }
 
 .guide-prompts button:hover {
-  color: #173c2f;
+  color: #1f2933;
 }
 
 .guide-recents__head {
@@ -1202,7 +1266,7 @@
 .guide-recents__head button {
   border: 0;
   background: none;
-  color: #214e3b;
+  color: #6b7280;
   font-size: 0.72rem;
   cursor: pointer;
 }
@@ -1258,8 +1322,12 @@
 .guide-row {
   display: flex;
   gap: 8px;
-  max-width: 94%;
+  max-width: 86%;
   animation: guide-msg 320ms ease;
+}
+
+.guide-row:not(.guide-row--user) {
+  max-width: 92%;
 }
 
 .guide-row--user {
@@ -1267,8 +1335,15 @@
   flex-direction: row-reverse;
 }
 
-.guide-row__body {
+.guide-row--user .guide-row__body {
   min-width: 0;
+  width: auto;
+  max-width: 100%;
+}
+
+.guide-row:not(.guide-row--user) .guide-row__body {
+  min-width: 0;
+  width: 100%;
 }
 
 .guide-avatar {
@@ -1284,7 +1359,7 @@
 }
 
 .guide-chat {
-  padding-bottom: 14px;
+  padding-bottom: 10px;
 }
 
 .guide-chat .guide-composer {
@@ -1293,31 +1368,30 @@
 
 .guide-day {
   margin: 4px 0 2px;
-  color: #8a968f;
+  color: #6b7280;
   font-size: 0.68rem;
   text-align: center;
 }
 
 .guide-bubble {
-  padding: 10px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.45);
-  border-radius: 18px 18px 18px 8px;
-  background: rgba(255, 255, 255, 0.52);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.75),
-    0 8px 18px -16px rgba(23, 60, 47, 0.4);
-  backdrop-filter: blur(12px);
-  font-size: 0.84rem;
+  padding: 9px 13px;
+  border: 1px solid rgba(35, 79, 61, 0.07);
+  border-radius: 16px 16px 16px 8px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 6px 16px -14px rgba(23, 60, 47, 0.28);
+  backdrop-filter: blur(10px);
+  color: #111827;
+  font-size: 0.82rem;
   line-height: 1.5;
   white-space: pre-wrap;
 }
 
 .guide-row--user .guide-bubble {
   border: 0;
-  border-radius: 18px 18px 8px 18px;
-  background: #214e3b;
-  color: #fffdf9;
-  box-shadow: 0 10px 18px -12px rgba(33, 78, 59, 0.7);
+  border-radius: 16px 16px 6px 16px;
+  background: #e5e5e3;
+  color: #1f2933;
+  box-shadow: none;
   backdrop-filter: none;
 }
 
@@ -1327,7 +1401,7 @@
 
 .guide-row time {
   margin: 0;
-  color: #8a968f;
+  color: #6b7280;
   font-size: 0.66rem;
 }
 
@@ -1336,7 +1410,7 @@
   align-items: center;
   gap: 8px;
   margin-top: 5px;
-  color: #8a968f;
+  color: #6b7280;
   font-size: 0.66rem;
 }
 
@@ -1391,7 +1465,7 @@
 
 .guide-progress {
   margin: 0 16px 6px;
-  color: #214e3b;
+  color: #1f2933;
   font-size: 0.75rem;
   font-weight: 650;
 }
@@ -1408,7 +1482,7 @@
   border: 1px solid rgba(33, 78, 59, 0.12);
   border-radius: 999px;
   background: rgba(255, 253, 249, 0.7);
-  color: #214e3b;
+  color: #1f2933;
   font-size: 0.7rem;
   cursor: pointer;
 }
@@ -1417,8 +1491,10 @@
   display: flex;
   gap: 10px;
   margin-top: 10px;
-  overflow: auto;
-  padding-bottom: 4px;
+  overflow-x: auto;
+  overflow-y: visible;
+  padding-bottom: 6px;
+  max-width: 100%;
 }
 
 .guide-xp {
@@ -1684,10 +1760,10 @@
   min-height: 36px;
   margin: 0;
   padding: 10px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.48);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(35, 79, 61, 0.07);
+  border-radius: 16px 16px 16px 8px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 6px 16px -14px rgba(23, 60, 47, 0.28);
   backdrop-filter: blur(10px);
   color: #5f7269;
   font-size: 0.75rem;
@@ -1773,12 +1849,12 @@
   0%,
   100% {
     box-shadow:
-      0 0 0 8px rgba(33, 78, 59, 0.07),
-      0 14px 32px -16px rgba(23, 60, 47, 0.48);
+      0 0 0 6px rgba(33, 78, 59, 0.08),
+      0 14px 32px -14px rgba(23, 60, 47, 0.48);
   }
   50% {
     box-shadow:
-      0 0 0 11px rgba(33, 78, 59, 0.12),
+      0 0 0 9px rgba(33, 78, 59, 0.14),
       0 16px 34px -14px rgba(23, 60, 47, 0.42);
   }
 }
@@ -1818,12 +1894,12 @@
   100% {
     opacity: 1;
     transform: scale(1);
-    box-shadow: 0 0 0 3px rgba(63, 143, 93, 0.16);
+    box-shadow: 0 0 0 0 rgba(183, 232, 198, 0.55);
   }
   50% {
-    opacity: 0.7;
-    transform: scale(0.92);
-    box-shadow: 0 0 0 5px rgba(63, 143, 93, 0.1);
+    opacity: 0.85;
+    transform: scale(1);
+    box-shadow: 0 0 0 5px rgba(183, 232, 198, 0);
   }
 }
 
@@ -1863,22 +1939,27 @@
 
 @media (max-width: 720px) {
   .guide-fab {
-    right: 16px;
-    bottom: 16px;
+    right: 20px;
+    bottom: 28px;
   }
 
   .guide-panel {
     top: auto;
-    right: 12px;
-    bottom: 12px;
+    right: 16px;
+    bottom: 28px;
     left: auto;
-    width: min(352px, calc(100vw - 24px));
-    height: min(380px, calc(100dvh - 96px));
-    max-height: calc(100dvh - 96px);
+    width: min(346px, calc(100vw - 24px));
+    height: min(476px, calc(100dvh - 128px));
+    max-height: calc(100dvh - 128px);
+  }
+
+  .guide-panel.guide-panel--home:not(.is-expanded),
+  .guide-panel:not(.guide-panel--home):not(.is-expanded) {
+    height: min(476px, calc(100dvh - 128px));
   }
 
   .guide-panel.is-expanded {
-    top: 72px;
+    top: 88px;
     right: 8px;
     bottom: 8px;
     left: 8px;

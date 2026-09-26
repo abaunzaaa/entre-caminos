@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
+  ArrowUpRight,
   CalendarRange,
   Check,
   ChevronDown,
@@ -10,7 +11,6 @@ import {
   FolderPlus,
   Heart,
   MapPin,
-  Maximize2,
   Mic,
   Minimize2,
   Minus,
@@ -86,10 +86,8 @@ export function GuideHost() {
   const [folderName, setFolderName] = useState("");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
-  const homePreview = pathname === "/";
+  const homePreview = pathname === "/" || pathname.startsWith("/explorar");
   const visible = (Boolean(user) || homePreview) && !hiddenPath(pathname);
-  const makingPlan = guide.sending && /plan/i.test(guide.thread?.messages.slice().reverse().find((item) => item.role === "user")?.content ?? "");
-  const statusLabel = makingPlan ? "Generando plan" : guide.sending ? "Pensando" : "Disponible";
 
   useEffect(() => {
     if (!settingsOpen) {
@@ -193,7 +191,7 @@ export function GuideHost() {
           ref={inputRef}
           rows={1}
           value={guide.draft}
-          placeholder="Pregúntame por experiencias o crea un plan..."
+          placeholder="Cuéntame qué quieres descubrir..."
           aria-label="Pregunta a Tu guía"
           className="guide-composer__field"
           wrap="soft"
@@ -484,15 +482,11 @@ export function GuideHost() {
               <div className="guide-panel__brand">
                 <div className="guide-panel__id">
                   <strong>Tu guía IA</strong>
-                  <em className={guide.sending ? "is-busy" : "is-live"}>
-                    <i />
-                    {statusLabel}
-                  </em>
                 </div>
               </div>
               <div className="guide-win">
                 <button type="button" className="guide-icon-btn" aria-label="Minimizar" onClick={guide.minimizeGuide}>
-                  <Minus size={12} strokeWidth={2.2} />
+                  <Minus size={14} strokeWidth={2} />
                 </button>
                 <button
                   type="button"
@@ -500,10 +494,10 @@ export function GuideHost() {
                   aria-label={guide.expanded ? "Reducir" : "Expandir"}
                   onClick={guide.toggleExpand}
                 >
-                  {guide.expanded ? <Minimize2 size={12} strokeWidth={2.2} /> : <Maximize2 size={12} strokeWidth={2.2} />}
+                  {guide.expanded ? <Minimize2 size={13} strokeWidth={2} /> : <ArrowUpRight size={14} strokeWidth={2} />}
                 </button>
                 <button type="button" className="guide-icon-btn guide-icon-btn--close" aria-label="Cerrar" onClick={guide.closeGuide}>
-                  <X size={12} strokeWidth={2.2} />
+                  <X size={14} strokeWidth={2} />
                 </button>
               </div>
             </header>
@@ -511,11 +505,8 @@ export function GuideHost() {
             {guide.view === "home" || (guide.expanded && guide.view === "history") ? (
               <div className="guide-home">
                 <div className="guide-home__intro">
-                  <span className="guide-home__pin" aria-hidden="true">
-                    <GuideMark />
-                  </span>
-                  <h2>¿Qué descubrimos hoy?</h2>
-                  <p className="guide-home__copy">Encuentra experiencias, lugares y planes según tus gustos.</p>
+                  <h2>¿Qué quieres descubrir?</h2>
+                  <p className="guide-home__copy">Encuentra experiencias y planes según tus gustos.</p>
                 </div>
                 <div className="guide-home__dock">
                   <div className="guide-actions">
@@ -524,7 +515,7 @@ export function GuideHost() {
                       return (
                         <button key={item.label} type="button" className="guide-action" onClick={() => void guide.send(item.prompt)}>
                           <span className="guide-action__icon">
-                            <Icon size={15} strokeWidth={1.7} aria-hidden="true" />
+                            <Icon size={18} strokeWidth={1.7} aria-hidden="true" />
                           </span>
                           <span>
                             <strong>{item.label}</strong>
