@@ -29,8 +29,13 @@ export async function featured(_req: Request, res: Response) {
 
 export async function getPublic(req: Request, res: Response) {
   const experience = await experienceService.getExperience(req.params.id, { publishedOnly: true });
-  await recordDetailView(experience.id).catch(() => undefined);
   return res.json({ success: true, data: { experience } });
+}
+
+export async function recordView(req: Request, res: Response) {
+  const experience = await experienceService.getExperience(req.params.id, { publishedOnly: true });
+  await recordDetailView(experience.id);
+  return res.status(201).json({ success: true });
 }
 
 export async function listAdmin(req: Request, res: Response) {

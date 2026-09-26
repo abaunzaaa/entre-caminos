@@ -16,6 +16,7 @@ export function SuccessConfirm({
   text,
   variant = "experience",
   image,
+  showIcon = true,
   actionLabel = "Continuar",
   onClose,
 }: {
@@ -24,6 +25,7 @@ export function SuccessConfirm({
   text: string;
   variant?: keyof typeof SUCCESS_BANNERS;
   image?: string;
+  showIcon?: boolean;
   actionLabel?: string;
   onClose: () => void;
 }) {
@@ -97,12 +99,14 @@ export function SuccessConfirm({
         >
           <X strokeWidth={1.5} aria-hidden="true" />
         </button>
-        <img
-          src={icon}
-          alt=""
-          className={`contact-success__icon contact-success__icon--${image ? "password" : variant}`}
-          aria-hidden="true"
-        />
+        {showIcon ? (
+          <img
+            src={icon}
+            alt=""
+            className={`contact-success__icon contact-success__icon--${image ? "password" : variant}`}
+            aria-hidden="true"
+          />
+        ) : null}
         <h2 id={titleId} className="contact-success__title">
           {title}
         </h2>

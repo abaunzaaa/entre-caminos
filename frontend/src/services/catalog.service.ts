@@ -99,6 +99,17 @@ export async function getPublicExperience(id: string) {
   return data.data.experience;
 }
 
+const viewLocks = new Set<string>();
+
+export async function recordExperienceView(id: string) {
+  if (viewLocks.has(id)) {
+    return;
+  }
+  viewLocks.add(id);
+  window.setTimeout(() => viewLocks.delete(id), 1500);
+  await api.post(`/experiences/${id}/view`);
+}
+
 export async function getAdminExperience(id: string) {
   const { data } = await api.get<ApiResponse<{ experience: Experience }>>(`/admin/experiences/${id}`);
   return data.data.experience;

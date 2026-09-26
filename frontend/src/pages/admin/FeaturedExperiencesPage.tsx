@@ -1,6 +1,8 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
+import { FeaturedMenuSelect } from "../../components/admin/FeaturedFieldControls";
+import { SuccessConfirm } from "../../components/feedback/SuccessConfirm";
 import { Button } from "../../components/ui/Button";
 import {
   featureExperience,
@@ -9,6 +11,7 @@ import {
   getAdminFeaturedExperiences,
   getFeaturedRanking,
   getOwnExperiencePerformance,
+  getPublicCategories,
   reorderFeaturedExperiences,
   unfeatureExperience,
   type FeaturedRankingCriterion,
@@ -33,35 +36,6 @@ const CRITERIA: Array<{ value: FeaturedRankingCriterion; label: string }> = [
   { value: "rating", label: "Mejor calificadas" },
   { value: "trending", label: "Mayor interacción reciente" },
 ];
-
-function toIso(value: string) {
-  if (!value) {
-    return null;
-  }
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) {
-    return null;
-  }
-  return parsed.toISOString();
-}
-
-function formatDay(value: string | null) {
-  if (!value) {
-    return "";
-  }
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
-  return date.toLocaleDateString("es-CO", { day: "2-digit", month: "2-digit", year: "numeric" });
-}
-
-function periodLabel(from: string | null, until: string | null) {
-  if (!from && !until) {
-    return "Sin periodo definido";
-  }
-  return `${formatDay(from) || "sin inicio"} - ${formatDay(until) || "sin fin"}`;
-}
 
 function FeaturedPageHeader({ title, description }: { title: string; description: string }) {
   return (
@@ -165,16 +139,12 @@ function AdminOwnPerformance() {
     <section className="featured-admin">
       {error ? <p className="featured-admin__error">{error}</p> : null}
       <section className="featured-admin__finder">
-        <label>
-          Ordenar por
-          <select value={criterion} onChange={(event) => setCriterion(event.target.value as FeaturedRankingCriterion)}>
-            {CRITERIA.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
+        <FeaturedMenuSelect
+          label="Ordenar por"
+          value={criterion}
+          options={CRITERIA}
+          onChange={(next) => setCriterion(next as FeaturedRankingCriterion)}
+        />
         {loading ? <p className="featured-admin__empty">Cargando tus experiencias…</p> : null}
         {!loading && items.length === 0 ? (
           <p className="featured-admin__empty">Todavía no tienes experiencias publicadas.</p>
@@ -228,12 +198,11 @@ function SuperAdminFeaturedPage() {
   const [rankingLoading, setRankingLoading] = useState(false);
   const [featured, setFeatured] = useState<FeaturedExperienceCard[]>([]);
   const [published, setPublished] = useState<Experience[]>([]);
-  const [experienceId, setExperienceId] = useState("");
+  const [catalogCategories, setCatalogCategories] = useState<string[]>([]);
+  const [editorialIds, setEditorialIds] = useState<string[]>([]);
+  const [limitOpen, setLimitOpen] = useState(false);
   const [editorialQuery, setEditorialQuery] = useState("");
   const [editorialCategory, setEditorialCategory] = useState("");
-  const [order, setOrder] = useState("1");
-  const [from, setFrom] = useState("");
-  const [until, setUntil] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -298,11 +267,13 @@ function SuperAdminFeaturedPage() {
       return;
     }
     let cancelled = false;
-    getAdminExperiences({ status: "PUBLISHED" })
-      .then((items) => {
-        if (!cancelled) {
-          setPublished(items);
+    Promise.all([getAdminExperiences({ status: "PUBLISHED" }), getPublicCategories()])
+      .then(([items, categories]) => {
+        if (cancelled) {
+          return;
         }
+        setPublished(items);
+        setCatalogCategories(categories.map((category) => category.name.trim()).filter(Boolean));
       })
       .catch((err) => {
         if (!cancelled) {
@@ -325,15 +296,18 @@ function SuperAdminFeaturedPage() {
   const pageStart = (currentPage - 1) * pageSize;
   const visibleFeatured = featured.slice(pageStart, pageStart + pageSize);
 
-  const editorialOptions = useMemo(() => {
-    const taken = new Set(featured.map((item) => item.experience.id));
-    return published.filter((item) => !taken.has(item.id));
-  }, [featured, published]);
+  const editorialOptions = published;
 
   const editorialCategories = useMemo(() => {
-    const names = new Set(editorialOptions.map((item) => item.category?.name).filter((name): name is string => Boolean(name)));
+    const names = new Set(catalogCategories);
+    for (const item of published) {
+      const name = item.category?.name?.trim();
+      if (name) {
+        names.add(name);
+      }
+    }
     return [...names].sort((left, right) => left.localeCompare(right, "es"));
-  }, [editorialOptions]);
+  }, [catalogCategories, published]);
 
   const visibleEditorial = useMemo(() => {
     const query = editorialQuery.trim().toLowerCase();
@@ -347,19 +321,6 @@ function SuperAdminFeaturedPage() {
       return item.title.toLowerCase().includes(query);
     });
   }, [editorialCategory, editorialOptions, editorialQuery]);
-
-  async function featureWith(id: string, payload: { featuredOrder?: number | null; featuredFrom?: string | null; featuredUntil?: string | null }) {
-    setSaving(true);
-    setError("");
-    try {
-      await featureExperience(id, payload);
-      await loadFeatured();
-    } catch (err) {
-      setError(getApiErrorMessage(err, "No se pudo destacar la experiencia"));
-    } finally {
-      setSaving(false);
-    }
-  }
 
   async function onGenerate(event: FormEvent) {
     event.preventDefault();
@@ -379,20 +340,46 @@ function SuperAdminFeaturedPage() {
     }
   }
 
+  function toggleEditorial(id: string) {
+    setEditorialIds((current) => {
+      const index = current.indexOf(id);
+      if (index >= 0) {
+        return current.filter((item) => item !== id);
+      }
+      if (current.length >= 5) {
+        setLimitOpen(true);
+        return current;
+      }
+      setError("");
+      return [...current, id];
+    });
+  }
+
   async function onEditorialFeature(event: FormEvent) {
     event.preventDefault();
-    if (!experienceId) {
-      setError("Elige una experiencia publicada");
+    if (editorialIds.length === 0) {
+      setError("Elige al menos una experiencia publicada");
       return;
     }
-    await featureWith(experienceId, {
-      featuredOrder: Number(order),
-      featuredFrom: toIso(from),
-      featuredUntil: toIso(until),
-    });
-    setExperienceId("");
-    setFrom("");
-    setUntil("");
+    setSaving(true);
+    setError("");
+    try {
+      for (const [index, id] of editorialIds.entries()) {
+        await featureExperience(id, { featuredOrder: index + 1, featuredFrom: null, featuredUntil: null });
+      }
+      const selected = new Set(editorialIds);
+      for (const card of featured) {
+        if (!selected.has(card.experience.id)) {
+          await unfeatureExperience(card.experience.id);
+        }
+      }
+      setFeatured(await getAdminFeaturedExperiences());
+      setEditorialIds([]);
+    } catch (err) {
+      setError(getApiErrorMessage(err, "No se pudo destacar la experiencia"));
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function move(index: number, direction: -1 | 1) {
@@ -435,40 +422,43 @@ function SuperAdminFeaturedPage() {
     <div className="dash dash--exps">
       <FeaturedPageHeader
         title="Experiencias destacadas"
-        description="Genera el carrusel por métricas o arma una selección editorial."
+        description="Selecciona y gestiona las experiencias destacadas mediante métricas o curaduría editorial."
       />
     <section className="featured-admin">
 
       {error ? <p className="featured-admin__error">{error}</p> : null}
+      <SuccessConfirm
+        open={limitOpen}
+        showIcon={false}
+        title="Límite de selección"
+        text="Puedes seleccionar hasta un máximo de 5 experiencias."
+        actionLabel="Aceptar"
+        onClose={() => setLimitOpen(false)}
+      />
 
       <section className="featured-admin__finder" aria-labelledby="featured-finder-title">
         <h2 id="featured-finder-title">Modo de destacado</h2>
-        <label>
-          Modo de destacado
-          <select value={mode} onChange={(event) => setMode(event.target.value as HighlightMode)}>
-            <option value="metrics">Por métricas</option>
-            <option value="editorial">Selección editorial</option>
-          </select>
-        </label>
+        <FeaturedMenuSelect
+          label="Modo de destacado"
+          value={mode}
+          options={[
+            { value: "metrics", label: "Por métricas" },
+            { value: "editorial", label: "Selección editorial" },
+          ]}
+          onChange={(next) => setMode(next as HighlightMode)}
+        />
 
         {mode === "metrics" ? (
           <form className="featured-admin__form featured-admin__form--metrics" onSubmit={(event) => void onGenerate(event)}>
-            <label>
-              Criterio
-              <select
-                value={criterion}
-                onChange={(event) => {
-                  setCriterion(event.target.value as FeaturedRankingCriterion);
-                  setRankingPage(1);
-                }}
-              >
-                {CRITERIA.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <FeaturedMenuSelect
+              label="Criterio"
+              value={criterion}
+              options={CRITERIA}
+              onChange={(next) => {
+                setCriterion(next as FeaturedRankingCriterion);
+                setRankingPage(1);
+              }}
+            />
             <label>
               Cantidad
               <input type="number" min={1} max={5} value={count} onChange={(event) => setCount(event.target.value)} />
@@ -484,34 +474,35 @@ function SuperAdminFeaturedPage() {
         ) : null}
 
         {mode === "editorial" && canEdit ? (
-          <form className="featured-admin__form" onSubmit={(event) => void onEditorialFeature(event)}>
-            <label>
-              Buscar por nombre
-              <input
-                type="search"
-                value={editorialQuery}
-                placeholder="Nombre de la experiencia"
-                onChange={(event) => setEditorialQuery(event.target.value)}
+          <form className="featured-admin__form featured-admin__form--editorial" onSubmit={(event) => void onEditorialFeature(event)}>
+            <div className="featured-admin__filters">
+              <label>
+                Buscar por nombre
+                <input
+                  type="search"
+                  value={editorialQuery}
+                  placeholder="Nombre de la experiencia"
+                  onChange={(event) => setEditorialQuery(event.target.value)}
+                />
+              </label>
+              <FeaturedMenuSelect
+                label="Categoría"
+                value={editorialCategory}
+                options={[
+                  { value: "", label: "Todas las categorías" },
+                  ...editorialCategories.map((name) => ({ value: name, label: name })),
+                ]}
+                onChange={setEditorialCategory}
               />
-            </label>
-            <label>
-              Categoría
-              <select value={editorialCategory} onChange={(event) => setEditorialCategory(event.target.value)}>
-                <option value="">Todas las categorías</option>
-                {editorialCategories.map((name) => (
-                  <option key={name} value={name}>
-                    {name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <div className="featured-admin__picker" role="listbox" aria-label="Experiencias publicadas">
+            </div>
+            <div className="featured-admin__picker" role="listbox" aria-multiselectable="true" aria-label="Experiencias publicadas">
               {visibleEditorial.length === 0 ? (
                 <p className="featured-admin__empty">No hay experiencias publicadas con ese filtro.</p>
               ) : (
                 visibleEditorial.map((item) => {
                   const place = item.location?.trim() || "Sin ubicación";
-                  const selected = item.id === experienceId;
+                  const selectedIndex = editorialIds.indexOf(item.id);
+                  const selected = selectedIndex >= 0;
                   return (
                     <button
                       key={item.id}
@@ -519,7 +510,7 @@ function SuperAdminFeaturedPage() {
                       role="option"
                       aria-selected={selected}
                       className={`featured-admin__pick${selected ? " is-selected" : ""}`}
-                      onClick={() => setExperienceId(item.id)}
+                      onClick={() => toggleEditorial(item.id)}
                     >
                       <img src={mediaUrl(item.imageUrl, 320)} alt="" />
                       <span>
@@ -527,24 +518,13 @@ function SuperAdminFeaturedPage() {
                         <small>{item.category?.name || "Sin categoría"}</small>
                         <small>{place}</small>
                       </span>
+                      {selected ? <span className="featured-admin__pick-order">{selectedIndex + 1}</span> : null}
                     </button>
                   );
                 })
               )}
             </div>
-            <label>
-              Orden
-              <input type="number" min={0} max={999} value={order} onChange={(event) => setOrder(event.target.value)} />
-            </label>
-            <label>
-              Desde
-              <input type="datetime-local" value={from} onChange={(event) => setFrom(event.target.value)} />
-            </label>
-            <label>
-              Hasta
-              <input type="datetime-local" value={until} onChange={(event) => setUntil(event.target.value)} />
-            </label>
-            <Button type="submit" disabled={saving || !experienceId}>
+            <Button type="submit" disabled={saving || editorialIds.length === 0}>
               Destacar
             </Button>
           </form>
@@ -562,13 +542,13 @@ function SuperAdminFeaturedPage() {
         {mode === "metrics" && ranking.length > 0 ? (
           <>
           <div className="featured-admin__grid">
-            {visibleRanking.map((card, index) => (
+            {visibleRanking.map((card) => (
               <article key={card.experience.id} className="featured-admin__card">
                 <img src={mediaUrl(card.imageUrl, 640)} alt="" />
                 <div className="featured-admin__body">
                   <p className="featured-admin__category">{card.category.name}</p>
                   <h2>
-                    {rankingStart + index + 1}. {card.experience.title}
+                    {card.experience.title}
                   </h2>
                   <p className="featured-admin__place">{card.experience.location}</p>
                   <MetricList card={card} emphasize={criterion} />
@@ -616,12 +596,9 @@ function SuperAdminFeaturedPage() {
               <div className="featured-admin__body">
                 <p className="featured-admin__category">{card.category.name}</p>
                 <h2>
-                  {position + 1}. {card.experience.title}
+                  {card.experience.title}
                 </h2>
                 <p className="featured-admin__period">Orden: {card.experience.featuredOrder ?? "—"}</p>
-                <p className="featured-admin__period">
-                  Visible: {periodLabel(card.experience.featuredFrom, card.experience.featuredUntil)}
-                </p>
                 <MetricList card={card} />
                 {canEdit && mode === "editorial" ? (
                   <div className="featured-admin__actions">

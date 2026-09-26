@@ -23,6 +23,7 @@ experienceRouter.get(
   asyncHandler(featuredController.recommendations),
 );
 experienceRouter.get("/:id", asyncHandler(experienceController.getPublic));
+experienceRouter.post("/:id/view", asyncHandler(experienceController.recordView));
 
 export const adminExperienceRouter = Router();
 adminExperienceRouter.use(permissionMiddleware(PERMISSIONS.EXPERIENCES_MANAGE));
