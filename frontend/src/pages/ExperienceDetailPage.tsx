@@ -35,16 +35,33 @@ export function ExperienceDetailPage() {
       setError("Experiencia no encontrada");
       return;
     }
+    let cancelled = false;
     setLoading(true);
     setError("");
     setFavoriteOn(false);
     getPublicExperience(id)
-      .then(setExperience)
+      .then((item) => {
+        if (cancelled) {
+          return;
+        }
+        setExperience(item);
+        void recordExperienceView(id).catch(() => undefined);
+      })
       .catch(() => {
+        if (cancelled) {
+          return;
+        }
         setExperience(null);
         setError("No se pudo cargar la experiencia");
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   if (loading) {

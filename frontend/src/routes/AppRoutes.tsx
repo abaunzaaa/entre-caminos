@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { EntreCaminosIntro } from "../components/intro/EntreCaminosIntro";
 import { AdminLayout } from "../layouts/AdminLayout";
+import { UserAccountLayout } from "../layouts/UserAccountLayout";
 import { PublicLayout } from "../layouts/PublicLayout";
 import { LandingPage } from "../pages/LandingPage";
 import { AuthPage } from "../pages/AuthPage";
@@ -21,6 +22,7 @@ import { RolesPage } from "../pages/admin/RolesPage";
 import { PermissionsPage } from "../pages/admin/PermissionsPage";
 import { CategoriesPage } from "../pages/admin/CategoriesPage";
 import { ExperiencesPage } from "../pages/admin/ExperiencesPage";
+import { FeaturedExperiencesPage } from "../pages/admin/FeaturedExperiencesPage";
 import { ExperienceFormPage } from "../pages/admin/ExperienceFormPage";
 import { ExperiencePreviewPage } from "../pages/admin/ExperiencePreviewPage";
 import { GuideHost } from "../components/guide/GuideHost";
@@ -95,6 +97,9 @@ export function AppRoutes() {
         <Route path="/verify-email" element={<VerifyEmailPage />} />
         <Route path="/auth/callback" element={<OAuthCallbackPage />} />
         <Route element={<ProtectedRoute />}>
+          <Route element={<UserAccountLayout />}>
+            <Route path="/cambiar-contrasena" element={<ChangePasswordPage />} />
+          </Route>
           <Route element={<OnboardingLayout />}>
             <Route path="/onboarding" element={<OnboardingPage />} />
             <Route path="/onboarding/preferencias" element={<Navigate to="/onboarding" replace />} />
@@ -121,6 +126,7 @@ export function AppRoutes() {
             <Route path="categorias" element={<CategoriesPage />} />
             <Route path="experiences" element={<ExperiencesPage />} />
             <Route path="experiencias" element={<ExperiencesPage />} />
+            <Route path="destacadas" element={<FeaturedExperiencesPage />} />
             <Route path="experiencias/nueva" element={<ExperienceFormPage />} />
             <Route path="experiencias/:id/ver" element={<ExperiencePreviewPage />} />
             <Route path="experiencias/:id" element={<ExperienceFormPage />} />

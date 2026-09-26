@@ -1,4 +1,5 @@
 import { useEffect, useRef, type MouseEvent, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import { X } from "lucide-react";
 import { AuthInteractiveCard } from "./AuthInteractiveCard";
@@ -9,16 +10,19 @@ import "../../styles/auth-recovery-modal.css";
 export function AuthForgotModalLayout({
   children,
   titleId = "forgot-password-title",
+  onClose,
 }: {
   children: ReactNode;
   titleId?: string;
+  onClose?: () => void;
 }) {
   const closeRef = useRef<HTMLAnchorElement>(null);
+  const overlayCloseRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
-        closeRef.current?.click();
+        (onClose ? overlayCloseRef : closeRef).current?.click();
       }
     }
 
@@ -28,8 +32,37 @@ export function AuthForgotModalLayout({
 
   function onOverlayClick(event: MouseEvent<HTMLDivElement>) {
     if (event.target === event.currentTarget) {
-      closeRef.current?.click();
+      (onClose ? overlayCloseRef : closeRef).current?.click();
     }
+  }
+
+  if (onClose) {
+    return createPortal(
+      <div className="auth-recovery-root">
+        <AuthScrollLock />
+        <div className="auth-recovery-layer is-fixed" onClick={onOverlayClick}>
+          <div
+            className="auth-recovery-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={titleId}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              ref={overlayCloseRef}
+              type="button"
+              className="auth-recovery-close"
+              aria-label="Cerrar"
+              onClick={onClose}
+            >
+              <X size={16} strokeWidth={1.8} aria-hidden="true" />
+            </button>
+            {children}
+          </div>
+        </div>
+      </div>,
+      document.body,
+    );
   }
 
   return (

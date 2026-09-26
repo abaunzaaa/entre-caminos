@@ -69,6 +69,7 @@ export function AdminFirstPasswordDialog({ open }: { open: boolean }) {
           <Input
             label="Nueva contraseña"
             type="password"
+            passwordToggle
             autoComplete="new-password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
@@ -78,6 +79,7 @@ export function AdminFirstPasswordDialog({ open }: { open: boolean }) {
           <Input
             label="Confirmar contraseña"
             type="password"
+            passwordToggle
             autoComplete="new-password"
             value={confirmPassword}
             onChange={(event) => setConfirmPassword(event.target.value)}

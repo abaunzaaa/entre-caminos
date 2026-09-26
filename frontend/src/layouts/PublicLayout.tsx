@@ -2,6 +2,7 @@ import { Link, Outlet, useLocation } from "react-router-dom";
 import { MapHeartLogo } from "../components/brand/MapHeartLogo";
 import { ExplorerNavbar } from "../components/explorer/ExplorerNavbar";
 import { useAuth } from "../hooks/useAuth";
+import { formatPersonName } from "../utils/person-name";
 import "../styles/explorer.css";
 
 export function PublicLayout() {
@@ -33,7 +34,7 @@ export function PublicLayout() {
           <div className="flex items-center justify-end gap-6 text-sm">
             {user ? (
               <>
-                <Link to={isAdmin ? "/admin" : "/explorar"}>{isAdmin ? "Atelier" : user.name}</Link>
+                <Link to={isAdmin ? "/admin" : "/explorar"}>{isAdmin ? "Atelier" : formatPersonName(user.name) || user.name}</Link>
                 <button type="button" onClick={() => void logout()}>
                   Salir
                 </button>

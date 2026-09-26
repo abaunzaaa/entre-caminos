@@ -79,6 +79,7 @@ export type Experience = {
   description: string;
   categoryId: string;
   price: string | number;
+  currency?: string;
   location: string;
   latitude: string | number | null;
   longitude: string | number | null;
@@ -98,6 +99,8 @@ export type Experience = {
   reviewedById?: string | null;
   createdAt: string;
   category?: Category;
+  categories?: Category[];
+  experienceCategories?: Array<{ position: number; categoryId: string; category: Category }>;
   creator?: { id: string; name: string; email: string; avatarUrl?: string | null };
   reviewedBy?: { id: string; name: string; email: string } | null;
 };
@@ -147,6 +150,33 @@ export type DashboardStats = {
     createdAt: string;
     user?: { name: string; email: string };
   }>;
+};
+
+export type FeaturedExperienceCard = {
+  experience: {
+    id: string;
+    title: string;
+    description: string;
+    location: string;
+    status: ExperienceStatus;
+    imageUrl: string | null;
+    isFeatured: boolean;
+    featuredOrder: number | null;
+    featuredFrom: string | null;
+    featuredUntil: string | null;
+  };
+  imageUrl: string | null;
+  category: { id: string; name: string; icon: string };
+  categories?: Array<{ id: string; name: string; icon: string }>;
+  score: number;
+  metrics: {
+    visits: number;
+    favorites: number;
+    reviews: number;
+    rating: number;
+    recentActivity?: number;
+  };
+  highlight: { label: string; emoji: string };
 };
 
 export type ApiResponse<T> = {

@@ -4,6 +4,7 @@ import type { Experience } from "../../types";
 import fotoInicioTurista from "../../assets/foto-inicio-turista.png";
 import { ExperienceGallery } from "./ExperienceGallery";
 import { municipalityLabel } from "./explorer-media";
+import { formatExperienceCategories } from "../../utils/experience-categories";
 
 type TouristHomeHeroProps = {
   experiences: Experience[];
@@ -13,10 +14,10 @@ type TouristHomeHeroProps = {
 
 export function TouristHomeHero({ experiences, selected, onSelect }: TouristHomeHeroProps) {
   const place = selected ? municipalityLabel(selected.location) : "";
-  const category = selected?.category?.name ?? "Experiencia";
+  const category = selected ? formatExperienceCategories(selected, "Experiencia") : "Experiencia";
 
   return (
-    <section className="tourist-hero" aria-label="Descubrir experiencias">
+    <section className="tourist-hero" aria-label="Elegidos para ti">
       <img
         className="tourist-hero__decor"
         src={fotoInicioTurista}

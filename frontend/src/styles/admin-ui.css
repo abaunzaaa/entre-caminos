@@ -707,6 +707,90 @@
   color: #ffffff;
 }
 
+.dash-exps-categories-field__control {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dash-exps-categories-slot {
+  position: relative;
+  min-height: 48px;
+}
+
+.dash-exps-categories-slot.has-chips .dash-team-role__trigger > span:first-child {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.dash-exps-categories-field .dash-team-role__option.is-active {
+  background: rgba(41, 73, 66, 0.14);
+  color: #1c332e;
+  font-weight: 500;
+}
+
+.dash-exps-categories-field .dash-team-role__option.is-active:hover,
+.dash-exps-categories-field .dash-team-role__option.is-active:focus-visible {
+  background: rgba(41, 73, 66, 0.22);
+  color: #1c332e;
+}
+
+.dash-exps-categories-slot .dash-exps-categories {
+  position: absolute;
+  z-index: 1;
+  top: 4px;
+  right: 34px;
+  bottom: 4px;
+  left: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.dash-exps-category-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  height: 18px;
+  max-width: 100%;
+  padding: 0 1px 0 7px;
+  border-radius: 999px;
+  background: rgba(41, 73, 66, 0.12);
+  color: #1c332e;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  pointer-events: auto;
+}
+
+.dash-exps-category-chip button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #294942;
+  cursor: pointer;
+}
+
 .dash-team-roster,
 .dash-cats-roster {
   --team-list-visible: 5;
@@ -773,6 +857,15 @@
       (var(--exps-list-rows) * var(--exps-row-height)) + ((var(--exps-list-rows) - 1) * var(--exps-row-gap))
     )
   );
+}
+
+.dash--exps .dash-exps-roster,
+.dash--exps .dash-exps-roster__viewport,
+.dash--exps .dash-exps-roster__viewport.is-scrollable {
+  max-height: none;
+  overflow: visible;
+  overscroll-behavior: auto;
+  padding-right: 0;
 }
 
 .dash-team-roster__viewport.is-scrollable:focus-visible,
@@ -2198,6 +2291,7 @@
 }
 
 .dash-exps-tile {
+  position: relative;
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -2217,6 +2311,25 @@
 
 .dash-exps-tile:has(.is-open) {
   z-index: 8;
+}
+
+.dash-exps-tile__link {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+}
+
+.dash-exps-tile__manage {
+  position: relative;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.dash-exps-tile__manage a,
+.dash-exps-tile__manage button,
+.dash-exps-tile__manage .dash-exps-status {
+  pointer-events: auto;
 }
 
 .dash-exps-tile__photo {
@@ -2348,8 +2461,10 @@
 
 .dash-exps-tile__chips .admin-status {
   margin: 0;
+  max-width: 100%;
   padding: 4px 10px;
   font-size: 12px;
+  white-space: normal;
 }
 
 .dash-exps-tile__manage {
@@ -2510,6 +2625,11 @@
   justify-content: flex-end;
   gap: 8px;
   min-width: 0;
+}
+
+.dash-exps-form__grid > :has(+ .dash-exps-categories-field),
+.dash-exps-form__grid > .dash-exps-categories-field {
+  align-self: start;
 }
 
 .dash-exps-form__grid > label > span:first-child,
@@ -3935,5 +4055,89 @@
     height: auto;
     aspect-ratio: 3 / 4;
     justify-self: start;
+  }
+}
+
+.dash--password {
+  gap: 20px;
+}
+
+.dash-split__panel.dash-password {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  align-items: center;
+  gap: 8px 16px;
+  padding: 22px 28px 18px;
+  border-radius: 24px;
+  overflow: visible;
+}
+
+.dash-password__form {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  justify-self: start;
+  width: 70%;
+  max-width: none;
+  margin-right: 0;
+  margin-left: 24px;
+}
+
+.dash-password__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-field__control {
+  position: relative;
+  display: block;
+}
+
+.admin-field__toggle {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--admin-forest, #294942);
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+
+.dash-password__art {
+  justify-self: center;
+  align-self: center;
+  width: auto;
+  height: 380px;
+  max-width: none;
+  margin: 0 72px -48px 0;
+  object-fit: contain;
+  object-position: center;
+  pointer-events: none;
+  scale: -1 1;
+}
+
+@media (max-width: 900px) {
+  .dash-split__panel.dash-password {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dash-password__form {
+    justify-self: stretch;
+    width: 100%;
+    margin-right: 0;
+    margin-left: 0;
+  }
+
+  .dash-password__art {
+    height: 260px;
+    margin: 8px auto -24px;
   }
 }

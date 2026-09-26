@@ -476,6 +476,11 @@
   width: 124px;
 }
 
+.contact-success__icon.contact-success__icon--password {
+  width: 148px;
+  max-width: 100%;
+}
+
 .contact-success__title {
   margin: 12px 0 0;
   max-width: 18rem;
@@ -646,6 +651,10 @@
 
   .contact-success__icon--experience {
     width: 108px;
+  }
+
+  .contact-success__icon.contact-success__icon--password {
+    width: 128px;
   }
 
   .contact-modal {

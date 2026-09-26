@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { Camera, LogOut, UserRoundPen } from "lucide-react";
+import { Camera, KeyRound, LogOut, UserRoundPen } from "lucide-react";
 import { Button } from "../ui/Button";
 import { useAuth } from "../../hooks/useAuth";
+import { formatPersonName } from "../../utils/person-name";
 import type { PublicUser } from "../../types";
 import { UserAvatar } from "../user/UserAvatar";
 import {
@@ -50,7 +51,9 @@ export function AdminUserMenu({
   const rootRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pickingRef = useRef(false);
-  const fullName = user?.name?.trim() || (user?.role === "USER" ? "Explorador" : "Administrador");
+  const storedName = user?.name?.trim() ?? "";
+  const visibleName = storedName ? (user?.role === "USER" ? formatPersonName(storedName) : storedName) : "";
+  const fullName = visibleName || (user?.role === "USER" ? "Explorador" : "Administrador");
   const firstName = fullName.split(/\s+/)[0] || "Admin";
   const initial = nameInitial(firstName, "A");
   const profilePath = user?.role === "USER" ? "/onboarding" : "/admin/perfil";
@@ -378,6 +381,20 @@ export function AdminUserMenu({
             <UserRoundPen size={18} strokeWidth={1.7} />
             Editar perfil
           </button>
+          {user?.role === "USER" ? (
+            <button
+              type="button"
+              className="admin-usermenu__item"
+              role="menuitem"
+              onClick={() => {
+                setOpen(false);
+                navigate("/cambiar-contrasena");
+              }}
+            >
+              <KeyRound size={18} strokeWidth={1.7} />
+              Cambiar contraseña
+            </button>
+          ) : null}
           <button
             type="button"
             className="admin-usermenu__item admin-usermenu__item--logout"

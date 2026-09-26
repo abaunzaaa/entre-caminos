@@ -6,6 +6,7 @@ import { ExperienceEditorialNearby } from "./ExperienceEditorialNearby";
 import { ExperienceEditorialPlace } from "./ExperienceEditorialPlace";
 import { formatDepartmentMunicipality } from "../../data/colombia-locations";
 import { formatPrice } from "../../utils/cn";
+import { experienceCategoryNames, formatExperienceCategories } from "../../utils/experience-categories";
 import {
   displayExternalUrl,
   durationParts,
@@ -82,8 +83,11 @@ export function buildExperienceEditorialFacts(
 
   const detailFacts: ExperienceEditorialFact[] = [
     ...(experience.description.trim() ? [{ label: "Descripción", value: experience.description }] : []),
-    { label: "Precio", value: formatPrice(experience.price) },
-    { label: "Categoría", value: experience.category?.name || "Sin categoría" },
+    { label: "Precio", value: formatPrice(experience.price, experience.currency) },
+    {
+      label: experienceCategoryNames(experience).length > 1 ? "Categorías" : "Categoría",
+      value: formatExperienceCategories(experience, "Sin categoría"),
+    },
     ...(mode === "admin" ? [{ label: "Estado", value: STATUS_LABEL[experience.status] }] : []),
     { label: "Ubicación", value: experience.location || "—" },
     ...(durationText ? [{ label: "Duración", value: durationText }] : []),

@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import type { Experience } from "../types";
-import { formatPrice } from "../services/api";
+import { formatPrice } from "../utils/cn";
+import { formatExperienceCategories } from "../utils/experience-categories";
 
 export function ExperienceCard({ experience }: { experience: Experience }) {
   return (
@@ -12,7 +13,7 @@ export function ExperienceCard({ experience }: { experience: Experience }) {
           className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
         />
         <span className="absolute left-4 top-4 rounded-full bg-cream/90 px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-forest">
-          {experience.category?.name}
+          {formatExperienceCategories(experience)}
         </span>
       </div>
       <div className="space-y-3 p-6">
@@ -20,7 +21,7 @@ export function ExperienceCard({ experience }: { experience: Experience }) {
         <h3 className="font-serif text-2xl leading-tight text-forest">{experience.title}</h3>
         <p className="line-clamp-3 text-sm leading-relaxed text-forest/70">{experience.description}</p>
         <div className="flex items-center justify-between pt-2">
-          <span className="text-sm font-medium text-forest">{formatPrice(experience.price)}</span>
+          <span className="text-sm font-medium text-forest">{formatPrice(experience.price, experience.currency)}</span>
           <Link to={`/explorar/${experience.id}`} className="text-sm text-forest/70 underline">
             Ver detalle
           </Link>

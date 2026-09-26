@@ -3,12 +3,11 @@ import { Link } from "react-router-dom";
 import { ArrowUpRight, Heart, MapPin, MapPinned, Users } from "lucide-react";
 import { experienceGalleryUrls, municipalityLabel } from "./explorer-media";
 import { formatPrice } from "../../utils/cn";
-import { buildRecommendationTabs } from "../../utils/explorer-recommendations";
+import { experienceCategoryNames, formatExperienceCategories } from "../../utils/experience-categories";
 import type { Experience } from "../../types";
 
 type ExplorerRecommendedSectionProps = {
   experiences: Experience[];
-  interests?: string[] | null;
 };
 
 const JOURNAL_BLOCKS = [
@@ -163,15 +162,20 @@ function RecsExperienceGallery({ urls }: { urls: string[] }) {
   );
 }
 
-export function ExplorerRecommendedSection({
-  experiences,
-  interests = [],
-}: ExplorerRecommendedSectionProps) {
+export function ExplorerRecommendedSection({ experiences }: ExplorerRecommendedSectionProps) {
   const tablistId = useId();
-  const preferred = useMemo(() => (interests ?? []).filter(Boolean), [interests]);
   const tabs = useMemo(
-    () => buildRecommendationTabs(experiences, preferred, 5),
-    [experiences, preferred],
+    () =>
+      experiences.slice(0, 5).map((experience) => {
+        const label = experienceCategoryNames(experience)[0] || "Destacada";
+        return {
+          id: experience.id,
+          label,
+          shortLabel: label,
+          experience,
+        };
+      }),
+    [experiences],
   );
 
   const [activeId, setActiveId] = useState(tabs[0]?.id ?? "");
@@ -194,7 +198,7 @@ export function ExplorerRecommendedSection({
 
   const experience = active.experience;
   const place = municipalityLabel(experience.location);
-  const category = experience.category?.name?.trim() || active.label;
+  const category = formatExperienceCategories(experience, active.label);
   const galleryUrls = experienceGalleryUrls(experience);
 
   function selectTab(id: string) {
@@ -227,11 +231,8 @@ export function ExplorerRecommendedSection({
             <article className="explorer-recs__panel" aria-labelledby="explorer-recs-title">
               <header className="explorer-recs__headline">
                 <h2 className="explorer-recs__title" id="explorer-recs-title">
-                  Elegidos para ti
+                  Experiencias destacadas
                 </h2>
-                <p className="explorer-recs__lead">
-                  Experiencias que conectan contigo
-                </p>
               </header>
               <RecsExperienceGallery key={experience.id} urls={galleryUrls} />
               <div className="explorer-recs__body">
@@ -246,7 +247,7 @@ export function ExplorerRecommendedSection({
                   </p>
                 ) : null}
                 <div className="explorer-recs__footer">
-                  <span className="explorer-recs__price">{formatPrice(experience.price)}</span>
+                  <span className="explorer-recs__price">{formatPrice(experience.price, experience.currency)}</span>
                   <Link to={`/explorar/${experience.id}`} className="explorer-recs__cta">
                     Ver experiencia
                     <ArrowUpRight size={15} strokeWidth={2.15} aria-hidden="true" />
@@ -259,7 +260,7 @@ export function ExplorerRecommendedSection({
               <div
                 className="explorer-recs__tabs"
                 role="tablist"
-                aria-label="Categorías recomendadas"
+                aria-label="Experiencias destacadas"
                 aria-orientation="vertical"
               >
                 {tabs.map((tab, index) => {

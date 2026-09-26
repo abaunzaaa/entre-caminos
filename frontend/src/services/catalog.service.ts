@@ -1,30 +1,150 @@
 import { api } from "./api";
-import type { ApiResponse, Category, DashboardStats, Experience, Permission, PublicUser, Role } from "../types";
+import type {
+  ApiResponse,
+  Category,
+  DashboardStats,
+  Experience,
+  FeaturedExperienceCard,
+  Permission,
+  PublicUser,
+  Role,
+} from "../types";
 
-export async function getFeaturedExperiences() {
-  const { data } = await api.get<ApiResponse<{ experiences: Experience[] }>>("/experiences/featured");
+export type FeaturedRankingCriterion = "visits" | "favorites" | "reviews" | "rating" | "trending";
+
+export async function getFeaturedRanking(criterion: FeaturedRankingCriterion) {
+  const { data } = await api.get<ApiResponse<{ experiences: FeaturedExperienceCard[]; criterion: string }>>(
+    "/admin/featured-experiences/ranking",
+    { params: { criterion } },
+  );
   return data.data.experiences;
 }
 
-export async function getPublicExperiences(options?: { limit?: number; offset?: number }) {
-  const { data } = await api.get<
-    ApiResponse<{ experiences: Experience[]; total: number; hasMore: boolean }>
-  >("/experiences", {
-    params:
-      options?.limit != null
+export async function getOwnExperiencePerformance(criterion: FeaturedRankingCriterion) {
+  const { data } = await api.get<ApiResponse<{ experiences: FeaturedExperienceCard[]; criterion: string }>>(
+    "/admin/featured-experiences/performance",
+    { params: { criterion } },
+  );
+  return data.data.experiences;
+}
+
+export async function getAdminFeaturedExperiences() {
+  const { data } = await api.get<ApiResponse<{ experiences: FeaturedExperienceCard[] }>>(
+    "/admin/featured-experiences",
+  );
+  return data.data.experiences;
+}
+
+export async function generateFeaturedExperiences(criterion: FeaturedRankingCriterion, limit = 10) {
+  await api.post("/admin/featured-experiences/generate", { criterion, limit });
+}
+
+export async function saveEditorialFeatured(experienceIds: string[]) {
+  await api.post("/admin/featured-experiences/selection", { experienceIds });
+}
+
+export async function featureExperience(
+  id: string,
+  payload: { featuredOrder?: number | null; featuredFrom?: string | null; featuredUntil?: string | null },
+) {
+  const { data } = await api.post<ApiResponse<{ experience: FeaturedExperienceCard }>>(
+    `/admin/featured-experiences/${id}`,
+    payload,
+  );
+  return data.data.experience;
+}
+
+export async function reorderFeaturedExperiences(items: Array<{ id: string; featuredOrder: number }>) {
+  const { data } = await api.patch<ApiResponse<{ experiences: FeaturedExperienceCard[] }>>(
+    "/admin/featured-experiences/order",
+    { items },
+  );
+  return data.data.experiences;
+}
+
+export async function unfeatureExperience(id: string) {
+  await api.delete(`/admin/featured-experiences/${id}`);
+}
+
+export async function getCoverFeaturedExperiences() {
+  const { data } = await api.get<ApiResponse<{ experiences: Experience[] }>>("/catalog/featured-experiences");
+  return data.data.experiences;
+}
+
+export async function getRecommendedExperiences() {
+  const { data } = await api.get<ApiResponse<{ experiences: Experience[]; source: "interests" | "popular" }>>(
+    "/catalog/recommended-experiences",
+  );
+  return data.data;
+}
+
+export async function getPublicExperiences(options?: {
+  limit?: number;
+  offset?: number;
+  page?: number;
+  q?: string;
+  city?: string;
+  categoryId?: string;
+  price?: string;
+  duration?: string;
+  plan?: string;
+  sort?: "newest" | "oldest";
+}) {
+  const params =
+    options?.page != null
+      ? {
+          page: options.page,
+          limit: options.limit ?? 8,
+          q: options.q || undefined,
+          city: options.city || undefined,
+          categoryId: options.categoryId || undefined,
+          price: options.price || undefined,
+          duration: options.duration || undefined,
+          plan: options.plan || undefined,
+          sort: options.sort,
+        }
+      : options?.limit != null
         ? { limit: options.limit, offset: options.offset ?? 0 }
-        : undefined,
-  });
+        : undefined;
+  const { data } = await api.get<
+    ApiResponse<{
+      experiences: Experience[];
+      total: number;
+      hasMore: boolean;
+      page?: number;
+      limit?: number;
+      pageCount?: number;
+      cities?: string[];
+      categories?: Array<{ id: string; name: string }>;
+    }>
+  >("/experiences", { params });
+  const total = data.data.total ?? data.data.experiences.length;
+  const limit = data.data.limit ?? options?.limit;
   return {
     experiences: data.data.experiences,
-    total: data.data.total ?? data.data.experiences.length,
+    total,
     hasMore: Boolean(data.data.hasMore),
+    page: data.data.page ?? options?.page ?? 1,
+    pageCount: data.data.pageCount ?? (limit ? Math.ceil(total / limit) : 1),
+    cities: data.data.cities ?? [],
+    categories: data.data.categories ?? [],
   };
 }
 
 export async function getPublicExperience(id: string) {
   const { data } = await api.get<ApiResponse<{ experience: Experience }>>(`/experiences/${id}`);
   return data.data.experience;
+}
+
+const viewLocks = new Set<string>();
+
+export async function recordExperienceView(id: string) {
+  if (viewLocks.has(id)) {
+    return;
+  }
+  viewLocks.add(id);
+  window.setTimeout(() => viewLocks.delete(id), 1500);
+  await api.post(`/experiences/${id}/view`);
 }
 
 export async function getAdminExperience(id: string) {

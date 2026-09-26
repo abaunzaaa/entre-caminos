@@ -486,6 +486,10 @@
   margin-top: 12px;
 }
 
+.admin-profile-edit__password {
+  margin-right: auto;
+}
+
 .admin-profile-edit__save-wrap {
   display: inline-flex;
   outline: none;

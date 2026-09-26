@@ -1,9 +1,11 @@
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { ChevronDown, Clock, ImagePlus, MapPin, Plus, X } from "lucide-react";
 import { ExperienceLocationMap } from "../../components/admin/ExperienceLocationMap";
+import { AuthKeyIcon } from "../../components/auth/AuthKeyIcon";
 import { SuccessConfirm } from "../../components/feedback/SuccessConfirm";
 import { Button } from "../../components/ui/Button";
+import { SuccessConfirmDialog } from "../../components/ui/SuccessConfirmDialog";
 import { Input, Textarea } from "../../components/ui/Input";
 import { useAuth } from "../../hooks/useAuth";
 import {
@@ -36,9 +38,11 @@ import {
   type DurationUnit,
   type ExperienceAvailability,
 } from "../../utils/experience-details";
+import { EXPERIENCE_CURRENCIES, isExperienceCurrency, type ExperienceCurrency } from "../../utils/currencies";
 import type { Category, ExperienceStatus } from "../../types";
 import superadmIlus2 from "../../assets/superadm-ilus2.png";
 import "../../styles/admin-access.css";
+import "../../styles/auth-recovery-modal.css";
 
 const MIN_EXPERIENCE_IMAGES = 5;
 const MIN_EXPERIENCE_IMAGES_MESSAGE = "Agrega al menos 5 imágenes para continuar.";
@@ -169,6 +173,127 @@ function FieldPicker({
   );
 }
 
+function CategoryMultiPicker({
+  categories,
+  selectedIds,
+  onChange,
+  onLimit,
+}: {
+  categories: Category[];
+  selectedIds: string[];
+  onChange: (ids: string[]) => void;
+  onLimit: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const rootRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const selected = categories.filter((item) => selectedIds.includes(item.id));
+  const ordered = selectedIds
+    .map((id) => selected.find((item) => item.id === id))
+    .filter((item): item is Category => Boolean(item));
+
+  useEffect(() => {
+    function onPointerDown(event: MouseEvent) {
+      if (!rootRef.current?.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onPointerDown);
+    return () => document.removeEventListener("mousedown", onPointerDown);
+  }, []);
+
+  useEffect(() => {
+    if (open) {
+      searchRef.current?.focus();
+    }
+  }, [open]);
+
+  const visible = useMemo(() => {
+    const term = query.trim().toLowerCase();
+    if (!term) {
+      return categories;
+    }
+    return categories.filter((item) => item.name.toLowerCase().includes(term));
+  }, [categories, query]);
+
+  function toggle(id: string) {
+    if (selectedIds.includes(id)) {
+      onChange(selectedIds.filter((item) => item !== id));
+      return;
+    }
+    if (selectedIds.length >= 3) {
+      onLimit();
+      return;
+    }
+    onChange([...selectedIds, id]);
+  }
+
+  return (
+    <div className={`dash-team-role dash-exps-categories-field${open ? " is-open" : ""}`} ref={rootRef}>
+      <div className="dash-exps-categories-field__control">
+      <span className="dash-team-role__label">Categorías</span>
+      <div className={`dash-exps-categories-slot${ordered.length ? " has-chips" : ""}`}>
+        <button
+          type="button"
+          className={`dash-team-role__trigger${open ? " is-open" : ""}`}
+          aria-haspopup="listbox"
+          aria-expanded={open}
+          onClick={() => {
+            setOpen((current) => !current);
+            setQuery("");
+          }}
+        >
+          <span>{ordered.length ? "Categorías seleccionadas" : "Seleccionar categorías"}</span>
+          <ChevronDown size={18} strokeWidth={1.7} aria-hidden="true" />
+        </button>
+        {ordered.length ? (
+          <div className="dash-exps-categories">
+            {ordered.map((item) => (
+              <span key={item.id} className="dash-exps-category-chip">
+                {item.name}
+                <button type="button" aria-label={`Quitar ${item.name}`} onClick={() => toggle(item.id)}>
+                  <X size={12} strokeWidth={2} aria-hidden="true" />
+                </button>
+              </span>
+            ))}
+          </div>
+        ) : null}
+      </div>
+      <div className={`dash-team-role__menu${open ? " is-open" : ""}`} role="listbox" aria-multiselectable="true">
+        <input
+          ref={searchRef}
+          className="dash-exps-picker__search"
+          type="search"
+          value={query}
+          placeholder="Buscar"
+          onChange={(event) => setQuery(event.target.value)}
+          onClick={(event) => event.stopPropagation()}
+        />
+        <div className="dash-exps-picker__list">
+          {visible.map((option) => {
+            const active = selectedIds.includes(option.id);
+            return (
+              <button
+                key={option.id}
+                type="button"
+                role="option"
+                aria-selected={active}
+                className={`dash-team-role__option${active ? " is-active" : ""}`}
+                onClick={() => toggle(option.id)}
+              >
+                {option.name}
+              </button>
+            );
+          })}
+          {visible.length === 0 ? <p className="dash-exps-picker__empty">No hay coincidencias.</p> : null}
+        </div>
+      </div>
+      </div>
+    </div>
+  );
+}
+
 export function ExperienceFormPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -187,8 +312,10 @@ export function ExperienceFormPage() {
   const [rejectionReason, setRejectionReason] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [categoryId, setCategoryId] = useState("");
+  const [categoryIds, setCategoryIds] = useState<string[]>([]);
+  const [categoryLimitOpen, setCategoryLimitOpen] = useState(false);
   const [price, setPrice] = useState("");
+  const [currency, setCurrency] = useState<ExperienceCurrency>("COP");
   const [department, setDepartment] = useState("");
   const [municipality, setMunicipality] = useState("");
   const [address, setAddress] = useState("");
@@ -220,16 +347,8 @@ export function ExperienceFormPage() {
   const mapZoom = geocodeStatus === "exact" || geocodeStatus === "manual" ? 17 : address.trim() ? 16 : municipality.trim() ? 13 : department ? 8 : 6;
 
   const selectableCategories = useMemo(
-    () => categories.filter((item) => item.status === "APPROVED" || item.id === categoryId),
-    [categories, categoryId],
-  );
-  const categoryName = useMemo(
-    () => selectableCategories.find((item) => item.id === categoryId)?.name ?? "",
-    [selectableCategories, categoryId],
-  );
-  const categoryOptions = useMemo(
-    () => selectableCategories.map((item) => item.name),
-    [selectableCategories],
+    () => categories.filter((item) => item.status === "APPROVED" || categoryIds.includes(item.id)),
+    [categories, categoryIds],
   );
 
   useEffect(() => {
@@ -266,8 +385,11 @@ export function ExperienceFormPage() {
             : "";
           setTitle(experience.title);
           setDescription(experience.description);
-          setCategoryId(experience.categoryId);
+          const links = [...(experience.experienceCategories ?? [])].sort((left, right) => left.position - right.position);
+          setCategoryIds(links.length ? links.map((link) => link.categoryId) : experience.categoryId ? [experience.categoryId] : []);
+          setCategoryLimitOpen(false);
           setPrice(String(experience.price));
+          setCurrency(experience.currency && isExperienceCurrency(experience.currency) ? experience.currency : "COP");
           setDepartment(loadedDepartment);
           setMunicipality(loadedMunicipality);
           setAddress(parsed.address);
@@ -421,8 +543,12 @@ export function ExperienceFormPage() {
       return;
     }
     setError("");
-    if (!categoryId) {
+    if (categoryIds.length < 1) {
       setError("Selecciona una categoría.");
+      return;
+    }
+    if (categoryIds.length > 3) {
+      setError("Puedes seleccionar máximo 3 categorías por experiencia.");
       return;
     }
     if (!department || !municipality || !address.trim()) {
@@ -458,11 +584,25 @@ export function ExperienceFormPage() {
       setError("Agrega al menos una fecha disponible.");
       return;
     }
+    if (!price.trim()) {
+      setError("Ingresa el precio de la experiencia.");
+      return;
+    }
+    if (!/^\d+([.,]\d+)?$/.test(price.trim())) {
+      setError("El precio debe ser un valor numérico.");
+      return;
+    }
+    if (!isExperienceCurrency(currency)) {
+      setError("Selecciona una moneda.");
+      return;
+    }
     const payload = {
       title,
       description,
-      categoryId,
-      price: Number(price),
+      categoryId: categoryIds[0],
+      categoryIds,
+      price: Number(price.replace(",", ".")),
+      currency,
       location: locationLabel,
       latitude: latitude ? Number(latitude) : null,
       longitude: longitude ? Number(longitude) : null,
@@ -573,16 +713,11 @@ export function ExperienceFormPage() {
                 placeholder="Nombre de la experiencia"
                 required
               />
-              <FieldPicker
-                label="Categoría"
-                value={categoryName}
-                placeholder="Seleccionar categoría"
-                options={categoryOptions}
-                searchable
-                onChange={(value) => {
-                  const selected = selectableCategories.find((item) => item.name === value);
-                  setCategoryId(selected?.id ?? "");
-                }}
+              <CategoryMultiPicker
+                categories={selectableCategories}
+                selectedIds={categoryIds}
+                onChange={setCategoryIds}
+                onLimit={() => setCategoryLimitOpen(true)}
               />
               <FieldPicker
                 label="Departamento"
@@ -953,15 +1088,52 @@ export function ExperienceFormPage() {
               />
             </div>
             <div className="dash-exps-form__grid">
-              <Input
-                label="Precio (COP)"
-                type="number"
-                min="0"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                placeholder="0"
-                required
-              />
+              <label className="dash-exps-duration">
+                <span className="dash-exps-duration__label">Precio de la experiencia</span>
+                <input
+                  className="dash-exps-duration__value"
+                  type="text"
+                  inputMode="decimal"
+                  name="price"
+                  aria-label="Precio de la experiencia"
+                  value={price}
+                  autoComplete="off"
+                  placeholder="50000"
+                  required
+                  onKeyDown={(event) => {
+                    if (["e", "E", "+", "-", " "].includes(event.key)) {
+                      event.preventDefault();
+                    }
+                  }}
+                  onChange={(event) => {
+                    const next = event.target.value;
+                    if (next === "" || /^\d*[.,]?\d*$/.test(next)) {
+                      setPrice(next);
+                    }
+                  }}
+                />
+              </label>
+              <label className="dash-exps-duration">
+                <span className="dash-exps-duration__label">Moneda</span>
+                <select
+                  className="dash-exps-duration__unit"
+                  name="currency"
+                  aria-label="Moneda"
+                  value={currency}
+                  required
+                  onChange={(event) => {
+                    if (isExperienceCurrency(event.target.value)) {
+                      setCurrency(event.target.value);
+                    }
+                  }}
+                >
+                  {EXPERIENCE_CURRENCIES.map((item) => (
+                    <option key={item.code} value={item.code}>
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
             </div>
           </div>
           {status === "REJECTED" && rejectionReason ? (
@@ -991,15 +1163,27 @@ export function ExperienceFormPage() {
                 {saving ? "Guardando..." : id ? "Guardar cambios" : isSuperAdmin ? "Publicar experiencia" : "Enviar a revisión"}
               </Button>
             )}
-            <Link
-              to="/admin/experiencias"
+            <button
+              type="button"
               className="admin-cta-hover inline-flex items-center justify-center rounded-full border border-forest/15 bg-white px-[22px] py-2 font-poppins text-[13.5px] font-medium tracking-[0.03em] text-ink"
+              onClick={() => navigate("/admin/experiencias")}
             >
               Cancelar
-            </Link>
+            </button>
           </div>
         </form>
       </section>
+
+      <SuccessConfirmDialog
+        open={categoryLimitOpen}
+        className="contact-success--subtle"
+        icon={<AuthKeyIcon className="auth-reset-success__mark" />}
+        title="Máximo de categorías alcanzado"
+        description="Solo puedes seleccionar máximo 3 categorías por experiencia."
+        actionLabel="Aceptar"
+        initialFocus="action"
+        onClose={() => setCategoryLimitOpen(false)}
+      />
 
       <SuccessConfirm
         open={createdOpen}

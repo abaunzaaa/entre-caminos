@@ -133,6 +133,7 @@ model Category {
   updatedAt       DateTime       @updatedAt @map("updated_at")
 
   experiences Experience[]
+  experienceLinks ExperienceCategory[]
   reviewedBy  User?        @relation("CategoryReviewedBy", fields: [reviewedById], references: [id])
 
   @@index([status])
@@ -147,6 +148,7 @@ model Experience {
   description     String
   categoryId      String           @map("category_id")
   price           Decimal          @db.Decimal(12, 2)
+  currency        String           @default("COP") @db.VarChar(3)
   location        String
   latitude        Decimal?         @db.Decimal(10, 7)
   longitude       Decimal?         @db.Decimal(10, 7)
@@ -164,10 +166,17 @@ model Experience {
   rejectionReason String?          @map("rejection_reason")
   reviewedAt      DateTime?        @map("reviewed_at")
   reviewedById    String?          @map("reviewed_by")
+  isFeatured      Boolean          @default(false) @map("is_featured")
+  featuredOrder   Int?             @map("featured_order")
+  featuredFrom    DateTime?        @map("featured_from")
+  featuredUntil   DateTime?        @map("featured_until")
   createdAt       DateTime         @default(now()) @map("created_at")
   updatedAt       DateTime         @updatedAt @map("updated_at")
 
+  /// Compatibilidad. Siempre es la primera categoría (experienceCategories.position = 1).
+  /// La fuente principal de categorías es experienceCategories.
   category Category            @relation(fields: [categoryId], references: [id])
+  experienceCategories ExperienceCategory[]
   creator  User                @relation(fields: [createdBy], references: [id])
   reviewedBy User?             @relation("ExperienceReviewedBy", fields: [reviewedById], references: [id])
   reviews       ExperienceReview[]
@@ -178,7 +187,24 @@ model Experience {
   @@index([createdBy])
   @@index([createdAt])
   @@index([submittedAt])
+  @@index([isFeatured, featuredOrder])
   @@map("experiences")
+}
+
+/// Categorías de una experiencia, en el orden en que se registraron. Máximo 3.
+model ExperienceCategory {
+  experienceId String   @map("experience_id")
+  categoryId   String   @map("category_id")
+  position     Int
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  experience Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+  category   Category   @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@id([experienceId, categoryId])
+  @@unique([experienceId, position])
+  @@index([categoryId])
+  @@map("experience_categories")
 }
 
 model ExperienceReview {
@@ -195,6 +221,46 @@ model ExperienceReview {
   @@index([experienceId, createdAt])
   @@index([reviewerId])
   @@map("experience_reviews")
+}
+
+model ExperienceDetailView {
+  id           String   @id @default(uuid())
+  experienceId String   @map("experience_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  experience Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+
+  @@index([experienceId, createdAt])
+  @@map("experience_detail_views")
+}
+
+model ExperienceFavorite {
+  id           String   @id @default(uuid())
+  experienceId String   @map("experience_id")
+  userId       String   @map("user_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  experience Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([experienceId, userId])
+  @@index([experienceId])
+  @@map("experience_favorites")
+}
+
+model ExperienceVisitorReview {
+  id           String   @id @default(uuid())
+  experienceId String   @map("experience_id")
+  userId       String   @map("user_id")
+  rating       Int
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  experience Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([experienceId, userId])
+  @@index([experienceId, createdAt])
+  @@map("experience_visitor_reviews")
 }
 
 model Notification {

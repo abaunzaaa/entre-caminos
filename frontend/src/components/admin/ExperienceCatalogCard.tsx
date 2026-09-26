@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { parseStoredLocation } from "../../data/colombia-locations";
 import { experienceImages, mediaUrl } from "../../utils/media";
 import { formatPrice } from "../../utils/cn";
+import { formatExperienceCategories } from "../../utils/experience-categories";
 import type { Experience, ExperienceStatus } from "../../types";
 import { StatusDot } from "./Panel";
 import { TeamInviteCarousel } from "./TeamInviteCarousel";
@@ -22,8 +23,8 @@ function isCatalogActive(status: ExperienceStatus) {
   return status === "PUBLISHED";
 }
 
-function catalogPrice(value: string | number) {
-  return formatPrice(value).replace(/\s/g, "");
+function catalogPrice(value: string | number, currency?: string) {
+  return formatPrice(value, currency);
 }
 
 function catalogPlace(location: string) {
@@ -96,6 +97,7 @@ export function ExperienceCatalogCard({
 
   return (
     <article className="dash-exps-tile">
+      <Link to={detailPath} className="dash-exps-tile__link" aria-label={`${viewLabel} ${experience.title}`} />
       <div className="dash-exps-tile__photo">
         <TeamInviteCarousel className="dash-exps-tile__gallery" slides={gallery} label={experience.title} />
         <Link
@@ -108,9 +110,9 @@ export function ExperienceCatalogCard({
       </div>
       <div className="dash-exps-tile__body">
         <div className="dash-exps-tile__chips">
-          <StatusDot active>{experience.category?.name || "Sin categoría"}</StatusDot>
+          <StatusDot active>{formatExperienceCategories(experience, "Sin categoría")}</StatusDot>
           {isTourist ? null : <StatusDot active={active}>{STATUS_LABEL[experience.status]}</StatusDot>}
-          <StatusDot active>{catalogPrice(experience.price)}</StatusDot>
+          <StatusDot active>{catalogPrice(experience.price, experience.currency)}</StatusDot>
         </div>
         <h3>{experience.title}</h3>
         {place ? (
