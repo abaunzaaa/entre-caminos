@@ -45,9 +45,7 @@ import {
 import { useAuth } from "../../hooks/useAuth";
 import { mediaUrl } from "../../utils/media";
 import { formatPrice } from "../../utils/cn";
-import { GuideMark } from "./GuideMark";
 import { useGuide } from "./GuideContext";
-import keySilhouette from "../../assets/key-silhouette.png";
 import "../../styles/guide.css";
 
 const CAPABILITIES = [
@@ -390,7 +388,7 @@ export function GuideHost() {
         <span className="guide-fab__icon">
           <span className="guide-fab__aura" aria-hidden="true" />
           <span className="guide-fab__spec" aria-hidden="true" />
-          <img src={keySilhouette} alt="" className="guide-fab__key" />
+          <span className="guide-fab__key" aria-hidden="true" />
           {guide.unread ? <span className="guide-fab__dot" /> : null}
         </span>
         <span className="guide-fab__label">Tu guía</span>
@@ -791,9 +789,7 @@ export function GuideHost() {
                   {guide.thread?.messages.map((message) => (
                     <article key={message.id} className={`guide-row${message.role === "user" ? " guide-row--user" : ""}`}>
                       {message.role === "assistant" ? (
-                        <span className="guide-avatar" aria-hidden="true">
-                          <GuideMark />
-                        </span>
+                        <span className="guide-avatar guide-avatar--key" aria-hidden="true" />
                       ) : null}
                       <div className="guide-row__body">
                         <div className="guide-bubble">{message.content}</div>
@@ -957,9 +953,7 @@ export function GuideHost() {
                   ))}
                   {guide.sending ? (
                     <div className="guide-row">
-                      <span className="guide-avatar" aria-hidden="true">
-                        <GuideMark />
-                      </span>
+                      <span className="guide-avatar guide-avatar--key" aria-hidden="true" />
                       <p className="guide-typing" aria-live="polite">
                         <span />
                         Escribiendo
