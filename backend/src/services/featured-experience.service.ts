@@ -1,9 +1,10 @@
 import type { ExperienceStatus } from "@prisma/client";
-import { FEATURED_RECENT_ACTIVITY_DAYS } from "../config/featured-score.js";
+import { FEATURED_PUBLIC_LIMIT, FEATURED_RECENT_ACTIVITY_DAYS } from "../config/featured-score.js";
 import {
   calculateFeaturedScore,
   compareFeaturedRanking,
   featuredHighlight,
+  selectDiverseByCategory,
   type FeaturedMetrics,
   type FeaturedRankingCriterion,
 } from "../config/featured-score.js";
@@ -100,27 +101,112 @@ export async function recordDetailView(experienceId: string) {
 
 const coverInclude = { category: true } as const;
 
-function activeFeaturedWhere(now: Date) {
-  return {
-    status: "PUBLISHED" as const,
-    isFeatured: true,
-    AND: [
-      { OR: [{ featuredFrom: null }, { featuredFrom: { lte: now } }] },
-      { OR: [{ featuredUntil: null }, { featuredUntil: { gte: now } }] },
-    ],
-  };
+const savedFeaturedWhere = {
+  isFeatured: true,
+  featuredOrder: { gte: 1, lte: FEATURED_PUBLIC_LIMIT },
+} as const;
+
+const savedFeaturedOrder = [{ featuredOrder: "asc" as const }, { updatedAt: "desc" as const }];
+
+/** Destacadas guardadas por generar o por selección editorial, en su orden. */
+export async function listCoverFeaturedExperiences() {
+  return prisma.experience.findMany({
+    where: savedFeaturedWhere,
+    include: coverInclude,
+    orderBy: savedFeaturedOrder,
+    take: FEATURED_PUBLIC_LIMIT,
+  });
 }
 
-const COVER_CAROUSEL_LIMIT = 12;
+const RECOMMENDATION_LIMIT = 12;
 
-/** Portada: solo destacadas vigentes, en el orden editorial. */
-export async function listCoverFeaturedExperiences(now = new Date()) {
-  return prisma.experience.findMany({
-    where: activeFeaturedWhere(now),
+const INTEREST_HINTS: Record<string, string[]> = {
+  naturaleza: ["naturaleza", "outdoor", "aire libre"],
+  gastronomia: ["gastronomia", "comida", "cocina", "cafe"],
+  cultura: ["cultura", "patrimonio", "museo"],
+  aventura: ["aventura", "extremo"],
+  relajacion: ["relajacion", "bienestar", "spa"],
+  "arte y creatividad": ["arte", "creatividad", "taller"],
+  deportes: ["deporte", "deportes"],
+  "historia y patrimonio": ["historia", "patrimonio", "museo"],
+  musica: ["musica", "concierto"],
+  talleres: ["taller", "talleres"],
+  "planes urbanos": ["urbano", "ciudad"],
+  cafe: ["cafe", "cafeteria"],
+  fotografia: ["fotografia", "foto"],
+  danza: ["danza", "baile"],
+  literatura: ["literatura", "lectura"],
+  "fiesta / vida nocturna": ["fiesta", "nocturna"],
+};
+
+function foldText(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+function matchesInterest(
+  interest: string,
+  experience: { title: string; description: string; category: { name: string } | null },
+) {
+  const key = foldText(interest);
+  if (!key) {
+    return false;
+  }
+  const category = foldText(experience.category?.name ?? "");
+  const haystack = foldText(`${experience.title} ${experience.description} ${category}`);
+  if (category && (category === key || category.includes(key) || key.includes(category))) {
+    return true;
+  }
+  if (haystack.includes(key)) {
+    return true;
+  }
+  return (INTEREST_HINTS[key] ?? []).some((hint) => category.includes(hint) || haystack.includes(hint));
+}
+
+function recommendationTie(seed: string, id: string) {
+  let hash = 0;
+  const value = `${seed}:${id}`;
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash * 33 + value.charCodeAt(index)) >>> 0;
+  }
+  return hash;
+}
+
+/** Carrusel personalizado. Sin intereses, usa el puntaje general y no la selección editorial. */
+export async function listRecommendedExperiences(userId?: string) {
+  const interests = userId
+    ? ((await prisma.userProfile.findUnique({ where: { userId }, select: { interests: true } }))?.interests ?? [])
+    : [];
+  const experiences = await prisma.experience.findMany({
+    where: { status: "PUBLISHED" },
     include: coverInclude,
-    orderBy: [{ featuredOrder: { sort: "asc", nulls: "last" } }, { updatedAt: "desc" }],
-    take: COVER_CAROUSEL_LIMIT,
   });
+  const maps = await loadMetricMaps(experiences.map((item) => item.id));
+  const day = new Date().toISOString().slice(0, 10);
+  const seed = `${userId ?? "anon"}:${day}`;
+  const ranked = [...experiences].sort((left, right) => {
+    const leftMatches = interests.reduce((count, interest) => count + (matchesInterest(interest, left) ? 1 : 0), 0);
+    const rightMatches = interests.reduce((count, interest) => count + (matchesInterest(interest, right) ? 1 : 0), 0);
+    if (rightMatches !== leftMatches) {
+      return rightMatches - leftMatches;
+    }
+    const byScore = calculateFeaturedScore(metricsFor(right.id, maps)) - calculateFeaturedScore(metricsFor(left.id, maps));
+    if (byScore !== 0) {
+      return byScore;
+    }
+    return recommendationTie(seed, left.id) - recommendationTie(seed, right.id);
+  });
+  const matched = interests.length
+    ? ranked.filter((item) => interests.some((interest) => matchesInterest(interest, item)))
+    : [];
+  const source = matched.length > 0 ? "interests" : "popular";
+  return {
+    source,
+    experiences: (source === "interests" ? matched : ranked).slice(0, RECOMMENDATION_LIMIT),
+  };
 }
 
 function toAdminCard(
@@ -213,10 +299,11 @@ export async function listOwnExperiencePerformance(actor: AuthUser, criterion: F
 export async function generateFeaturedFromRanking(
   actor: AuthUser,
   criterion: FeaturedRankingCriterion,
-  limit = 10,
+  limit = FEATURED_PUBLIC_LIMIT,
 ) {
+  const safeLimit = Math.min(Math.max(limit, 1), FEATURED_PUBLIC_LIMIT);
   const ranked = await listFeaturedRanking(criterion);
-  const selected = ranked.slice(0, limit);
+  const selected = selectDiverseByCategory(ranked, safeLimit, (card) => card.category.id);
   const selectedIds = selected.map((card) => card.experience.id);
 
   await prisma.$transaction(async (tx) => {
@@ -256,9 +343,10 @@ export async function generateFeaturedFromRanking(
 
 export async function listAdminFeaturedExperiences() {
   const experiences = await prisma.experience.findMany({
-    where: { isFeatured: true },
+    where: savedFeaturedWhere,
     include: { category: { select: { id: true, name: true, icon: true } } },
-    orderBy: [{ featuredOrder: "asc" }, { updatedAt: "desc" }],
+    orderBy: savedFeaturedOrder,
+    take: FEATURED_PUBLIC_LIMIT,
   });
   const maps = await loadMetricMaps(experiences.map((item) => item.id));
   return experiences.map((experience) => toAdminCard(experience, metricsFor(experience.id, maps)));

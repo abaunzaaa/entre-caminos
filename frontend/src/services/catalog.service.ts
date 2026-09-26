@@ -71,6 +71,13 @@ export async function getCoverFeaturedExperiences() {
   return data.data.experiences;
 }
 
+export async function getRecommendedExperiences() {
+  const { data } = await api.get<ApiResponse<{ experiences: Experience[]; source: "interests" | "popular" }>>(
+    "/catalog/recommended-experiences",
+  );
+  return data.data;
+}
+
 export async function getPublicExperiences(options?: { limit?: number; offset?: number }) {
   const { data } = await api.get<
     ApiResponse<{ experiences: Experience[]; total: number; hasMore: boolean }>

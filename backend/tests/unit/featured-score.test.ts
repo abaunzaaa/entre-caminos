@@ -5,6 +5,7 @@ import {
   compareFeaturedRanking,
   featuredHighlight,
   isWithinFeaturedPeriod,
+  selectDiverseByCategory,
   selectPublicFeatured,
   type FeaturedMetrics,
   type RankableExperience,
@@ -89,6 +90,52 @@ describe("compareFeaturedRanking", () => {
     expect(top("reviews")).toBe("Reseñada");
     expect(top("rating")).toBe("Calificada");
     expect(top("trending")).toBe("Tendencia");
+  });
+});
+
+describe("selectDiverseByCategory", () => {
+  it("reparte las primeras posiciones entre categorías distintas y conserva el orden de métricas", () => {
+    const ranked = [
+      { id: "c1", categoryId: "cultura" },
+      { id: "c2", categoryId: "cultura" },
+      { id: "g1", categoryId: "gastronomia" },
+      { id: "n1", categoryId: "naturaleza" },
+    ];
+    expect(selectDiverseByCategory(ranked, 3, (item) => item.categoryId).map((item) => item.id)).toEqual([
+      "c1",
+      "g1",
+      "n1",
+    ]);
+  });
+
+  it("no completa el cupo con otra experiencia de una categoría ya elegida", () => {
+    const ranked = [
+      { id: "c1", categoryId: "cultura" },
+      { id: "c2", categoryId: "cultura" },
+      { id: "g1", categoryId: "gastronomia" },
+      { id: "c3", categoryId: "cultura" },
+    ];
+    expect(selectDiverseByCategory(ranked, 5, (item) => item.categoryId).map((item) => item.id)).toEqual([
+      "c1",
+      "g1",
+    ]);
+  });
+
+  it("sigue el criterio en toda la lista y no se queda con las primeras cinco para luego quitar duplicados", () => {
+    const ranked = [
+      { id: "cocina", categoryId: "recreativo", visits: 100 },
+      { id: "flores", categoryId: "recreativo", visits: 90 },
+      { id: "candlelight", categoryId: "cultural", visits: 80 },
+      { id: "ceramicas", categoryId: "cultural", visits: 70 },
+      { id: "jardines", categoryId: "turistico", visits: 60 },
+      { id: "bosque", categoryId: "naturaleza", visits: 40 },
+    ];
+    expect(selectDiverseByCategory(ranked, 5, (item) => item.categoryId).map((item) => item.id)).toEqual([
+      "cocina",
+      "candlelight",
+      "jardines",
+      "bosque",
+    ]);
   });
 });
 

@@ -16,7 +16,7 @@ export function TouristHomeHero({ experiences, selected, onSelect }: TouristHome
   const category = selected?.category?.name ?? "Experiencia";
 
   return (
-    <section className="tourist-hero" aria-label="Descubrir experiencias">
+    <section className="tourist-hero" aria-label="Elegidos para ti">
       <img
         className="tourist-hero__decor"
         src={fotoInicioTurista}

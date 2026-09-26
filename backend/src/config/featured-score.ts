@@ -126,6 +126,30 @@ export type RankableExperience = {
   updatedAt: Date;
 };
 
+/**
+ * El arreglo ya viene ordenado por el criterio. Recorre esa lista completa:
+ * toma la mejor, descarta las siguientes de su categoría y sigue hasta cubrir el cupo.
+ */
+export function selectDiverseByCategory<T>(items: T[], limit: number, categoryKey: (item: T) => string): T[] {
+  if (limit < 1) {
+    return [];
+  }
+  const selected: T[] = [];
+  const seenCategories = new Set<string>();
+  for (const item of items) {
+    if (selected.length >= limit) {
+      break;
+    }
+    const key = categoryKey(item);
+    if (seenCategories.has(key)) {
+      continue;
+    }
+    seenCategories.add(key);
+    selected.push(item);
+  }
+  return selected;
+}
+
 export function selectPublicFeatured<T extends RankableExperience>(items: T[], now = new Date()): T[] {
   const manual = items
     .filter((item) => item.status === "PUBLISHED" && item.isFeatured && isWithinFeaturedPeriod(item, now))

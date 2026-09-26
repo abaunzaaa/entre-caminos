@@ -1,8 +1,10 @@
 import { Router } from "express";
+import { optionalAuthMiddleware } from "../middleware/auth.middleware.js";
 import { permissionMiddleware } from "../middleware/role.middleware.js";
 import { validate } from "../middleware/validate.middleware.js";
 import { asyncHandler } from "../utils/async-handler.js";
 import { PERMISSIONS } from "../config/constants.js";
+import * as featuredController from "../controllers/featured-experience.controller.js";
 import * as experienceController from "../controllers/experience.controller.js";
 import {
   experienceRejectSchema,
@@ -15,6 +17,11 @@ export const experienceRouter = Router();
 
 experienceRouter.get("/", asyncHandler(experienceController.listPublic));
 experienceRouter.get("/featured", asyncHandler(experienceController.featured));
+experienceRouter.get(
+  "/recommendations",
+  optionalAuthMiddleware,
+  asyncHandler(featuredController.recommendations),
+);
 experienceRouter.get("/:id", asyncHandler(experienceController.getPublic));
 
 export const adminExperienceRouter = Router();

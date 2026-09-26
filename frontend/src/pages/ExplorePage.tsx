@@ -10,10 +10,9 @@ import {
 import { ExplorerRecommendedSection } from "../components/explorer/ExplorerRecommendedSection";
 import { TouristHomeHero } from "../components/explorer/TouristHomeHero";
 import { experienceCoverUrl } from "../components/explorer/explorer-media";
-import { useAuth } from "../hooks/useAuth";
-import avionIcon from "../assets/avion-icon.png";
 import camIcon from "../assets/cam-icon.png";
-import { getCoverFeaturedExperiences, getPublicExperiences } from "../services/catalog.service";
+import avionIcon from "../assets/avion-icon.png";
+import { getCoverFeaturedExperiences, getPublicExperiences, getRecommendedExperiences } from "../services/catalog.service";
 import { formatDepartmentMunicipality } from "../data/colombia-locations";
 import type { Experience } from "../types";
 import "../styles/admin-ui.css";
@@ -39,9 +38,9 @@ function mergeExperiences(current: Experience[], incoming: Experience[]) {
 }
 
 export function ExplorePage() {
-  const { user } = useAuth();
   const [experiences, setExperiences] = useState<Experience[]>([]);
   const [coverFeatured, setCoverFeatured] = useState<Experience[]>([]);
+  const [recommended, setRecommended] = useState<Experience[]>([]);
   const [total, setTotal] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [filters, setFilters] = useState<DiscoverFiltersState>(DEFAULT_DISCOVER_FILTERS);
@@ -55,13 +54,25 @@ export function ExplorePage() {
 
   useEffect(() => {
     let cancelled = false;
+    getRecommendedExperiences()
+      .then((result) => {
+        if (cancelled) {
+          return;
+        }
+        setRecommended(result.experiences);
+        setSelectedId(result.experiences[0]?.id ?? null);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setRecommended([]);
+        }
+      });
     getCoverFeaturedExperiences()
       .then((items) => {
         if (cancelled || items.length === 0) {
           return;
         }
         setCoverFeatured(items);
-        setSelectedId(items[0]?.id ?? null);
       })
       .catch(() => {
         if (!cancelled) {
@@ -98,8 +109,8 @@ export function ExplorePage() {
   }, [filters, activeSearch]);
 
   const heroExperiences = useMemo(
-    () => (coverFeatured.length > 0 ? coverFeatured : experiences.slice(0, 12)),
-    [coverFeatured, experiences],
+    () => (recommended.length > 0 ? recommended : experiences.slice(0, 12)),
+    [recommended, experiences],
   );
 
   const selected = useMemo(
@@ -312,10 +323,7 @@ export function ExplorePage() {
         )}
       </section>
 
-      <ExplorerRecommendedSection
-        experiences={experiences}
-        interests={user?.profile?.interests ?? []}
-      />
+      <ExplorerRecommendedSection experiences={coverFeatured} />
 
       <section className="explorer-section" id="mapa" aria-labelledby="explorer-map-title">
         <div className="explorer-section__head">

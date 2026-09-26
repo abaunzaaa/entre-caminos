@@ -223,12 +223,14 @@ function SuperAdminFeaturedPage() {
   const canEdit = user?.role === "SUPER_ADMIN";
   const [mode, setMode] = useState<HighlightMode>("metrics");
   const [criterion, setCriterion] = useState<FeaturedRankingCriterion>("visits");
-  const [count, setCount] = useState("10");
+  const [count, setCount] = useState("5");
   const [ranking, setRanking] = useState<FeaturedExperienceCard[]>([]);
   const [rankingLoading, setRankingLoading] = useState(false);
   const [featured, setFeatured] = useState<FeaturedExperienceCard[]>([]);
   const [published, setPublished] = useState<Experience[]>([]);
   const [experienceId, setExperienceId] = useState("");
+  const [editorialQuery, setEditorialQuery] = useState("");
+  const [editorialCategory, setEditorialCategory] = useState("");
   const [order, setOrder] = useState("1");
   const [from, setFrom] = useState("");
   const [until, setUntil] = useState("");
@@ -328,6 +330,24 @@ function SuperAdminFeaturedPage() {
     return published.filter((item) => !taken.has(item.id));
   }, [featured, published]);
 
+  const editorialCategories = useMemo(() => {
+    const names = new Set(editorialOptions.map((item) => item.category?.name).filter((name): name is string => Boolean(name)));
+    return [...names].sort((left, right) => left.localeCompare(right, "es"));
+  }, [editorialOptions]);
+
+  const visibleEditorial = useMemo(() => {
+    const query = editorialQuery.trim().toLowerCase();
+    return editorialOptions.filter((item) => {
+      if (editorialCategory && item.category?.name !== editorialCategory) {
+        return false;
+      }
+      if (!query) {
+        return true;
+      }
+      return item.title.toLowerCase().includes(query);
+    });
+  }, [editorialCategory, editorialOptions, editorialQuery]);
+
   async function featureWith(id: string, payload: { featuredOrder?: number | null; featuredFrom?: string | null; featuredUntil?: string | null }) {
     setSaving(true);
     setError("");
@@ -344,8 +364,8 @@ function SuperAdminFeaturedPage() {
   async function onGenerate(event: FormEvent) {
     event.preventDefault();
     const limit = Number(count);
-    if (!Number.isInteger(limit) || limit < 1 || limit > 10) {
-      setError("La cantidad debe estar entre 1 y 10");
+    if (!Number.isInteger(limit) || limit < 1 || limit > 5) {
+      setError("La cantidad debe estar entre 1 y 5");
       return;
     }
     setSaving(true);
@@ -451,7 +471,7 @@ function SuperAdminFeaturedPage() {
             </label>
             <label>
               Cantidad
-              <input type="number" min={1} max={10} value={count} onChange={(event) => setCount(event.target.value)} />
+              <input type="number" min={1} max={5} value={count} onChange={(event) => setCount(event.target.value)} />
             </label>
             {canEdit ? (
               <Button type="submit" disabled={saving || rankingLoading || ranking.length === 0}>
@@ -466,16 +486,52 @@ function SuperAdminFeaturedPage() {
         {mode === "editorial" && canEdit ? (
           <form className="featured-admin__form" onSubmit={(event) => void onEditorialFeature(event)}>
             <label>
-              Experiencia publicada
-              <select value={experienceId} onChange={(event) => setExperienceId(event.target.value)}>
-                <option value="">Selecciona una experiencia</option>
-                {editorialOptions.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.title}
+              Buscar por nombre
+              <input
+                type="search"
+                value={editorialQuery}
+                placeholder="Nombre de la experiencia"
+                onChange={(event) => setEditorialQuery(event.target.value)}
+              />
+            </label>
+            <label>
+              Categoría
+              <select value={editorialCategory} onChange={(event) => setEditorialCategory(event.target.value)}>
+                <option value="">Todas las categorías</option>
+                {editorialCategories.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
                   </option>
                 ))}
               </select>
             </label>
+            <div className="featured-admin__picker" role="listbox" aria-label="Experiencias publicadas">
+              {visibleEditorial.length === 0 ? (
+                <p className="featured-admin__empty">No hay experiencias publicadas con ese filtro.</p>
+              ) : (
+                visibleEditorial.map((item) => {
+                  const place = item.location?.trim() || "Sin ubicación";
+                  const selected = item.id === experienceId;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      role="option"
+                      aria-selected={selected}
+                      className={`featured-admin__pick${selected ? " is-selected" : ""}`}
+                      onClick={() => setExperienceId(item.id)}
+                    >
+                      <img src={mediaUrl(item.imageUrl, 320)} alt="" />
+                      <span>
+                        <strong>{item.title}</strong>
+                        <small>{item.category?.name || "Sin categoría"}</small>
+                        <small>{place}</small>
+                      </span>
+                    </button>
+                  );
+                })
+              )}
+            </div>
             <label>
               Orden
               <input type="number" min={0} max={999} value={order} onChange={(event) => setOrder(event.target.value)} />
@@ -488,7 +544,7 @@ function SuperAdminFeaturedPage() {
               Hasta
               <input type="datetime-local" value={until} onChange={(event) => setUntil(event.target.value)} />
             </label>
-            <Button type="submit" disabled={saving || !editorialOptions.length}>
+            <Button type="submit" disabled={saving || !experienceId}>
               Destacar
             </Button>
           </form>

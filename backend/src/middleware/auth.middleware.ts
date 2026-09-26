@@ -17,6 +17,20 @@ function extractToken(req: Request): string | null {
   return typeof cookieToken === "string" ? cookieToken : null;
 }
 
+export function optionalAuthMiddleware(req: Request, res: Response, next: NextFunction) {
+  if (!extractToken(req)) {
+    next();
+    return;
+  }
+  authMiddleware(req, res, (error) => {
+    if (error) {
+      next();
+      return;
+    }
+    next();
+  });
+}
+
 export async function authMiddleware(req: Request, _res: Response, next: NextFunction) {
   try {
     const token = extractToken(req);

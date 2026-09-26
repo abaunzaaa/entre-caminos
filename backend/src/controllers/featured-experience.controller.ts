@@ -23,7 +23,7 @@ export async function generate(req: Request, res: Response) {
   const experiences = await featuredService.generateFeaturedFromRanking(
     req.user!,
     req.body.criterion,
-    req.body.limit ?? 10,
+    req.body.limit ?? 5,
   );
   return res.status(201).json({
     success: true,
@@ -49,4 +49,9 @@ export async function reorder(req: Request, res: Response) {
 export async function unfeature(req: Request, res: Response) {
   await featuredService.unfeatureExperience(req.user!, req.params.id);
   return res.json({ success: true, message: "Experiencia retirada de destacadas" });
+}
+
+export async function recommendations(req: Request, res: Response) {
+  const result = await featuredService.listRecommendedExperiences(req.user?.id);
+  return res.json({ success: true, data: result });
 }

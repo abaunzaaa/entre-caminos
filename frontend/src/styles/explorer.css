@@ -1754,7 +1754,7 @@
   width: 100%;
   box-sizing: border-box;
   margin: 0;
-  padding: 1.9rem 1.3rem 0;
+  padding: 1.9rem 1.3rem 2.05rem;
   text-align: center;
 }
 
@@ -1769,20 +1769,6 @@
   text-align: center;
   text-transform: uppercase;
   text-wrap: pretty;
-}
-
-.explorer-recs__lead {
-  max-width: 100%;
-  margin: 0 0 2.05rem;
-  color: #6b746f;
-  font-family: Poppins, Nunito, system-ui, sans-serif;
-  font-size: 0.74rem;
-  font-weight: 500;
-  letter-spacing: 0.12em;
-  line-height: 1.35;
-  text-align: center;
-  text-transform: uppercase;
-  white-space: nowrap;
 }
 
 .explorer-recs__shell {
@@ -2066,10 +2052,6 @@
 
   .explorer-recs__stage {
     order: 1;
-  }
-
-  .explorer-recs__lead {
-    white-space: normal;
   }
 
   .explorer-recs__gallery {
