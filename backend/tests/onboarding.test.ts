@@ -204,12 +204,16 @@ describe("Onboarding y perfil persistente", () => {
 
     const me = await api().get("/api/auth/me").set(auth(session.token));
     expect(me.body.data.user.profile.profileImageUrl).toBe(replaced.body.data.profile.profileImageUrl);
+    expect(me.body.data.user.avatarUrl).toBe(replaced.body.data.profile.profileImageUrl);
 
     const removed = await api().delete("/api/auth/onboarding/photo").set(auth(session.token));
     expect(removed.status).toBe(200);
     expect(removed.body.data.profile.profileImageUrl).toBeNull();
     expect(removed.body.data.profile.profileImagePublicId).toBeNull();
     expect(removed.body.data.profile.profileImageType).toBe("AVATAR");
+
+    const afterDelete = await api().get("/api/auth/me").set(auth(session.token));
+    expect(afterDelete.body.data.user.avatarUrl).toBeNull();
   });
 
   it("rechaza una imagen con formato no permitido", async () => {

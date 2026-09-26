@@ -18,3 +18,4 @@ apiRouter.use("/contact", contactRouter);
 apiRouter.use("/experiences", experienceRouter);
 apiRouter.use("/uploads", uploadRouter);
 apiRouter.use("/assistant", assistantRouter);
+apiRouter.use(assistantRouter);

@@ -2,6 +2,7 @@ const PREFIX = "ec_guide_";
 
 export type GuideStoredMessage = {
   id: string;
+  conversationId?: string;
   role: "user" | "assistant";
   content: string;
   createdAt: string;
@@ -35,12 +36,28 @@ export type GuideStoredMessage = {
   status?: "ok" | "empty" | "need_info";
 };
 
+export type GuideExperienceSnapshot = {
+  id: string;
+  name: string;
+  category?: string;
+  location: string;
+  price?: string | number;
+  duration?: string;
+  description?: string;
+  availableDays?: unknown;
+  howToGetThere?: string;
+  imageUrl?: string;
+};
+
 export type GuideThread = {
   id: string;
   title: string;
   updatedAt: string;
   experienceId?: string;
+  experienceName?: string;
   folderId?: string;
+  favorite?: boolean;
+  pinned?: boolean;
   messages: GuideStoredMessage[];
 };
 
@@ -134,14 +151,201 @@ export function newMessageId() {
   return `m_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
+export function chronologicalMessages(messages: GuideStoredMessage[] | undefined | null): GuideStoredMessage[] {
+  if (!messages?.length) {
+    return [];
+  }
+  const serverKeys = new Set(
+    messages
+      .filter((item) => item.id && !item.id.startsWith("local_"))
+      .map((item) => `${item.role}:${item.content.trim()}`),
+  );
+  const seenIds = new Set<string>();
+  const result: GuideStoredMessage[] = [];
+  for (const message of messages) {
+    if (!message?.content && message?.role !== "assistant") {
+      continue;
+    }
+    if (message.id && seenIds.has(message.id)) {
+      continue;
+    }
+    const key = `${message.role}:${message.content.trim()}`;
+    if (message.id?.startsWith("local_") && serverKeys.has(key)) {
+      continue;
+    }
+    const prev = result[result.length - 1];
+    if (prev && prev.role === message.role && prev.content.trim() === message.content.trim()) {
+      if (prev.id.startsWith("local_") && message.id && !message.id.startsWith("local_")) {
+        result[result.length - 1] = message;
+        seenIds.add(message.id);
+      }
+      continue;
+    }
+    if (message.id) {
+      seenIds.add(message.id);
+    }
+    result.push(message);
+  }
+  return result;
+}
+
 export function newThreadId() {
   return `t_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
-export function titleFromText(value: string) {
-  const clean = value.replace(/\s+/g, " ").trim();
-  if (clean.length <= 42) {
-    return clean || "Nueva conversación";
+const PLACEHOLDER_TITLES = new Set([
+  "nueva conversación",
+  "nuevo chat",
+  "hoy",
+  "ayer",
+  "creando un plan",
+  "nuevo plan",
+  "buscar experiencias",
+  "explorar cerca",
+  "según mis intereses",
+]);
+
+export function isPersistedConversationId(id?: string | null) {
+  return Boolean(id && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id));
+}
+
+export function isBlankThread(thread?: Pick<GuideThread, "title" | "messages"> | null) {
+  if (!thread) {
+    return false;
   }
-  return `${clean.slice(0, 42).trim()}…`;
+  const hasContent = thread.messages.some((item) => item.content.trim());
+  return !hasContent && isPlaceholderTitle(thread.title);
+}
+
+export function isPlaceholderTitle(value?: string | null) {
+  const clean = (value ?? "").replace(/\s+/g, " ").trim().toLowerCase();
+  if (!clean || PLACEHOLDER_TITLES.has(clean)) {
+    return true;
+  }
+  if (/^(hoy|ayer)$/.test(clean)) {
+    return true;
+  }
+  if (/^\d{1,2}:\d{2}/.test(clean) && clean.length < 20) {
+    return true;
+  }
+  if (/\b(a\.?\s*m\.?|p\.?\s*m\.?)\b/.test(clean) && clean.length < 22) {
+    return true;
+  }
+  return false;
+}
+
+function clipTitle(value: string) {
+  return value.length <= 42 ? value : `${value.slice(0, 42).trim()}…`;
+}
+
+export function titleFromText(value: string) {
+  let clean = value.replace(/\s+/g, " ").trim();
+  clean = clean.replace(/^[¿¡]+/, "").replace(/[?!.]+$/g, "").trim();
+  const lower = clean.toLowerCase();
+  const generic = new Set(["hola", "hoy", "ok", "okay", "sí", "si", "no", "gracias", "hey", "buenas", "hello", "hi"]);
+  if (!clean) {
+    return "Nueva conversación";
+  }
+  if (PLACEHOLDER_TITLES.has(lower) || /^(hoy|ayer)$/.test(lower)) {
+    return "Nueva conversación";
+  }
+  if (/^\d{1,2}:\d{2}/.test(lower) && clean.length < 20) {
+    return "Nueva conversación";
+  }
+  if (generic.has(lower)) {
+    return clipTitle(clean.charAt(0).toUpperCase() + clean.slice(1));
+  }
+  if (clean.length < 3) {
+    return "Nueva conversación";
+  }
+
+  const hacer = clean.match(/^qu[eé]\s+(puedo\s+|podemos\s+)?hacer\s+(en|por)\s+(.+)$/i);
+  if (hacer) {
+    const place = hacer[3].trim();
+    return clipTitle(`Experiencias en ${place.charAt(0).toUpperCase()}${place.slice(1)}`);
+  }
+
+  const experiencias = clean.match(/experiencias?\s+(.+?)\s+en\s+(.+)$/i);
+  if (experiencias) {
+    const kind = experiencias[1].trim();
+    const place = experiencias[2].trim();
+    return clipTitle(`Experiencias ${kind} ${place.charAt(0).toUpperCase()}${place.slice(1)}`);
+  }
+
+  let rest = clean
+    .replace(/^(créame|creame|crea|quiero|necesito|busca|búscame|buscame)\s+/i, "")
+    .replace(/^(un|una|el|la)\s+/i, "")
+    .trim();
+
+  const planEn = rest.match(/^plan(?:\s+de)?\s+(.+?)\s+en\s+(.+)$/i);
+  if (planEn) {
+    const kind = planEn[1].trim();
+    const place = planEn[2].trim();
+    return clipTitle(`Plan ${kind} ${place.charAt(0).toUpperCase()}${place.slice(1)}`);
+  }
+
+  const conocer = clean.match(/(?:conocer\s+)?(?:lugares|experiencias?)\s+([^]+?)\s+en\s+(.+)$/i);
+  if (conocer) {
+    const kind = conocer[1].trim();
+    const place = conocer[2].trim();
+    return clipTitle(`Experiencias ${kind} ${place.charAt(0).toUpperCase()}${place.slice(1)}`);
+  }
+
+  if (/^plan(\b)/i.test(rest)) {
+    rest = rest.replace(/^plan\s*/i, "Plan ").replace(/^Plan\s+de\s+/i, "Plan de ");
+    if (!/^Plan\b/.test(rest)) {
+      rest = `Plan ${rest}`;
+    }
+  }
+
+  if (rest) {
+    rest = rest.charAt(0).toUpperCase() + rest.slice(1);
+  }
+  const titled = rest || clean.charAt(0).toUpperCase() + clean.slice(1);
+  return clipTitle(titled);
+}
+
+function normalizeChipText(value: string) {
+  return value.replace(/\s+/g, " ").trim().toLowerCase().replace(/[¿?¡!.,;:]+/g, "");
+}
+
+export function userChoiceChips(reply: string, suggestions?: string[] | null) {
+  const replyNorm = normalizeChipText(reply);
+  const chips: string[] = [];
+  const seen = new Set<string>();
+  for (const raw of suggestions ?? []) {
+    const item = raw.replace(/\s+/g, " ").trim();
+    if (!item || item.length > 42 || /[?]/.test(item)) {
+      continue;
+    }
+    const key = normalizeChipText(item);
+    if (!key || seen.has(key) || key === replyNorm) {
+      continue;
+    }
+    if (replyNorm.includes(key) && key.length >= 18) {
+      continue;
+    }
+    seen.add(key);
+    chips.push(item);
+  }
+  if (!chips.length && /tipo de experiencia|cultura|naturaleza|gastronom|aventura/i.test(reply)) {
+    return ["Cultura", "Naturaleza", "Aventura", "Gastronomía"];
+  }
+  return chips;
+}
+
+function activeKey(userId: string) {
+  return `${PREFIX}active_${userId}`;
+}
+
+export function loadActiveConversationId(userId: string) {
+  return readJson<string | null>(activeKey(userId), null);
+}
+
+export function saveActiveConversationId(userId: string, id?: string | null) {
+  if (!id) {
+    window.localStorage.removeItem(activeKey(userId));
+    return;
+  }
+  writeJson(activeKey(userId), id);
 }

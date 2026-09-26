@@ -145,6 +145,8 @@ export const updateProfileSchema = z.object({
       if (value.startsWith("data:image/webp;base64,")) {
         return true;
       }
-      return /^\/uploads\/avatars\/[A-Za-z0-9._-]+$/.test(value) || /^https:\/\//i.test(value);
+      return (
+        /^\/uploads\/(?:avatars\/)?[A-Za-z0-9._-]+$/.test(value) || /^https:\/\//i.test(value)
+      );
     }, "La foto de perfil no es válida"),
 });

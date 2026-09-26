@@ -1,6 +1,8 @@
+import { env } from "../config/env.js";
 import { ApiError } from "../utils/api-error.js";
-import { loadGuideContext, type GuideCatalogItem } from "./context.service.js";
+import { loadGuideContext, type GuideCatalogItem, type GuideChatContext } from "./context.service.js";
 import { generateGeminiText, parseGeminiJson } from "./gemini.service.js";
+import { generateGroqJson, hasGroqConfig } from "./openai.service.js";
 
 export type AssistantChatMessage = { role: "user" | "assistant"; content: string };
 
@@ -46,22 +48,36 @@ export type AssistantReply = {
 
 type CatalogItem = GuideCatalogItem;
 
-const SYSTEM = `Eres Tu guía, el asistente inteligente de Entre Caminos. Ayudas a usuarios a descubrir experiencias, resolver dudas y crear planes personalizados.
+const SYSTEM = `Eres Tu guía IA de Entre Caminos.
+Ayudas a usuarios a descubrir experiencias y crear planes.
 
-Habla en español, con tono cercano, calmado y premium. No eres un buscador: conversas, pides lo que falta y recomiendas con criterio.
+Tu objetivo es recomendar experiencias reales.
+Nunca inventes datos.
+Si tienes contexto de una experiencia específica debes responder primero usando esa información.
+Si falta información pregunta al usuario.
+Responde de manera clara, cercana y útil.
+
+Habla en español. No eres un buscador: conversas, pides lo que falta y recomiendas con criterio.
 
 Reglas:
-- Si falta ciudad, fecha, compañía, presupuesto o interés para armar un plan, pregunta UNA cosa a la vez.
-- Nunca inventes experiencias que no estén en el catálogo. Usa solo los id del catálogo.
-- Si el catálogo está vacío, dilo con claridad: aún no hay experiencias publicadas. No inventes lugares ni precios.
+- Si el usuario pide un plan o el hilo es de creación de plan, NO asumas día, fecha, ciudad, personas, tipo, presupuesto ni duración. Nunca empieces con “este sábado” ni inventes datos que el usuario no dijo.
+- Pregunta UNA cosa a la vez, en este orden si falta: 1) tipo de experiencia (cultura, naturaleza, gastronomía, aventura, relax u otra) 2) día (hoy, mañana, este fin de semana u otra fecha) 3) ciudad o zona 4) con quién (solo, pareja, amigos, familia) 5) presupuesto aproximado 6) tiempo disponible.
+- No generes un plan completo hasta tener esas respuestas (o hasta que el usuario las dé juntas).
+- Nunca inventes “este sábado”, un presupuesto o un número de personas si el usuario no lo dijo.
+- Cuando tengas suficiente, genera un plan con nombre, experiencias reales del catálogo, orden del recorrido, duración aproximada y recomendaciones.
+- Nunca inventes experiencias, precios, duraciones, horarios ni cómo llegar si no están en el catálogo o en el contexto.
+- Si el catálogo está vacío, dilo con claridad. No inventes lugares ni precios.
 - Si no hay coincidencias, dilo y ofrece alternativas del catálogo.
+- En modo experiencia, prioriza siempre esa experiencia antes que el resto del catálogo.
+- Si preguntan si es apta para niños, responde solo con descripción y categoría; si no alcanza, dilo y pregunta.
+- suggestions son atajos cortos que el usuario toca (Cultura, Naturaleza, Aventura). Nunca copies reply. Nunca pongas la misma pregunta en suggestions. Si la pregunta es abierta, deja suggestions vacío.
 - Responde SOLO un JSON con esta forma:
 {
   "reply": "texto para la persona",
   "intent": "chat" | "clarify" | "recommend" | "plan" | "experience",
   "status": "ok" | "empty" | "need_info",
   "questions": ["pregunta opcional"],
-  "suggestions": ["atajo corto"],
+  "suggestions": ["Cultura", "Naturaleza"],
   "plan": null | {
     "title": "",
     "city": "",
@@ -85,6 +101,28 @@ function asStringArray(value: unknown) {
     return [];
   }
   return value.map((item) => asString(item)).filter(Boolean);
+}
+
+function uniqueSuggestions(reply: string, suggestions: string[]) {
+  const replyNorm = reply.replace(/\s+/g, " ").trim().toLowerCase().replace(/[¿?¡!.,;:]+/g, "");
+  const seen = new Set<string>();
+  const chips: string[] = [];
+  for (const raw of suggestions) {
+    const item = raw.replace(/\s+/g, " ").trim();
+    if (!item || item.length > 42 || /[?]/.test(item)) {
+      continue;
+    }
+    const key = item.toLowerCase().replace(/[¿?¡!.,;:]+/g, "");
+    if (!key || seen.has(key) || key === replyNorm) {
+      continue;
+    }
+    if (replyNorm.includes(key) && key.length >= 18) {
+      continue;
+    }
+    seen.add(key);
+    chips.push(item);
+  }
+  return chips;
 }
 
 function extractIds(value: unknown): string[] {
@@ -205,13 +243,26 @@ export async function chatWithGuide(input: {
   message: string;
   history: AssistantChatMessage[];
   experienceId?: string;
+  context?: GuideChatContext;
   location?: { latitude?: number; longitude?: number; city?: string };
 }) {
-  const { catalog, cityFallback, prompt } = await loadGuideContext(input);
+  const { catalog, cityFallback, contextPrompt, prompt } = await loadGuideContext(input);
+
+  const turns = [
+    ...input.history.slice(-20).filter((item) => item.content.trim()),
+    { role: "user" as const, content: input.message },
+  ];
 
   let parsed: Record<string, unknown> | null = null;
   try {
-    parsed = parseGeminiJson(await generateGeminiText(SYSTEM, prompt));
+    const raw = hasGroqConfig()
+      ? await generateGroqJson(`${SYSTEM}\n\n${contextPrompt}`, turns)
+      : env.GEMINI_API_KEY
+        ? await generateGeminiText(SYSTEM, prompt)
+        : (() => {
+            throw ApiError.unavailable("El guía no está configurado en este momento.");
+          })();
+    parsed = parseGeminiJson(raw);
   } catch (error) {
     if (error instanceof ApiError) {
       throw error;
@@ -273,7 +324,7 @@ export async function chatWithGuide(input: {
       : "chat") as AssistantReply["intent"],
     status,
     questions: asStringArray(parsed.questions).slice(0, 3),
-    suggestions: asStringArray(parsed.suggestions).slice(0, 4),
+    suggestions: uniqueSuggestions(asString(parsed.reply), asStringArray(parsed.suggestions).slice(0, 6)),
     plan,
     planProgress:
       progressRaw && Number(progressRaw.step) > 0

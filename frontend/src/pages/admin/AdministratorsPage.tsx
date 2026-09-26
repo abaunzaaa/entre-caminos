@@ -16,7 +16,7 @@ import { Panel, StatusDot } from "../../components/admin/Panel";
 import { TeamInviteCarousel } from "../../components/admin/TeamInviteCarousel";
 import { useAuth } from "../../hooks/useAuth";
 import { getApiErrorMessage } from "../../utils/api-error";
-import { resolveAvatarUrl } from "../../utils/admin-avatar";
+import { nameInitial, resolveAvatarUrl } from "../../utils/admin-avatar";
 import adminIlus from "../../assets/admin-ilus.png";
 import superadmIlus from "../../assets/superadm-ilus.png";
 import "../../styles/auth-recovery-modal.css";
@@ -631,7 +631,7 @@ export function AdministratorsPage() {
               <div className="dash-team-board__people">
               {visibleAdmins.map((admin) => {
                 const avatar = resolveAvatarUrl(admin);
-                const initial = admin.name.trim().charAt(0).toUpperCase() || "A";
+                const initial = nameInitial(admin.name, "A");
                 return (
                   <article key={admin.id} className="dash-team-card">
                     <span className="dash-team-card__avatar">

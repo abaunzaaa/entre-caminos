@@ -5,10 +5,12 @@ import { Camera, LogOut, UserRoundPen } from "lucide-react";
 import { Button } from "../ui/Button";
 import { useAuth } from "../../hooks/useAuth";
 import type { PublicUser } from "../../types";
+import { UserAvatar } from "../user/UserAvatar";
 import {
   ADMIN_AVATAR_EVENT,
   clearAdminAvatar,
   fileToAvatarDataUrl,
+  nameInitial,
   resolveAvatarUrl,
   saveAdminAvatar,
   toAvatarPayload,
@@ -28,22 +30,6 @@ function roleLabel(role: PublicUser["role"] | undefined) {
     return "Explorador";
   }
   return "Administración";
-}
-
-function AvatarMark({
-  src,
-  initial,
-  className,
-}: {
-  src: string | null;
-  initial: string;
-  className: string;
-}) {
-  return (
-    <span className={className}>
-      {src ? <img src={src} alt="" /> : initial}
-    </span>
-  );
 }
 
 export function AdminUserMenu({
@@ -66,7 +52,7 @@ export function AdminUserMenu({
   const pickingRef = useRef(false);
   const fullName = user?.name?.trim() || (user?.role === "USER" ? "Explorador" : "Administrador");
   const firstName = fullName.split(/\s+/)[0] || "Admin";
-  const initial = firstName.charAt(0).toUpperCase();
+  const initial = nameInitial(firstName, "A");
   const profilePath = user?.role === "USER" ? "/onboarding" : "/admin/perfil";
 
   useEffect(() => {
@@ -246,7 +232,7 @@ export function AdminUserMenu({
                     Foto de perfil
                   </h2>
                   <div className="admin-usermenu__dialog-preview" aria-hidden="true">
-                    <AvatarMark src={photo} initial={initial} className="admin-usermenu__dialog-avatar" />
+                    <UserAvatar user={user} src={photo} initial={initial} size={96} className="admin-usermenu__dialog-avatar" />
                   </div>
                   {photoError ? (
                     <p id="admin-photo-error" className="admin-usermenu__photo-error">
@@ -281,7 +267,7 @@ export function AdminUserMenu({
                   </h2>
                   <p className="dash-team-confirm__lead">Así se verá tu foto de perfil.</p>
                   <div className="admin-usermenu__dialog-preview" aria-hidden="true">
-                    <AvatarMark src={pendingPhoto} initial={initial} className="admin-usermenu__dialog-avatar" />
+                    <UserAvatar user={user} src={pendingPhoto} initial={initial} size={96} className="admin-usermenu__dialog-avatar" />
                   </div>
                   {photoError ? (
                     <p id="admin-photo-error" className="admin-usermenu__photo-error">
@@ -336,7 +322,7 @@ export function AdminUserMenu({
         aria-label={`Menú de ${fullName}`}
         onClick={() => setOpen((value) => !value)}
       >
-        <AvatarMark src={photo} initial={initial} className="admin-topbar__avatar" />
+        <UserAvatar user={user} src={photo} initial={initial} size={40} className="admin-topbar__avatar" />
         {showName ? (
           <p className="admin-topbar__hello">
             <span>{fullName}</span>
@@ -369,7 +355,7 @@ export function AdminUserMenu({
             onClick={openPhotoDialog}
           >
             <span className="admin-usermenu__photo-ring">
-              <AvatarMark src={photo} initial={initial} className="admin-usermenu__photo" />
+              <UserAvatar user={user} src={photo} initial={initial} size={72} className="admin-usermenu__photo" />
               <span className="admin-usermenu__photo-badge" aria-hidden="true">
                 <Camera size={10} strokeWidth={1.8} />
               </span>

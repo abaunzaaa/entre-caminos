@@ -11,6 +11,7 @@ import { ExplorerRecommendedSection } from "../components/explorer/ExplorerRecom
 import { TouristHomeHero } from "../components/explorer/TouristHomeHero";
 import { experienceCoverUrl } from "../components/explorer/explorer-media";
 import { useAuth } from "../hooks/useAuth";
+import { useGuide } from "../components/guide/GuideContext";
 import avionIcon from "../assets/avion-icon.png";
 import camIcon from "../assets/cam-icon.png";
 import { getPublicExperiences } from "../services/catalog.service";
@@ -40,6 +41,7 @@ function mergeExperiences(current: Experience[], incoming: Experience[]) {
 
 export function ExplorePage() {
   const { user } = useAuth();
+  const guide = useGuide();
   const [experiences, setExperiences] = useState<Experience[]>([]);
   const [total, setTotal] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -200,7 +202,10 @@ export function ExplorePage() {
       <TouristHomeHero
         experiences={heroExperiences}
         selected={selected}
-        onSelect={(experience) => setSelectedId(experience.id)}
+        onSelect={(experience) => {
+          setSelectedId(experience.id);
+          guide.setCatalogFocus(experience);
+        }}
       />
 
       <section
