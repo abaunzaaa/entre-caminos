@@ -859,6 +859,15 @@
   );
 }
 
+.dash--exps .dash-exps-roster,
+.dash--exps .dash-exps-roster__viewport,
+.dash--exps .dash-exps-roster__viewport.is-scrollable {
+  max-height: none;
+  overflow: visible;
+  overscroll-behavior: auto;
+  padding-right: 0;
+}
+
 .dash-team-roster__viewport.is-scrollable:focus-visible,
 .dash-cats-roster__viewport.is-scrollable:focus-visible,
 .dash-exps-roster__viewport.is-scrollable:focus-visible {
