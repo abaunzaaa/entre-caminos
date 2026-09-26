@@ -112,6 +112,8 @@ model User {
   profile                 UserProfile?
   conversations           Conversation[]
   folders                 Folder[]
+  experienceFavorites     ExperienceFavorite[]
+  visitorReviews          ExperienceVisitorReview[]
 
   @@index([roleId])
   @@index([status])
@@ -179,8 +181,11 @@ model Experience {
   experienceCategories ExperienceCategory[]
   creator  User                @relation(fields: [createdBy], references: [id])
   reviewedBy User?             @relation("ExperienceReviewedBy", fields: [reviewedById], references: [id])
-  reviews       ExperienceReview[]
-  conversations Conversation[]
+  reviews         ExperienceReview[]
+  conversations   Conversation[]
+  detailViews     ExperienceDetailView[]
+  favorites       ExperienceFavorite[]
+  visitorReviews  ExperienceVisitorReview[]
 
   @@index([status])
   @@index([categoryId])
