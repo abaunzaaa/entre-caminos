@@ -133,6 +133,7 @@ model Category {
   updatedAt       DateTime       @updatedAt @map("updated_at")
 
   experiences Experience[]
+  experienceLinks ExperienceCategory[]
   reviewedBy  User?        @relation("CategoryReviewedBy", fields: [reviewedById], references: [id])
 
   @@index([status])
@@ -172,7 +173,10 @@ model Experience {
   createdAt       DateTime         @default(now()) @map("created_at")
   updatedAt       DateTime         @updatedAt @map("updated_at")
 
+  /// Compatibilidad. Siempre es la primera categoría (experienceCategories.position = 1).
+  /// La fuente principal de categorías es experienceCategories.
   category Category            @relation(fields: [categoryId], references: [id])
+  experienceCategories ExperienceCategory[]
   creator  User                @relation(fields: [createdBy], references: [id])
   reviewedBy User?             @relation("ExperienceReviewedBy", fields: [reviewedById], references: [id])
   reviews  ExperienceReview[]
@@ -187,6 +191,22 @@ model Experience {
   @@index([submittedAt])
   @@index([isFeatured, featuredOrder])
   @@map("experiences")
+}
+
+/// Categorías de una experiencia, en el orden en que se registraron. Máximo 3.
+model ExperienceCategory {
+  experienceId String   @map("experience_id")
+  categoryId   String   @map("category_id")
+  position     Int
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  experience Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+  category   Category   @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@id([experienceId, categoryId])
+  @@unique([experienceId, position])
+  @@index([categoryId])
+  @@map("experience_categories")
 }
 
 model ExperienceReview {

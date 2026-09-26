@@ -24,7 +24,11 @@ export const featuredRankingQuerySchema = z.object({
 
 export const generateFeaturedSchema = z.object({
   criterion: z.enum(["visits", "favorites", "reviews", "rating", "trending"]),
-  limit: z.number().int().min(1).max(10).optional(),
+  limit: z.number().int().min(1).max(5).optional(),
+});
+
+export const editorialFeaturedSchema = z.object({
+  experienceIds: z.array(z.string().uuid()).min(1).max(5),
 });
 
 export const featureExperienceSchema = z.object({

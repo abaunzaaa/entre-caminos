@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { parseStoredLocation } from "../../data/colombia-locations";
 import { experienceImages, mediaUrl } from "../../utils/media";
 import { formatPrice } from "../../utils/cn";
+import { formatExperienceCategories } from "../../utils/experience-categories";
 import type { Experience, ExperienceStatus } from "../../types";
 import { StatusDot } from "./Panel";
 import { TeamInviteCarousel } from "./TeamInviteCarousel";
@@ -109,7 +110,7 @@ export function ExperienceCatalogCard({
       </div>
       <div className="dash-exps-tile__body">
         <div className="dash-exps-tile__chips">
-          <StatusDot active>{experience.category?.name || "Sin categoría"}</StatusDot>
+          <StatusDot active>{formatExperienceCategories(experience, "Sin categoría")}</StatusDot>
           {isTourist ? null : <StatusDot active={active}>{STATUS_LABEL[experience.status]}</StatusDot>}
           <StatusDot active>{catalogPrice(experience.price, experience.currency)}</StatusDot>
         </div>

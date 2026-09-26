@@ -1,9 +1,11 @@
 import type { ExperienceStatus } from "@prisma/client";
-import { FEATURED_RECENT_ACTIVITY_DAYS } from "../config/featured-score.js";
+import { FEATURED_PUBLIC_LIMIT, FEATURED_RECENT_ACTIVITY_DAYS } from "../config/featured-score.js";
+import { COVER_RECOMMENDATION_LIMIT, selectExperiencesForInterests } from "../config/interest-carousel.js";
 import {
   calculateFeaturedScore,
   compareFeaturedRanking,
   featuredHighlight,
+  selectDiverseByCategory,
   type FeaturedMetrics,
   type FeaturedRankingCriterion,
 } from "../config/featured-score.js";
@@ -98,29 +100,95 @@ export async function recordDetailView(experienceId: string) {
   });
 }
 
-const coverInclude = { category: true } as const;
+const categoryPreview = { select: { id: true, name: true, icon: true } } as const;
 
-function activeFeaturedWhere(now: Date) {
-  return {
-    status: "PUBLISHED" as const,
-    isFeatured: true,
-    AND: [
-      { OR: [{ featuredFrom: null }, { featuredFrom: { lte: now } }] },
-      { OR: [{ featuredUntil: null }, { featuredUntil: { gte: now } }] },
-    ],
-  };
+const featuredCategoriesInclude = {
+  category: categoryPreview,
+  experienceCategories: {
+    orderBy: { position: "asc" as const },
+    include: { category: categoryPreview },
+  },
+} as const;
+
+const coverInclude = {
+  category: true,
+  experienceCategories: {
+    orderBy: { position: "asc" as const },
+    include: { category: true },
+  },
+} as const;
+
+const savedFeaturedWhere = {
+  isFeatured: true,
+  featuredOrder: { gte: 1, lte: FEATURED_PUBLIC_LIMIT },
+} as const;
+
+const savedFeaturedOrder = [{ featuredOrder: "asc" as const }, { updatedAt: "desc" as const }];
+
+/** Destacadas guardadas por generar o por selección editorial, en su orden. */
+export async function listCoverFeaturedExperiences() {
+  return prisma.experience.findMany({
+    where: savedFeaturedWhere,
+    include: coverInclude,
+    orderBy: savedFeaturedOrder,
+    take: FEATURED_PUBLIC_LIMIT,
+  });
 }
 
-const COVER_CAROUSEL_LIMIT = 12;
+function recommendationTie(seed: string, id: string) {
+  let hash = 0;
+  const value = `${seed}:${id}`;
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash * 33 + value.charCodeAt(index)) >>> 0;
+  }
+  return hash;
+}
 
-/** Portada: solo destacadas vigentes, en el orden editorial. */
-export async function listCoverFeaturedExperiences(now = new Date()) {
-  return prisma.experience.findMany({
-    where: activeFeaturedWhere(now),
-    include: coverInclude,
-    orderBy: [{ featuredOrder: { sort: "asc", nulls: "last" } }, { updatedAt: "desc" }],
-    take: COVER_CAROUSEL_LIMIT,
+/** Carrusel de portada. Con intereses, solo sus categorías. Sin intereses, puntaje general y no la selección editorial. */
+export async function listRecommendedExperiences(userId?: string) {
+  const interests = userId
+    ? ((await prisma.userProfile.findUnique({ where: { userId }, select: { interests: true } }))?.interests ?? [])
+    : [];
+  const experiences = await prisma.experience.findMany({
+    where: { status: "PUBLISHED" },
+    include: {
+      category: true,
+      experienceCategories: {
+        orderBy: { position: "asc" },
+        include: { category: { select: { name: true } } },
+      },
+    },
   });
+  const activeInterests = interests.map((interest) => interest.trim()).filter(Boolean);
+  if (activeInterests.length > 0) {
+    const personalized = experiences.map((experience) => ({
+      ...experience,
+      categories: experience.experienceCategories.length
+        ? experience.experienceCategories.map((link) => ({ name: link.category.name }))
+        : experience.category
+          ? [{ name: experience.category.name }]
+          : [],
+    }));
+    return {
+      source: "interests" as const,
+      experiences: selectExperiencesForInterests(personalized, activeInterests, COVER_RECOMMENDATION_LIMIT),
+    };
+  }
+
+  const maps = await loadMetricMaps(experiences.map((item) => item.id));
+  const day = new Date().toISOString().slice(0, 10);
+  const seed = `${userId ?? "anon"}:${day}`;
+  const ranked = [...experiences].sort((left, right) => {
+    const byScore = calculateFeaturedScore(metricsFor(right.id, maps)) - calculateFeaturedScore(metricsFor(left.id, maps));
+    if (byScore !== 0) {
+      return byScore;
+    }
+    return recommendationTie(seed, left.id) - recommendationTie(seed, right.id);
+  });
+  return {
+    source: "popular" as const,
+    experiences: ranked.slice(0, COVER_RECOMMENDATION_LIMIT),
+  };
 }
 
 function toAdminCard(
@@ -137,10 +205,17 @@ function toAdminCard(
     featuredFrom: Date | null;
     featuredUntil: Date | null;
     category: { id: string; name: string; icon: string };
+    experienceCategories?: Array<{
+      position: number;
+      category: { id: string; name: string; icon: string };
+    }>;
   },
   metrics: FeaturedMetrics,
 ) {
   const score = calculateFeaturedScore(metrics);
+  const ordered = [...(experience.experienceCategories ?? [])].sort((left, right) => left.position - right.position);
+  const categories = ordered.map((link) => link.category).filter((category) => category?.name);
+  const listed = categories.length > 0 ? categories : [experience.category];
   return {
     experience: {
       id: experience.id,
@@ -155,7 +230,8 @@ function toAdminCard(
       featuredUntil: experience.featuredUntil,
     },
     imageUrl: coverUrl(experience),
-    category: experience.category,
+    category: listed[0],
+    categories: listed,
     score,
     metrics: {
       visits: metrics.visits,
@@ -171,7 +247,7 @@ function toAdminCard(
 export async function listFeaturedRanking(criterion: FeaturedRankingCriterion) {
   const experiences = await prisma.experience.findMany({
     where: { status: "PUBLISHED" },
-    include: { category: { select: { id: true, name: true, icon: true } } },
+    include: featuredCategoriesInclude,
   });
   const maps = await loadMetricMaps(experiences.map((item) => item.id));
   return experiences
@@ -192,7 +268,7 @@ export async function listFeaturedRanking(criterion: FeaturedRankingCriterion) {
 export async function listOwnExperiencePerformance(actor: AuthUser, criterion: FeaturedRankingCriterion) {
   const experiences = await prisma.experience.findMany({
     where: { status: "PUBLISHED", createdBy: actor.id },
-    include: { category: { select: { id: true, name: true, icon: true } } },
+    include: featuredCategoriesInclude,
   });
   const maps = await loadMetricMaps(experiences.map((item) => item.id));
   return experiences
@@ -213,10 +289,11 @@ export async function listOwnExperiencePerformance(actor: AuthUser, criterion: F
 export async function generateFeaturedFromRanking(
   actor: AuthUser,
   criterion: FeaturedRankingCriterion,
-  limit = 10,
+  limit = FEATURED_PUBLIC_LIMIT,
 ) {
+  const safeLimit = Math.min(Math.max(limit, 1), FEATURED_PUBLIC_LIMIT);
   const ranked = await listFeaturedRanking(criterion);
-  const selected = ranked.slice(0, limit);
+  const selected = selectDiverseByCategory(ranked, safeLimit, (card) => card.category.id);
   const selectedIds = selected.map((card) => card.experience.id);
 
   await prisma.$transaction(async (tx) => {
@@ -251,17 +328,100 @@ export async function generateFeaturedFromRanking(
     entity: "Experience",
     entityId: selectedIds[0] ?? "featured",
   });
-  return listAdminFeaturedExperiences();
 }
 
 export async function listAdminFeaturedExperiences() {
   const experiences = await prisma.experience.findMany({
-    where: { isFeatured: true },
-    include: { category: { select: { id: true, name: true, icon: true } } },
-    orderBy: [{ featuredOrder: "asc" }, { updatedAt: "desc" }],
+    where: savedFeaturedWhere,
+    include: featuredCategoriesInclude,
+    orderBy: savedFeaturedOrder,
+    take: FEATURED_PUBLIC_LIMIT,
   });
   const maps = await loadMetricMaps(experiences.map((item) => item.id));
   return experiences.map((experience) => toAdminCard(experience, metricsFor(experience.id, maps)));
+}
+
+function primaryCategoryId(experience: {
+  categoryId: string;
+  experienceCategories: Array<{ categoryId: string }>;
+}) {
+  return experience.experienceCategories[0]?.categoryId || experience.categoryId;
+}
+
+/** Reemplaza el conjunto destacado editorial en una transacción, sin métricas ni tarjetas. */
+export async function saveEditorialFeatured(actor: AuthUser, experienceIds: string[]) {
+  const ids = [...new Set(experienceIds)];
+  if (ids.length !== experienceIds.length) {
+    throw ApiError.unprocessable("Cada experiencia solo puede destacarse una vez");
+  }
+  if (ids.length < 1 || ids.length > FEATURED_PUBLIC_LIMIT) {
+    throw ApiError.unprocessable("Puedes destacar entre 1 y 5 experiencias");
+  }
+
+  const rows = await prisma.experience.findMany({
+    where: { id: { in: ids } },
+    select: {
+      id: true,
+      status: true,
+      categoryId: true,
+      experienceCategories: {
+        orderBy: { position: "asc" },
+        select: { categoryId: true },
+        take: 1,
+      },
+    },
+  });
+  if (rows.length !== ids.length) {
+    throw ApiError.notFound("Experiencia no encontrada");
+  }
+  const byId = new Map(rows.map((row) => [row.id, row]));
+  const ordered = ids.map((id) => byId.get(id)!);
+  for (const row of ordered) {
+    assertPublished(row.status);
+  }
+  const primaryCategories = new Set<string>();
+  for (const row of ordered) {
+    const primary = primaryCategoryId(row);
+    if (primaryCategories.has(primary)) {
+      throw ApiError.unprocessable(
+        "Solo puedes seleccionar una experiencia por categoría principal. Elige una experiencia con otra categoría para continuar.",
+      );
+    }
+    primaryCategories.add(primary);
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.experience.updateMany({
+      where: {
+        isFeatured: true,
+        id: { notIn: ids },
+      },
+      data: {
+        isFeatured: false,
+        featuredOrder: null,
+        featuredFrom: null,
+        featuredUntil: null,
+      },
+    });
+    for (const [index, id] of ids.entries()) {
+      await tx.experience.update({
+        where: { id },
+        data: {
+          isFeatured: true,
+          featuredOrder: index + 1,
+          featuredFrom: null,
+          featuredUntil: null,
+        },
+      });
+    }
+  });
+
+  await recordAudit({
+    userId: actor.id,
+    action: "FEATURE_EXPERIENCE",
+    entity: "Experience",
+    entityId: ids[0] ?? "featured",
+  });
 }
 
 function assertPublished(status: ExperienceStatus) {
@@ -296,7 +456,7 @@ export async function featureExperience(
       featuredFrom: input.featuredFrom === undefined ? experience.featuredFrom : input.featuredFrom,
       featuredUntil: input.featuredUntil === undefined ? experience.featuredUntil : input.featuredUntil,
     },
-    include: { category: { select: { id: true, name: true, icon: true } } },
+    include: featuredCategoriesInclude,
   });
   await recordAudit({ userId: actor.id, action: "FEATURE_EXPERIENCE", entity: "Experience", entityId: id });
   const maps = await loadMetricMaps([id]);

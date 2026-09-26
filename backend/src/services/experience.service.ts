@@ -15,8 +15,14 @@ import {
   notifyExperienceRejected,
   notifyExperienceSubmitted,
 } from "./notification.service.js";
+const experienceCategoryInclude = {
+  orderBy: { position: "asc" as const },
+  include: { category: true },
+} as const;
+
 const experienceInclude = {
   category: true,
+  experienceCategories: experienceCategoryInclude,
   creator: { select: { id: true, name: true, email: true, avatarUrl: true } },
   reviewedBy: { select: { id: true, name: true, email: true } },
 } as const;
@@ -48,6 +54,14 @@ const experienceListSelect = {
   createdAt: true,
   updatedAt: true,
   category: { select: { id: true, name: true, icon: true, status: true } },
+  experienceCategories: {
+    orderBy: { position: "asc" as const },
+    select: {
+      position: true,
+      categoryId: true,
+      category: { select: { id: true, name: true, icon: true, status: true } },
+    },
+  },
   creator: { select: { id: true, name: true, email: true, avatarUrl: true } },
   reviewedBy: { select: { id: true, name: true, email: true } },
 } as const;
@@ -69,7 +83,7 @@ export async function listPublicExperiences(opts?: { take?: number; skip?: numbe
   const [experiences, total] = await prisma.$transaction([
     prisma.experience.findMany({
       where,
-      include: { category: true },
+      include: { category: true, experienceCategories: experienceCategoryInclude },
       orderBy: { createdAt: "desc" },
       ...(opts?.take != null ? { take: opts.take } : {}),
       ...(opts?.skip != null ? { skip: opts.skip } : {}),
@@ -161,12 +175,39 @@ function requirePublishFields(
   }
 }
 
+const MAX_EXPERIENCE_CATEGORIES = 3;
+
+async function approvedCategoryIds(ids: string[]) {
+  const unique = [...new Set(ids.map((id) => id.trim()).filter(Boolean))];
+  if (unique.length < 1) {
+    throw ApiError.unprocessable("Selecciona una categoría.");
+  }
+  if (unique.length > MAX_EXPERIENCE_CATEGORIES) {
+    throw ApiError.unprocessable("Puedes seleccionar máximo 3 categorías por experiencia.");
+  }
+  const categories = await prisma.category.findMany({ where: { id: { in: unique } } });
+  if (categories.length !== unique.length) {
+    throw ApiError.badRequest("La categoría no existe");
+  }
+  for (const category of categories) {
+    if (category.status !== "APPROVED") {
+      throw ApiError.badRequest("La categoría aún no está aprobada");
+    }
+  }
+  return unique;
+}
+
+function categoryLinks(ids: string[]) {
+  return ids.map((categoryId, index) => ({ categoryId, position: index + 1 }));
+}
+
 export async function createExperience(
   actor: AuthUser,
   input: {
     title: string;
     description: string;
     categoryId: string;
+    categoryIds?: string[];
     price: number;
     currency?: string;
     location: string;
@@ -183,13 +224,7 @@ export async function createExperience(
     status?: ExperienceStatus;
   },
 ) {
-  const category = await prisma.category.findUnique({ where: { id: input.categoryId } });
-  if (!category) {
-    throw ApiError.badRequest("La categoría no existe");
-  }
-  if (category.status !== "APPROVED") {
-    throw ApiError.badRequest("La categoría aún no está aprobada");
-  }
+  const categoryIds = await approvedCategoryIds(input.categoryIds?.length ? input.categoryIds : [input.categoryId]);
 
   const gallery = normalizeExperienceImages(input);
   requirePublishFields(gallery, input.location);
@@ -207,7 +242,8 @@ export async function createExperience(
     data: {
       title: input.title,
       description: input.description,
-      categoryId: input.categoryId,
+      categoryId: categoryIds[0],
+      experienceCategories: { create: categoryLinks(categoryIds) },
       price: input.price,
       currency: input.currency ?? "COP",
       location: input.location,
@@ -284,7 +320,7 @@ function pickExperienceUpdate(input: Prisma.ExperienceUncheckedUpdateInput) {
 export async function updateExperience(
   actor: AuthUser,
   id: string,
-  input: Prisma.ExperienceUncheckedUpdateInput,
+  input: Prisma.ExperienceUncheckedUpdateInput & { categoryIds?: string[] },
 ) {
   const current = await getExperience(id, { actor });
   const reviewer = canReviewExperiences(actor);
@@ -298,17 +334,16 @@ export async function updateExperience(
     throw ApiError.forbidden("No puedes editar esta experiencia");
   }
 
-  if (input.categoryId && typeof input.categoryId === "string") {
-    const category = await prisma.category.findUnique({ where: { id: input.categoryId } });
-    if (!category) {
-      throw ApiError.badRequest("La categoría no existe");
-    }
-    if (category.status !== "APPROVED") {
-      throw ApiError.badRequest("La categoría aún no está aprobada");
-    }
-  }
+  const nextCategoryIds = Array.isArray(input.categoryIds)
+    ? await approvedCategoryIds(input.categoryIds)
+    : input.categoryId && typeof input.categoryId === "string"
+      ? await approvedCategoryIds([input.categoryId])
+      : null;
 
   const data = pickExperienceUpdate(input);
+  if (nextCategoryIds) {
+    data.categoryId = nextCategoryIds[0];
+  }
   delete data.status;
   const durationPatch = resolveExperienceDuration({
     duration: input.duration === undefined ? undefined : ((input.duration as string | null) ?? null),
@@ -328,10 +363,19 @@ export async function updateExperience(
 
   requireMinExperienceImages(gallery);
 
-  const experience = await prisma.experience.update({
-    where: { id },
-    data: hasGalleryUpdate ? { ...data, imageUrl: gallery.imageUrl, imageUrls: gallery.imageUrls } : data,
-    include: experienceInclude,
+  const experienceData = hasGalleryUpdate ? { ...data, imageUrl: gallery.imageUrl, imageUrls: gallery.imageUrls } : data;
+  const experience = await prisma.$transaction(async (tx) => {
+    if (nextCategoryIds) {
+      await tx.experienceCategory.deleteMany({ where: { experienceId: id } });
+      await tx.experienceCategory.createMany({
+        data: categoryLinks(nextCategoryIds).map((link) => ({ experienceId: id, ...link })),
+      });
+    }
+    return tx.experience.update({
+      where: { id },
+      data: experienceData,
+      include: experienceInclude,
+    });
   });
 
   await recordAudit({

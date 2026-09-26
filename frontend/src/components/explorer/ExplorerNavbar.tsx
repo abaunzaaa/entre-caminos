@@ -70,7 +70,7 @@ export function ExplorerNavbar() {
       className={`explorer-nav${isExplorer ? " explorer-nav--light" : " explorer-nav--dark"}${scrolled ? " is-scrolled" : ""}${menuOpen ? " is-open" : ""}`}
     >
       <div className="explorer-nav__inner">
-        <Link to="/explorar" className="explorer-nav__brand" aria-label="Entre Caminos">
+        <Link to="/" className="explorer-nav__brand" aria-label="Entre Caminos">
           <img
             src={logoMark}
             alt="Entre Caminos"

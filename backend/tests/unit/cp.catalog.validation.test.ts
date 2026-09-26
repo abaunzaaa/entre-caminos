@@ -54,6 +54,19 @@ describe("Sprint 1 — Categorías y experiencias (sin DB)", () => {
     }
   });
 
+  it("acepta de 1 a 3 categorías y rechaza una cuarta", () => {
+    const second = "22222222-2222-4222-8222-222222222222";
+    const third = "33333333-3333-4333-8333-333333333333";
+    const fourth = "44444444-4444-4444-8444-444444444444";
+    expect(experienceSchema.safeParse(validExperience({ categoryIds: [categoryId] })).success).toBe(true);
+    expect(experienceSchema.safeParse(validExperience({ categoryIds: [categoryId, second] })).success).toBe(true);
+    expect(experienceSchema.safeParse(validExperience({ categoryIds: [categoryId, second, third] })).success).toBe(true);
+    expect(experienceSchema.safeParse(validExperience({ categoryIds: [categoryId, second, third, fourth] })).success).toBe(
+      false,
+    );
+    expect(experienceSchema.safeParse(validExperience({ categoryIds: [] })).success).toBe(false);
+  });
+
   it("CP-S1-023: enlace inválido se rechaza; enlace relativo se normaliza", () => {
     expect(experienceSchema.safeParse(validExperience({ externalUrl: "no es un enlace" })).success).toBe(false);
     const ok = experienceSchema.safeParse(validExperience({ externalUrl: "wa.me/573001112233" }));

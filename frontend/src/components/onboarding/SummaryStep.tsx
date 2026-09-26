@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { getPreferenceLabel } from "../../data/onboarding";
 import { mediaUrl } from "../../utils/media";
 import { locationSummary, type OnboardingForm } from "../../utils/onboarding";
+import { formatPersonName } from "../../utils/person-name";
 import { AvatarPreview } from "./AvatarPreview";
 
 function SummaryBlock({
@@ -46,7 +47,7 @@ export function SummaryStep({
 }) {
   const photo = form.localPhotoUrl || (form.profileImageUrl ? mediaUrl(form.profileImageUrl) : "");
   const place = locationSummary(form);
-  const displayName = userName.trim();
+  const displayName = formatPersonName(userName);
 
   return (
     <div className="onboarding-summary">

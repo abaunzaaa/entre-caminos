@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { ExperienceEditorialView } from "../components/admin/ExperienceEditorialView";
-import { getPublicExperience, getPublicExperiences } from "../services/catalog.service";
+import { getPublicExperience, getPublicExperiences, recordExperienceView } from "../services/catalog.service";
 import type { Experience } from "../types";
 import "../styles/admin-ui.css";
 import "../styles/admin-access.css";
@@ -30,16 +30,33 @@ export function ExperienceDetailPage() {
       setError("Experiencia no encontrada");
       return;
     }
+    let cancelled = false;
     setLoading(true);
     setError("");
     setFavoriteOn(false);
     getPublicExperience(id)
-      .then(setExperience)
+      .then((item) => {
+        if (cancelled) {
+          return;
+        }
+        setExperience(item);
+        void recordExperienceView(id).catch(() => undefined);
+      })
       .catch(() => {
+        if (cancelled) {
+          return;
+        }
         setExperience(null);
         setError("No se pudo cargar la experiencia");
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   if (loading) {

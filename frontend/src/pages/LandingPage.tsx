@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../hooks/useAuth";
+import { formatPersonName } from "../utils/person-name";
 import encabezado from "../assets/encabezado.png";
 import keyIcon from "../assets/key-icon.png";
 import tituloEncabezado from "../assets/titulo-encabezado.png";
@@ -283,7 +284,7 @@ export function LandingPage() {
           </Link>
           <div className="landing-hero__links landing-hero__links--right">
             {user ? (
-              <Link to={isAdmin ? "/admin" : "/explorar"}>{isAdmin ? "Panel" : user.name}</Link>
+              <Link to={isAdmin ? "/admin" : "/explorar"}>{isAdmin ? "Panel" : formatPersonName(user.name) || user.name}</Link>
             ) : (
               <>
                 <Link to="/login">ACCEDER</Link>

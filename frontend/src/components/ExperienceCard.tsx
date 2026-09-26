@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import type { Experience } from "../types";
 import { formatPrice } from "../utils/cn";
+import { formatExperienceCategories } from "../utils/experience-categories";
 
 export function ExperienceCard({ experience }: { experience: Experience }) {
   return (
@@ -12,7 +13,7 @@ export function ExperienceCard({ experience }: { experience: Experience }) {
           className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
         />
         <span className="absolute left-4 top-4 rounded-full bg-cream/90 px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-forest">
-          {experience.category?.name}
+          {formatExperienceCategories(experience)}
         </span>
       </div>
       <div className="space-y-3 p-6">
