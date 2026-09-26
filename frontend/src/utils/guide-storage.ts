@@ -309,6 +309,16 @@ function normalizeChipText(value: string) {
   return value.replace(/\s+/g, " ").trim().toLowerCase().replace(/[¿?¡!.,;:]+/g, "");
 }
 
+const CATEGORY_CHIPS = ["Cultura", "Naturaleza", "Aventura", "Gastronomía"];
+const DAY_CHIPS = ["Hoy", "Mañana", "Este fin de semana"];
+const WHO_CHIPS = ["Solo", "En pareja", "Con amigos", "En familia"];
+const BUDGET_CHIPS = ["Económico", "Medio", "Sin límite"];
+const TIME_CHIPS = ["Unas horas", "Medio día", "Un día"];
+
+function isCategoryChip(value: string) {
+  return /^(cultura|naturaleza|gastronomia|aventura|relax|otra)$/i.test(normalizeChipText(value));
+}
+
 export function userChoiceChips(reply: string, suggestions?: string[] | null) {
   const replyNorm = normalizeChipText(reply);
   const chips: string[] = [];
@@ -328,8 +338,30 @@ export function userChoiceChips(reply: string, suggestions?: string[] | null) {
     seen.add(key);
     chips.push(item);
   }
-  if (!chips.length && /tipo de experiencia|cultura|naturaleza|gastronom|aventura/i.test(reply)) {
-    return ["Cultura", "Naturaleza", "Aventura", "Gastronomía"];
+  const asksType = /qu[eé] tipo de (experiencia|plan)|tipo de experiencia quieres|qu[eé] tipo de experiencia/i.test(reply);
+  const asksDay = /qu[eé] d[ií]a|en qu[eé] d[ií]a|para qu[eé] d[ií]a|qu[eé] fecha|cu[aá]ndo (te gustar|quieres|prefieres)/i.test(reply);
+  const asksWho = /con qui[eé]n|para qui[eé]n|a solas/i.test(reply);
+  const asksBudget = /presupuesto|cu[aá]nto (quieres|puedes )?gastar/i.test(reply);
+  const asksTime = /cu[aá]nto tiempo|tiempo disponible|cu[aá]ntas horas/i.test(reply);
+
+  if (asksDay) {
+    const days = chips.filter((item) => !isCategoryChip(item));
+    return days.length ? days : DAY_CHIPS;
+  }
+  if (asksWho) {
+    const people = chips.filter((item) => !isCategoryChip(item));
+    return people.length ? people : WHO_CHIPS;
+  }
+  if (asksBudget) {
+    const budget = chips.filter((item) => !isCategoryChip(item));
+    return budget.length ? budget : BUDGET_CHIPS;
+  }
+  if (asksTime) {
+    const times = chips.filter((item) => !isCategoryChip(item));
+    return times.length ? times : TIME_CHIPS;
+  }
+  if (asksType) {
+    return chips.length ? chips : CATEGORY_CHIPS;
   }
   return chips;
 }

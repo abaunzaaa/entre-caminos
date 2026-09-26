@@ -116,6 +116,7 @@ export async function loadGuideContext(input: {
   const experienceBlock = focus
     ? [
         "MODO: experiencia específica. Prioriza siempre esta información y no inventes lo que no aparezca aquí.",
+        "No preguntes qué tipo de experiencia quiere: ya está viendo esta ficha. Si pide un plan, úsala como centro y solo pregunta día, compañía o presupuesto si faltan.",
         `Experiencia: ${focus.title}.`,
         `Categoría: ${focus.category?.name ?? clientExperience?.category ?? "N/A"}.`,
         `Lugar: ${focus.location}.`,
@@ -128,6 +129,7 @@ export async function loadGuideContext(input: {
     : clientExperience?.name
       ? [
           "MODO: experiencia específica (contexto del cliente). Úsala primero y no inventes datos.",
+          "No preguntes qué tipo de experiencia quiere: ya está viendo esta ficha.",
           `Experiencia: ${clientExperience.name}.`,
           `Categoría: ${clientExperience.category ?? "N/A"}.`,
           `Lugar: ${clientExperience.location ?? "no indicado"}.`,

@@ -70,14 +70,21 @@ Reglas:
 - Si no hay coincidencias, dilo y ofrece alternativas del catálogo.
 - En modo experiencia, prioriza siempre esa experiencia antes que el resto del catálogo.
 - Si preguntan si es apta para niños, responde solo con descripción y categoría; si no alcanza, dilo y pregunta.
-- suggestions son atajos cortos que el usuario toca (Cultura, Naturaleza, Aventura). Nunca copies reply. Nunca pongas la misma pregunta en suggestions. Si la pregunta es abierta, deja suggestions vacío.
+- suggestions son botones de respuesta a LA pregunta que acabas de hacer. Deben coincidir:
+  · tipo de experiencia → Cultura, Naturaleza, Gastronomía, Aventura
+  · día → Hoy, Mañana, Este fin de semana
+  · con quién → Solo, En pareja, Con amigos, En familia
+  · presupuesto → Económico, Medio, Sin límite
+- Nunca pongas Cultura/Naturaleza si estás preguntando el día, la ciudad, el presupuesto o con quién.
+- Nunca copies reply. Nunca pongas la misma pregunta en suggestions. Si no hay atajos claros, deja suggestions [].
+- Si el modo es una experiencia específica, NO preguntes el tipo de experiencia: ya está. Pregunta solo lo que falte (día, con quién, presupuesto) o responde sobre esa ficha.
 - Responde SOLO un JSON con esta forma:
 {
   "reply": "texto para la persona",
   "intent": "chat" | "clarify" | "recommend" | "plan" | "experience",
   "status": "ok" | "empty" | "need_info",
   "questions": ["pregunta opcional"],
-  "suggestions": ["Cultura", "Naturaleza"],
+  "suggestions": ["Hoy", "Mañana"],
   "plan": null | {
     "title": "",
     "city": "",
@@ -121,6 +128,15 @@ function uniqueSuggestions(reply: string, suggestions: string[]) {
     }
     seen.add(key);
     chips.push(item);
+  }
+  const isCategory = (item: string) => /^(cultura|naturaleza|gastronom[ií]a|aventura|relax|otra)$/i.test(item.trim());
+  if (/qu[eé] d[ií]a|en qu[eé] d[ií]a|qu[eé] fecha|cu[aá]ndo (te gustar|quieres|prefieres)/i.test(reply)) {
+    const days = chips.filter((item) => !isCategory(item));
+    return days.length ? days : ["Hoy", "Mañana", "Este fin de semana"];
+  }
+  if (/con qui[eé]n|para qui[eé]n/i.test(reply)) {
+    const people = chips.filter((item) => !isCategory(item));
+    return people.length ? people : ["Solo", "En pareja", "Con amigos", "En familia"];
   }
   return chips;
 }

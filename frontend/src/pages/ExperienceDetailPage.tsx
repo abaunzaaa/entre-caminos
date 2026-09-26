@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { ExperienceEditorialView } from "../components/admin/ExperienceEditorialView";
+import { useGuide } from "../components/guide/GuideContext";
+import { useAuth } from "../hooks/useAuth";
 import { getPublicExperience, getPublicExperiences } from "../services/catalog.service";
 import type { Experience } from "../types";
 import "../styles/admin-ui.css";
@@ -13,6 +15,9 @@ import "../styles/explorer.css";
 
 export function ExperienceDetailPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const guide = useGuide();
   const [experience, setExperience] = useState<Experience | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -71,6 +76,14 @@ export function ExperienceDetailPage() {
         onFavoriteToggle={() => setFavoriteOn((value) => !value)}
         nearbyHref={(nearbyId) => `/explorar/${nearbyId}`}
         fetchNearby={fetchNearby}
+        onConsultAi={() => {
+          if (!user) {
+            navigate("/login");
+            return;
+          }
+          guide.setCatalogFocus(experience);
+          guide.openGuide({ experience, view: "chat", expanded: true });
+        }}
       />
     </div>
   );

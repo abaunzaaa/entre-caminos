@@ -1027,22 +1027,6 @@ button.guide-rail__folder-row {
   margin-left: auto;
 }
 
-.guide-rail__folder-acts .guide-rail__more,
-.guide-rail__folder-acts .guide-rail__act {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.guide-rail__folder-row:hover .guide-rail__folder-acts .guide-rail__more,
-.guide-rail__folder-row:hover .guide-rail__folder-acts .guide-rail__act,
-.guide-rail__folder-row.is-on .guide-rail__folder-acts .guide-rail__more,
-.guide-rail__folder-row.is-on .guide-rail__folder-acts .guide-rail__act,
-.guide-rail__folder-row:focus-within .guide-rail__folder-acts .guide-rail__more,
-.guide-rail__folder-row:focus-within .guide-rail__folder-acts .guide-rail__act {
-  opacity: 1;
-  pointer-events: auto;
-}
-
 .guide-rail__folder-open strong {
   display: block;
   min-width: 0;
@@ -1353,15 +1337,13 @@ button.guide-rail__folder-row {
   transition: opacity 140ms ease, background 140ms ease;
 }
 
+.guide-rail__thread .guide-rail__more,
 .guide-rail__thread-acts .guide-rail__act--pin {
   opacity: 1;
+  visibility: visible;
   pointer-events: auto;
 }
 
-.guide-rail__thread:hover .guide-rail__more,
-.guide-rail__thread:focus-within .guide-rail__more,
-.guide-rail__thread.is-on .guide-rail__more,
-.guide-rail__thread.is-menu .guide-rail__more,
 .guide-rail__thread:hover .guide-rail__thread-acts .guide-rail__act,
 .guide-rail__thread:focus-within .guide-rail__thread-acts .guide-rail__act,
 .guide-rail__thread.is-menu .guide-rail__thread-acts .guide-rail__act,
@@ -1399,6 +1381,24 @@ button.guide-rail__folder-row {
 
 .guide-rail__act--danger:hover {
   color: #b42318;
+}
+
+.guide-rail__folder-acts .guide-rail__more,
+.guide-rail__folder-acts .guide-rail__act--new {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.guide-rail__folder-row:hover .guide-rail__folder-acts .guide-rail__more,
+.guide-rail__folder-row:hover .guide-rail__folder-acts .guide-rail__act--new,
+.guide-rail__folder-row:focus-within .guide-rail__folder-acts .guide-rail__more,
+.guide-rail__folder-row:focus-within .guide-rail__folder-acts .guide-rail__act--new,
+.guide-rail__folder-row.is-menu .guide-rail__folder-acts .guide-rail__more,
+.guide-rail__folder-row.is-menu .guide-rail__folder-acts .guide-rail__act--new {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 
 .guide-rail__thread.is-dragging {
@@ -2502,10 +2502,30 @@ button.guide-rail__folder-row {
 }
 
 .guide-row:not(.guide-row--user) {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
   align-self: flex-start;
-  align-items: center;
+  align-items: start;
+  column-gap: 8px;
   width: 100%;
   max-width: min(92%, 680px);
+}
+
+.guide-row:not(.guide-row--user) .guide-row__body {
+  display: contents;
+}
+
+.guide-row:not(.guide-row--user) .guide-bubble {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.guide-row:not(.guide-row--user) .guide-meta,
+.guide-row:not(.guide-row--user) .guide-xp-row,
+.guide-row:not(.guide-row--user) .guide-plan,
+.guide-row:not(.guide-row--user) .guide-smart,
+.guide-row:not(.guide-row--user) .guide-typing {
+  grid-column: 2;
 }
 
 .guide-row--user {
@@ -2531,6 +2551,8 @@ button.guide-rail__folder-row {
   display: block;
   width: 22px;
   height: 32px;
+  grid-column: 1;
+  grid-row: 1;
   margin-top: 0;
   align-self: center;
   overflow: visible;
@@ -2629,6 +2651,29 @@ button.guide-rail__folder-row {
 
 .guide-meta button.is-on {
   color: #214e3b;
+}
+
+.guide-copy {
+  position: relative;
+}
+
+.guide-copy__hint {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 4px);
+  z-index: 3;
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: #dceee6;
+  color: #2f5a4c;
+  font-size: 10.5px;
+  font-weight: 550;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translateX(-50%);
+  box-shadow: 0 4px 10px rgba(41, 73, 66, 0.08);
 }
 
 .guide-focus {

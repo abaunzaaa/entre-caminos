@@ -26,7 +26,7 @@ export type GuideContextValue = {
   savedPlans: NonNullable<GuideStoredMessage["plan"]>[];
   setDraft: (value: string) => void;
   setPlusOpen: (value: boolean) => void;
-  openGuide: (opts?: { prompt?: string; view?: GuideView; experience?: Experience }) => void;
+  openGuide: (opts?: { prompt?: string; view?: GuideView; experience?: Experience; expanded?: boolean }) => void;
   setCatalogFocus: (experience?: Experience | null) => void;
   closeGuide: () => void;
   minimizeGuide: () => void;

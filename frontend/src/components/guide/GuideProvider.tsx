@@ -7,8 +7,10 @@ import {
   loadActiveConversationId,
   loadFavoriteIds,
   loadSavedPlans,
+  loadThreads,
   saveActiveConversationId,
   savePlan,
+  saveThreads,
   isBlankThread,
   isPersistedConversationId,
   isPlaceholderTitle,
@@ -45,19 +47,59 @@ function folderFromApi(folder: GuideFolderPayload): GuideFolder {
   };
 }
 
+function clipText(value: unknown, max: number) {
+  if (value == null) {
+    return undefined;
+  }
+  const text = String(value).trim();
+  return text ? text.slice(0, max) : undefined;
+}
+
 function snapshotExperience(item: Experience) {
-  return {
+  const snap = {
     id: item.id,
-    name: item.title,
-    category: item.category?.name,
-    location: item.location,
+    name: clipText(item.title, 200),
+    category: clipText(item.category?.name, 120),
+    location: clipText(item.location, 200),
     price: item.price,
-    duration: item.duration ?? undefined,
-    description: item.description,
+    duration: clipText(item.duration ?? "", 80),
+    description: clipText(item.description, 2000),
     availableDays: item.availability,
-    howToGetThere: item.howToGetThere ?? undefined,
-    imageUrl: item.imageUrl ?? undefined,
+    howToGetThere: clipText(item.howToGetThere, 800),
+    imageUrl: clipText(item.imageUrl, 2048),
   };
+  try {
+    return JSON.parse(JSON.stringify(snap)) as typeof snap;
+  } catch {
+    const { availableDays: _ignored, ...rest } = snap;
+    return rest;
+  }
+}
+
+async function createExperienceConversation(input: {
+  experienceId?: string;
+  experienceName?: string;
+  experienceData?: ReturnType<typeof snapshotExperience> | GuideConversation["experienceData"];
+  starter?: "plan" | "search" | "nearby" | "interests";
+}) {
+  const experienceId = input.experienceId?.trim();
+  const payload = {
+    contextType: "experience" as const,
+    experienceId,
+    experienceName: clipText(input.experienceName, 200),
+    experienceData: input.experienceData,
+    starter: input.starter,
+  };
+  try {
+    return await createGuideConversation(payload);
+  } catch {
+    return createGuideConversation({
+      contextType: "experience",
+      experienceId,
+      experienceName: payload.experienceName,
+      starter: input.starter,
+    });
+  }
 }
 
 export function GuideProvider({ children }: { children: ReactNode }) {
@@ -110,6 +152,12 @@ export function GuideProvider({ children }: { children: ReactNode }) {
     try {
       setFavorites(loadFavoriteIds(user.id));
       setSavedPlans(loadSavedPlans(user.id).filter(Boolean) as NonNullable<GuideStoredMessage["plan"]>[]);
+      const cached = loadThreads(user.id);
+      if (cached.length) {
+        setThreads(cached);
+        const activeId = loadActiveConversationId(user.id);
+        setThread((current) => current ?? cached.find((item) => item.id === activeId) ?? cached[0] ?? null);
+      }
     } catch {
       setFavorites([]);
       setSavedPlans([]);
@@ -129,6 +177,7 @@ export function GuideProvider({ children }: { children: ReactNode }) {
         if (rows) {
           const mapped = rows.map(conversationToThread);
           setThreads(mapped);
+          saveThreads(user.id, mapped);
           const activeId = loadActiveConversationId(user.id);
           setThread((current) => {
             if (current) {
@@ -191,10 +240,14 @@ export function GuideProvider({ children }: { children: ReactNode }) {
       if (clean.id.startsWith("local_thread_")) {
         return;
       }
-      setThreads((current) => [
-        clean,
-        ...current.filter((item) => item.id !== clean.id && !item.id.startsWith("local_thread_")),
-      ]);
+      setThreads((current) => {
+        const list = [
+          clean,
+          ...current.filter((item) => item.id !== clean.id && !item.id.startsWith("local_thread_")),
+        ];
+        saveThreads(user.id, list);
+        return list;
+      });
       saveActiveConversationId(user.id, clean.id);
     },
     [user],
@@ -303,16 +356,13 @@ export function GuideProvider({ children }: { children: ReactNode }) {
     void (async () => {
       try {
         const snap = experienceId ? experienceContext : undefined;
-        const created = await createGuideConversation(
-          experienceId
-            ? {
-                contextType: "experience",
-                experienceId,
-                experienceName: experienceTitle ?? snap?.name,
-                experienceData: snap,
-              }
-            : { contextType: "general" },
-        );
+        const created = experienceId
+          ? await createExperienceConversation({
+              experienceId,
+              experienceName: experienceTitle ?? snap?.name,
+              experienceData: snap,
+            })
+          : await createGuideConversation({ contextType: "general" });
         applyConversation(created);
         if (targetFolder) {
           setThreads((current) =>
@@ -357,16 +407,13 @@ export function GuideProvider({ children }: { children: ReactNode }) {
       try {
         if (!isPersistedConversationId(base?.id)) {
           const snap = experienceId ? experienceContext : undefined;
-          const created = await createGuideConversation(
-            experienceId
-              ? {
-                  contextType: "experience",
-                  experienceId,
-                  experienceName: experienceTitle ?? snap?.name,
-                  experienceData: snap,
-                }
-              : { contextType: "general" },
-          );
+          const created = experienceId
+            ? await createExperienceConversation({
+                experienceId,
+                experienceName: experienceTitle ?? snap?.name,
+                experienceData: snap,
+              })
+            : await createGuideConversation({ contextType: "general" });
           base = conversationToThread(created);
           const targetFolder = folderFilter && folderFilter !== "__fav__" ? folderFilter : undefined;
           if (targetFolder) {
@@ -455,10 +502,13 @@ export function GuideProvider({ children }: { children: ReactNode }) {
   );
 
   const openGuide = useCallback(
-    (opts?: { prompt?: string; view?: GuideView; experience?: Experience }) => {
+    (opts?: { prompt?: string; view?: GuideView; experience?: Experience; expanded?: boolean }) => {
       setOpen(true);
       setUnread(false);
       setError("");
+      if (opts?.expanded) {
+        setExpanded(true);
+      }
       if (opts?.prompt) {
         setDraft(opts.prompt);
       }
@@ -486,8 +536,7 @@ export function GuideProvider({ children }: { children: ReactNode }) {
               setView("chat");
               return;
             }
-            const created = await createGuideConversation({
-              contextType: "experience",
+            const created = await createExperienceConversation({
               experienceId: focusId,
               experienceName: featured?.title ?? experienceTitle,
               experienceData: featured ? snapshotExperience(featured) : experienceContext,
@@ -533,16 +582,13 @@ export function GuideProvider({ children }: { children: ReactNode }) {
       setError("");
       void (async () => {
         try {
-          const created = await createGuideConversation(
-            experienceId
-              ? {
-                  contextType: "experience",
-                  experienceId,
-                  experienceName: experienceTitle,
-                  experienceData: experienceContext,
-                }
-              : { contextType: "general" },
-          );
+          const created = experienceId
+            ? await createExperienceConversation({
+                experienceId,
+                experienceName: experienceTitle,
+                experienceData: experienceContext,
+              })
+            : await createGuideConversation({ contextType: "general" });
           const next = applyConversation(created);
           setView("chat");
           if (prompt) {
@@ -566,13 +612,17 @@ export function GuideProvider({ children }: { children: ReactNode }) {
       setDraft("");
       void (async () => {
         try {
-          const created = await createGuideConversation({
-            contextType: experienceId ? "experience" : "general",
-            experienceId,
-            experienceName: experienceTitle,
-            experienceData: experienceContext,
-            starter: kind,
-          });
+          const created = experienceId
+            ? await createExperienceConversation({
+                experienceId,
+                experienceName: experienceTitle,
+                experienceData: experienceContext,
+                starter: kind,
+              })
+            : await createGuideConversation({
+                contextType: "general",
+                starter: kind,
+              });
           applyConversation(created);
           setView("chat");
         } catch (err) {
@@ -701,6 +751,7 @@ export function GuideProvider({ children }: { children: ReactNode }) {
           .then(() => {
             const next = threads.filter((item) => item.id !== id);
             setThreads(next);
+            saveThreads(user.id, next);
             if (thread?.id === id) {
               setThread(null);
               setView("home");

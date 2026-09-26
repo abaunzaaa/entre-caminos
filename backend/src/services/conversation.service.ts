@@ -5,7 +5,7 @@ import { chatWithGuide, type AssistantChatMessage, type AssistantReply } from ".
 import type { GuideChatContext, GuideExperienceContext } from "./context.service.js";
 import { assertOwnedFolder } from "./folder.service.js";
 
-const WELCOME_SUGGESTIONS = ["¿Qué incluye?", "¿Cuánto dura?", "¿Cómo llegar?", "¿Qué debo llevar?", "Agregar al plan"];
+const WELCOME_SUGGESTIONS = ["¿Qué incluye?", "¿Cuánto dura?", "¿Cómo llegar?", "¿Qué debo llevar?", "Armar un plan con esto"];
 
 export type StoredExperienceData = GuideExperienceContext & { imageUrl?: string };
 
@@ -357,19 +357,36 @@ export async function createConversation(
             metadata: { suggestions: WELCOME_SUGGESTIONS },
           }
         : undefined;
-  const conversation = await prisma.conversation.create({
-    data: {
-      userId,
-      title,
-      contextType,
-      experienceId,
-      experienceName: input?.experienceName,
-      experienceData: (input?.experienceData ?? undefined) as Prisma.InputJsonValue | undefined,
-      messages: seed ? { create: seed } : undefined,
-    },
-    include: { messages: { orderBy: { createdAt: "asc" } } },
-  });
-  return serializeConversation(conversation);
+  let experienceData = input?.experienceData ?? undefined;
+  if (experienceData) {
+    try {
+      experienceData = JSON.parse(JSON.stringify(experienceData)) as StoredExperienceData;
+    } catch {
+      experienceData = undefined;
+    }
+  }
+  const data = {
+    userId,
+    title,
+    contextType,
+    experienceId,
+    experienceName: input?.experienceName,
+    experienceData: experienceData as Prisma.InputJsonValue | undefined,
+    messages: seed ? { create: seed } : undefined,
+  };
+  try {
+    const conversation = await prisma.conversation.create({
+      data,
+      include: { messages: { orderBy: { createdAt: "asc" } } },
+    });
+    return serializeConversation(conversation);
+  } catch {
+    const conversation = await prisma.conversation.create({
+      data: { ...data, experienceData: undefined },
+      include: { messages: { orderBy: { createdAt: "asc" } } },
+    });
+    return serializeConversation(conversation);
+  }
 }
 
 export async function updateConversation(

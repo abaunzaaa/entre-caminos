@@ -219,6 +219,7 @@ export function GuideHost() {
   const [menuPos, setMenuPos] = useState<{ top: number; left: number; openUp?: boolean } | null>(null);
   const [moveMenu, setMoveMenu] = useState<string | null>(null);
   const [folderMenu, setFolderMenu] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [confirmFolderDelete, setConfirmFolderDelete] = useState<string | null>(null);
   const [renamingFolder, setRenamingFolder] = useState<string | null>(null);
   const [renameDraft, setRenameDraft] = useState("");
@@ -227,6 +228,7 @@ export function GuideHost() {
   const [dropFolderId, setDropFolderId] = useState<string | null>(null);
   const [draggingThread, setDraggingThread] = useState<string | null>(null);
   const [toast, setToast] = useState("");
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   const [railOpen, setRailOpen] = useState(true);
   const [searchOpen, setSearchOpen] = useState(false);
   const [railSection, setRailSection] = useState<"home" | "recents" | "favorites">("home");
@@ -290,10 +292,9 @@ export function GuideHost() {
     setConfirmFolderDelete(null);
   }
 
-  async function copyMessage(value: string) {
+  async function copyMessage(id: string, value: string) {
     try {
       await navigator.clipboard.writeText(value);
-      setToast("Copiado");
     } catch {
       const area = document.createElement("textarea");
       area.value = value;
@@ -304,8 +305,8 @@ export function GuideHost() {
       area.select();
       document.execCommand("copy");
       area.remove();
-      setToast("Copiado");
     }
+    setCopiedId(id);
   }
 
   useEffect(() => {
@@ -314,6 +315,14 @@ export function GuideHost() {
       setSearchOpen(false);
     }
   }, [guide.expanded]);
+
+  useEffect(() => {
+    if (!copiedId) {
+      return;
+    }
+    const id = window.setTimeout(() => setCopiedId(null), 1800);
+    return () => window.clearTimeout(id);
+  }, [copiedId]);
 
   useEffect(() => {
     if (!toast) {
@@ -1044,7 +1053,7 @@ export function GuideHost() {
                     return (
                     <div key={folder.id} className="guide-rail__folder-block">
                     <div
-                      className={`guide-rail__folder-row${open ? " is-on" : ""}${dropFolderId === folder.id ? " is-drop" : ""}`}
+                      className={`guide-rail__folder-row${open ? " is-on" : ""}${dropFolderId === folder.id ? " is-drop" : ""}${folderMenu === folder.id ? " is-menu" : ""}`}
                       onDragOver={(event) => {
                         event.preventDefault();
                         event.dataTransfer.dropEffect = "move";
@@ -1145,6 +1154,18 @@ export function GuideHost() {
                       >
                         <button
                           type="button"
+                          className="guide-rail__act guide-rail__act--new"
+                          aria-label={`Nuevo chat en ${folder.name}`}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            guide.setFolderFilter(folder.id);
+                            guide.newConversation(folder.id);
+                          }}
+                        >
+                          <SquarePen size={14} strokeWidth={1.8} />
+                        </button>
+                        <button
+                          type="button"
                           className="guide-rail__more"
                           aria-label={`Opciones de ${folder.name}`}
                           aria-expanded={folderMenu === folder.id}
@@ -1165,18 +1186,6 @@ export function GuideHost() {
                           }}
                         >
                           <MoreVertical size={14} strokeWidth={1.8} />
-                        </button>
-                        <button
-                          type="button"
-                          className="guide-rail__act"
-                          aria-label={`Nuevo chat en ${folder.name}`}
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            guide.setFolderFilter(folder.id);
-                            guide.newConversation(folder.id);
-                          }}
-                        >
-                          <SquarePen size={14} strokeWidth={1.8} />
                         </button>
                       </div>
                       {folderMenu === folder.id && menuPos
@@ -1383,14 +1392,20 @@ export function GuideHost() {
                           <time>{formatTime(message.createdAt)}</time>
                           <button
                             type="button"
+                            className="guide-copy"
                             aria-label="Copiar"
                             onClick={(event) => {
                               event.preventDefault();
                               event.stopPropagation();
-                              void copyMessage(message.content);
+                              void copyMessage(message.id, message.content);
                             }}
                           >
                             <Copy size={14} strokeWidth={1.8} />
+                            {copiedId === message.id ? (
+                              <span className="guide-copy__hint" role="status">
+                                Se ha copiado
+                              </span>
+                            ) : null}
                           </button>
                           {lastAssistant ? (
                             <button
@@ -1468,16 +1483,10 @@ export function GuideHost() {
                                       type="button"
                                       className="guide-xp__ghost"
                                       onClick={() =>
-                                        guide.persistPlan({
-                                          title: `Plan con ${experience.title}`,
-                                          city: experience.location,
-                                          duration: experience.duration || "1 día",
-                                          people: "2 personas",
-                                          experiences: [experience.title],
-                                        })
+                                        void guide.send(`Armame un plan alrededor de ${experience.title}`)
                                       }
                                     >
-                                      Agregar al plan
+                                      Crear un plan con esto
                                     </button>
                                   </div>
                                 </div>

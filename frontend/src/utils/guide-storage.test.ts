@@ -47,6 +47,12 @@ describe("userChoiceChips", () => {
       "Medellín",
     ]);
   });
+
+  it("no sugiere categorías cuando pregunta el día", () => {
+    expect(
+      userChoiceChips("¿En qué día te gustaría disfrutar de la experiencia cultural?", ["Cultura", "Naturaleza"]),
+    ).toEqual(["Hoy", "Mañana", "Este fin de semana"]);
+  });
 });
 
 describe("chronologicalMessages", () => {

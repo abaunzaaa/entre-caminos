@@ -1,17 +1,24 @@
 import { z } from "zod";
 
+const clip = (max: number) => (value: unknown) => {
+  if (value == null || value === "") {
+    return undefined;
+  }
+  return String(value).trim().slice(0, max) || undefined;
+};
+
 const experienceContextSchema = z
   .object({
     id: z.string().trim().min(1).max(80).optional(),
-    name: z.string().trim().max(200).optional(),
-    category: z.string().trim().max(120).optional(),
-    location: z.string().trim().max(200).optional(),
+    name: z.preprocess(clip(200), z.string().max(200).optional()),
+    category: z.preprocess(clip(120), z.string().max(120).optional()),
+    location: z.preprocess(clip(200), z.string().max(200).optional()),
     price: z.union([z.string(), z.number()]).optional(),
-    duration: z.string().trim().max(80).optional(),
-    description: z.string().trim().max(2000).optional(),
+    duration: z.preprocess(clip(80), z.string().max(80).optional()),
+    description: z.preprocess(clip(8000), z.string().max(8000).optional()),
     availableDays: z.unknown().optional(),
-    howToGetThere: z.string().trim().max(800).optional(),
-    imageUrl: z.string().trim().max(500).optional(),
+    howToGetThere: z.preprocess(clip(2000), z.string().max(2000).optional()),
+    imageUrl: z.preprocess(clip(2048), z.string().max(2048).optional()),
   })
   .optional();
 
