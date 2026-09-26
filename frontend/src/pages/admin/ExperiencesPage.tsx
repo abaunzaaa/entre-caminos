@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { ChevronDown, Clock, Compass, Plus, Search } from "lucide-react";
 import { Button } from "../../components/ui/Button";
@@ -72,8 +72,6 @@ function FilterMenu<T extends string>({
 }
 
 const SUMMARY_PREVIEW_LIMIT = 3;
-/** Visible rows in Experiencias registradas. The filtered grid still renders in full; this caps the scroll viewport. */
-const EXPERIENCE_DIRECTORY_ROWS = 2;
 
 function SummaryPreviewCard({ experience, meta }: { experience: Experience; meta: string }) {
   const photo = mediaUrl(experienceImages(experience)[0] ?? null);
@@ -305,61 +303,6 @@ export function ExperiencesPage() {
     });
   }, [categoryFilter, dateSort, experiences, query, statusFilter]);
 
-  const catalogRef = useRef<HTMLDivElement>(null);
-  const [catalogScrollable, setCatalogScrollable] = useState(false);
-
-  useLayoutEffect(() => {
-    const viewport = catalogRef.current;
-    if (!viewport) {
-      setCatalogScrollable(false);
-      return;
-    }
-    const catalog = viewport.querySelector<HTMLElement>(".dash-exps-catalog");
-    if (!catalog) {
-      return;
-    }
-
-    function applyViewportHeight() {
-      const cards = [...catalog.querySelectorAll<HTMLElement>(":scope > .dash-exps-tile")];
-      const firstTop = cards[0]?.getBoundingClientRect().top ?? 0;
-      let columns = 0;
-      for (const card of cards) {
-        if (Math.abs(card.getBoundingClientRect().top - firstTop) > 2) {
-          break;
-        }
-        columns += 1;
-      }
-      columns = Math.max(columns, 1);
-      const windowSize = columns * EXPERIENCE_DIRECTORY_ROWS;
-      if (cards.length <= windowSize) {
-        viewport.style.removeProperty("--exps-list-max");
-        setCatalogScrollable(false);
-        return;
-      }
-      const first = cards[0];
-      const last = cards[windowSize - 1];
-      if (!first || !last) {
-        return;
-      }
-      const height = Math.ceil(last.getBoundingClientRect().bottom - first.getBoundingClientRect().top);
-      const next = `${height}px`;
-      if (viewport.style.getPropertyValue("--exps-list-max") !== next) {
-        viewport.style.setProperty("--exps-list-max", next);
-      }
-      setCatalogScrollable(true);
-    }
-
-    applyViewportHeight();
-    const observer = new ResizeObserver(applyViewportHeight);
-    observer.observe(viewport);
-    observer.observe(catalog);
-    window.addEventListener("resize", applyViewportHeight);
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("resize", applyViewportHeight);
-    };
-  }, [visibleExperiences]);
-
   const selectedCategoryName = categories.find((item) => item.id === categoryFilter)?.name;
 
   return (
@@ -538,7 +481,7 @@ export function ExperiencesPage() {
       <section className="dash-team-board" aria-label="Gestión de experiencias">
         <section
           id="experiencias-catalogo"
-          className={`dash-split__panel dash-exps-roster${catalogScrollable ? " is-scrollable" : ""}`}
+          className="dash-split__panel dash-exps-roster"
           aria-label="Experiencias registradas"
         >
           <header className="dash-exps-roster__head">
@@ -655,20 +598,7 @@ export function ExperiencesPage() {
               </p>
             </Panel>
           ) : (
-            <div
-              ref={catalogRef}
-              className={`dash-exps-roster__viewport${catalogScrollable ? " is-scrollable" : ""}`}
-              tabIndex={catalogScrollable ? 0 : undefined}
-              role="region"
-              aria-label="Listado de experiencias"
-              aria-describedby={catalogScrollable ? "exps-directory-scroll-hint" : undefined}
-              data-visible-rows={EXPERIENCE_DIRECTORY_ROWS}
-            >
-              {catalogScrollable ? (
-                <p id="exps-directory-scroll-hint" className="sr-only">
-                  Desplázate para ver más experiencias.
-                </p>
-              ) : null}
+            <div className="dash-exps-roster__viewport" role="region" aria-label="Listado de experiencias">
               <div className="dash-exps-catalog">
               {visibleExperiences.map((experience) => {
                 const statusMenu = `status-${experience.id}`;
