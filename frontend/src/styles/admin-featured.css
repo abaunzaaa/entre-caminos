@@ -199,6 +199,10 @@
   font-size: 13px;
 }
 
+.featured-admin__category {
+  line-height: 1.4;
+}
+
 .featured-admin__why {
   display: flex;
   align-items: center;

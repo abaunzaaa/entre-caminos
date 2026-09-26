@@ -19,6 +19,11 @@ import {
 } from "../../services/catalog.service";
 import { getApiErrorMessage } from "../../utils/api-error";
 import { mediaUrl } from "../../utils/media";
+import {
+  experienceCategoryNames,
+  formatExperienceCategories,
+  primaryCategoryKey,
+} from "../../utils/experience-categories";
 import type { Experience, FeaturedExperienceCard } from "../../types";
 import featuredHeader from "../../assets/images/admin/featured-experiences-header.png";
 import viewsIcon from "../../assets/icons/metrics/views.svg";
@@ -156,7 +161,7 @@ function AdminOwnPerformance() {
             <article key={card.experience.id} className="featured-admin__card">
               <img src={mediaUrl(card.imageUrl, 640)} alt="" />
               <div className="featured-admin__body">
-                <p className="featured-admin__category">{card.category.name}</p>
+                <p className="featured-admin__category">{formatExperienceCategories(card, card.category.name)}</p>
                 <h2>{card.experience.title}</h2>
                 <ul className="featured-admin__metrics">
                   <li className={criterion === "visits" ? "is-emphasis" : undefined}>
@@ -304,8 +309,7 @@ function SuperAdminFeaturedPage() {
   const editorialCategories = useMemo(() => {
     const names = new Set(catalogCategories);
     for (const item of published) {
-      const name = item.category?.name?.trim();
-      if (name) {
+      for (const name of experienceCategoryNames(item)) {
         names.add(name);
       }
     }
@@ -315,7 +319,7 @@ function SuperAdminFeaturedPage() {
   const visibleEditorial = useMemo(() => {
     const query = editorialQuery.trim().toLowerCase();
     return editorialOptions.filter((item) => {
-      if (editorialCategory && item.category?.name !== editorialCategory) {
+      if (editorialCategory && !experienceCategoryNames(item).includes(editorialCategory)) {
         return false;
       }
       if (!query) {
@@ -354,14 +358,13 @@ function SuperAdminFeaturedPage() {
     if (!next) {
       return;
     }
-    const nextCategory = next.categoryId || next.category?.name?.trim().toLocaleLowerCase("es") || "sin-categoria";
+    const nextCategory = primaryCategoryKey(next);
     const categoryTaken = editorialIds.some((selectedId) => {
       const selected = published.find((item) => item.id === selectedId);
       if (!selected) {
         return false;
       }
-      const selectedCategory = selected.categoryId || selected.category?.name?.trim().toLocaleLowerCase("es") || "sin-categoria";
-      return selectedCategory === nextCategory;
+      return primaryCategoryKey(selected) === nextCategory;
     });
     if (categoryTaken) {
       setEditorialNotice("category");
@@ -457,7 +460,7 @@ function SuperAdminFeaturedPage() {
         }
         description={
           editorialNotice === "category"
-            ? "Solo puedes seleccionar una experiencia por categoría. Elige una experiencia de otra categoría para continuar."
+            ? "Solo puedes seleccionar una experiencia por categoría principal. Elige una experiencia con otra categoría para continuar."
             : "Solo puedes seleccionar hasta 5 experiencias destacadas."
         }
         actionLabel="Aceptar"
@@ -558,7 +561,7 @@ function SuperAdminFeaturedPage() {
                       <img src={mediaUrl(item.imageUrl, 320)} alt="" />
                       <span>
                         <strong>{item.title}</strong>
-                        <small>{item.category?.name || "Sin categoría"}</small>
+                        <small>{formatExperienceCategories(item, "Sin categoría")}</small>
                         <small>{place}</small>
                       </span>
                       {selected ? <span className="featured-admin__pick-order">{selectedIndex + 1}</span> : null}
@@ -589,7 +592,7 @@ function SuperAdminFeaturedPage() {
               <article key={card.experience.id} className="featured-admin__card">
                 <img src={mediaUrl(card.imageUrl, 640)} alt="" />
                 <div className="featured-admin__body">
-                  <p className="featured-admin__category">{card.category.name}</p>
+                  <p className="featured-admin__category">{formatExperienceCategories(card, card.category.name)}</p>
                   <h2>
                     {card.experience.title}
                   </h2>
@@ -637,7 +640,7 @@ function SuperAdminFeaturedPage() {
             <article key={card.experience.id} className="featured-admin__card">
               <img src={mediaUrl(card.imageUrl, 640)} alt="" />
               <div className="featured-admin__body">
-                <p className="featured-admin__category">{card.category.name}</p>
+                <p className="featured-admin__category">{formatExperienceCategories(card, card.category.name)}</p>
                 <h2>
                   {card.experience.title}
                 </h2>

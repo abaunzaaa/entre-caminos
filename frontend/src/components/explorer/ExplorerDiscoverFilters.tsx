@@ -3,6 +3,7 @@ import { ChevronDown, Search, X } from "lucide-react";
 import { parseStoredLocation } from "../../data/colombia-locations";
 import { formatDuration } from "../../utils/experience-details";
 import type { Experience } from "../../types";
+import { experienceCategoryNames } from "../../utils/experience-categories";
 
 export type DiscoverPlan = "family" | "couple" | "solo" | "friends" | "";
 export type DiscoverSort = "newest" | "oldest";
@@ -169,7 +170,7 @@ function matchesQuery(experience: Experience, query: string) {
   const haystack = normalizeSearchText(
     [
       experience.title || "",
-      experience.category?.name || "",
+      experienceCategoryNames(experience).join(" "),
       experience.location || "",
       place.department,
       place.municipality,

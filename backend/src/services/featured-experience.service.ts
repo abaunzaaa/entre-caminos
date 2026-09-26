@@ -100,7 +100,23 @@ export async function recordDetailView(experienceId: string) {
   });
 }
 
-const coverInclude = { category: true } as const;
+const categoryPreview = { select: { id: true, name: true, icon: true } } as const;
+
+const featuredCategoriesInclude = {
+  category: categoryPreview,
+  experienceCategories: {
+    orderBy: { position: "asc" as const },
+    include: { category: categoryPreview },
+  },
+} as const;
+
+const coverInclude = {
+  category: true,
+  experienceCategories: {
+    orderBy: { position: "asc" as const },
+    include: { category: true },
+  },
+} as const;
 
 const savedFeaturedWhere = {
   isFeatured: true,
@@ -135,13 +151,27 @@ export async function listRecommendedExperiences(userId?: string) {
     : [];
   const experiences = await prisma.experience.findMany({
     where: { status: "PUBLISHED" },
-    include: coverInclude,
+    include: {
+      category: true,
+      experienceCategories: {
+        orderBy: { position: "asc" },
+        include: { category: { select: { name: true } } },
+      },
+    },
   });
   const activeInterests = interests.map((interest) => interest.trim()).filter(Boolean);
   if (activeInterests.length > 0) {
+    const personalized = experiences.map((experience) => ({
+      ...experience,
+      categories: experience.experienceCategories.length
+        ? experience.experienceCategories.map((link) => ({ name: link.category.name }))
+        : experience.category
+          ? [{ name: experience.category.name }]
+          : [],
+    }));
     return {
       source: "interests" as const,
-      experiences: selectExperiencesForInterests(experiences, activeInterests, COVER_RECOMMENDATION_LIMIT),
+      experiences: selectExperiencesForInterests(personalized, activeInterests, COVER_RECOMMENDATION_LIMIT),
     };
   }
 
@@ -175,10 +205,17 @@ function toAdminCard(
     featuredFrom: Date | null;
     featuredUntil: Date | null;
     category: { id: string; name: string; icon: string };
+    experienceCategories?: Array<{
+      position: number;
+      category: { id: string; name: string; icon: string };
+    }>;
   },
   metrics: FeaturedMetrics,
 ) {
   const score = calculateFeaturedScore(metrics);
+  const ordered = [...(experience.experienceCategories ?? [])].sort((left, right) => left.position - right.position);
+  const categories = ordered.map((link) => link.category).filter((category) => category?.name);
+  const listed = categories.length > 0 ? categories : [experience.category];
   return {
     experience: {
       id: experience.id,
@@ -193,7 +230,8 @@ function toAdminCard(
       featuredUntil: experience.featuredUntil,
     },
     imageUrl: coverUrl(experience),
-    category: experience.category,
+    category: listed[0],
+    categories: listed,
     score,
     metrics: {
       visits: metrics.visits,
@@ -209,7 +247,7 @@ function toAdminCard(
 export async function listFeaturedRanking(criterion: FeaturedRankingCriterion) {
   const experiences = await prisma.experience.findMany({
     where: { status: "PUBLISHED" },
-    include: { category: { select: { id: true, name: true, icon: true } } },
+    include: featuredCategoriesInclude,
   });
   const maps = await loadMetricMaps(experiences.map((item) => item.id));
   return experiences
@@ -230,7 +268,7 @@ export async function listFeaturedRanking(criterion: FeaturedRankingCriterion) {
 export async function listOwnExperiencePerformance(actor: AuthUser, criterion: FeaturedRankingCriterion) {
   const experiences = await prisma.experience.findMany({
     where: { status: "PUBLISHED", createdBy: actor.id },
-    include: { category: { select: { id: true, name: true, icon: true } } },
+    include: featuredCategoriesInclude,
   });
   const maps = await loadMetricMaps(experiences.map((item) => item.id));
   return experiences
@@ -296,7 +334,7 @@ export async function generateFeaturedFromRanking(
 export async function listAdminFeaturedExperiences() {
   const experiences = await prisma.experience.findMany({
     where: savedFeaturedWhere,
-    include: { category: { select: { id: true, name: true, icon: true } } },
+    include: featuredCategoriesInclude,
     orderBy: savedFeaturedOrder,
     take: FEATURED_PUBLIC_LIMIT,
   });
@@ -336,7 +374,7 @@ export async function featureExperience(
       featuredFrom: input.featuredFrom === undefined ? experience.featuredFrom : input.featuredFrom,
       featuredUntil: input.featuredUntil === undefined ? experience.featuredUntil : input.featuredUntil,
     },
-    include: { category: { select: { id: true, name: true, icon: true } } },
+    include: featuredCategoriesInclude,
   });
   await recordAudit({ userId: actor.id, action: "FEATURE_EXPERIENCE", entity: "Experience", entityId: id });
   const maps = await loadMetricMaps([id]);

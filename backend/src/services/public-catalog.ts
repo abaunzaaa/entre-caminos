@@ -60,6 +60,7 @@ export type CatalogListItem = {
   description: string;
   categoryId: string;
   categoryName: string;
+  categorySearch?: string;
   price: number;
   location: string;
   duration: string | null;
@@ -200,7 +201,9 @@ function matchesQuery(item: CatalogListItem, query: string) {
     return true;
   }
   const city = municipalityOf(item.location);
-  const haystack = fold([item.title, item.categoryName, item.location, city, item.description].join(" "));
+  const haystack = fold(
+    [item.title, item.categorySearch || item.categoryName, item.location, city, item.description].join(" "),
+  );
   if (haystack.includes(normalizedQuery)) {
     return true;
   }
@@ -274,21 +277,34 @@ export function paginateCatalog<T>(items: T[], page: number, limit: number) {
 export async function listPublicCatalogPage(input: PublicCatalogFilters & { page: number; limit: number }) {
   const rows = await prisma.experience.findMany({
     where: { status: "PUBLISHED" },
-    include: { category: true },
+    include: {
+      category: true,
+      experienceCategories: {
+        orderBy: { position: "asc" },
+        include: { category: true },
+      },
+    },
   });
-  const items: CatalogListItem[] = rows.map((row) => ({
-    id: row.id,
-    title: row.title,
-    description: row.description,
-    categoryId: row.categoryId,
-    categoryName: row.category?.name ?? "",
-    price: Number(row.price),
-    location: row.location,
-    duration: row.duration,
-    durationValue: row.durationValue,
-    durationUnit: row.durationUnit,
-    createdAt: row.createdAt,
-  }));
+  const items: CatalogListItem[] = rows.map((row) => {
+    const orderedNames = [...(row.experienceCategories ?? [])]
+      .sort((left, right) => left.position - right.position)
+      .map((link) => link.category?.name?.trim() || "")
+      .filter(Boolean);
+    return {
+      id: row.id,
+      title: row.title,
+      description: row.description,
+      categoryId: row.categoryId,
+      categoryName: row.category?.name ?? "",
+      categorySearch: orderedNames.length ? orderedNames.join(" ") : row.category?.name ?? "",
+      price: Number(row.price),
+      location: row.location,
+      duration: row.duration,
+      durationValue: row.durationValue,
+      durationUnit: row.durationUnit,
+      createdAt: row.createdAt,
+    };
+  });
   const facets = catalogFacets(items);
   const filtered = filterCatalogItems(items, input);
   const page = paginateCatalog(filtered, input.page, input.limit);

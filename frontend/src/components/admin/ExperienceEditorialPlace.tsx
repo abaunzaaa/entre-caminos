@@ -2,6 +2,7 @@ import { Car, Leaf, MapPin, Tag } from "lucide-react";
 import { ExperienceLocationMap } from "./ExperienceLocationMap";
 import { parseStoredLocation } from "../../data/colombia-locations";
 import type { Experience } from "../../types";
+import { formatExperienceCategories } from "../../utils/experience-categories";
 import mapaIcon from "../../assets/mapa-icon.png";
 
 const MEDELLIN = { lat: 6.2476, lng: -75.5658 };
@@ -68,7 +69,7 @@ export function ExperienceEditorialPlace({
   const place = [municipality, department].filter(Boolean).join(", ");
   const address = parsed.address.trim();
   const mapsHref = mapsUrl(latitude, longitude, experience.location);
-  const category = experience.category?.name || "";
+  const category = formatExperienceCategories(experience);
   const artisan = /arte|artesanal|cerám|taller|oficio/i.test(`${category} ${experience.title}`);
   const travelMinutes =
     hasPoint && department === "Antioquia" && municipality !== "Medellín"

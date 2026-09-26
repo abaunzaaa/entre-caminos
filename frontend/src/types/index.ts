@@ -99,6 +99,8 @@ export type Experience = {
   reviewedById?: string | null;
   createdAt: string;
   category?: Category;
+  categories?: Category[];
+  experienceCategories?: Array<{ position: number; categoryId: string; category: Category }>;
   creator?: { id: string; name: string; email: string; avatarUrl?: string | null };
   reviewedBy?: { id: string; name: string; email: string } | null;
 };
@@ -165,6 +167,7 @@ export type FeaturedExperienceCard = {
   };
   imageUrl: string | null;
   category: { id: string; name: string; icon: string };
+  categories?: Array<{ id: string; name: string; icon: string }>;
   score: number;
   metrics: {
     visits: number;

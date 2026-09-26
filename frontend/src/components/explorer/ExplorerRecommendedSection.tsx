@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ArrowUpRight, Heart, MapPin, MapPinned, Users } from "lucide-react";
 import { experienceGalleryUrls, municipalityLabel } from "./explorer-media";
 import { formatPrice } from "../../utils/cn";
+import { experienceCategoryNames, formatExperienceCategories } from "../../utils/experience-categories";
 import type { Experience } from "../../types";
 
 type ExplorerRecommendedSectionProps = {
@@ -166,7 +167,7 @@ export function ExplorerRecommendedSection({ experiences }: ExplorerRecommendedS
   const tabs = useMemo(
     () =>
       experiences.slice(0, 5).map((experience) => {
-        const label = experience.category?.name?.trim() || "Destacada";
+        const label = experienceCategoryNames(experience)[0] || "Destacada";
         return {
           id: experience.id,
           label,
@@ -197,7 +198,7 @@ export function ExplorerRecommendedSection({ experiences }: ExplorerRecommendedS
 
   const experience = active.experience;
   const place = municipalityLabel(experience.location);
-  const category = experience.category?.name?.trim() || active.label;
+  const category = formatExperienceCategories(experience, active.label);
   const galleryUrls = experienceGalleryUrls(experience);
 
   function selectTab(id: string) {

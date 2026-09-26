@@ -707,6 +707,90 @@
   color: #ffffff;
 }
 
+.dash-exps-categories-field__control {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dash-exps-categories-slot {
+  position: relative;
+  min-height: 48px;
+}
+
+.dash-exps-categories-slot.has-chips .dash-team-role__trigger > span:first-child {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.dash-exps-categories-field .dash-team-role__option.is-active {
+  background: rgba(41, 73, 66, 0.14);
+  color: #1c332e;
+  font-weight: 500;
+}
+
+.dash-exps-categories-field .dash-team-role__option.is-active:hover,
+.dash-exps-categories-field .dash-team-role__option.is-active:focus-visible {
+  background: rgba(41, 73, 66, 0.22);
+  color: #1c332e;
+}
+
+.dash-exps-categories-slot .dash-exps-categories {
+  position: absolute;
+  z-index: 1;
+  top: 4px;
+  right: 34px;
+  bottom: 4px;
+  left: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.dash-exps-category-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  height: 18px;
+  max-width: 100%;
+  padding: 0 1px 0 7px;
+  border-radius: 999px;
+  background: rgba(41, 73, 66, 0.12);
+  color: #1c332e;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  pointer-events: auto;
+}
+
+.dash-exps-category-chip button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #294942;
+  cursor: pointer;
+}
+
 .dash-team-roster,
 .dash-cats-roster {
   --team-list-visible: 5;
@@ -2368,8 +2452,10 @@
 
 .dash-exps-tile__chips .admin-status {
   margin: 0;
+  max-width: 100%;
   padding: 4px 10px;
   font-size: 12px;
+  white-space: normal;
 }
 
 .dash-exps-tile__manage {
@@ -2530,6 +2616,11 @@
   justify-content: flex-end;
   gap: 8px;
   min-width: 0;
+}
+
+.dash-exps-form__grid > :has(+ .dash-exps-categories-field),
+.dash-exps-form__grid > .dash-exps-categories-field {
+  align-self: start;
 }
 
 .dash-exps-form__grid > label > span:first-child,
