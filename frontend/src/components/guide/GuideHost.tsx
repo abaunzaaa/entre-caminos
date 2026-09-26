@@ -2,26 +2,41 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   ArrowUpRight,
+  Calendar,
   CalendarRange,
+  Camera,
   Check,
   ChevronDown,
   Clock,
+  Compass,
   Copy,
   Folder,
-  FolderPlus,
   Heart,
+  Home,
+  Leaf,
+  Lightbulb,
+  Map,
   MapPin,
   Mic,
   Minimize2,
   Minus,
+  MoreVertical,
+  Mountain,
+  Palette,
   Pencil,
+  PanelLeft,
+  Plane,
   Plus,
+  Star,
+  UtensilsCrossed,
+  Users,
   RefreshCw,
   Save,
   Search,
   Send,
   Settings,
   Share2,
+  SquarePen,
   ThumbsDown,
   ThumbsUp,
   Trash2,
@@ -32,6 +47,7 @@ import { mediaUrl } from "../../utils/media";
 import { formatPrice } from "../../utils/cn";
 import { GuideMark } from "./GuideMark";
 import { useGuide } from "./GuideContext";
+import keySilhouette from "../../assets/key-silhouette.png";
 import "../../styles/guide.css";
 
 const CAPABILITIES = [
@@ -40,6 +56,72 @@ const CAPABILITIES = [
   { icon: MapPin, label: "Explorar cerca", hint: "Cerca de ti", prompt: "Qué puedo hacer cerca de mí" },
   { icon: Heart, label: "Mis intereses", hint: "A tu medida", prompt: "Recomiéndame algo según mis intereses" },
 ] as const;
+
+const FOLDER_ICONS = [
+  { id: "folder", Icon: Folder },
+  { id: "heart", Icon: Heart },
+  { id: "star", Icon: Star },
+  { id: "plane", Icon: Plane },
+  { id: "map", Icon: Map },
+  { id: "mountain", Icon: Mountain },
+  { id: "utensils", Icon: UtensilsCrossed },
+  { id: "palette", Icon: Palette },
+  { id: "home", Icon: Home },
+  { id: "camera", Icon: Camera },
+  { id: "compass", Icon: Compass },
+  { id: "lightbulb", Icon: Lightbulb },
+  { id: "leaf", Icon: Leaf },
+  { id: "pin", Icon: MapPin },
+  { id: "calendar", Icon: Calendar },
+  { id: "users", Icon: Users },
+] as const;
+
+const EMOJI_TO_ICON: Record<string, string> = {
+  "📁": "folder",
+  "📂": "folder",
+  "💚": "heart",
+  "❤️": "heart",
+  "⭐": "star",
+  "✈️": "plane",
+  "🗺️": "map",
+  "🏔️": "mountain",
+  "🍽️": "utensils",
+  "🎨": "palette",
+  "🏡": "home",
+  "📸": "camera",
+  "🧭": "compass",
+  "💡": "lightbulb",
+  "🌿": "leaf",
+  "📍": "pin",
+  "🗓️": "calendar",
+  "👥": "users",
+};
+
+function folderIconId(name: string, icon?: string) {
+  if (icon && FOLDER_ICONS.some((item) => item.id === icon)) {
+    return icon;
+  }
+  if (icon && EMOJI_TO_ICON[icon]) {
+    return EMOJI_TO_ICON[icon];
+  }
+  const label = name.toLowerCase();
+  if (label.includes("favorit")) {
+    return "heart";
+  }
+  if (label.includes("idea") || label.includes("viaje")) {
+    return "plane";
+  }
+  if (label.includes("destino")) {
+    return "map";
+  }
+  return "folder";
+}
+
+function FolderMark({ name, icon }: { name: string; icon?: string }) {
+  const id = folderIconId(name, icon);
+  const Icon = FOLDER_ICONS.find((item) => item.id === id)?.Icon ?? Folder;
+  return <Icon size={15} strokeWidth={1.7} />;
+}
 
 function hiddenPath(pathname: string) {
   return (
@@ -80,27 +162,48 @@ export function GuideHost() {
   const guide = useGuide();
   const streamRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const threadSearchRef = useRef<HTMLInputElement>(null);
   const [listening, setListening] = useState(false);
   const [planOpen, setPlanOpen] = useState(true);
   const [votes, setVotes] = useState<Record<string, "up" | "down">>({});
   const [folderName, setFolderName] = useState("");
+  const [newFolderIcon, setNewFolderIcon] = useState("folder");
+  const [iconPicker, setIconPicker] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [threadMenu, setThreadMenu] = useState<string | null>(null);
+  const [railOpen, setRailOpen] = useState(true);
+  const [searchOpen, setSearchOpen] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
-  const homePreview = pathname === "/" || pathname.startsWith("/explorar");
-  const visible = (Boolean(user) || homePreview) && !hiddenPath(pathname);
+  const threadMenuRef = useRef<HTMLDivElement>(null);
+  const iconPickerRef = useRef<HTMLDivElement>(null);
+  const visible = Boolean(user) && !hiddenPath(pathname);
 
   useEffect(() => {
-    if (!settingsOpen) {
+    if (!settingsOpen && !threadMenu && !iconPicker) {
       return;
     }
     function onPointer(event: MouseEvent) {
-      if (!settingsRef.current?.contains(event.target as Node)) {
+      const target = event.target as Node;
+      if (settingsOpen && !settingsRef.current?.contains(target)) {
         setSettingsOpen(false);
+      }
+      if (threadMenu && !threadMenuRef.current?.contains(target)) {
+        setThreadMenu(null);
+      }
+      if (iconPicker && !iconPickerRef.current?.contains(target)) {
+        setIconPicker(null);
       }
     }
     window.addEventListener("mousedown", onPointer);
     return () => window.removeEventListener("mousedown", onPointer);
-  }, [settingsOpen]);
+  }, [settingsOpen, threadMenu, iconPicker]);
+
+  useEffect(() => {
+    if (!guide.expanded) {
+      setRailOpen(true);
+      setSearchOpen(false);
+    }
+  }, [guide.expanded]);
 
   useEffect(() => {
     if (!guide.open) {
@@ -284,8 +387,13 @@ export function GuideHost() {
         hidden={guide.open}
         onClick={() => guide.openGuide()}
       >
-        <GuideMark />
-        {guide.unread ? <span className="guide-fab__dot" /> : null}
+        <span className="guide-fab__icon">
+          <span className="guide-fab__aura" aria-hidden="true" />
+          <span className="guide-fab__spec" aria-hidden="true" />
+          <img src={keySilhouette} alt="" className="guide-fab__key" />
+          {guide.unread ? <span className="guide-fab__dot" /> : null}
+        </span>
+        <span className="guide-fab__label">Tu guía</span>
       </button>
 
       {guide.open ? (
@@ -296,47 +404,126 @@ export function GuideHost() {
             aria-label="Tu guía"
           >
             {guide.expanded ? (
-              <aside className="guide-rail">
-                <p className="guide-rail__app">Entre Caminos</p>
-                <button type="button" className="guide-rail__new" onClick={guide.newConversation}>
-                  Nueva conversación
+              <aside className={`guide-rail${railOpen ? "" : " is-collapsed"}`}>
+                {railOpen ? (
+                <div className="guide-rail__head">
+                  <div className="guide-rail__brand">
+                    <span className="guide-rail__logo" aria-hidden="true" />
+                    <span>
+                      <strong>Entre Caminos</strong>
+                      <em>Tu guía IA</em>
+                    </span>
+                  </div>
+                  <div className="guide-rail__tools">
+                    <button
+                      type="button"
+                      className="guide-rail__find"
+                      aria-label="Buscar conversaciones"
+                      aria-expanded={searchOpen}
+                      onClick={() => {
+                        setSearchOpen((open) => {
+                          const next = !open;
+                          if (next) {
+                            window.setTimeout(() => threadSearchRef.current?.focus(), 0);
+                          }
+                          return next;
+                        });
+                      }}
+                    >
+                      <Search size={16} strokeWidth={1.8} />
+                    </button>
+                    <button
+                      type="button"
+                      className="guide-rail__collapse"
+                      aria-label="Cerrar menú"
+                      onClick={() => setRailOpen(false)}
+                    >
+                      <PanelLeft size={16} strokeWidth={1.8} />
+                    </button>
+                  </div>
+                </div>
+                ) : (
+                <button
+                  type="button"
+                  className="guide-rail__home"
+                  aria-label="Abrir menú"
+                  onClick={() => setRailOpen(true)}
+                >
+                  <Home size={18} strokeWidth={1.8} />
                 </button>
-                <label className="guide-rail__search">
-                  <Search size={13} strokeWidth={1.8} />
-                  <input
-                    value={guide.threadQuery}
-                    onChange={(event) => guide.setThreadQuery(event.target.value)}
-                    placeholder="Buscar conversaciones..."
-                    aria-label="Buscar conversaciones"
-                  />
-                </label>
+                )}
+                {searchOpen ? (
+                  <label className="guide-rail__search">
+                    <Search size={13} strokeWidth={1.8} />
+                    <input
+                      ref={threadSearchRef}
+                      value={guide.threadQuery}
+                      onChange={(event) => guide.setThreadQuery(event.target.value)}
+                      placeholder="Buscar conversaciones..."
+                      aria-label="Buscar conversaciones"
+                    />
+                  </label>
+                ) : null}
                 <p className="guide-rail__label">Carpetas</p>
-                <div className="guide-rail__list guide-rail__list--folders">
+                <div className="guide-rail__list guide-rail__list--folders" ref={iconPickerRef}>
                   {guide.folders.map((folder) => {
                     const count = guide.threads.filter((item) => item.folderId === folder.id).length;
+                    const iconId = folderIconId(folder.name, folder.icon);
                     return (
-                    <button
+                    <div
                       key={folder.id}
-                      type="button"
-                      className={guide.folderFilter === folder.id ? "is-on" : ""}
-                      onClick={() => guide.setFolderFilter(guide.folderFilter === folder.id ? undefined : folder.id)}
+                      className={`guide-rail__folder-row${guide.folderFilter === folder.id ? " is-on" : ""}`}
                     >
-                      <span className="guide-rail__folder">
-                        <Folder size={14} strokeWidth={1.7} />
-                        <span>
-                          <strong>{folder.name}</strong>
-                          <em>{count} {count === 1 ? "conversación" : "conversaciones"}</em>
-                        </span>
-                      </span>
-                      <X
-                        size={12}
-                        aria-label="Eliminar carpeta"
+                      <button
+                        type="button"
+                        className="guide-rail__folder-icon"
+                        aria-label="Cambiar icono de carpeta"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setIconPicker((current) => (current === folder.id ? null : folder.id));
+                        }}
+                      >
+                        <FolderMark name={folder.name} icon={folder.icon} />
+                      </button>
+                      {iconPicker === folder.id ? (
+                        <div className="guide-rail__emoji" role="listbox" aria-label="Elegir icono">
+                          {FOLDER_ICONS.map((item) => (
+                            <button
+                              key={item.id}
+                              type="button"
+                              role="option"
+                              aria-selected={iconId === item.id}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                guide.setFolderIcon(folder.id, item.id);
+                                setIconPicker(null);
+                              }}
+                            >
+                              <item.Icon size={15} strokeWidth={1.7} />
+                            </button>
+                          ))}
+                        </div>
+                      ) : null}
+                      <button
+                        type="button"
+                        className="guide-rail__folder-open"
+                        onClick={() => guide.setFolderFilter(guide.folderFilter === folder.id ? undefined : folder.id)}
+                      >
+                        <strong>{folder.name}</strong>
+                        <span className="guide-rail__count">{count}</span>
+                      </button>
+                      <button
+                        type="button"
+                        className="guide-rail__folder-del"
+                        aria-label={`Eliminar carpeta ${folder.name}`}
                         onClick={(event) => {
                           event.stopPropagation();
                           guide.deleteFolder(folder.id);
                         }}
-                      />
-                    </button>
+                      >
+                        <Trash2 size={12} strokeWidth={1.8} />
+                      </button>
+                    </div>
                     );
                   })}
                   <form
@@ -344,12 +531,39 @@ export function GuideHost() {
                     onSubmit={(event) => {
                       event.preventDefault();
                       if (folderName.trim()) {
-                        guide.createFolder(folderName.trim());
+                        guide.createFolder(folderName.trim(), newFolderIcon);
                         setFolderName("");
+                        setNewFolderIcon("folder");
+                        setIconPicker(null);
                       }
                     }}
                   >
-                    <FolderPlus size={13} strokeWidth={1.8} />
+                    <button
+                      type="button"
+                      className="guide-rail__folder-icon"
+                      aria-label="Elegir icono de carpeta"
+                      onClick={() => setIconPicker((current) => (current === "new" ? null : "new"))}
+                    >
+                      <FolderMark name="" icon={newFolderIcon} />
+                    </button>
+                    {iconPicker === "new" ? (
+                      <div className="guide-rail__emoji" role="listbox" aria-label="Elegir icono">
+                        {FOLDER_ICONS.map((item) => (
+                          <button
+                            key={item.id}
+                            type="button"
+                            role="option"
+                            aria-selected={newFolderIcon === item.id}
+                            onClick={() => {
+                              setNewFolderIcon(item.id);
+                              setIconPicker(null);
+                            }}
+                          >
+                            <item.Icon size={15} strokeWidth={1.7} />
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
                     <input
                       value={folderName}
                       onChange={(event) => setFolderName(event.target.value)}
@@ -359,36 +573,58 @@ export function GuideHost() {
                   </form>
                 </div>
                 <p className="guide-rail__label">Conversaciones recientes</p>
-                <div className="guide-rail__list guide-rail__list--threads">
+                <div className="guide-rail__list guide-rail__list--threads" ref={threadMenuRef}>
                   {guide.threads
                     .filter((item) => !guide.folderFilter || item.folderId === guide.folderFilter)
                     .filter((item) => item.title.toLowerCase().includes(guide.threadQuery.toLowerCase()))
-                    .map((item) => {
-                      const last = item.messages[item.messages.length - 1];
-                      return (
-                      <button
-                        key={item.id}
-                        type="button"
-                        className={item.id === guide.thread?.id ? "is-on" : ""}
-                        onClick={() => guide.openThread(item.id)}
-                      >
-                        <span>
+                    .map((item) => (
+                      <div key={item.id} className={`guide-rail__thread${item.id === guide.thread?.id ? " is-on" : ""}`}>
+                        <button type="button" className="guide-rail__thread-open" onClick={() => guide.openThread(item.id)}>
                           <strong>{item.title}</strong>
                           <em>{relativeDay(item.updatedAt)}</em>
-                          {last?.content ? <b>{last.content}</b> : null}
-                        </span>
-                        <X
-                          size={12}
-                          aria-label="Eliminar conversación"
+                        </button>
+                        <button
+                          type="button"
+                          className="guide-rail__more"
+                          aria-label="Acciones de conversación"
+                          aria-expanded={threadMenu === item.id}
                           onClick={(event) => {
                             event.stopPropagation();
-                            guide.deleteThread(item.id);
+                            setThreadMenu((current) => (current === item.id ? null : item.id));
                           }}
-                        />
-                      </button>
-                      );
-                    })}
+                        >
+                          <MoreVertical size={14} strokeWidth={1.8} />
+                        </button>
+                        {threadMenu === item.id ? (
+                          <div className="guide-rail__menu" role="menu">
+                            <button type="button" role="menuitem" onClick={() => setThreadMenu(null)}>
+                              <Save size={13} strokeWidth={1.8} />
+                              Guardar
+                            </button>
+                            <button type="button" role="menuitem" onClick={() => setThreadMenu(null)}>
+                              <Heart size={13} strokeWidth={1.8} />
+                              Favorito
+                            </button>
+                            <button
+                              type="button"
+                              role="menuitem"
+                              onClick={() => {
+                                setThreadMenu(null);
+                                guide.deleteThread(item.id);
+                              }}
+                            >
+                              <Trash2 size={13} strokeWidth={1.8} />
+                              Eliminar
+                            </button>
+                          </div>
+                        ) : null}
+                      </div>
+                    ))}
                 </div>
+                <button type="button" className="guide-rail__new" onClick={guide.newConversation}>
+                  <SquarePen size={15} strokeWidth={1.8} />
+                  Nuevo chat
+                </button>
                 <div className="guide-rail__user" ref={settingsRef}>
                   <span className="guide-rail__avatar" aria-hidden="true">
                     {(user?.name?.trim().charAt(0) || "U").toUpperCase()}
@@ -401,7 +637,7 @@ export function GuideHost() {
                     aria-expanded={settingsOpen}
                     onClick={() => setSettingsOpen((open) => !open)}
                   >
-                    <Settings size={13} strokeWidth={1.8} />
+                    <Settings size={18} strokeWidth={1.8} />
                   </button>
                   {settingsOpen ? (
                     <div className="guide-settings" role="menu" aria-label="Opciones del chat">

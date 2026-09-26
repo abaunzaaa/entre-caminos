@@ -40,8 +40,9 @@ export type GuideContextValue = {
   persistPlan: (plan: NonNullable<GuideStoredMessage["plan"]>) => void;
   setThreadQuery: (value: string) => void;
   setFolderFilter: (id?: string) => void;
-  createFolder: (name: string) => void;
+  createFolder: (name: string, icon?: string) => void;
   renameFolder: (id: string, name: string) => void;
+  setFolderIcon: (id: string, icon: string) => void;
   deleteFolder: (id: string) => void;
   assignThreadFolder: (threadId: string, folderId?: string) => void;
 };

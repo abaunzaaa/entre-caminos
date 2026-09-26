@@ -337,11 +337,14 @@ export function GuideProvider({ children }: { children: ReactNode }) {
       },
       setThreadQuery,
       setFolderFilter,
-      createFolder: (name) => {
+      createFolder: (name, icon) => {
         if (!user) {
           return;
         }
-        const next = [...folders, { id: newFolderId(), name: name.trim() || "Nueva carpeta" }].slice(0, 16);
+        const next = [
+          ...folders,
+          { id: newFolderId(), name: name.trim() || "Nueva carpeta", icon: icon || "folder" },
+        ].slice(0, 16);
         setFolders(next);
         saveFolders(user.id, next);
       },
@@ -350,6 +353,14 @@ export function GuideProvider({ children }: { children: ReactNode }) {
           return;
         }
         const next = folders.map((item) => (item.id === id ? { ...item, name } : item));
+        setFolders(next);
+        saveFolders(user.id, next);
+      },
+      setFolderIcon: (id, icon) => {
+        if (!user) {
+          return;
+        }
+        const next = folders.map((item) => (item.id === id ? { ...item, icon } : item));
         setFolders(next);
         saveFolders(user.id, next);
       },

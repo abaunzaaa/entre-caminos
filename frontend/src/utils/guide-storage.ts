@@ -47,6 +47,7 @@ export type GuideThread = {
 export type GuideFolder = {
   id: string;
   name: string;
+  icon?: string;
 };
 
 function key(userId: string) {
@@ -66,10 +67,10 @@ function plansKey(userId: string) {
 }
 
 const DEFAULT_FOLDERS: GuideFolder[] = [
-  { id: "f_planes", name: "Mis planes" },
-  { id: "f_destinos", name: "Destinos" },
-  { id: "f_favoritas", name: "Experiencias favoritas" },
-  { id: "f_ideas", name: "Ideas de viaje" },
+  { id: "f_planes", name: "Mis planes", icon: "folder" },
+  { id: "f_destinos", name: "Destinos", icon: "map" },
+  { id: "f_favoritas", name: "Experiencias favoritas", icon: "heart" },
+  { id: "f_ideas", name: "Ideas de viaje", icon: "plane" },
 ];
 
 export function loadFolders(userId: string): GuideFolder[] {
