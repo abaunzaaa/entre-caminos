@@ -2,7 +2,8 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { FeaturedMenuSelect } from "../../components/admin/FeaturedFieldControls";
-import { SuccessConfirm } from "../../components/feedback/SuccessConfirm";
+import { AuthKeyIcon } from "../../components/auth/AuthKeyIcon";
+import { SuccessConfirmDialog } from "../../components/ui/SuccessConfirmDialog";
 import { Button } from "../../components/ui/Button";
 import {
   featureExperience,
@@ -26,6 +27,7 @@ import reviewsIcon from "../../assets/icons/metrics/reviews.svg";
 import ratingIcon from "../../assets/icons/metrics/rating.svg";
 import trendingIcon from "../../assets/icons/metrics/trending.svg";
 import "../../styles/admin-featured.css";
+import "../../styles/auth-recovery-modal.css";
 
 type HighlightMode = "metrics" | "editorial";
 
@@ -201,6 +203,7 @@ function SuperAdminFeaturedPage() {
   const [catalogCategories, setCatalogCategories] = useState<string[]>([]);
   const [editorialIds, setEditorialIds] = useState<string[]>([]);
   const [limitOpen, setLimitOpen] = useState(false);
+  const [featuredSaved, setFeaturedSaved] = useState(false);
   const [editorialQuery, setEditorialQuery] = useState("");
   const [editorialCategory, setEditorialCategory] = useState("");
   const [error, setError] = useState("");
@@ -375,6 +378,7 @@ function SuperAdminFeaturedPage() {
       }
       setFeatured(await getAdminFeaturedExperiences());
       setEditorialIds([]);
+      setFeaturedSaved(true);
     } catch (err) {
       setError(getApiErrorMessage(err, "No se pudo destacar la experiencia"));
     } finally {
@@ -427,13 +431,25 @@ function SuperAdminFeaturedPage() {
     <section className="featured-admin">
 
       {error ? <p className="featured-admin__error">{error}</p> : null}
-      <SuccessConfirm
+      <SuccessConfirmDialog
         open={limitOpen}
-        showIcon={false}
-        title="Límite de selección"
-        text="Puedes seleccionar hasta un máximo de 5 experiencias."
-        actionLabel="Aceptar"
+        className="contact-success--subtle"
+        icon={<AuthKeyIcon className="auth-reset-success__mark" />}
+        title="Máximo de experiencias alcanzado"
+        description="Solo puedes seleccionar hasta 5 experiencias destacadas."
+        actionLabel="Entendido"
+        initialFocus="action"
         onClose={() => setLimitOpen(false)}
+      />
+      <SuccessConfirmDialog
+        open={featuredSaved}
+        className="contact-success--subtle"
+        icon={<AuthKeyIcon className="auth-reset-success__mark" />}
+        title="Experiencias destacadas exitosamente"
+        description="Las experiencias seleccionadas ahora hacen parte de las experiencias destacadas."
+        actionLabel="Aceptar"
+        initialFocus="action"
+        onClose={() => setFeaturedSaved(false)}
       />
 
       <section className="featured-admin__finder" aria-labelledby="featured-finder-title">
@@ -524,7 +540,7 @@ function SuperAdminFeaturedPage() {
                 })
               )}
             </div>
-            <Button type="submit" disabled={saving || editorialIds.length === 0}>
+            <Button type="submit" className="featured-admin__submit" disabled={saving || editorialIds.length === 0}>
               Destacar
             </Button>
           </form>

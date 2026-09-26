@@ -2,9 +2,44 @@ import type { ExperienceStatus } from "@prisma/client";
 import type { Request, Response } from "express";
 import * as experienceService from "../services/experience.service.js";
 import { listCoverFeaturedExperiences, recordDetailView } from "../services/featured-experience.service.js";
+import { listPublicCatalogPage } from "../services/public-catalog.js";
 import { parseLimitQuery, parseOffsetQuery } from "../utils/query.js";
 
+function queryText(value: unknown, max = 80) {
+  const raw = Array.isArray(value) ? value[0] : value;
+  if (typeof raw !== "string") {
+    return "";
+  }
+  return raw.trim().slice(0, max);
+}
+
+function queryPage(value: unknown) {
+  const raw = Array.isArray(value) ? value[0] : value;
+  const parsed = Number(raw);
+  if (!Number.isInteger(parsed) || parsed < 1) {
+    return 1;
+  }
+  return parsed;
+}
+
 export async function listPublic(req: Request, res: Response) {
+  const pageRequested = req.query.page != null && String(req.query.page).trim() !== "";
+  if (pageRequested) {
+    const limit = parseLimitQuery(req.query.limit, 100) ?? 8;
+    const data = await listPublicCatalogPage({
+      page: queryPage(req.query.page),
+      limit,
+      q: queryText(req.query.q),
+      city: queryText(req.query.city),
+      categoryId: queryText(req.query.categoryId),
+      price: queryText(req.query.price),
+      duration: queryText(req.query.duration),
+      plan: queryText(req.query.plan),
+      sort: req.query.sort === "oldest" ? "oldest" : "newest",
+    });
+    return res.json({ success: true, data });
+  }
+
   const take = parseLimitQuery(req.query.limit, 100);
   const skip = take != null ? parseOffsetQuery(req.query.offset) : undefined;
   const { experiences, total } = await experienceService.listPublicExperiences({

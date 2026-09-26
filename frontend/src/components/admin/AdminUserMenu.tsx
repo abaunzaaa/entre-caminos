@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Camera, KeyRound, LogOut, UserRoundPen } from "lucide-react";
 import { Button } from "../ui/Button";
 import { useAuth } from "../../hooks/useAuth";
+import { formatPersonName } from "../../utils/person-name";
 import type { PublicUser } from "../../types";
 import {
   ADMIN_AVATAR_EVENT,
@@ -64,7 +65,9 @@ export function AdminUserMenu({
   const rootRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pickingRef = useRef(false);
-  const fullName = user?.name?.trim() || (user?.role === "USER" ? "Explorador" : "Administrador");
+  const storedName = user?.name?.trim() ?? "";
+  const visibleName = storedName ? (user?.role === "USER" ? formatPersonName(storedName) : storedName) : "";
+  const fullName = visibleName || (user?.role === "USER" ? "Explorador" : "Administrador");
   const firstName = fullName.split(/\s+/)[0] || "Admin";
   const initial = firstName.charAt(0).toUpperCase();
   const profilePath = user?.role === "USER" ? "/onboarding" : "/admin/perfil";

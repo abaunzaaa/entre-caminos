@@ -267,6 +267,8 @@ function FilterSegment({ label, valueLabel, open, onToggle, children, wide, alig
 
 type ExplorerDiscoverFiltersProps = {
   experiences: Experience[];
+  cityOptions?: string[];
+  categoryOptions?: Array<{ id: string; name: string }>;
   value: DiscoverFiltersState;
   onChange: (next: DiscoverFiltersState) => void;
   searchDraft: string;
@@ -278,6 +280,8 @@ type ExplorerDiscoverFiltersProps = {
 
 export function ExplorerDiscoverFilters({
   experiences,
+  cityOptions,
+  categoryOptions,
   value,
   onChange,
   searchDraft,
@@ -309,6 +313,9 @@ export function ExplorerDiscoverFilters({
   }, []);
 
   const cities = useMemo(() => {
+    if (cityOptions) {
+      return cityOptions;
+    }
     const set = new Set<string>();
     for (const experience of experiences) {
       const city = parseStoredLocation(experience.location || "").municipality.trim();
@@ -317,9 +324,12 @@ export function ExplorerDiscoverFilters({
       }
     }
     return [...set].sort((a, b) => a.localeCompare(b, "es"));
-  }, [experiences]);
+  }, [cityOptions, experiences]);
 
   const categories = useMemo(() => {
+    if (categoryOptions) {
+      return categoryOptions;
+    }
     const map = new Map<string, string>();
     for (const experience of experiences) {
       if (experience.categoryId) {
@@ -329,7 +339,7 @@ export function ExplorerDiscoverFilters({
     return [...map.entries()]
       .map(([id, name]) => ({ id, name }))
       .sort((a, b) => a.name.localeCompare(b.name, "es"));
-  }, [experiences]);
+  }, [categoryOptions, experiences]);
 
   function patch(partial: Partial<DiscoverFiltersState>) {
     onChange({ ...value, ...partial });

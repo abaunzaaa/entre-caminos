@@ -78,19 +78,56 @@ export async function getRecommendedExperiences() {
   return data.data;
 }
 
-export async function getPublicExperiences(options?: { limit?: number; offset?: number }) {
-  const { data } = await api.get<
-    ApiResponse<{ experiences: Experience[]; total: number; hasMore: boolean }>
-  >("/experiences", {
-    params:
-      options?.limit != null
+export async function getPublicExperiences(options?: {
+  limit?: number;
+  offset?: number;
+  page?: number;
+  q?: string;
+  city?: string;
+  categoryId?: string;
+  price?: string;
+  duration?: string;
+  plan?: string;
+  sort?: "newest" | "oldest";
+}) {
+  const params =
+    options?.page != null
+      ? {
+          page: options.page,
+          limit: options.limit ?? 8,
+          q: options.q || undefined,
+          city: options.city || undefined,
+          categoryId: options.categoryId || undefined,
+          price: options.price || undefined,
+          duration: options.duration || undefined,
+          plan: options.plan || undefined,
+          sort: options.sort,
+        }
+      : options?.limit != null
         ? { limit: options.limit, offset: options.offset ?? 0 }
-        : undefined,
-  });
+        : undefined;
+  const { data } = await api.get<
+    ApiResponse<{
+      experiences: Experience[];
+      total: number;
+      hasMore: boolean;
+      page?: number;
+      limit?: number;
+      pageCount?: number;
+      cities?: string[];
+      categories?: Array<{ id: string; name: string }>;
+    }>
+  >("/experiences", { params });
+  const total = data.data.total ?? data.data.experiences.length;
+  const limit = data.data.limit ?? options?.limit;
   return {
     experiences: data.data.experiences,
-    total: data.data.total ?? data.data.experiences.length,
+    total,
     hasMore: Boolean(data.data.hasMore),
+    page: data.data.page ?? options?.page ?? 1,
+    pageCount: data.data.pageCount ?? (limit ? Math.ceil(total / limit) : 1),
+    cities: data.data.cities ?? [],
+    categories: data.data.categories ?? [],
   };
 }
 
