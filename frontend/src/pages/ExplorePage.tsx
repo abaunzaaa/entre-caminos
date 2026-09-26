@@ -9,12 +9,10 @@ import {
 import { ExplorerRecommendedSection } from "../components/explorer/ExplorerRecommendedSection";
 import { TouristHomeHero } from "../components/explorer/TouristHomeHero";
 import { experienceCoverUrl } from "../components/explorer/explorer-media";
-import { useAuth } from "../hooks/useAuth";
 import { useGuide } from "../components/guide/GuideContext";
+import { useAuth } from "../hooks/useAuth";
 import avionIcon from "../assets/avion-icon.png";
 import camIcon from "../assets/cam-icon.png";
-import avionIcon from "../assets/avion-icon.png";
-import { useAuth } from "../hooks/useAuth";
 import { getCoverFeaturedExperiences, getPublicExperiences, getRecommendedExperiences } from "../services/catalog.service";
 import { formatDepartmentMunicipality } from "../data/colombia-locations";
 import type { Experience } from "../types";
@@ -27,6 +25,7 @@ const PAGE_SIZE = 8;
 export function ExplorePage() {
   const { user } = useAuth();
   const guide = useGuide();
+  const interestKey = user?.profile?.interests?.slice().sort().join("|") ?? "";
   const [experiences, setExperiences] = useState<Experience[]>([]);
   const [coverFeatured, setCoverFeatured] = useState<Experience[]>([]);
   const [recommended, setRecommended] = useState<Experience[]>([]);
