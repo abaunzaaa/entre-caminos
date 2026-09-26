@@ -36,11 +36,11 @@ export async function getAdminFeaturedExperiences() {
 }
 
 export async function generateFeaturedExperiences(criterion: FeaturedRankingCriterion, limit = 10) {
-  const { data } = await api.post<ApiResponse<{ experiences: FeaturedExperienceCard[] }>>(
-    "/admin/featured-experiences/generate",
-    { criterion, limit },
-  );
-  return data.data.experiences;
+  await api.post("/admin/featured-experiences/generate", { criterion, limit });
+}
+
+export async function saveEditorialFeatured(experienceIds: string[]) {
+  await api.post("/admin/featured-experiences/selection", { experienceIds });
 }
 
 export async function featureExperience(

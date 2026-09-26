@@ -20,15 +20,22 @@ export async function list(_req: Request, res: Response) {
 }
 
 export async function generate(req: Request, res: Response) {
-  const experiences = await featuredService.generateFeaturedFromRanking(
+  await featuredService.generateFeaturedFromRanking(
     req.user!,
     req.body.criterion,
     req.body.limit ?? 5,
   );
   return res.status(201).json({
     success: true,
-    message: "Destacadas generadas por métricas",
-    data: { experiences },
+    message: "Las experiencias han sido destacadas exitosamente",
+  });
+}
+
+export async function saveSelection(req: Request, res: Response) {
+  await featuredService.saveEditorialFeatured(req.user!, req.body.experienceIds);
+  return res.status(200).json({
+    success: true,
+    message: "Las experiencias han sido destacadas exitosamente",
   });
 }
 

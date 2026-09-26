@@ -328,7 +328,6 @@ export async function generateFeaturedFromRanking(
     entity: "Experience",
     entityId: selectedIds[0] ?? "featured",
   });
-  return listAdminFeaturedExperiences();
 }
 
 export async function listAdminFeaturedExperiences() {
@@ -340,6 +339,89 @@ export async function listAdminFeaturedExperiences() {
   });
   const maps = await loadMetricMaps(experiences.map((item) => item.id));
   return experiences.map((experience) => toAdminCard(experience, metricsFor(experience.id, maps)));
+}
+
+function primaryCategoryId(experience: {
+  categoryId: string;
+  experienceCategories: Array<{ categoryId: string }>;
+}) {
+  return experience.experienceCategories[0]?.categoryId || experience.categoryId;
+}
+
+/** Reemplaza el conjunto destacado editorial en una transacción, sin métricas ni tarjetas. */
+export async function saveEditorialFeatured(actor: AuthUser, experienceIds: string[]) {
+  const ids = [...new Set(experienceIds)];
+  if (ids.length !== experienceIds.length) {
+    throw ApiError.unprocessable("Cada experiencia solo puede destacarse una vez");
+  }
+  if (ids.length < 1 || ids.length > FEATURED_PUBLIC_LIMIT) {
+    throw ApiError.unprocessable("Puedes destacar entre 1 y 5 experiencias");
+  }
+
+  const rows = await prisma.experience.findMany({
+    where: { id: { in: ids } },
+    select: {
+      id: true,
+      status: true,
+      categoryId: true,
+      experienceCategories: {
+        orderBy: { position: "asc" },
+        select: { categoryId: true },
+        take: 1,
+      },
+    },
+  });
+  if (rows.length !== ids.length) {
+    throw ApiError.notFound("Experiencia no encontrada");
+  }
+  const byId = new Map(rows.map((row) => [row.id, row]));
+  const ordered = ids.map((id) => byId.get(id)!);
+  for (const row of ordered) {
+    assertPublished(row.status);
+  }
+  const primaryCategories = new Set<string>();
+  for (const row of ordered) {
+    const primary = primaryCategoryId(row);
+    if (primaryCategories.has(primary)) {
+      throw ApiError.unprocessable(
+        "Solo puedes seleccionar una experiencia por categoría principal. Elige una experiencia con otra categoría para continuar.",
+      );
+    }
+    primaryCategories.add(primary);
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.experience.updateMany({
+      where: {
+        isFeatured: true,
+        id: { notIn: ids },
+      },
+      data: {
+        isFeatured: false,
+        featuredOrder: null,
+        featuredFrom: null,
+        featuredUntil: null,
+      },
+    });
+    for (const [index, id] of ids.entries()) {
+      await tx.experience.update({
+        where: { id },
+        data: {
+          isFeatured: true,
+          featuredOrder: index + 1,
+          featuredFrom: null,
+          featuredUntil: null,
+        },
+      });
+    }
+  });
+
+  await recordAudit({
+    userId: actor.id,
+    action: "FEATURE_EXPERIENCE",
+    entity: "Experience",
+    entityId: ids[0] ?? "featured",
+  });
 }
 
 function assertPublished(status: ExperienceStatus) {

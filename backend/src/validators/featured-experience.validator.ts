@@ -27,6 +27,10 @@ export const generateFeaturedSchema = z.object({
   limit: z.number().int().min(1).max(5).optional(),
 });
 
+export const editorialFeaturedSchema = z.object({
+  experienceIds: z.array(z.string().uuid()).min(1).max(5),
+});
+
 export const featureExperienceSchema = z.object({
   featuredOrder: z.number().int().min(0).max(999).nullable().optional(),
   featuredFrom: optionalDate,

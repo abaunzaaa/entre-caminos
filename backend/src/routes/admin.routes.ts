@@ -18,6 +18,7 @@ import {
   updateAdminSchema,
 } from "../validators/admin.validator.js";
 import {
+  editorialFeaturedSchema,
   featureExperienceSchema,
   featuredOrderSchema,
   featuredRankingQuerySchema,
@@ -118,6 +119,12 @@ adminRouter.post(
   roleMiddleware([ROLES.SUPER_ADMIN]),
   validate(generateFeaturedSchema),
   asyncHandler(featuredController.generate),
+);
+adminRouter.post(
+  "/featured-experiences/selection",
+  roleMiddleware([ROLES.SUPER_ADMIN]),
+  validate(editorialFeaturedSchema),
+  asyncHandler(featuredController.saveSelection),
 );
 adminRouter.post(
   "/featured-experiences/:id",

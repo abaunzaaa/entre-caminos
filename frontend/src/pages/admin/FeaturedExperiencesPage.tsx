@@ -6,8 +6,8 @@ import { AuthKeyIcon } from "../../components/auth/AuthKeyIcon";
 import { SuccessConfirmDialog } from "../../components/ui/SuccessConfirmDialog";
 import { Button } from "../../components/ui/Button";
 import {
-  featureExperience,
   generateFeaturedExperiences,
+  saveEditorialFeatured,
   getAdminExperiences,
   getAdminFeaturedExperiences,
   getFeaturedRanking,
@@ -329,6 +329,12 @@ function SuperAdminFeaturedPage() {
     });
   }, [editorialCategory, editorialOptions, editorialQuery]);
 
+  function refreshFeatured() {
+    return getAdminFeaturedExperiences()
+      .then((items) => setFeatured(items))
+      .catch((err) => setError(getApiErrorMessage(err, "No se pudieron actualizar las destacadas")));
+  }
+
   async function onGenerate(event: FormEvent) {
     event.preventDefault();
     const limit = Number(count);
@@ -339,8 +345,9 @@ function SuperAdminFeaturedPage() {
     setSaving(true);
     setError("");
     try {
-      setFeatured(await generateFeaturedExperiences(criterion, limit));
+      await generateFeaturedExperiences(criterion, limit);
       setFeaturedSaved("metrics");
+      void refreshFeatured();
     } catch (err) {
       setError(getApiErrorMessage(err, "No se pudieron generar las destacadas"));
     } finally {
@@ -387,18 +394,10 @@ function SuperAdminFeaturedPage() {
     setSaving(true);
     setError("");
     try {
-      for (const [index, id] of editorialIds.entries()) {
-        await featureExperience(id, { featuredOrder: index + 1, featuredFrom: null, featuredUntil: null });
-      }
-      const selected = new Set(editorialIds);
-      for (const card of featured) {
-        if (!selected.has(card.experience.id)) {
-          await unfeatureExperience(card.experience.id);
-        }
-      }
-      setFeatured(await getAdminFeaturedExperiences());
+      await saveEditorialFeatured(editorialIds);
       setEditorialIds([]);
       setFeaturedSaved("editorial");
+      void refreshFeatured();
     } catch (err) {
       setError(getApiErrorMessage(err, "No se pudo destacar la experiencia"));
     } finally {
