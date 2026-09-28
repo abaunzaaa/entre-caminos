@@ -322,3 +322,12 @@ export async function uploadImage(file: File) {
   });
   return data.data.url as string;
 }
+
+export async function uploadStampImage(file: File) {
+  const form = new FormData();
+  form.append("image", file);
+  const { data } = await api.post("/uploads/stamp", form, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return data.data.url as string;
+}

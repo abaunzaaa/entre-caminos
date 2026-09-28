@@ -97,6 +97,18 @@ export async function persistExperienceImage(file?: Express.Multer.File): Promis
   return stored.url;
 }
 
+const STAMP_TYPES = ["image/png", "image/webp"];
+
+export async function persistExperienceStamp(file: Express.Multer.File): Promise<StoredImage> {
+  if (!STAMP_TYPES.includes(file.mimetype)) {
+    throw ApiError.badRequest("La estampita debe ser PNG o WEBP, con fondo transparente.");
+  }
+  if (file.size > MAX_BYTES) {
+    throw ApiError.badRequest("La imagen no puede superar 5 MB.");
+  }
+  return persistImage(file, "entre-caminos/experience-stamps");
+}
+
 /** Sube un JPEG local a Cloudinary (catálogo). Falla si Cloudinary no está en .env. */
 export async function persistExperienceJpegFromDisk(filePath: string, originalname: string): Promise<string> {
   if (!cloudinaryConfigured()) {

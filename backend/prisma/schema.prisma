@@ -162,6 +162,7 @@ model Experience {
   howToGetThere   String?          @map("how_to_get_there")
   imageUrl        String?          @map("image_url")
   imageUrls       String[]         @default([]) @map("image_urls")
+  stampImageUrl   String?          @map("stamp_image_url")
   status          ExperienceStatus @default(PENDING)
   createdBy       String           @map("created_by")
   submittedAt     DateTime?        @map("submitted_at")

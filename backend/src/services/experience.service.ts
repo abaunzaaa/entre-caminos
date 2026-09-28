@@ -45,6 +45,7 @@ const experienceListSelect = {
   howToGetThere: true,
   imageUrl: true,
   imageUrls: true,
+  stampImageUrl: true,
   status: true,
   createdBy: true,
   submittedAt: true,
@@ -221,6 +222,7 @@ export async function createExperience(
     howToGetThere?: string | null;
     imageUrl?: string | null;
     imageUrls?: string[];
+    stampImageUrl?: string | null;
     status?: ExperienceStatus;
   },
 ) {
@@ -257,6 +259,7 @@ export async function createExperience(
       howToGetThere: input.howToGetThere ?? null,
       imageUrl: gallery.imageUrl,
       imageUrls: gallery.imageUrls,
+      stampImageUrl: input.stampImageUrl ?? null,
       status,
       createdBy: actor.id,
       submittedAt,
@@ -304,6 +307,7 @@ function pickExperienceUpdate(input: Prisma.ExperienceUncheckedUpdateInput) {
     "howToGetThere",
     "imageUrl",
     "imageUrls",
+    "stampImageUrl",
   ] as const;
   for (const key of keys) {
     if (input[key] !== undefined) {

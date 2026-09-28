@@ -2,6 +2,7 @@ import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "re
 import { useNavigate, useParams } from "react-router-dom";
 import { ChevronDown, Clock, ImagePlus, MapPin, Plus, X } from "lucide-react";
 import { ExperienceLocationMap } from "../../components/admin/ExperienceLocationMap";
+import { ExperienceStampField } from "../../components/admin/ExperienceStampField";
 import { AuthKeyIcon } from "../../components/auth/AuthKeyIcon";
 import { SuccessConfirm } from "../../components/feedback/SuccessConfirm";
 import { Button } from "../../components/ui/Button";
@@ -307,6 +308,7 @@ export function ExperienceFormPage() {
   const [createdPendingReview, setCreatedPendingReview] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [stampImageUrl, setStampImageUrl] = useState<string | null>(null);
   const [status, setStatus] = useState<ExperienceStatus>("PENDING");
   const canSavePublished = !id || canEditExperience(status, hasPermission, user?.role);
   const [rejectionReason, setRejectionReason] = useState("");
@@ -405,6 +407,7 @@ export function ExperienceFormPage() {
           setGeocodeStatus(experience.latitude && experience.longitude ? "manual" : "idle");
           setGeocodedLabel("");
           setImageUrls(experienceImages(experience));
+          setStampImageUrl(experience.stampImageUrl ?? null);
           setStatus(experience.status);
           setRejectionReason(experience.rejectionReason ?? "");
         })
@@ -613,6 +616,7 @@ export function ExperienceFormPage() {
       howToGetThere: howToGetThere.trim() || null,
       imageUrl: imageUrls[0] || null,
       imageUrls,
+      stampImageUrl,
     };
     try {
       setSaving(true);
@@ -1087,6 +1091,12 @@ export function ExperienceFormPage() {
                 }}
               />
             </div>
+            <ExperienceStampField
+              value={stampImageUrl}
+              disabled={saving || uploading}
+              onChange={setStampImageUrl}
+              onError={(message) => setError(message)}
+            />
             <div className="dash-exps-form__grid">
               <label className="dash-exps-duration">
                 <span className="dash-exps-duration__label">Precio de la experiencia</span>
