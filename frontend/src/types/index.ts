@@ -91,6 +91,7 @@ export type Experience = {
   howToGetThere?: string | null;
   imageUrl: string | null;
   imageUrls?: string[];
+  stampImageUrl?: string | null;
   status: ExperienceStatus;
   createdBy: string;
   submittedAt?: string | null;

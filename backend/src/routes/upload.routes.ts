@@ -20,3 +20,11 @@ uploadRouter.post(
   upload.single("image"),
   asyncHandler(uploadController.uploadImage),
 );
+
+uploadRouter.post(
+  "/stamp",
+  authMiddleware,
+  permissionMiddleware(PERMISSIONS.EXPERIENCES_MANAGE),
+  upload.single("image"),
+  asyncHandler(uploadController.uploadStamp),
+);

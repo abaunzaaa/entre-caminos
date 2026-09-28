@@ -137,6 +137,7 @@ const experienceFields = z.object({
   ),
   imageUrl: imageUrlValue.optional().nullable(),
   imageUrls: z.array(imageUrlValue).max(12).optional(),
+  stampImageUrl: imageUrlValue.optional().nullable(),
   status: experienceStatus.optional(),
 });
 
