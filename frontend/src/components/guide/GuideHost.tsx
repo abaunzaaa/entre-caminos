@@ -35,7 +35,6 @@ import {
   UtensilsCrossed,
   Users,
   RefreshCw,
-  Save,
   Search,
   Send,
   Settings,
@@ -198,6 +197,17 @@ function loadVotes(): Record<string, "up" | "down"> {
 
 function saveVotes(votes: Record<string, "up" | "down">) {
   window.localStorage.setItem(VOTES_KEY, JSON.stringify(votes));
+}
+
+function experienceIdForPlanStop(
+  title: string,
+  experiences: Array<{ id: string; title: string }> | undefined,
+) {
+  const key = title.trim().toLocaleLowerCase("es");
+  if (!key) {
+    return null;
+  }
+  return experiences?.find((item) => item.title.trim().toLocaleLowerCase("es") === key)?.id ?? null;
 }
 
 export function GuideHost() {
@@ -1526,29 +1536,40 @@ export function GuideHost() {
                                         subtitle: message.plan?.city ?? "",
                                         imageUrl: null,
                                       }))
-                                  ).map((stop) => (
+                                  ).map((stop) => {
+                                    const experienceId = experienceIdForPlanStop(stop.title, message.experiences);
+                                    const stopBody = (
+                                      <>
+                                        <span>{stop.time}</span>
+                                        {stop.imageUrl ? <img src={mediaUrl(stop.imageUrl, 80)} alt="" /> : <i aria-hidden="true" />}
+                                        <div>
+                                          <strong>{stop.title}</strong>
+                                          <p>{stop.subtitle}</p>
+                                        </div>
+                                      </>
+                                    );
+                                    return (
                                     <li key={`${stop.time}-${stop.title}`}>
-                                      <span>{stop.time}</span>
-                                      {stop.imageUrl ? <img src={mediaUrl(stop.imageUrl, 80)} alt="" /> : <i />}
-                                      <div>
-                                        <strong>{stop.title}</strong>
-                                        <p>{stop.subtitle}</p>
-                                      </div>
+                                      {experienceId ? (
+                                        <Link
+                                          className="guide-plan__stop"
+                                          to={`/explorar/${experienceId}`}
+                                          onClick={guide.minimizeGuide}
+                                        >
+                                          {stopBody}
+                                        </Link>
+                                      ) : (
+                                        <div className="guide-plan__stop">{stopBody}</div>
+                                      )}
                                     </li>
-                                  ))}
+                                    );
+                                  })}
                                 </ol>
                               ) : null}
                               <div className="guide-plan__actions">
-                                <button type="button" className="is-solid" onClick={() => setPlanOpen(true)}>
-                                  Ver plan completo
-                                </button>
                                 <button type="button" onClick={() => void guide.send("Modifica este plan")}>
                                   <Pencil size={13} />
                                   Modificar
-                                </button>
-                                <button type="button" onClick={() => guide.persistPlan(message.plan!)}>
-                                  <Save size={13} />
-                                  Guardar
                                 </button>
                                 <button type="button" onClick={() => sharePlan(message.plan!)}>
                                   <Share2 size={13} />

@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { ExperienceEditorialView } from "../components/admin/ExperienceEditorialView";
 import { useGuide } from "../components/guide/GuideContext";
 import { useAuth } from "../hooks/useAuth";
-import { getPublicExperience, getPublicExperiences } from "../services/catalog.service";
+import { getPublicExperience, getPublicExperiences, recordExperienceView } from "../services/catalog.service";
 import type { Experience } from "../types";
 import "../styles/admin-ui.css";
 import "../styles/admin-access.css";
