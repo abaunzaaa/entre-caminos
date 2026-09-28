@@ -99,19 +99,21 @@ model User {
   createdAt               DateTime   @default(now()) @map("created_at")
   updatedAt               DateTime   @updatedAt @map("updated_at")
 
-  role                  Role                   @relation(fields: [roleId], references: [id])
-  experiences             Experience[]
-  reviewedExperiences     Experience[]         @relation("ExperienceReviewedBy")
-  reviewedCategories      Category[]           @relation("CategoryReviewedBy")
-  experienceReviews       ExperienceReview[]
-  notifications           Notification[]
-  auditLogs               AuditLog[]
-  passwordResetTokens     PasswordResetToken[]
-  emailVerificationTokens EmailVerificationToken[]
-  oauthAccounts           OAuthAccount[]
-  profile                 UserProfile?
-  conversations           Conversation[]
-  folders                 Folder[]
+  role                     Role                      @relation(fields: [roleId], references: [id])
+  experiences              Experience[]
+  reviewedExperiences      Experience[]              @relation("ExperienceReviewedBy")
+  reviewedCategories       Category[]                @relation("CategoryReviewedBy")
+  experienceReviews        ExperienceReview[]
+  notifications            Notification[]
+  auditLogs                AuditLog[]
+  passwordResetTokens      PasswordResetToken[]
+  emailVerificationTokens  EmailVerificationToken[]
+  oauthAccounts            OAuthAccount[]
+  profile                  UserProfile?
+  conversations            Conversation[]
+  folders                  Folder[]
+  experienceFavorites      ExperienceFavorite[]
+  experienceVisitorReviews ExperienceVisitorReview[]
 
   @@index([roleId])
   @@index([status])
@@ -132,9 +134,9 @@ model Category {
   createdAt       DateTime       @default(now()) @map("created_at")
   updatedAt       DateTime       @updatedAt @map("updated_at")
 
-  experiences Experience[]
+  experiences     Experience[]
   experienceLinks ExperienceCategory[]
-  reviewedBy  User?        @relation("CategoryReviewedBy", fields: [reviewedById], references: [id])
+  reviewedBy      User?                @relation("CategoryReviewedBy", fields: [reviewedById], references: [id])
 
   @@index([status])
   @@index([createdAt])
@@ -175,12 +177,15 @@ model Experience {
 
   /// Compatibilidad. Siempre es la primera categoría (experienceCategories.position = 1).
   /// La fuente principal de categorías es experienceCategories.
-  category Category            @relation(fields: [categoryId], references: [id])
-  experienceCategories ExperienceCategory[]
-  creator  User                @relation(fields: [createdBy], references: [id])
-  reviewedBy User?             @relation("ExperienceReviewedBy", fields: [reviewedById], references: [id])
-  reviews       ExperienceReview[]
-  conversations Conversation[]
+  category                 Category                  @relation(fields: [categoryId], references: [id])
+  experienceCategories     ExperienceCategory[]
+  creator                  User                      @relation(fields: [createdBy], references: [id])
+  reviewedBy               User?                     @relation("ExperienceReviewedBy", fields: [reviewedById], references: [id])
+  reviews                  ExperienceReview[]
+  conversations            Conversation[]
+  experienceDetailViews    ExperienceDetailView[]
+  experienceFavorites      ExperienceFavorite[]
+  experienceVisitorReviews ExperienceVisitorReview[]
 
   @@index([status])
   @@index([categoryId])
@@ -208,12 +213,12 @@ model ExperienceCategory {
 }
 
 model ExperienceReview {
-  id           String                    @id @default(uuid())
-  experienceId String                    @map("experience_id")
-  reviewerId   String                    @map("reviewer_id")
+  id           String                   @id @default(uuid())
+  experienceId String                   @map("experience_id")
+  reviewerId   String                   @map("reviewer_id")
   decision     ExperienceReviewDecision
   reason       String?
-  createdAt    DateTime                  @default(now()) @map("created_at")
+  createdAt    DateTime                 @default(now()) @map("created_at")
 
   experience Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
   reviewer   User       @relation(fields: [reviewerId], references: [id])

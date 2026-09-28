@@ -9,8 +9,8 @@ import {
 import { ExplorerRecommendedSection } from "../components/explorer/ExplorerRecommendedSection";
 import { TouristHomeHero } from "../components/explorer/TouristHomeHero";
 import { experienceCoverUrl } from "../components/explorer/explorer-media";
-import { useAuth } from "../hooks/useAuth";
 import { useGuide } from "../components/guide/GuideContext";
+import { useAuth } from "../hooks/useAuth";
 import avionIcon from "../assets/avion-icon.png";
 import camIcon from "../assets/cam-icon.png";
 import { getCoverFeaturedExperiences, getPublicExperiences, getRecommendedExperiences } from "../services/catalog.service";
@@ -25,7 +25,7 @@ const PAGE_SIZE = 8;
 export function ExplorePage() {
   const { user } = useAuth();
   const guide = useGuide();
-  const interestKey = user?.profile?.interests?.join("|") ?? "";
+  const interestKey = user?.profile?.interests?.slice().sort().join("|") ?? "";
   const [experiences, setExperiences] = useState<Experience[]>([]);
   const [coverFeatured, setCoverFeatured] = useState<Experience[]>([]);
   const [recommended, setRecommended] = useState<Experience[]>([]);

@@ -2721,7 +2721,8 @@ button.guide-rail__folder-row {
 .guide-xp__actions {
   display: grid;
   gap: 6px;
-  margin-top: 10px;
+  margin-top: auto;
+  padding-top: 10px;
 }
 
 .guide-xp__ghost {
@@ -2751,7 +2752,10 @@ button.guide-rail__folder-row {
 }
 
 .guide-xp {
+  display: flex;
   flex: 0 0 180px;
+  flex-direction: column;
+  align-self: stretch;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.55);
   border-radius: 18px;
@@ -2795,11 +2799,15 @@ button.guide-rail__folder-row {
 }
 
 .guide-xp__body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
   padding: 10px 10px 12px;
 }
 
 .guide-xp strong {
   display: block;
+  min-height: calc(1.25em * 2);
   font-size: 0.8rem;
   line-height: 1.25;
 }
@@ -2836,7 +2844,7 @@ button.guide-rail__folder-row {
   justify-content: center;
   gap: 6px;
   width: 100%;
-  margin-top: 10px;
+  margin-top: 0;
   padding: 8px 10px;
   border: 0;
   border-radius: 999px;
@@ -2935,10 +2943,33 @@ button.guide-rail__folder-row {
 }
 
 .guide-plan li {
+  display: block;
+}
+
+.guide-plan__stop {
   display: grid;
   grid-template-columns: 64px 36px 1fr;
   align-items: center;
   gap: 8px;
+  margin: 0 -4px;
+  padding: 6px 4px;
+  border-radius: 12px;
+  color: inherit;
+  text-decoration: none;
+}
+
+a.guide-plan__stop {
+  cursor: pointer;
+}
+
+a.guide-plan__stop:hover,
+a.guide-plan__stop:focus-visible {
+  background: rgba(33, 78, 59, 0.07);
+}
+
+a.guide-plan__stop:focus-visible {
+  outline: 2px solid #214e3b;
+  outline-offset: 1px;
 }
 
 .guide-plan li span {
