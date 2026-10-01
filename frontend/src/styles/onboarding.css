@@ -1424,22 +1424,23 @@ html.onboarding-menu-open .onboarding-footer {
 .onboarding-ready-card__icon {
   display: grid;
   place-items: center;
-  overflow: hidden;
   flex-shrink: 0;
   width: 72px;
   height: 72px;
-  padding: 10px;
-  border-radius: 18px;
-  background: #eef4f0;
-  color: var(--ob-forest);
+  padding: 0;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #e8f0eb;
+  color: #2a4943;
+  box-shadow: inset 0 1px 2px rgba(42, 73, 67, 0.06);
 }
 
 .onboarding-line-icon {
   display: block;
-  width: 100%;
-  height: 100%;
-  max-width: 50px;
-  max-height: 50px;
+  width: 38px;
+  height: 38px;
+  max-width: 40px;
+  max-height: 40px;
   object-fit: contain;
 }
 
@@ -1680,6 +1681,16 @@ html.onboarding-menu-open .onboarding-footer {
     min-height: 100dvh;
     overflow-x: hidden;
     overflow-y: auto;
+  }
+
+  .onboarding-ready-card__icon {
+    width: 64px;
+    height: 64px;
+  }
+
+  .onboarding-line-icon {
+    width: 34px;
+    height: 34px;
   }
 
   .onboarding-shell {

@@ -1,9 +1,9 @@
-import ambientes from "../../assets/onboarding/summary-ambientes.png";
-import clima from "../../assets/onboarding/summary-clima.png";
-import compania from "../../assets/onboarding/summary-compania.png";
-import intereses from "../../assets/onboarding/summary-intereses.png";
-import musica from "../../assets/onboarding/summary-musica.png";
-import presupuesto from "../../assets/onboarding/summary-presupuesto.png";
+import intereses from "../../assets/onboarding/summary-intereses.svg";
+import compania from "../../assets/onboarding/summary-compania.svg";
+import ambientes from "../../assets/onboarding/summary-ambientes.svg";
+import musica from "../../assets/onboarding/summary-musica.svg";
+import presupuesto from "../../assets/onboarding/summary-presupuesto.svg";
+import clima from "../../assets/onboarding/summary-clima.svg";
 
 function Icon({ src }: { src: string }) {
   return <img src={src} alt="" className="onboarding-line-icon" aria-hidden="true" />;
