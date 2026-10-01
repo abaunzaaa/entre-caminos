@@ -11,7 +11,6 @@ import {
   Users,
   X,
 } from "lucide-react";
-import logoMark from "../../assets/logo.png";
 import { AdminNotifications } from "../admin/AdminNotifications";
 import { AdminUserMenu } from "../admin/AdminUserMenu";
 import { useAuth } from "../../hooks/useAuth";
@@ -89,16 +88,8 @@ export function ExplorerNavbar() {
       className={`explorer-nav${isExplorer ? " explorer-nav--light" : " explorer-nav--dark"}${scrolled ? " is-scrolled" : ""}${menuOpen ? " is-open" : ""}${entered ? " is-entered" : ""}`}
     >
       <div className="explorer-nav__inner">
-        <Link to="/" className="explorer-nav__brand" aria-label="Entre Caminos">
-          <img
-            src={logoMark}
-            alt="Entre Caminos"
-            className="explorer-nav__logo"
-            width={48}
-            height={48}
-            draggable={false}
-            decoding="async"
-          />
+        <Link to="/explorar" className="explorer-nav__brand">
+          Entre caminos
         </Link>
 
         <nav className="explorer-nav__links" aria-label="Navegación del explorador">
