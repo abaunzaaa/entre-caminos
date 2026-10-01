@@ -1,10 +1,22 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
-import { ChevronLeft, ChevronRight, FolderPlus, Heart, MapPin, Search, Trash2 } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  FolderInput,
+  FolderPlus,
+  Heart,
+  MapPin,
+  Plus,
+  Search,
+  Trash2,
+  X,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import favVacia from "../../assets/fav-vacia.png";
 import heartIcon from "../../assets/heart-icon.png";
 import { useFavoriteToggle } from "../../hooks/useFavoriteToggle";
 import {
+  addExperienceToCollection,
   createFavoriteCollection,
   deleteFavoriteCollection,
   getFavoriteCollection,
@@ -30,6 +42,9 @@ type FavoritesLibraryProps = {
 
 const ALL_CATEGORY_KEY = "ver-todo";
 const PAGE_SIZE = 8;
+const COLLECTION_PAGE_SIZE_DESKTOP = 8;
+const COLLECTION_PAGE_SIZE_TABLET = 4;
+const COLLECTION_PAGE_SIZE_MOBILE = 2;
 
 function scrollCarousel(node: HTMLElement | null, direction: -1 | 1) {
   if (!node) {
@@ -39,52 +54,32 @@ function scrollCarousel(node: HTMLElement | null, direction: -1 | 1) {
   node.scrollBy({ left: direction * amount, behavior: "smooth" });
 }
 
-function FavoriteStripRemove({
+function ExperienceCardActions({
   experienceId,
   href,
   collectionId,
-  experienceTitle,
+  onMove,
   onCollectionUpdated,
 }: {
   experienceId: string;
   href: string;
   collectionId?: string;
-  experienceTitle?: string;
+  onMove?: (experienceId: string) => void;
   onCollectionUpdated?: (collection: FavoriteCollection) => void;
 }) {
   const { favorited, busy, toggle } = useFavoriteToggle(experienceId, {
     initialFavorited: true,
     loginRedirectTo: href,
-    experienceTitle,
   });
-  const [moving, setMoving] = useState(false);
+  const [removingFromCollection, setRemovingFromCollection] = useState(false);
 
   return (
-    <div className="favorites-strip__actions">
-      {collectionId ? (
-        <button
-          type="button"
-          className="favorites-strip__remove"
-          disabled={moving}
-          onClick={() => {
-            setMoving(true);
-            removeExperienceFromCollection(collectionId, experienceId)
-              .then((collection) => {
-                showFavoriteToast("Quitada de la colección");
-                onCollectionUpdated?.(collection);
-                window.dispatchEvent(new Event("ec-favorite-collections-changed"));
-              })
-              .catch(() => undefined)
-              .finally(() => setMoving(false));
-          }}
-        >
-          Quitar de esta colección
-        </button>
-      ) : null}
+    <div className="favorites-strip__toolbar" role="group" aria-label="Acciones de la experiencia">
       <button
         type="button"
-        className="favorites-strip__remove"
+        className={`favorites-strip__icon-btn${favorited ? " favorites-strip__icon-btn--fav" : ""}`}
         aria-label="Quitar de favoritos"
+        title="Quitar de favoritos"
         disabled={busy || !favorited}
         onClick={(event) => {
           event.preventDefault();
@@ -94,9 +89,48 @@ function FavoriteStripRemove({
           }
         }}
       >
-        <Heart size={12} strokeWidth={1.85} fill="none" aria-hidden="true" />
-        <span>Quitar de favoritos</span>
+        <Heart
+          size={15}
+          strokeWidth={1.85}
+          fill={favorited ? "currentColor" : "none"}
+          aria-hidden="true"
+        />
       </button>
+
+      {collectionId ? (
+        <button
+          type="button"
+          className="favorites-strip__icon-btn"
+          aria-label="Quitar de esta colección"
+          title="Quitar de esta colección"
+          disabled={removingFromCollection}
+          onClick={() => {
+            setRemovingFromCollection(true);
+            removeExperienceFromCollection(collectionId, experienceId)
+              .then((collection) => {
+                showFavoriteToast("Quitada de la colección");
+                onCollectionUpdated?.(collection);
+                window.dispatchEvent(new Event("ec-favorite-collections-changed"));
+              })
+              .catch(() => undefined)
+              .finally(() => setRemovingFromCollection(false));
+          }}
+        >
+          <Trash2 size={15} strokeWidth={1.85} aria-hidden="true" />
+        </button>
+      ) : null}
+
+      {onMove ? (
+        <button
+          type="button"
+          className="favorites-strip__icon-btn"
+          aria-label="Mover a colección"
+          title="Mover a colección"
+          onClick={() => onMove(experienceId)}
+        >
+          <FolderInput size={15} strokeWidth={1.85} aria-hidden="true" />
+        </button>
+      ) : null}
     </div>
   );
 }
@@ -120,7 +154,10 @@ function ExperienceCard({
       : "";
 
   return (
-    <article className="favorites-strip__card favorites-strip__card--grid" role="listitem">
+    <article
+      className={`favorites-strip__card favorites-strip__card--grid${collectionId ? " favorites-strip__card--in-collection" : ""}`}
+      role="listitem"
+    >
       <Link to={href} className="favorites-strip__media" aria-label={`Ver ${experience.title}`}>
         <img src={experienceCoverUrl(experience, 640)} alt="" draggable={false} decoding="async" />
       </Link>
@@ -136,16 +173,11 @@ function ExperienceCard({
         <Link to={href} className="favorites-strip__cta">
           Ver detalle
         </Link>
-        {onMove ? (
-          <button type="button" className="favorites-strip__remove" onClick={() => onMove(experience.id)}>
-            Mover a colección
-          </button>
-        ) : null}
-        <FavoriteStripRemove
+        <ExperienceCardActions
           experienceId={experience.id}
           href={href}
           collectionId={collectionId}
-          experienceTitle={experience.title}
+          onMove={onMove}
           onCollectionUpdated={onCollectionUpdated}
         />
       </div>
@@ -282,6 +314,187 @@ function CategoryCarousel({
           <ChevronRight size={18} strokeWidth={1.8} aria-hidden="true" />
         </button>
       ) : null}
+    </div>
+  );
+}
+
+function AddExperiencesToCollectionModal({
+  collection,
+  favorites,
+  onClose,
+  onAdded,
+}: {
+  collection: FavoriteCollection;
+  favorites: Experience[];
+  onClose: () => void;
+  onAdded: (collection: FavoriteCollection) => void;
+}) {
+  const [memberIds, setMemberIds] = useState<Set<string>>(new Set());
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [query, setQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setSelectedIds([]);
+    setQuery("");
+    setError("");
+    getFavoriteCollection(collection.id)
+      .then((detail) => {
+        if (cancelled) {
+          return;
+        }
+        const ids = new Set((detail.experiences ?? detail.previewExperiences).map((item) => item.id));
+        setMemberIds(ids);
+        onAdded(detail);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setMemberIds(
+            new Set((collection.experiences ?? collection.previewExperiences).map((item) => item.id)),
+          );
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [collection.id]);
+
+  const available = useMemo(() => {
+    return favorites.filter((experience) => !memberIds.has(experience.id));
+  }, [favorites, memberIds]);
+
+  const normalizedQuery = query.trim().toLocaleLowerCase("es");
+  const filtered = useMemo(() => {
+    if (!normalizedQuery) {
+      return available;
+    }
+    return available.filter((experience) =>
+      experience.title.toLocaleLowerCase("es").includes(normalizedQuery),
+    );
+  }, [available, normalizedQuery]);
+
+  async function confirmAdd() {
+    if (!selectedIds.length || saving) {
+      return;
+    }
+    setSaving(true);
+    setError("");
+    try {
+      for (const experienceId of selectedIds) {
+        await addExperienceToCollection(collection.id, experienceId);
+      }
+      const detail = await getFavoriteCollection(collection.id);
+      onAdded(detail);
+      window.dispatchEvent(new Event("ec-favorite-collections-changed"));
+      showFavoriteToast(
+        selectedIds.length === 1 ? "Experiencia agregada" : "Experiencias agregadas",
+      );
+      onClose();
+    } catch {
+      setError("No pudimos agregar las experiencias. Intenta de nuevo.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="favorite-save-modal" role="dialog" aria-modal="true" aria-labelledby="add-to-collection-title">
+      <button type="button" className="favorite-save-modal__backdrop" aria-label="Cerrar" onClick={onClose} />
+      <div className="favorite-save-modal__panel favorite-save-modal__panel--wide">
+        <button type="button" className="favorite-save-modal__close" onClick={onClose} aria-label="Cerrar">
+          <X size={16} strokeWidth={1.9} aria-hidden="true" />
+        </button>
+        <header className="favorite-save-modal__head">
+          <h2 id="add-to-collection-title" className="favorite-save-modal__title">
+            Agregar experiencias a “{collection.name}”
+          </h2>
+        </header>
+
+        {loading ? (
+          <p className="favorite-save-modal__empty">Cargando experiencias…</p>
+        ) : !available.length ? (
+          <p className="favorite-save-modal__empty">
+            Todas tus experiencias favoritas ya están en esta colección
+          </p>
+        ) : (
+          <>
+            <label className="favorites-add-modal__search">
+              <Search size={14} strokeWidth={1.8} aria-hidden="true" />
+              <input
+                type="search"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Buscar experiencia"
+                aria-label="Buscar experiencia"
+                autoComplete="off"
+                spellCheck={false}
+              />
+            </label>
+
+            <div className="favorite-save-modal__list favorites-add-modal__list">
+              {filtered.length ? (
+                filtered.map((experience) => {
+                  const checked = selectedIds.includes(experience.id);
+                  const place = municipalityLabel(experience.location) || "Colombia";
+                  return (
+                    <button
+                      key={experience.id}
+                      type="button"
+                      className={`favorite-save-modal__item${checked ? " is-on" : ""}`}
+                      onClick={() =>
+                        setSelectedIds((current) =>
+                          checked
+                            ? current.filter((id) => id !== experience.id)
+                            : [...current, experience.id],
+                        )
+                      }
+                    >
+                      <span className="favorite-save-modal__thumb">
+                        <img src={experienceCoverUrl(experience, 240)} alt="" draggable={false} />
+                      </span>
+                      <span className="favorite-save-modal__meta">
+                        <strong>{experience.title}</strong>
+                        <em>{place}</em>
+                      </span>
+                      <span className="favorite-save-modal__check" aria-hidden="true">
+                        {checked ? "✓" : ""}
+                      </span>
+                    </button>
+                  );
+                })
+              ) : (
+                <p className="favorite-save-modal__empty">No se encontraron experiencias con ese nombre</p>
+              )}
+            </div>
+          </>
+        )}
+
+        {error ? <p className="favorite-save-modal__error">{error}</p> : null}
+
+        {!loading && available.length ? (
+          <div className="favorite-save-modal__actions">
+            <button
+              type="button"
+              className="favorite-save-modal__primary"
+              disabled={saving || !selectedIds.length}
+              onClick={() => {
+                void confirmAdd();
+              }}
+            >
+              Agregar seleccionadas
+            </button>
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -425,6 +638,11 @@ export function FavoritesLibrary({ experiences }: FavoritesLibraryProps) {
   const [createError, setCreateError] = useState("");
   const [creating, setCreating] = useState(false);
   const [moveExperienceId, setMoveExperienceId] = useState<string | null>(null);
+  const [addToCollectionOpen, setAddToCollectionOpen] = useState(false);
+  const [collectionPendingDelete, setCollectionPendingDelete] = useState<FavoriteCollection | null>(null);
+  const [deletingCollection, setDeletingCollection] = useState(false);
+  const [collectionsPage, setCollectionsPage] = useState(1);
+  const [collectionPageSize, setCollectionPageSize] = useState(COLLECTION_PAGE_SIZE_DESKTOP);
 
   function upsertCollection(detail: FavoriteCollection) {
     setCollections((current) => {
@@ -451,6 +669,21 @@ export function FavoritesLibrary({ experiences }: FavoritesLibraryProps) {
       })
       .catch(() => setCollections([]));
   }
+
+  useEffect(() => {
+    function updateCollectionPageSize() {
+      if (window.matchMedia("(max-width: 640px)").matches) {
+        setCollectionPageSize(COLLECTION_PAGE_SIZE_MOBILE);
+      } else if (window.matchMedia("(max-width: 980px)").matches) {
+        setCollectionPageSize(COLLECTION_PAGE_SIZE_TABLET);
+      } else {
+        setCollectionPageSize(COLLECTION_PAGE_SIZE_DESKTOP);
+      }
+    }
+    updateCollectionPageSize();
+    window.addEventListener("resize", updateCollectionPageSize);
+    return () => window.removeEventListener("resize", updateCollectionPageSize);
+  }, []);
 
   useEffect(() => {
     loadCollections();
@@ -488,6 +721,10 @@ export function FavoritesLibrary({ experiences }: FavoritesLibraryProps) {
     setPage(1);
   }, [selectedKey, query, experiences.length]);
 
+  useEffect(() => {
+    setCollectionsPage(1);
+  }, [collections.length, collectionPageSize]);
+
   const showingAll = selectedKey === ALL_CATEGORY_KEY || !selectedKey;
   const selectedGroup = showingAll ? null : (groups.find((group) => group.key === selectedKey) ?? null);
   const normalizedQuery = query.trim().toLocaleLowerCase("es");
@@ -504,6 +741,15 @@ export function FavoritesLibrary({ experiences }: FavoritesLibraryProps) {
   const pageCount = Math.max(1, Math.ceil(filteredExperiences.length / PAGE_SIZE));
   const safePage = Math.min(page, pageCount);
   const pagedExperiences = filteredExperiences.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
+  // One slot on every page is reserved for the fixed "Crear colección" card.
+  const collectionsPerPage = Math.max(1, collectionPageSize - 1);
+  const collectionPageCount = Math.max(1, Math.ceil(collections.length / collectionsPerPage));
+  const safeCollectionsPage = Math.min(collectionsPage, collectionPageCount);
+  const pagedCollections = collections.slice(
+    (safeCollectionsPage - 1) * collectionsPerPage,
+    safeCollectionsPage * collectionsPerPage,
+  );
   const activeCollection = collections.find((item) => item.id === activeCollectionId) ?? null;
 
   if (!groups.length) {
@@ -529,58 +775,80 @@ export function FavoritesLibrary({ experiences }: FavoritesLibraryProps) {
   return (
     <div className="favorites-library__content">
       <div className="favorites-library__top">
-        <header className="favorites-library__intro">
-          <span
-            className="favorites-library__mark"
-            style={{ "--favorites-mark-mask": `url(${heartIcon})` } as CSSProperties}
-            role="img"
-            aria-hidden="true"
-          />
-          <h1 className="favorites-library__title" id="favorites-page-title">
-            Favoritos
-          </h1>
-          <p className="favorites-library__lead">Tus experiencias guardadas</p>
-          <label className="favorites-library__search">
-            <Search size={15} strokeWidth={1.8} aria-hidden="true" />
-            <input
-              type="search"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Buscar una experiencia"
-              aria-label="Buscar una experiencia"
-              autoComplete="off"
-              spellCheck={false}
+        <div className="favorites-library__top-inner">
+          <header className="favorites-library__intro">
+            <span
+              className="favorites-library__mark"
+              style={{ "--favorites-mark-mask": `url(${heartIcon})` } as CSSProperties}
+              role="img"
+              aria-hidden="true"
             />
-          </label>
-          <p className="favorites-library__hint">O selecciona las categorías en las carpetas</p>
-        </header>
+            <h1 className="favorites-library__title" id="favorites-page-title">
+              Favoritos
+            </h1>
+            <p className="favorites-library__lead">Tus experiencias guardadas</p>
+            <label className="favorites-library__search">
+              <Search size={15} strokeWidth={1.8} aria-hidden="true" />
+              <input
+                type="search"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Buscar una experiencia"
+                aria-label="Buscar una experiencia"
+                autoComplete="off"
+                spellCheck={false}
+              />
+            </label>
+            <p className="favorites-library__hint">O selecciona las categorías en las carpetas</p>
+          </header>
 
-        <CategoryCarousel
-          groups={groups}
-          selectedKey={showingAll ? ALL_CATEGORY_KEY : selectedKey}
-          totalCount={experiences.length}
-          recentImageSrcs={recentImageSrcs}
-          onSelect={(key) => {
-            setSelectedKey(key);
-            setActiveCollectionId(null);
-          }}
-        />
+          <CategoryCarousel
+            groups={groups}
+            selectedKey={showingAll ? ALL_CATEGORY_KEY : selectedKey}
+            totalCount={experiences.length}
+            recentImageSrcs={recentImageSrcs}
+            onSelect={(key) => {
+              setSelectedKey(key);
+              setActiveCollectionId(null);
+            }}
+          />
+        </div>
       </div>
 
       <section className="favorites-strip favorites-strip--grid">
-        <p className="favorites-strip__label">
-          {activeCollection ? activeCollection.name : selectedGroup ? selectedGroup.name : "Todas tus experiencias"}
-        </p>
+        {activeCollection ? (
+          <p className="favorites-strip__label">{activeCollection.name}</p>
+        ) : selectedGroup ? (
+          <p className="favorites-strip__label">{selectedGroup.name}</p>
+        ) : (
+          <header className="favorites-section-intro">
+            <h2 className="favorites-section-intro__title">Todas tus experiencias</h2>
+            <p className="favorites-section-intro__lead">Recorre tus favoritos</p>
+          </header>
+        )}
 
         {activeCollection ? (
           <>
-            <button
-              type="button"
-              className="favorites-collections__back"
-              onClick={() => setActiveCollectionId(null)}
-            >
-              ← Volver a mis colecciones
-            </button>
+            <div className="favorites-collections__view-tools">
+              <button
+                type="button"
+                className="favorites-collections__back"
+                onClick={() => {
+                  setAddToCollectionOpen(false);
+                  setActiveCollectionId(null);
+                }}
+              >
+                ← Volver a mis colecciones
+              </button>
+              <button
+                type="button"
+                className="favorites-collections__add-btn"
+                onClick={() => setAddToCollectionOpen(true)}
+              >
+                <Plus size={14} strokeWidth={1.9} aria-hidden="true" />
+                Agregar experiencias
+              </button>
+            </div>
             {!activeCollection.experiences?.length && !activeCollection.previewExperiences.length ? (
               <p className="favorites-strip__empty">Esta colección aún no tiene experiencias.</p>
             ) : (
@@ -641,34 +909,33 @@ export function FavoritesLibrary({ experiences }: FavoritesLibraryProps) {
 
       {showingAll && !activeCollection ? (
         <section className="favorites-collections">
-          <div className="favorites-collections__head">
-            <p className="favorites-strip__label">Mis colecciones</p>
-            {collections.length ? (
+          <header className="favorites-section-intro">
+            <h2 className="favorites-section-intro__title">Mis colecciones</h2>
+            <p className="favorites-section-intro__lead">Guarda y reúne tus próximos planes</p>
+          </header>
+
+          <div className="favorites-collections__grid">
+            <article className="favorites-collection-card favorites-collection-card--create">
               <button
                 type="button"
-                className="favorites-collections__create"
+                className="favorites-collection-card__main favorites-collection-card__main--create"
                 onClick={() => {
                   setCreateOpen(true);
                   setCreateError("");
                   setNewName("");
                 }}
               >
-                + Crear colección
+                <span className="favorites-collection-card__create-body">
+                  <Plus size={42} strokeWidth={1.55} aria-hidden="true" />
+                  <span>Crear colección</span>
+                </span>
               </button>
-            ) : null}
-          </div>
+            </article>
 
-          {!collections.length ? (
-            <div className="favorites-collections__empty">
-              <p>Aún no tienes colecciones</p>
-              <span>Crea una para organizar tus experiencias favoritas.</span>
-              <button type="button" className="explorer-empty__cta" onClick={() => setCreateOpen(true)}>
-                Crear colección
-              </button>
-            </div>
-          ) : (
-            <div className="favorites-collections__grid">
-              {collections.map((collection) => (
+            {pagedCollections.map((collection) => {
+              const previews = collection.previewExperiences.slice(0, 4);
+              const collageCount = Math.min(previews.length, 4);
+              return (
                 <article key={collection.id} className="favorites-collection-card">
                   <button
                     type="button"
@@ -684,17 +951,20 @@ export function FavoritesLibrary({ experiences }: FavoritesLibraryProps) {
                         .catch(() => undefined);
                     }}
                   >
-                    <span className="favorites-collection-card__stack" aria-hidden="true">
-                      {collection.previewExperiences.slice(0, 3).map((experience, index) => (
+                    <span
+                      className={`favorites-collection-card__collage favorites-collection-card__collage--${collageCount}`}
+                      aria-hidden="true"
+                    >
+                      {previews.map((experience) => (
                         <img
                           key={experience.id}
-                          src={experienceCoverUrl(experience, 320)}
+                          src={experienceCoverUrl(experience, 480)}
                           alt=""
-                          className={`favorites-collection-card__shot favorites-collection-card__shot--${index}`}
+                          className="favorites-collection-card__shot"
                           draggable={false}
                         />
                       ))}
-                      {!collection.previewExperiences.length ? (
+                      {!previews.length ? (
                         <span className="favorites-collection-card__placeholder">
                           <FolderPlus size={20} strokeWidth={1.7} />
                         </span>
@@ -711,27 +981,34 @@ export function FavoritesLibrary({ experiences }: FavoritesLibraryProps) {
                     type="button"
                     className="favorites-collection-card__delete"
                     aria-label={`Eliminar colección ${collection.name}`}
-                    onClick={() => {
-                      if (!window.confirm(`¿Eliminar la colección “${collection.name}”? Tus favoritos se conservarán.`)) {
-                        return;
-                      }
-                      deleteFavoriteCollection(collection.id)
-                        .then(() => {
-                          showFavoriteToast("Colección eliminada");
-                          loadCollections();
-                          if (activeCollectionId === collection.id) {
-                            setActiveCollectionId(null);
-                          }
-                        })
-                        .catch(() => undefined);
-                    }}
+                    onClick={() => setCollectionPendingDelete(collection)}
                   >
                     <Trash2 size={14} strokeWidth={1.8} aria-hidden="true" />
                   </button>
                 </article>
-              ))}
+              );
+            })}
+          </div>
+
+          {collections.length > collectionsPerPage ? (
+            <div className="explorer-discover-pager favorites-library__pager">
+              <button
+                type="button"
+                onClick={() => setCollectionsPage((current) => Math.max(1, current - 1))}
+                disabled={safeCollectionsPage <= 1}
+              >
+                Anterior
+              </button>
+              <span className="explorer-discover-pager__page">Página {safeCollectionsPage}</span>
+              <button
+                type="button"
+                onClick={() => setCollectionsPage((current) => Math.min(collectionPageCount, current + 1))}
+                disabled={safeCollectionsPage >= collectionPageCount}
+              >
+                Siguiente
+              </button>
             </div>
-          )}
+          ) : null}
         </section>
       ) : null}
 
@@ -801,6 +1078,82 @@ export function FavoritesLibrary({ experiences }: FavoritesLibraryProps) {
             loadCollections();
           }}
         />
+      ) : null}
+
+      {addToCollectionOpen && activeCollection ? (
+        <AddExperiencesToCollectionModal
+          collection={activeCollection}
+          favorites={experiences}
+          onClose={() => setAddToCollectionOpen(false)}
+          onAdded={upsertCollection}
+        />
+      ) : null}
+
+      {collectionPendingDelete ? (
+        <div
+          className="favorite-save-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-collection-title"
+        >
+          <button
+            type="button"
+            className="favorite-save-modal__backdrop"
+            aria-label="Cerrar"
+            disabled={deletingCollection}
+            onClick={() => {
+              if (!deletingCollection) {
+                setCollectionPendingDelete(null);
+              }
+            }}
+          />
+          <div className="favorite-save-modal__panel favorites-delete-modal">
+            <span className="favorites-delete-modal__icon" aria-hidden="true">
+              <Trash2 size={28} strokeWidth={1.6} />
+            </span>
+            <h2 id="delete-collection-title" className="favorite-save-modal__title">
+              Eliminar colección
+            </h2>
+            <p className="favorites-delete-modal__question">
+              ¿Quieres eliminar “{collectionPendingDelete.name}”?
+            </p>
+            <p className="favorites-delete-modal__note">
+              Tus experiencias seguirán guardadas en favoritos.
+            </p>
+            <div className="favorite-save-modal__actions favorites-delete-modal__actions">
+              <button
+                type="button"
+                className="favorite-save-modal__ghost"
+                disabled={deletingCollection}
+                onClick={() => setCollectionPendingDelete(null)}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="favorite-save-modal__primary"
+                disabled={deletingCollection}
+                onClick={() => {
+                  const target = collectionPendingDelete;
+                  setDeletingCollection(true);
+                  deleteFavoriteCollection(target.id)
+                    .then(() => {
+                      showFavoriteToast("Colección eliminada");
+                      setCollectionPendingDelete(null);
+                      loadCollections();
+                      if (activeCollectionId === target.id) {
+                        setActiveCollectionId(null);
+                      }
+                    })
+                    .catch(() => undefined)
+                    .finally(() => setDeletingCollection(false));
+                }}
+              >
+                Eliminar colección
+              </button>
+            </div>
+          </div>
+        </div>
       ) : null}
     </div>
   );

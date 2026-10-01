@@ -54,7 +54,7 @@ function serializeCollection(
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
     count: row._count?.items ?? experiences.length,
-    previewExperiences: experiences.slice(0, 3),
+    previewExperiences: experiences.slice(0, 4),
     ...(options.includeAllExperiences ? { experiences } : {}),
   };
 }
@@ -67,7 +67,7 @@ export async function listCollections(userId: string) {
       _count: { select: { items: true } },
       items: {
         orderBy: { createdAt: "desc" },
-        take: 3,
+        take: 4,
         include: { experience: { include: experienceInclude } },
       },
     },

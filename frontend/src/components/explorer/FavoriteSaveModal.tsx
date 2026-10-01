@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { FolderPlus, Plus, X } from "lucide-react";
+import heartIcon from "../../assets/heart-icon.png";
 import {
   createFavoriteCollection,
   listFavoriteCollections,
@@ -21,7 +22,6 @@ export function FavoriteSaveModal() {
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<Mode>("pick");
   const [experienceId, setExperienceId] = useState("");
-  const [experienceTitle, setExperienceTitle] = useState("");
   const [collections, setCollections] = useState<FavoriteCollection[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [name, setName] = useState("");
@@ -30,9 +30,8 @@ export function FavoriteSaveModal() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    return onFavoriteSaveModal(({ experienceId: id, experienceTitle: title }) => {
+    return onFavoriteSaveModal(({ experienceId: id }) => {
       setExperienceId(id);
-      setExperienceTitle(title ?? "");
       setMode("pick");
       setName("");
       setError("");
@@ -76,27 +75,7 @@ export function FavoriteSaveModal() {
     setOpen(false);
   }
 
-  async function saveWithoutCollection() {
-    if (!experienceId || saving) {
-      return;
-    }
-    setSaving(true);
-    setError("");
-    try {
-      await addFavorite(experienceId);
-      notifyFavoriteStatus(experienceId, true);
-      notifyFavoritesChanged();
-      window.dispatchEvent(new Event("ec-favorite-collections-changed"));
-      showFavoriteToast("Añadido a favoritos");
-      setOpen(false);
-    } catch {
-      setError("No pudimos guardar en favoritos. Intenta de nuevo.");
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function saveToSelected() {
+  async function saveFavorite() {
     if (!experienceId || saving) {
       return;
     }
@@ -153,16 +132,22 @@ export function FavoriteSaveModal() {
     <div className="favorite-save-modal" role="dialog" aria-modal="true" aria-labelledby="favorite-save-title">
       <button type="button" className="favorite-save-modal__backdrop" aria-label="Cerrar" onClick={close} />
       <div className="favorite-save-modal__panel">
+        <button type="button" className="favorite-save-modal__close" onClick={close} aria-label="Cerrar">
+          <X size={16} strokeWidth={1.9} aria-hidden="true" />
+        </button>
+
         <header className="favorite-save-modal__head">
-          <div>
-            <h2 id="favorite-save-title" className="favorite-save-modal__title">
-              {mode === "create" ? "Crear nueva colección" : "Guardar en favoritos"}
-            </h2>
-            {experienceTitle ? <p className="favorite-save-modal__sub">{experienceTitle}</p> : null}
-          </div>
-          <button type="button" className="favorite-save-modal__close" onClick={close} aria-label="Cerrar">
-            <X size={16} strokeWidth={1.9} aria-hidden="true" />
-          </button>
+          {mode === "pick" ? (
+            <span
+              className="favorite-save-modal__mark"
+              style={{ "--favorites-mark-mask": `url(${heartIcon})` } as CSSProperties}
+              role="img"
+              aria-hidden="true"
+            />
+          ) : null}
+          <h2 id="favorite-save-title" className="favorite-save-modal__title">
+            {mode === "create" ? "Crear nueva colección" : "Guardar en favoritos"}
+          </h2>
         </header>
 
         {mode === "pick" ? (
@@ -224,11 +209,8 @@ export function FavoriteSaveModal() {
             {error ? <p className="favorite-save-modal__error">{error}</p> : null}
 
             <div className="favorite-save-modal__actions">
-              <button type="button" className="favorite-save-modal__ghost" disabled={saving} onClick={saveWithoutCollection}>
-                Guardar sin colección
-              </button>
-              <button type="button" className="favorite-save-modal__primary" disabled={saving} onClick={saveToSelected}>
-                {selectedIds.length ? "Guardar" : "Guardar en favoritos"}
+              <button type="button" className="favorite-save-modal__primary" disabled={saving} onClick={saveFavorite}>
+                Guardar en favoritos
               </button>
             </div>
           </>
@@ -246,7 +228,7 @@ export function FavoriteSaveModal() {
               />
             </label>
             {error ? <p className="favorite-save-modal__error">{error}</p> : null}
-            <div className="favorite-save-modal__actions">
+            <div className="favorite-save-modal__actions favorite-save-modal__actions--split">
               <button
                 type="button"
                 className="favorite-save-modal__ghost"
