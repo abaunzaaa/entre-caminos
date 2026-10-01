@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { Camera, KeyRound, LogOut, UserRound, UserRoundPen } from "lucide-react";
+import { Camera, KeyRound, LogOut, UserRound } from "lucide-react";
 import { Button } from "../ui/Button";
 import { useAuth } from "../../hooks/useAuth";
 import { formatPersonName } from "../../utils/person-name";
@@ -58,7 +58,7 @@ export function AdminUserMenu({
   const initial = nameInitial(firstName, "A");
   const isExplorerUser = user?.role === "USER";
   const profilePath = isExplorerUser ? "/perfil" : "/admin/perfil";
-  const profileLabel = isExplorerUser ? "Perfil" : "Editar perfil";
+  const profileLabel = "Perfil";
 
   useEffect(() => {
     function syncPhoto() {
@@ -356,23 +356,14 @@ export function AdminUserMenu({
           <button
             type="button"
             className="admin-usermenu__photo-wrap"
-            aria-label={isExplorerUser ? "Ver perfil" : "Gestionar foto de perfil"}
+            aria-label="Ver perfil"
             onClick={() => {
-              if (isExplorerUser) {
-                setOpen(false);
-                navigate(profilePath);
-                return;
-              }
-              openPhotoDialog();
+              setOpen(false);
+              navigate(profilePath);
             }}
           >
             <span className="admin-usermenu__photo-ring">
               <UserAvatar user={user} src={photo} initial={initial} size={72} className="admin-usermenu__photo" />
-              {!isExplorerUser ? (
-                <span className="admin-usermenu__photo-badge" aria-hidden="true">
-                  <Camera size={10} strokeWidth={1.8} />
-                </span>
-              ) : null}
             </span>
           </button>
           <p className="admin-usermenu__name">{fullName}</p>
@@ -389,14 +380,11 @@ export function AdminUserMenu({
               navigate(profilePath);
             }}
           >
-            {isExplorerUser ? (
-              <UserRound size={18} strokeWidth={1.7} />
-            ) : (
-              <UserRoundPen size={18} strokeWidth={1.7} />
-            )}
+            <UserRound size={18} strokeWidth={1.7} />
             {profileLabel}
           </button>
-          {isExplorerUser ? (            <button
+          {isExplorerUser ? (
+            <button
               type="button"
               className="admin-usermenu__item"
               role="menuitem"

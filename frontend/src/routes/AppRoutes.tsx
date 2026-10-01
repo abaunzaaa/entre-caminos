@@ -21,6 +21,7 @@ import { FavoritesPage } from "../pages/FavoritesPage";
 import { ProfilePage } from "../pages/ProfilePage";
 import { DashboardPage } from "../pages/admin/DashboardPage";
 import { AdminProfilePage } from "../pages/admin/AdminProfilePage";
+import { AdminProfileViewPage } from "../pages/admin/AdminProfileViewPage";
 import { AdministratorsPage } from "../pages/admin/AdministratorsPage";
 import { RolesPage } from "../pages/admin/RolesPage";
 import { PermissionsPage } from "../pages/admin/PermissionsPage";
@@ -44,6 +45,8 @@ const PAGE_TITLES: Record<string, string> = {
   "/onboarding/listo": "Personaliza tu experiencia | Entre Caminos",
   "/perfil": "Tu perfil | Entre Caminos",
   "/perfil/editar": "Editar perfil | Entre Caminos",
+  "/admin/perfil": "Tu perfil | Entre Caminos",
+  "/admin/perfil/editar": "Editar perfil | Entre Caminos",
 };
 
 const INTRO_SEEN_KEY = "ec-intro-seen";
@@ -133,8 +136,9 @@ export function AppRoutes() {
         <Route element={<ProtectedRoute admin />}>
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<DashboardPage />} />
-            <Route path="perfil" element={<AdminProfilePage />} />
-            <Route path="profile" element={<AdminProfilePage />} />
+            <Route path="perfil" element={<AdminProfileViewPage />} />
+            <Route path="perfil/editar" element={<AdminProfilePage />} />
+            <Route path="profile" element={<Navigate to="/admin/perfil" replace />} />
             <Route path="administrators" element={<AdministratorsPage />} />
             <Route path="administradores" element={<AdministratorsPage />} />
             <Route path="roles" element={<RolesPage />} />

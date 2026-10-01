@@ -429,7 +429,7 @@ export function AdminProfilePage() {
   }, [photoModalOpen, successOpen]);
 
   function goBack() {
-    navigate("/admin");
+    navigate("/admin/perfil");
   }
 
   function requestLeave() {
@@ -442,14 +442,7 @@ export function AdminProfilePage() {
 
   function closeSuccess() {
     setSuccessOpen(false);
-    window.setTimeout(() => {
-      const saveButton = document.getElementById("admin-profile-save");
-      if (saveButton instanceof HTMLButtonElement && !saveButton.disabled) {
-        saveButton.focus();
-        return;
-      }
-      saveWrapRef.current?.focus();
-    }, 0);
+    navigate("/admin/perfil", { replace: true });
   }
 
   function closePhotoDialog() {
@@ -611,9 +604,9 @@ export function AdminProfilePage() {
         <div className="admin-profile-edit__hero-copy">
           <div className="admin-profile-edit__hero-heading">
             <Link
-              to="/admin"
+              to="/admin/perfil"
               className="admin-profile-edit__back"
-              aria-label="Volver al panel"
+              aria-label="Volver al perfil"
               onClick={(event) => {
                 if (!dirty) {
                   return;

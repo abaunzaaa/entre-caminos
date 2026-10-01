@@ -117,7 +117,10 @@ export function AdminLayout() {
     );
   });
   const isDashboard = location.pathname === "/admin";
-  const isProfilePage = location.pathname === "/admin/perfil" || location.pathname === "/admin/profile";
+  const isProfilePage =
+    location.pathname === "/admin/perfil" ||
+    location.pathname === "/admin/perfil/editar" ||
+    location.pathname === "/admin/profile";
   const isTeamPage =
     location.pathname === "/admin/administradores" || location.pathname === "/admin/administrators";
   const isAccessPage = location.pathname === "/admin/roles";
