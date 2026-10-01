@@ -147,8 +147,14 @@ export function ExperienceEditorialView({
         {showTouristActions ? (
           <div className="dash-exps-editorial__actions">
             {onConsultAi ? (
-              <button type="button" className="dash-exps-editorial__guide" onClick={onConsultAi}>
-                Cómo consultar a la IA
+              <button
+                type="button"
+                className="dash-exps-editorial__guide"
+                aria-label="Pregúntale a tu guía"
+                title="Pregúntale a tu guía"
+                onClick={onConsultAi}
+              >
+                Pregúntale a tu guía
               </button>
             ) : null}
             {onFavoriteToggle ? (

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+  <!-- back pack (larger) -->
+  <path d="M14.2 10.8h10.4c1.4 0 2.5 1.1 2.5 2.5v14.2c0 1.5-1.2 2.7-2.7 2.7H14.4c-1.5 0-2.7-1.2-2.7-2.7V13.3c0-1.4 1.1-2.5 2.5-2.5Z" stroke="#2A4943" stroke-width="1.25" stroke-linejoin="round"/>
+  <path d="M14.8 10.8V9.2c0-.7.6-1.3 1.3-1.3h6.6c.7 0 1.3.6 1.3 1.3v1.6" stroke="#2A4943" stroke-width="1.15" stroke-linejoin="round"/>
+  <path d="M16.2 13.4h6.4M16.2 13.4v2.2l1.1-.7 1 .7 1-.7 1.1.7V13.4" stroke="#2A4943" stroke-width="1.05" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M15.4 18.6h8M15.4 22.2h8" stroke="#2A4943" stroke-width="1.05" stroke-linecap="round"/>
+  <path d="M12.2 16.4v6.2c0 .7.5 1.2 1.1 1.2h.6" stroke="#2A4943" stroke-width="1.1" stroke-linejoin="round"/>
+  <path d="M26.6 16.4v6.2c0 .7-.5 1.2-1.1 1.2h-.6" stroke="#2A4943" stroke-width="1.1" stroke-linejoin="round"/>
+  <path d="M18.6 8.2h1.6" stroke="#2A4943" stroke-width="1.05" stroke-linecap="round"/>
+  <!-- front pack (smaller, offset) -->
+  <path d="M18.8 16.6h11.2c1.2 0 2.2 1 2.2 2.2v11.4c0 1.3-1.1 2.4-2.4 2.4H19c-1.3 0-2.4-1.1-2.4-2.4V18.8c0-1.2 1-2.2 2.2-2.2Z" stroke="#2A4943" stroke-width="1.25" stroke-linejoin="round"/>
+  <path d="M20.2 16.6v-1.2c0-.6.5-1.1 1.1-1.1h6.2c.6 0 1.1.5 1.1 1.1v1.2" stroke="#2A4943" stroke-width="1.1" stroke-linejoin="round"/>
+  <path d="M21.4 18.8h6.2M21.4 18.8v1.8l.9-.6.9.6.9-.6.9.6V18.8" stroke="#2A4943" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M20.8 23h7.2M20.8 26.2h7.2" stroke="#2A4943" stroke-width="1" stroke-linecap="round"/>
+  <path d="M17.2 21.2v5.2c0 .55.4 1 .95 1H19" stroke="#2A4943" stroke-width="1.05" stroke-linejoin="round"/>
+  <path d="M31.6 21.2v5.2c0 .55-.4 1-.95 1H29.8" stroke="#2A4943" stroke-width="1.05" stroke-linejoin="round"/>
+</svg>

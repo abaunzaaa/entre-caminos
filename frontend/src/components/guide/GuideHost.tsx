@@ -131,6 +131,7 @@ function hiddenPath(pathname: string) {
     pathname.startsWith("/login") ||
     pathname.startsWith("/register") ||
     pathname.startsWith("/onboarding") ||
+    pathname.startsWith("/perfil/editar") ||
     pathname.startsWith("/verify-email") ||
     pathname.startsWith("/forgot-password") ||
     pathname.startsWith("/reset-password") ||
@@ -725,26 +726,27 @@ export function GuideHost() {
 
   return (
     <>
-      <button
-        type="button"
-        className={`guide-fab${guide.open ? " is-open" : ""}${guide.unread ? " has-mail" : ""}${fabSettled ? " is-settled" : ""}`}
-        aria-label="Abrir Tu guía"
-        hidden={guide.open}
-        onClick={() => guide.openGuide()}
-        onAnimationEnd={(event) => {
-          if (event.animationName === "guide-fab-enter") {
-            setFabSettled(true);
-          }
-        }}
-      >
-        <span className="guide-fab__icon">
-          <span className="guide-fab__aura" aria-hidden="true" />
-          <span className="guide-fab__spec" aria-hidden="true" />
-          <span className="guide-fab__key" aria-hidden="true" />
-          {guide.unread ? <span className="guide-fab__dot" /> : null}
-        </span>
-        <span className="guide-fab__label">Tu guía</span>
-      </button>
+      {createPortal(
+        <button
+          type="button"
+          className={`guide-fab${guide.open ? " is-open" : ""}${guide.unread ? " has-mail" : ""}${fabSettled ? " is-settled" : ""}`}
+          aria-label="Abrir Tu guía"
+          hidden={guide.open}
+          onClick={() => guide.openGuide()}
+          onAnimationEnd={(event) => {
+            if (event.animationName === "guide-fab-enter") {
+              setFabSettled(true);
+            }
+          }}
+        >
+          <span className="guide-fab__icon" aria-hidden="true">
+            <span className="guide-fab__key" />
+            {guide.unread ? <span className="guide-fab__dot" /> : null}
+          </span>
+          <span className="guide-fab__label">Tu guía</span>
+        </button>,
+        document.body,
+      )}
 
       {guide.open ? (
         <section
