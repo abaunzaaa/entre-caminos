@@ -240,6 +240,7 @@ export function GuideHost() {
   const [toast, setToast] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [railOpen, setRailOpen] = useState(true);
+  const [fabSettled, setFabSettled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [railSection, setRailSection] = useState<"home" | "recents" | "favorites">("home");
   const activeFolderId =
@@ -253,6 +254,16 @@ export function GuideHost() {
   const iconPickerRef = useRef<HTMLDivElement>(null);
   const plusMenuRef = useRef<HTMLDivElement>(null);
   const visible = Boolean(user) && !hiddenPath(pathname);
+
+  useEffect(() => {
+    if (!visible || fabSettled) {
+      return;
+    }
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const delay = reduceMotion ? 0 : 2000;
+    const timer = window.setTimeout(() => setFabSettled(true), delay);
+    return () => window.clearTimeout(timer);
+  }, [visible, fabSettled]);
 
   useEffect(() => {
     if (!settingsOpen && !threadMenu && !folderMenu && !iconPicker && !guide.plusOpen && !moveMenu) {
@@ -716,10 +727,15 @@ export function GuideHost() {
     <>
       <button
         type="button"
-        className={`guide-fab${guide.open ? " is-open" : ""}${guide.unread ? " has-mail" : ""}`}
+        className={`guide-fab${guide.open ? " is-open" : ""}${guide.unread ? " has-mail" : ""}${fabSettled ? " is-settled" : ""}`}
         aria-label="Abrir Tu guía"
         hidden={guide.open}
         onClick={() => guide.openGuide()}
+        onAnimationEnd={(event) => {
+          if (event.animationName === "guide-fab-enter") {
+            setFabSettled(true);
+          }
+        }}
       >
         <span className="guide-fab__icon">
           <span className="guide-fab__aura" aria-hidden="true" />

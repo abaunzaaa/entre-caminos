@@ -1,41 +1,17 @@
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
-import { ArrowUpRight, Heart, MapPin, MapPinned, Users } from "lucide-react";
+import { ArrowUpRight, MapPin } from "lucide-react";
 import { experienceGalleryUrls, municipalityLabel } from "./explorer-media";
+import { FavoriteFoldersGrid } from "./FavoriteFoldersGrid";
+import { MOCK_FAVORITE_FOLDERS } from "./favorite-folders";
+import { useInViewReveal } from "../../hooks/useInViewReveal";
 import { formatPrice } from "../../utils/cn";
-import { experienceCategoryNames, formatExperienceCategories } from "../../utils/experience-categories";
+import { experienceCategoryNames } from "../../utils/experience-categories";
 import type { Experience } from "../../types";
 
 type ExplorerRecommendedSectionProps = {
   experiences: Experience[];
 };
-
-const JOURNAL_BLOCKS = [
-  {
-    id: "favoritos",
-    title: "Favoritos",
-    lead: "Guarda lo que quieres vivir más adelante.",
-    empty: "Aún no tienes favoritos. Explora una experiencia y márcala cuando esté disponible.",
-  },
-  {
-    id: "planes",
-    title: "Plan con amigos",
-    lead: "Crea un grupo con tus amigos y deja que la IA encuentre el plan ideal para todos.",
-    empty: "Aún no tienes planes. Invita a tus amigos y empiecen a descubrir juntos.",
-  },
-  {
-    id: "visitados",
-    title: "Visitados",
-    lead: "Tu historial de caminos recorridos aparecerá aquí.",
-    empty: "Aún no registras visitas. Cada experiencia vivida irá sumándose a este espacio.",
-  },
-] as const;
-
-const JOURNAL_ICONS = {
-  favoritos: Heart,
-  planes: Users,
-  visitados: MapPinned,
-} as const;
 
 type GalleryMotion = "idle" | "next-from" | "next-to" | "prev-from" | "prev-to";
 type GallerySlot = "primary" | "secondary" | "flush";
@@ -164,6 +140,8 @@ function RecsExperienceGallery({ urls }: { urls: string[] }) {
 
 export function ExplorerRecommendedSection({ experiences }: ExplorerRecommendedSectionProps) {
   const tablistId = useId();
+  const { ref: featuredRef, inView: featuredRevealed } = useInViewReveal<HTMLDivElement>();
+  const { ref: favoritesRef, inView: favoritesRevealed } = useInViewReveal<HTMLDivElement>();
   const tabs = useMemo(
     () =>
       experiences.slice(0, 5).map((experience) => {
@@ -198,7 +176,7 @@ export function ExplorerRecommendedSection({ experiences }: ExplorerRecommendedS
 
   const experience = active.experience;
   const place = municipalityLabel(experience.location);
-  const category = formatExperienceCategories(experience, active.label);
+  const description = experience.description?.replace(/\s+/g, " ").trim() ?? "";
   const galleryUrls = experienceGalleryUrls(experience);
 
   function selectTab(id: string) {
@@ -208,50 +186,51 @@ export function ExplorerRecommendedSection({ experiences }: ExplorerRecommendedS
   return (
     <section className="explorer-section explorer-section--recs" id="recomendados">
       <div className="explorer-recs">
-        <aside className="explorer-recs__journal" aria-label="Tu espacio personal">
-          {JOURNAL_BLOCKS.map((block) => {
-            const Icon = JOURNAL_ICONS[block.id];
-            return (
-              <div key={block.id} className="explorer-recs__entry" id={block.id}>
-                <div className="explorer-recs__entry-heading">
-                  <span className="explorer-recs__entry-icon" aria-hidden="true">
-                    <Icon className="explorer-recs__entry-glyph" strokeWidth={1.7} />
-                  </span>
-                  <h2 className="explorer-recs__entry-title">{block.title}</h2>
-                </div>
-                <p className="explorer-recs__entry-lead">{block.lead}</p>
-                <p className="explorer-recs__entry-empty">{block.empty}</p>
-              </div>
-            );
-          })}
-        </aside>
-
-        <div className="explorer-recs__stage">
+        <div
+          ref={featuredRef}
+          className={`explorer-recs__stage explorer-reveal-scope${featuredRevealed ? " is-revealed" : ""}`}
+        >
+          <header className="explorer-recs__column-head">
+            <h2
+              className="explorer-recs__column-title explorer-reveal explorer-reveal--title"
+              id="explorer-recs-title"
+              style={{ "--reveal-delay": "0ms" } as CSSProperties}
+            >
+              Experiencias destacadas
+            </h2>
+            <p
+              className="explorer-recs__column-lead explorer-reveal explorer-reveal--soft"
+              style={{ "--reveal-delay": "80ms" } as CSSProperties}
+            >
+              Explora nuestra selección
+            </p>
+          </header>
           <div className="explorer-recs__shell">
-            <article className="explorer-recs__panel" aria-labelledby="explorer-recs-title">
-              <header className="explorer-recs__headline">
-                <h2 className="explorer-recs__title" id="explorer-recs-title">
-                  Experiencias destacadas
-                </h2>
-              </header>
-              <RecsExperienceGallery key={experience.id} urls={galleryUrls} />
-              <div className="explorer-recs__body">
-                <p className="explorer-recs__category">{category}</p>
-                <h3 className="explorer-recs__heading" id={`${tablistId}-heading`}>
-                  {experience.title}
-                </h3>
-                {place ? (
-                  <p className="explorer-recs__place">
-                    <MapPin size={13} strokeWidth={2} aria-hidden="true" />
-                    <span>{place}</span>
-                  </p>
-                ) : null}
-                <div className="explorer-recs__footer">
-                  <span className="explorer-recs__price">{formatPrice(experience.price, experience.currency)}</span>
-                  <Link to={`/explorar/${experience.id}`} className="explorer-recs__cta">
-                    Ver experiencia
-                    <ArrowUpRight size={15} strokeWidth={2.15} aria-hidden="true" />
-                  </Link>
+            <article
+              className="explorer-recs__panel explorer-reveal explorer-reveal--card"
+              aria-labelledby="explorer-recs-title"
+              style={{ "--reveal-delay": "150ms" } as CSSProperties}
+            >
+              <div key={experience.id} className="explorer-recs__swap">
+                <RecsExperienceGallery urls={galleryUrls} />
+                <div className="explorer-recs__body">
+                  {place ? (
+                    <p className="explorer-recs__place">
+                      <MapPin size={13} strokeWidth={2} aria-hidden="true" />
+                      <span>{place}</span>
+                    </p>
+                  ) : null}
+                  <h3 className="explorer-recs__heading" id={`${tablistId}-heading`}>
+                    {experience.title}
+                  </h3>
+                  {description ? <p className="explorer-recs__excerpt">{description}</p> : null}
+                  <div className="explorer-recs__footer">
+                    <span className="explorer-recs__price">{formatPrice(experience.price, experience.currency)}</span>
+                    <Link to={`/explorar/${experience.id}`} className="explorer-recs__cta">
+                      Ver experiencia
+                      <ArrowUpRight size={15} strokeWidth={2.15} aria-hidden="true" />
+                    </Link>
+                  </div>
                 </div>
               </div>
             </article>
@@ -271,8 +250,13 @@ export function ExplorerRecommendedSection({ experiences }: ExplorerRecommendedS
                       type="button"
                       role="tab"
                       id={`${tablistId}-${tab.id}`}
-                      className={`explorer-recs__tab${selected ? " is-active" : ""}`}
-                      style={{ zIndex: selected ? tabs.length + 1 : index + 1 }}
+                      className={`explorer-recs__tab explorer-reveal explorer-reveal--from-right${selected ? " is-active" : ""}`}
+                      style={
+                        {
+                          zIndex: selected ? tabs.length + 1 : index + 1,
+                          "--reveal-delay": `${220 + index * 80}ms`,
+                        } as CSSProperties
+                      }
                       aria-selected={selected}
                       tabIndex={selected ? 0 : -1}
                       onMouseEnter={() => selectTab(tab.id)}
@@ -286,6 +270,13 @@ export function ExplorerRecommendedSection({ experiences }: ExplorerRecommendedS
               </div>
             ) : null}
           </div>
+        </div>
+
+        <div
+          ref={favoritesRef}
+          className={`explorer-recs__favorites explorer-reveal-scope${favoritesRevealed ? " is-revealed" : ""}`}
+        >
+          <FavoriteFoldersGrid folders={MOCK_FAVORITE_FOLDERS} />
         </div>
       </div>
     </section>

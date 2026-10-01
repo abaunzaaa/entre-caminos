@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { ExperienceCatalogCard } from "../components/admin/ExperienceCatalogCard";
 import {
@@ -11,8 +11,11 @@ import { TouristHomeHero } from "../components/explorer/TouristHomeHero";
 import { experienceCoverUrl } from "../components/explorer/explorer-media";
 import { useGuide } from "../components/guide/GuideContext";
 import { useAuth } from "../hooks/useAuth";
+import { useInViewReveal } from "../hooks/useInViewReveal";
 import avionIcon from "../assets/avion-icon.png";
 import camIcon from "../assets/cam-icon.png";
+import descubreIcon from "../assets/icon-descubre.png";
+import mapaIcon from "../assets/mapa-icon.png";
 import { getCoverFeaturedExperiences, getPublicExperiences, getRecommendedExperiences } from "../services/catalog.service";
 import { formatDepartmentMunicipality } from "../data/colombia-locations";
 import type { Experience } from "../types";
@@ -148,6 +151,10 @@ export function ExplorePage() {
     Boolean(activeSearch.trim()) ||
     Boolean(filters.city || filters.categoryId || filters.price || filters.duration || filters.plan);
 
+  const { ref: discoverRef, inView: discoverRevealed } = useInViewReveal<HTMLElement>();
+  const { ref: mapRef, inView: mapRevealed } = useInViewReveal<HTMLElement>();
+  const { ref: storiesRef, inView: storiesRevealed } = useInViewReveal<HTMLElement>();
+
   return (
     <div className="explorer-page">
       <TouristHomeHero
@@ -160,47 +167,70 @@ export function ExplorePage() {
       />
 
       <section
-        className="explorer-section explorer-section--discover"
+        ref={discoverRef}
+        className={`explorer-section explorer-section--discover explorer-reveal-scope${discoverRevealed ? " is-revealed" : ""}`}
         id="descubrir"
         aria-labelledby="explorer-discover-title"
       >
         <header className="explorer-discover-intro">
-          <h2 className="explorer-discover-title" id="explorer-discover-title">
+          <img
+            className="explorer-discover-icon explorer-reveal explorer-reveal--soft"
+            src={descubreIcon}
+            alt=""
+            aria-hidden="true"
+            style={{ "--reveal-delay": "0ms" } as CSSProperties}
+          />
+          <h2
+            className="explorer-discover-title explorer-reveal explorer-reveal--title"
+            id="explorer-discover-title"
+            style={{ "--reveal-delay": "80ms" } as CSSProperties}
+          >
             Descubre nuevas experiencias
           </h2>
-          <p className="explorer-discover-lead">Encuentra lo que buscas</p>
+          <p
+            className="explorer-discover-lead explorer-reveal explorer-reveal--soft"
+            style={{ "--reveal-delay": "150ms" } as CSSProperties}
+          >
+            Encuentra lo que buscas
+          </p>
         </header>
 
-        <ExplorerDiscoverFilters
-          experiences={experiences}
-          cityOptions={cities}
-          categoryOptions={categories}
-          value={filters}
-          onChange={(next) => {
-            setFilters(next);
-            setPage(1);
-          }}
-          searchDraft={searchDraft}
-          searchActive={Boolean(activeSearch.trim())}
-          onSearchDraftChange={setSearchDraft}
-          onSearchSubmit={() => {
-            setActiveSearch(searchDraft.trim());
-            setPage(1);
-            document.getElementById("descubrir")?.scrollIntoView({ behavior: "smooth", block: "start" });
-          }}
-          onSearchClear={() => {
-            setSearchDraft("");
-            setActiveSearch("");
-            setPage(1);
-          }}
-        />
+        <div className="explorer-reveal explorer-reveal--soft" style={{ "--reveal-delay": "220ms" } as CSSProperties}>
+          <ExplorerDiscoverFilters
+            experiences={experiences}
+            cityOptions={cities}
+            categoryOptions={categories}
+            value={filters}
+            onChange={(next) => {
+              setFilters(next);
+              setPage(1);
+            }}
+            searchDraft={searchDraft}
+            searchActive={Boolean(activeSearch.trim())}
+            onSearchDraftChange={setSearchDraft}
+            onSearchSubmit={() => {
+              setActiveSearch(searchDraft.trim());
+              setPage(1);
+              document.getElementById("descubrir")?.scrollIntoView({ behavior: "smooth", block: "start" });
+            }}
+            onSearchClear={() => {
+              setSearchDraft("");
+              setActiveSearch("");
+              setPage(1);
+            }}
+          />
+        </div>
 
         {loading && experiences.length === 0 ? (
-          <p className="explorer-empty explorer-empty--search">Buscando experiencias que coincidan…</p>
+          <p className="explorer-empty explorer-empty--search explorer-reveal" style={{ "--reveal-delay": "220ms" } as CSSProperties}>
+            Buscando experiencias que coincidan…
+          </p>
         ) : loaded && total === 0 && !filtersActive ? (
-          <p className="explorer-empty">No hay experiencias publicadas todavía.</p>
+          <p className="explorer-empty explorer-reveal" style={{ "--reveal-delay": "220ms" } as CSSProperties}>
+            No hay experiencias publicadas todavía.
+          </p>
         ) : total === 0 ? (
-          <div className="explorer-empty explorer-empty--search">
+          <div className="explorer-empty explorer-empty--search explorer-reveal" style={{ "--reveal-delay": "220ms" } as CSSProperties}>
             <p>
               {activeSearch.trim()
                 ? `No encontramos experiencias relacionadas con “${activeSearch.trim()}”.`
@@ -223,8 +253,12 @@ export function ExplorePage() {
         ) : (
           <>
             <div className="dash-exps-catalog explorer-discover-catalog">
-              {experiences.map((experience) => (
-                <div key={experience.id} className="explorer-discover-card explorer-discover-card--reveal">
+              {experiences.map((experience, index) => (
+                <div
+                  key={experience.id}
+                  className="explorer-discover-card explorer-reveal explorer-reveal--card"
+                  style={{ "--reveal-delay": `${220 + index * 80}ms` } as CSSProperties}
+                >
                   <ExperienceCatalogCard
                     experience={experience}
                     variant="tourist"
@@ -236,7 +270,10 @@ export function ExplorePage() {
               ))}
             </div>
 
-            <div className="explorer-discover-pager">
+            <div
+              className="explorer-discover-pager explorer-reveal"
+              style={{ "--reveal-delay": `${220 + Math.min(experiences.length, 8) * 80}ms` } as CSSProperties}
+            >
               <button
                 type="button"
                 onClick={() => setPage((current) => Math.max(1, current - 1))}
@@ -259,26 +296,52 @@ export function ExplorePage() {
 
       <ExplorerRecommendedSection experiences={coverFeatured} />
 
-      <section className="explorer-section" id="mapa" aria-labelledby="explorer-map-title">
+      <section
+        ref={mapRef}
+        className={`explorer-section explorer-reveal-scope${mapRevealed ? " is-revealed" : ""}`}
+        id="mapa"
+        aria-labelledby="explorer-map-title"
+      >
         <div className="explorer-section__head">
           <div>
-            <h2 className="explorer-discover-title" id="explorer-map-title">
+            <img
+              className="explorer-map-icon explorer-reveal explorer-reveal--soft"
+              src={mapaIcon}
+              alt=""
+              aria-hidden="true"
+              style={{ "--reveal-delay": "0ms" } as CSSProperties}
+            />
+            <h2
+              className="explorer-discover-title explorer-reveal explorer-reveal--title"
+              id="explorer-map-title"
+              style={{ "--reveal-delay": "80ms" } as CSSProperties}
+            >
               Mapa
             </h2>
-            <p className="explorer-section__lead">
+            <p
+              className="explorer-section__lead explorer-reveal explorer-reveal--soft"
+              style={{ "--reveal-delay": "150ms" } as CSSProperties}
+            >
               Un mapa interactivo llegará pronto. Mientras tanto, revisa la ubicación de cada experiencia.
             </p>
           </div>
         </div>
         {mapPreview.length === 0 ? (
-          <p className="explorer-empty">Cuando haya experiencias publicadas, podrás ubicarlas aquí.</p>
+          <p className="explorer-empty explorer-reveal" style={{ "--reveal-delay": "220ms" } as CSSProperties}>
+            Cuando haya experiencias publicadas, podrás ubicarlas aquí.
+          </p>
         ) : (
           <div className="explorer-soft-grid">
-            {mapPreview.map((experience) => {
+            {mapPreview.map((experience, index) => {
               const place =
                 formatDepartmentMunicipality(experience.location) || experience.location || "Colombia";
               return (
-                <Link key={experience.id} to={`/explorar/${experience.id}`} className="explorer-soft-card">
+                <Link
+                  key={experience.id}
+                  to={`/explorar/${experience.id}`}
+                  className="explorer-soft-card explorer-reveal explorer-reveal--card"
+                  style={{ "--reveal-delay": `${220 + index * 80}ms` } as CSSProperties}
+                >
                   <img src={experienceCoverUrl(experience, 320)} alt="" />
                   <div>
                     <h3>{experience.title}</h3>
@@ -291,16 +354,39 @@ export function ExplorePage() {
         )}
       </section>
 
-      <section className="explorer-stories" aria-labelledby="explorer-stories-title">
+      <section
+        ref={storiesRef}
+        className={`explorer-stories explorer-reveal-scope${storiesRevealed ? " is-revealed" : ""}`}
+        aria-labelledby="explorer-stories-title"
+      >
         <div className="explorer-stories__inner">
-          <img className="explorer-stories__icon explorer-stories__icon--cam" src={camIcon} alt="" aria-hidden="true" />
-          <h2 className="explorer-discover-title" id="explorer-stories-title">
+          <img
+            className="explorer-stories__icon explorer-stories__icon--cam explorer-reveal explorer-reveal--soft"
+            src={camIcon}
+            alt=""
+            aria-hidden="true"
+            style={{ "--reveal-delay": "0ms" } as CSSProperties}
+          />
+          <h2
+            className="explorer-discover-title explorer-reveal explorer-reveal--title"
+            id="explorer-stories-title"
+            style={{ "--reveal-delay": "80ms" } as CSSProperties}
+          >
             Entre caminos, nacen historias
           </h2>
-          <p className="explorer-section__lead">
+          <p
+            className="explorer-section__lead explorer-reveal explorer-reveal--soft"
+            style={{ "--reveal-delay": "150ms" } as CSSProperties}
+          >
             A veces, solo hace falta elegir un lugar, salir de la rutina y dejar que una nueva experiencia te encuentre.
           </p>
-          <img className="explorer-stories__icon explorer-stories__icon--plane" src={avionIcon} alt="" aria-hidden="true" />
+          <img
+            className="explorer-stories__icon explorer-stories__icon--plane explorer-reveal explorer-reveal--soft"
+            src={avionIcon}
+            alt=""
+            aria-hidden="true"
+            style={{ "--reveal-delay": "220ms" } as CSSProperties}
+          />
         </div>
       </section>
     </div>

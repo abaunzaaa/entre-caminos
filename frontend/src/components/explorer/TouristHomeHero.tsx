@@ -31,11 +31,15 @@ export function TouristHomeHero({ experiences, selected, onSelect }: TouristHome
         <div className="tourist-hero__sheet">
           <span className="tourist-hero__sheet-art" aria-hidden="true" />
           <div className="tourist-hero__copy">
+            <span className="tourist-hero__bloom" aria-hidden="true" />
+            <header className="tourist-hero__intro">
+              <h1 className="explorer-discover-title">Caminos elegidos para ti</h1>
+              <p className="explorer-discover-lead">Inspirado en tus intereses</p>
+            </header>
             {selected ? (
               <>
-                <span className="tourist-hero__bloom" aria-hidden="true" />
                 <p className="tourist-hero__kicker">{category}</p>
-                <h1 className="tourist-hero__title">{selected.title}</h1>
+                <h2 className="tourist-hero__title">{selected.title}</h2>
                 {place ? (
                   <p className="tourist-hero__place">
                     <MapPin size={14} strokeWidth={1.85} aria-hidden="true" />
@@ -48,20 +52,21 @@ export function TouristHomeHero({ experiences, selected, onSelect }: TouristHome
               </>
             ) : (
               <>
-                <span className="tourist-hero__bloom" aria-hidden="true" />
                 <p className="tourist-hero__kicker">Entre Caminos</p>
-                <h1 className="tourist-hero__title">Descubre tu próximo camino</h1>
+                <h2 className="tourist-hero__title">Descubre tu próximo camino</h2>
               </>
             )}
           </div>
         </div>
       </div>
 
-      <ExperienceGallery
-        experiences={experiences}
-        selectedId={selected?.id ?? null}
-        onSelect={onSelect}
-      />
+      <div className="tourist-hero__showcase">
+        <ExperienceGallery
+          experiences={experiences}
+          selectedId={selected?.id ?? null}
+          onSelect={onSelect}
+        />
+      </div>
     </section>
   );
 }

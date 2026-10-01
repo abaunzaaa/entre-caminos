@@ -23,17 +23,34 @@ const NAV_LINKS: Array<{
   end?: boolean;
 }> = [
   { to: "/explorar", label: "Inicio", icon: Compass, end: true },
-  { to: "/explorar#mapa", label: "Mapa", icon: Map },
-  { to: "/explorar#favoritos", label: "Favoritos", icon: Heart },
-  { to: "/explorar#planes", label: "Plan con amigos", icon: Users },
-  { to: "/explorar#visitados", label: "Visitados", icon: MapPinned },
+  { to: "/favoritos", label: "Favoritos", icon: Heart, end: true },
+  { to: "/mapa", label: "Mapa", icon: Map, end: true },
+  { to: "/plan-con-amigos", label: "Plan con amigos", icon: Users, end: true },
+  { to: "/visitados", label: "Visitados", icon: MapPinned, end: true },
 ];
+
+const EXPLORER_SHELL_PATHS = new Set(["/favoritos", "/mapa", "/plan-con-amigos", "/visitados"]);
+
+export function isExplorerShellPath(pathname: string) {
+  return pathname.startsWith("/explorar") || EXPLORER_SHELL_PATHS.has(pathname);
+}
 
 export function ExplorerNavbar() {
   const { user, logout, isAdmin } = useAuth();
   const { pathname, hash } = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [entered, setEntered] = useState(false);
+
+  useEffect(() => {
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduceMotion) {
+      setEntered(true);
+      return;
+    }
+    const frame = window.requestAnimationFrame(() => setEntered(true));
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
 
   useEffect(() => {
     function onScroll() {
@@ -63,11 +80,11 @@ export function ExplorerNavbar() {
     return () => window.cancelAnimationFrame(frame);
   }, [hash, pathname]);
 
-  const isExplorer = pathname.startsWith("/explorar") || pathname.endsWith("/cambiar-contrasena");
+  const isExplorer = isExplorerShellPath(pathname) || pathname.endsWith("/cambiar-contrasena");
 
   return (
     <header
-      className={`explorer-nav${isExplorer ? " explorer-nav--light" : " explorer-nav--dark"}${scrolled ? " is-scrolled" : ""}${menuOpen ? " is-open" : ""}`}
+      className={`explorer-nav${isExplorer ? " explorer-nav--light" : " explorer-nav--dark"}${scrolled ? " is-scrolled" : ""}${menuOpen ? " is-open" : ""}${entered ? " is-entered" : ""}`}
     >
       <div className="explorer-nav__inner">
         <Link to="/" className="explorer-nav__brand" aria-label="Entre Caminos">
@@ -85,16 +102,12 @@ export function ExplorerNavbar() {
         <nav className="explorer-nav__links" aria-label="Navegación del explorador">
           {NAV_LINKS.map((item) => {
             const Icon = item.icon;
-            const active =
-              item.end
-                ? pathname === "/explorar" && !hash
-                : hash === item.to.replace("/explorar", "");
             return (
               <NavLink
                 key={item.to}
                 to={item.to}
                 end={item.end}
-                className={() => `explorer-nav__link${active ? " is-active" : ""}`}
+                className={({ isActive }) => `explorer-nav__link${isActive ? " is-active" : ""}`}
               >
                 <Icon size={16} strokeWidth={1.8} aria-hidden="true" />
                 <span>{item.label}</span>
@@ -135,10 +148,15 @@ export function ExplorerNavbar() {
           {NAV_LINKS.map((item) => {
             const Icon = item.icon;
             return (
-              <Link key={item.to} to={item.to} className="explorer-nav__drawer-link">
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.end}
+                className={({ isActive }) => `explorer-nav__drawer-link${isActive ? " is-active" : ""}`}
+              >
                 <Icon size={18} strokeWidth={1.8} aria-hidden="true" />
                 <span>{item.label}</span>
-              </Link>
+              </NavLink>
             );
           })}
           {user ? (

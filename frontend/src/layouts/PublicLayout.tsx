@@ -1,6 +1,6 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { MapHeartLogo } from "../components/brand/MapHeartLogo";
-import { ExplorerNavbar } from "../components/explorer/ExplorerNavbar";
+import { ExplorerNavbar, isExplorerShellPath } from "../components/explorer/ExplorerNavbar";
 import { useAuth } from "../hooks/useAuth";
 import { formatPersonName } from "../utils/person-name";
 import "../styles/explorer.css";
@@ -8,7 +8,7 @@ import "../styles/explorer.css";
 export function PublicLayout() {
   const { user, isAdmin, logout } = useAuth();
   const { pathname } = useLocation();
-  const isExplorer = pathname.startsWith("/explorar");
+  const isExplorer = isExplorerShellPath(pathname);
 
   if (isExplorer) {
     return (

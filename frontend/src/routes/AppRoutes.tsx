@@ -11,11 +11,11 @@ import { ResetPasswordPage } from "../pages/ResetPasswordPage";
 import { VerifyEmailPage } from "../pages/VerifyEmailPage";
 import { ChangePasswordPage } from "../pages/ChangePasswordPage";
 import { OAuthCallbackPage } from "../pages/OAuthCallbackPage";
-import { ChangePasswordPage } from "../pages/ChangePasswordPage";
 import { OnboardingCatalogGuard } from "../components/onboarding/OnboardingCatalogGuard";
 import { OnboardingLayout } from "../components/onboarding/OnboardingLayout";
 import { OnboardingPage } from "../pages/onboarding/OnboardingPage";
 import { ExplorePage } from "../pages/ExplorePage";
+import { ExplorerBlankPage } from "../pages/ExplorerBlankPage";
 import { ExperienceDetailPage } from "../pages/ExperienceDetailPage";
 import { DashboardPage } from "../pages/admin/DashboardPage";
 import { AdminProfilePage } from "../pages/admin/AdminProfilePage";
@@ -112,6 +112,10 @@ export function AppRoutes() {
           <Route element={<PublicLayout />}>
             <Route path="/explorar" element={<ExplorePage />} />
             <Route path="/explorar/:id" element={<ExperienceDetailPage />} />
+            <Route path="/favoritos" element={<ExplorerBlankPage title="FAVORITOS" />} />
+            <Route path="/mapa" element={<ExplorerBlankPage title="MAPA" />} />
+            <Route path="/plan-con-amigos" element={<ExplorerBlankPage title="PLAN CON AMIGOS" />} />
+            <Route path="/visitados" element={<ExplorerBlankPage title="VISITADOS" />} />
           </Route>
         </Route>
         <Route element={<ProtectedRoute admin />}>
