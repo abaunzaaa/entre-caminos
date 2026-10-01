@@ -17,6 +17,8 @@ import camIcon from "../assets/cam-icon.png";
 import descubreIcon from "../assets/icon-descubre.png";
 import mapaIcon from "../assets/mapa-icon.png";
 import { getCoverFeaturedExperiences, getPublicExperiences, getRecommendedExperiences } from "../services/catalog.service";
+import { listFavoriteExperiences } from "../services/favorites.service";
+import { onFavoritesChanged } from "../services/favorites-sync";
 import { formatDepartmentMunicipality } from "../data/colombia-locations";
 import type { Experience } from "../types";
 import "../styles/admin-ui.css";
@@ -44,6 +46,34 @@ export function ExplorePage() {
   const [activeSearch, setActiveSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [loaded, setLoaded] = useState(false);
+  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(() => new Set());
+
+  useEffect(() => {
+    if (!user) {
+      setFavoriteIds(new Set());
+      return;
+    }
+    let cancelled = false;
+    function loadFavorites() {
+      listFavoriteExperiences()
+        .then((items) => {
+          if (!cancelled) {
+            setFavoriteIds(new Set(items.map((item) => item.id)));
+          }
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setFavoriteIds(new Set());
+          }
+        });
+    }
+    loadFavorites();
+    const unsubscribe = onFavoritesChanged(loadFavorites);
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
+  }, [user?.id]);
 
   useEffect(() => {
     let cancelled = false;
@@ -265,6 +295,7 @@ export function ExplorePage() {
                     canReview={false}
                     showManage={false}
                     viewHref={`/explorar/${experience.id}`}
+                    favorited={favoriteIds.has(experience.id)}
                   />
                 </div>
               ))}

@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from "react";
+import type { CSSProperties } from "react";
 import { Heart } from "lucide-react";
 import { ExperienceEditorialDossier, type ExperienceEditorialFact } from "./ExperienceEditorialDossier";
 import { ExperienceEditorialGallery } from "./ExperienceEditorialGallery";
@@ -43,6 +43,7 @@ export type ExperienceEditorialViewProps = {
   experience: Experience;
   mode?: "admin" | "tourist";
   favoriteOn?: boolean;
+  favoriteBusy?: boolean;
   onFavoriteToggle?: () => void;
   nearbyHref?: (id: string) => string;
   fetchNearby?: () => Promise<Experience[]>;
@@ -112,13 +113,13 @@ export function ExperienceEditorialView({
   experience,
   mode = "admin",
   favoriteOn = false,
+  favoriteBusy = false,
   onFavoriteToggle,
   nearbyHref,
   fetchNearby,
   onConsultAi,
 }: ExperienceEditorialViewProps) {
-  const [localFavorite, setLocalFavorite] = useState(false);
-  const isFavorite = onFavoriteToggle ? favoriteOn : localFavorite;
+  const isFavorite = favoriteOn;
   const locationByline = formatDepartmentMunicipality(experience.location);
   const lat = experience.latitude ? Number(experience.latitude) : null;
   const lng = experience.longitude ? Number(experience.longitude) : null;
@@ -126,14 +127,7 @@ export function ExperienceEditorialView({
   const photos = experienceImages(experience);
   const mainPhoto = photos[0] ? mediaUrl(photos[0], 1200) : null;
   const { noteFacts, detailFacts } = buildExperienceEditorialFacts(experience, mode);
-
-  function toggleFavorite() {
-    if (onFavoriteToggle) {
-      onFavoriteToggle();
-      return;
-    }
-    setLocalFavorite((value) => !value);
-  }
+  const showTouristActions = mode === "tourist" && (onConsultAi || onFavoriteToggle);
 
   return (
     <section
@@ -143,20 +137,6 @@ export function ExperienceEditorialView({
     >
       <section className="dash-exps-editorial" aria-label="Galería de la experiencia">
         <div className="dash-exps-editorial__hero">
-          <button
-            type="button"
-            className={`dash-exps-preview-fav${isFavorite ? " is-on" : ""}`}
-            aria-label="Guardar en favoritos"
-            aria-pressed={isFavorite}
-            onClick={toggleFavorite}
-          >
-            <Heart
-              size={18}
-              strokeWidth={1.7}
-              fill={isFavorite ? "currentColor" : "none"}
-              aria-hidden="true"
-            />
-          </button>
           <ExperienceEditorialGallery
             slides={photos.map((url) => mediaUrl(url, 1400))}
             label={experience.title}
@@ -164,10 +144,35 @@ export function ExperienceEditorialView({
         </div>
         <h2 className="dash-exps-editorial__title">{experience.title}</h2>
         {locationByline ? <p className="dash-exps-editorial__byline">{locationByline}</p> : null}
-        {mode === "tourist" && onConsultAi ? (
-          <button type="button" className="dash-exps-editorial__guide" onClick={onConsultAi}>
-            Cómo consultar a la IA
-          </button>
+        {showTouristActions ? (
+          <div className="dash-exps-editorial__actions">
+            {onConsultAi ? (
+              <button type="button" className="dash-exps-editorial__guide" onClick={onConsultAi}>
+                Cómo consultar a la IA
+              </button>
+            ) : null}
+            {onFavoriteToggle ? (
+              <button
+                type="button"
+                className={`dash-exps-editorial__favorite${isFavorite ? " is-on" : ""}`}
+                aria-pressed={isFavorite}
+                disabled={favoriteBusy}
+                onClick={() => {
+                  if (!favoriteBusy) {
+                    onFavoriteToggle();
+                  }
+                }}
+              >
+                <Heart
+                  size={14}
+                  strokeWidth={1.8}
+                  fill={isFavorite ? "currentColor" : "none"}
+                  aria-hidden="true"
+                />
+                <span>{isFavorite ? "En favoritos" : "Añadir a favoritos"}</span>
+              </button>
+            ) : null}
+          </div>
         ) : null}
       </section>
 

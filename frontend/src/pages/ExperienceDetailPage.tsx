@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { ExperienceEditorialView } from "../components/admin/ExperienceEditorialView";
 import { useGuide } from "../components/guide/GuideContext";
 import { useAuth } from "../hooks/useAuth";
+import { useFavoriteToggle } from "../hooks/useFavoriteToggle";
 import { getPublicExperience, getPublicExperiences, recordExperienceView } from "../services/catalog.service";
 import type { Experience } from "../types";
 import "../styles/admin-ui.css";
@@ -21,7 +22,9 @@ export function ExperienceDetailPage() {
   const [experience, setExperience] = useState<Experience | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [favoriteOn, setFavoriteOn] = useState(false);
+  const favorite = useFavoriteToggle(id ?? "", {
+    loginRedirectTo: id ? `/explorar/${id}` : "/explorar",
+  });
 
   const fetchNearby = useCallback(async () => {
     const { experiences } = await getPublicExperiences();
@@ -38,7 +41,6 @@ export function ExperienceDetailPage() {
     let cancelled = false;
     setLoading(true);
     setError("");
-    setFavoriteOn(false);
     getPublicExperience(id)
       .then((item) => {
         if (cancelled) {
@@ -89,8 +91,9 @@ export function ExperienceDetailPage() {
       <ExperienceEditorialView
         experience={experience}
         mode="tourist"
-        favoriteOn={favoriteOn}
-        onFavoriteToggle={() => setFavoriteOn((value) => !value)}
+        favoriteOn={favorite.favorited}
+        favoriteBusy={favorite.busy}
+        onFavoriteToggle={favorite.toggle}
         nearbyHref={(nearbyId) => `/explorar/${nearbyId}`}
         fetchNearby={fetchNearby}
         onConsultAi={() => {

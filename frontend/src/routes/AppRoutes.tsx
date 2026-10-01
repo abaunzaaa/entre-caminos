@@ -17,6 +17,7 @@ import { OnboardingPage } from "../pages/onboarding/OnboardingPage";
 import { ExplorePage } from "../pages/ExplorePage";
 import { ExplorerBlankPage } from "../pages/ExplorerBlankPage";
 import { ExperienceDetailPage } from "../pages/ExperienceDetailPage";
+import { FavoritesPage } from "../pages/FavoritesPage";
 import { DashboardPage } from "../pages/admin/DashboardPage";
 import { AdminProfilePage } from "../pages/admin/AdminProfilePage";
 import { AdministratorsPage } from "../pages/admin/AdministratorsPage";
@@ -112,7 +113,7 @@ export function AppRoutes() {
           <Route element={<PublicLayout />}>
             <Route path="/explorar" element={<ExplorePage />} />
             <Route path="/explorar/:id" element={<ExperienceDetailPage />} />
-            <Route path="/favoritos" element={<ExplorerBlankPage title="FAVORITOS" />} />
+            <Route path="/favoritos" element={<FavoritesPage />} />
             <Route path="/mapa" element={<ExplorerBlankPage title="MAPA" />} />
             <Route path="/plan-con-amigos" element={<ExplorerBlankPage title="PLAN CON AMIGOS" />} />
             <Route path="/visitados" element={<ExplorerBlankPage title="VISITADOS" />} />

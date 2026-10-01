@@ -1,6 +1,7 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { MapHeartLogo } from "../components/brand/MapHeartLogo";
 import { ExplorerNavbar, isExplorerShellPath } from "../components/explorer/ExplorerNavbar";
+import { FavoriteToast } from "../components/explorer/FavoriteToast";
 import { useAuth } from "../hooks/useAuth";
 import { formatPersonName } from "../utils/person-name";
 import "../styles/explorer.css";
@@ -15,6 +16,7 @@ export function PublicLayout() {
       <div className="explorer-page explorer-page--shell min-h-screen text-ink">
         <ExplorerNavbar />
         <Outlet />
+        <FavoriteToast />
       </div>
     );
   }

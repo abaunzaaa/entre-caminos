@@ -1,10 +1,13 @@
 import { useEffect, useId, useMemo, useRef, useState, type CSSProperties } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { ArrowUpRight, MapPin } from "lucide-react";
 import { experienceGalleryUrls, municipalityLabel } from "./explorer-media";
 import { FavoriteFoldersGrid } from "./FavoriteFoldersGrid";
-import { MOCK_FAVORITE_FOLDERS } from "./favorite-folders";
+import { experiencesToFavoriteFolders } from "./favorite-folders";
+import { useAuth } from "../../hooks/useAuth";
 import { useInViewReveal } from "../../hooks/useInViewReveal";
+import { listFavoriteExperiences } from "../../services/favorites.service";
+import { onFavoritesChanged } from "../../services/favorites-sync";
 import { formatPrice } from "../../utils/cn";
 import { experienceCategoryNames } from "../../utils/experience-categories";
 import type { Experience } from "../../types";
@@ -140,8 +143,39 @@ function RecsExperienceGallery({ urls }: { urls: string[] }) {
 
 export function ExplorerRecommendedSection({ experiences }: ExplorerRecommendedSectionProps) {
   const tablistId = useId();
+  const { user } = useAuth();
+  const { pathname, key: locationKey } = useLocation();
   const { ref: featuredRef, inView: featuredRevealed } = useInViewReveal<HTMLDivElement>();
   const { ref: favoritesRef, inView: favoritesRevealed } = useInViewReveal<HTMLDivElement>();
+  const [favoriteFolders, setFavoriteFolders] = useState(() => experiencesToFavoriteFolders([]));
+
+  useEffect(() => {
+    if (!user) {
+      setFavoriteFolders([]);
+      return;
+    }
+    let cancelled = false;
+    function loadFolders() {
+      listFavoriteExperiences({ limit: 4 })
+        .then((items) => {
+          if (!cancelled) {
+            setFavoriteFolders(experiencesToFavoriteFolders(items, 4));
+          }
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setFavoriteFolders([]);
+          }
+        });
+    }
+    loadFolders();
+    const unsubscribe = onFavoritesChanged(loadFolders);
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
+  }, [user?.id, pathname, locationKey]);
+
   const tabs = useMemo(
     () =>
       experiences.slice(0, 5).map((experience) => {
@@ -276,7 +310,14 @@ export function ExplorerRecommendedSection({ experiences }: ExplorerRecommendedS
           ref={favoritesRef}
           className={`explorer-recs__favorites explorer-reveal-scope${favoritesRevealed ? " is-revealed" : ""}`}
         >
-          <FavoriteFoldersGrid folders={MOCK_FAVORITE_FOLDERS} />
+          <FavoriteFoldersGrid
+            folders={favoriteFolders}
+            emptyMessage={
+              user
+                ? "Aún no tienes experiencias favoritas"
+                : "Inicia sesión para guardar y ver tus favoritos"
+            }
+          />
         </div>
       </div>
     </section>

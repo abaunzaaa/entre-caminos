@@ -1,6 +1,7 @@
-import { MapPin } from "lucide-react";
+import { Heart, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
 import { parseStoredLocation } from "../../data/colombia-locations";
+import { useFavoriteToggle } from "../../hooks/useFavoriteToggle";
 import { experienceImages, mediaUrl } from "../../utils/media";
 import { formatPrice } from "../../utils/cn";
 import { formatExperienceCategories } from "../../utils/experience-categories";
@@ -50,6 +51,44 @@ function formatSentAt(value?: string | null) {
   }).format(date);
 }
 
+function TouristFavoriteButton({
+  experienceId,
+  initialFavorited,
+}: {
+  experienceId: string;
+  initialFavorited?: boolean;
+}) {
+  const { favorited, busy, toggle } = useFavoriteToggle(experienceId, {
+    initialFavorited,
+    loginRedirectTo: `/explorar/${experienceId}`,
+  });
+
+  return (
+    <button
+      type="button"
+      className={`dash-exps-tile__fav${favorited ? " is-on" : ""}`}
+      aria-label={favorited ? "Quitar de favoritos" : "Añadir a favoritos"}
+      aria-pressed={favorited}
+      disabled={busy}
+      onClick={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        toggle();
+      }}
+    >
+      <Heart
+        size={14}
+        strokeWidth={1.9}
+        fill={favorited ? "currentColor" : "none"}
+        aria-hidden="true"
+      />
+      <span className="dash-exps-tile__fav-tip" role="tooltip">
+        {favorited ? "Quitar de favoritos" : "Añadir a favoritos"}
+      </span>
+    </button>
+  );
+}
+
 export function ExperienceCatalogCard({
   experience,
   statusOpen = false,
@@ -59,6 +98,7 @@ export function ExperienceCatalogCard({
   showManage = true,
   viewHref,
   variant = "admin",
+  favorited,
   onToggleStatus,
   onChangeStatus,
   onDelete,
@@ -72,6 +112,8 @@ export function ExperienceCatalogCard({
   /** Override detail link (defaults to admin preview). */
   viewHref?: string;
   variant?: "admin" | "tourist";
+  /** Optional shared favorite state from a page-level batch load. */
+  favorited?: boolean;
   onToggleStatus?: () => void;
   onChangeStatus?: (status: ExperienceStatus) => void;
   onDelete?: () => void;
@@ -95,18 +137,31 @@ export function ExperienceCatalogCard({
   const canChangeStatus =
     !isTourist && (experience.status === "PUBLISHED" || experience.status === "ARCHIVED");
 
+  const viewLink = (
+    <Link
+      to={detailPath}
+      className="dash-exps-tile__glass"
+      onClick={(event) => event.stopPropagation()}
+    >
+      {viewLabel}
+    </Link>
+  );
+
   return (
     <article className="dash-exps-tile">
       <Link to={detailPath} className="dash-exps-tile__link" aria-label={`${viewLabel} ${experience.title}`} />
-      <div className="dash-exps-tile__photo">
-        <TeamInviteCarousel className="dash-exps-tile__gallery" slides={gallery} label={experience.title} />
-        <Link
-          to={detailPath}
-          className="dash-exps-tile__glass"
-          onClick={(event) => event.stopPropagation()}
-        >
-          {viewLabel}
-        </Link>
+      <div className="dash-exps-tile__media">
+        <div className="dash-exps-tile__photo">
+          <TeamInviteCarousel className="dash-exps-tile__gallery" slides={gallery} label={experience.title} />
+        </div>
+        {isTourist ? (
+          <div className="dash-exps-tile__actions">
+            {viewLink}
+            <TouristFavoriteButton experienceId={experience.id} initialFavorited={favorited} />
+          </div>
+        ) : (
+          viewLink
+        )}
       </div>
       <div className="dash-exps-tile__body">
         <div className="dash-exps-tile__chips">
