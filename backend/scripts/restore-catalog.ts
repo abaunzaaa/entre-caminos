@@ -355,8 +355,32 @@ async function main() {
     }
   }
 
+  // Restaura una selección editorial pública (destacadas) para /explorar.
+  const published = await prisma.experience.findMany({
+    where: { status: "PUBLISHED" },
+    orderBy: { createdAt: "desc" },
+    select: { id: true },
+    take: 5,
+  });
+  await prisma.experience.updateMany({
+    data: { isFeatured: false, featuredOrder: null, featuredFrom: null, featuredUntil: null },
+  });
+  const now = new Date();
+  for (let index = 0; index < published.length; index += 1) {
+    await prisma.experience.update({
+      where: { id: published[index].id },
+      data: {
+        isFeatured: true,
+        featuredOrder: index + 1,
+        featuredFrom: now,
+        featuredUntil: null,
+      },
+    });
+  }
+
   const count = await prisma.experience.count({ where: { status: "PUBLISHED" } });
-  console.log(`Listo. Experiencias publicadas: ${count}`);
+  const featured = await prisma.experience.count({ where: { status: "PUBLISHED", isFeatured: true } });
+  console.log(`Listo. Experiencias publicadas: ${count}. Destacadas: ${featured}`);
 }
 
 main()

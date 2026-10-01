@@ -102,10 +102,9 @@ export function ExplorePage() {
     let cancelled = false;
     getCoverFeaturedExperiences()
       .then((items) => {
-        if (cancelled || items.length === 0) {
-          return;
+        if (!cancelled) {
+          setCoverFeatured(items);
         }
-        setCoverFeatured(items);
       })
       .catch(() => {
         if (!cancelled) {
