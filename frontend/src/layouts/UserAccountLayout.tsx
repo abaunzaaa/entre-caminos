@@ -8,7 +8,7 @@ export function UserAccountLayout() {
   return (
     <div className="explorer-page explorer-page--shell min-h-screen text-ink">
       <ExplorerNavbar />
-      <div style={{ paddingTop: "var(--explorer-nav-height)" }}>
+      <div className="profile-account-outlet" style={{ paddingTop: "var(--explorer-nav-height)" }}>
         <Outlet />
       </div>
     </div>

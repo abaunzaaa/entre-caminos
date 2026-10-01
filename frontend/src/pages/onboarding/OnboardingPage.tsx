@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import logoEntreCaminos from "../../assets/logo.png";
 import { CompanyStep } from "../../components/onboarding/CompanyStep";
 import { LocationStep, type LocationStatus } from "../../components/onboarding/LocationStep";
@@ -36,6 +36,8 @@ import {
   type OnboardingForm,
   validateOnboardingPhoto,
 } from "../../utils/onboarding";
+import { reverseGeocodeColombia } from "../../utils/geocode";
+import { formatPersonName } from "../../utils/person-name";
 
 const COPY = [
   { title: "¿Dónde quieres comenzar?", lead: "Cuéntanos dónde estás para acercarte mejores experiencias." },
@@ -46,9 +48,21 @@ const COPY = [
   { title: "Todo listo", lead: "Así se verá tu perfil en Entre Caminos." },
 ] as const;
 
+const EDIT_COPY = [
+  { title: "Ubicación", lead: "Actualiza dónde estás para acercarte mejores experiencias." },
+  { title: "Tu imagen", lead: "Elige cómo quieres presentarte en Entre Caminos." },
+  { title: "Intereses", lead: "Elige entre 3 y 5 intereses." },
+  { title: "Compañía", lead: "Elige una o varias opciones." },
+  { title: "Preferencias", lead: "Afina ambientes, música, presupuesto y clima." },
+  { title: "Revisa tu perfil", lead: "Confirma los cambios antes de guardarlos." },
+] as const;
+
 export function OnboardingPage() {
   const { user, refresh } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isProfileEdit = location.pathname.startsWith("/perfil/editar");
+  const exitTarget = isProfileEdit ? "/perfil" : "/explorar";
   const fileInput = useRef<HTMLInputElement>(null);
   const pendingFile = useRef<File | null>(null);
   const savingLock = useRef(false);
@@ -74,6 +88,18 @@ export function OnboardingPage() {
   const [exitOpen, setExitOpen] = useState(false);
 
   useEffect(() => {
+    if (!isProfileEdit && user?.profile?.onboardingCompleted) {
+      navigate("/perfil", { replace: true });
+    }
+  }, [isProfileEdit, navigate, user?.profile?.onboardingCompleted]);
+
+  useEffect(() => {
+    if (isProfileEdit && user && !user.profile?.onboardingCompleted) {
+      navigate("/onboarding", { replace: true });
+    }
+  }, [isProfileEdit, navigate, user]);
+
+  useEffect(() => {
     const next = profileToForm(user?.profile);
     setForm((current) => ({ ...next, localPhotoUrl: current.localPhotoUrl }));
     setHydrated(true);
@@ -81,11 +107,11 @@ export function OnboardingPage() {
 
   useEffect(() => {
     const next = profileToForm(user?.profile);
-    setStep(user?.profile?.onboardingCompleted ? 6 : getOnboardingResumeStep(next));
-  }, [user?.id]);
+    setStep(user?.profile?.onboardingCompleted || isProfileEdit ? 6 : getOnboardingResumeStep(next));
+  }, [user?.id, isProfileEdit]);
 
   const primaryCount = countPrimaryInterests(form.interests);
-  const copy = COPY[step - 1] ?? COPY[0];
+  const copy = (isProfileEdit ? EDIT_COPY : COPY)[step - 1] ?? (isProfileEdit ? EDIT_COPY[0] : COPY[0]);
   const canContinue =
     (step === 1 && isLocationComplete(form)) ||
     (step === 2 && isPhotoStepComplete(form) && (form.profileImageType === "AVATAR" || Boolean(form.profileImageUrl))) ||
@@ -102,7 +128,7 @@ export function OnboardingPage() {
   }
 
   useEffect(() => {
-    if (!hydrated) {
+    if (!hydrated || isProfileEdit) {
       return;
     }
     if (skipDraftSave.current) {
@@ -115,15 +141,18 @@ export function OnboardingPage() {
       });
     }, 400);
     return () => window.clearTimeout(timer);
-  }, [form, hydrated]);
+  }, [form, hydrated, isProfileEdit]);
 
   useEffect(() => {
+    if (isProfileEdit) {
+      return;
+    }
     function flushDraft() {
       void saveOnboardingProfile(formRef.current, false);
     }
     window.addEventListener("pagehide", flushDraft);
     return () => window.removeEventListener("pagehide", flushDraft);
-  }, []);
+  }, [isProfileEdit]);
 
   async function onPickFile(file: File | undefined) {
     if (!file) {
@@ -220,6 +249,9 @@ export function OnboardingPage() {
   }
 
   async function persistDraft(nextForm = formRef.current) {
+    if (isProfileEdit) {
+      return;
+    }
     await saveOnboardingProfile(nextForm, false);
   }
 
@@ -228,6 +260,10 @@ export function OnboardingPage() {
       return;
     }
     setFormError("");
+    if (isProfileEdit) {
+      goTo(step + 1);
+      return;
+    }
     setDraftSaving(true);
     try {
       await persistDraft();
@@ -248,16 +284,21 @@ export function OnboardingPage() {
 
   function requestLeave() {
     if (!hasUnsavedChanges()) {
-      navigate("/explorar", { replace: true });
+      navigate(exitTarget, { replace: true });
       return;
     }
     setExitOpen(true);
   }
 
   async function onLeave() {
+    if (isProfileEdit) {
+      setExitOpen(false);
+      navigate(exitTarget, { replace: true });
+      return;
+    }
     try {
       await persistDraft();
-      navigate("/explorar", { replace: true });
+      navigate(exitTarget, { replace: true });
     } catch (error) {
       setExitOpen(false);
       setFormError(getApiErrorMessage(error, "No pudimos guardar. Inténtalo de nuevo."));
@@ -274,7 +315,7 @@ export function OnboardingPage() {
     try {
       await saveOnboardingProfile(form, true);
       await refresh();
-      navigate("/explorar", { replace: true });
+      navigate(isProfileEdit ? "/perfil" : "/explorar", { replace: true });
     } catch (error) {
       savingLock.current = false;
       setSaving(false);
@@ -367,10 +408,11 @@ export function OnboardingPage() {
         />
       );
     }
+    const displayName = formatPersonName(user?.name ?? "") || user?.name?.trim() || "";
     return (
       <SummaryStep
         form={form}
-        userName={user?.name ?? ""}
+        userName={displayName}
         onChangeImage={() => goTo(2)}
         onEdit={(section) => {
           if (section === "interests") {
@@ -392,6 +434,10 @@ export function OnboardingPage() {
     return <div className="onboarding-page" />;
   }
 
+  if (!isProfileEdit && user?.profile?.onboardingCompleted) {
+    return <div className="onboarding-page" />;
+  }
+
   return (
     <div className="onboarding-page">
       <section className="onboarding-shell" aria-labelledby="onboarding-title">
@@ -400,7 +446,9 @@ export function OnboardingPage() {
             <img src={logoEntreCaminos} alt="Entre Caminos" />
             <span className="onboarding-header__copy">
               <strong className="onboarding-header__wordmark">Entre Caminos</strong>
-              <span className="onboarding-header__kicker">Personaliza tu experiencia</span>
+              <span className="onboarding-header__kicker">
+                {isProfileEdit ? "Editar perfil" : "Personaliza tu experiencia"}
+              </span>
             </span>
           </Link>
           <div className="onboarding-header__meta">
@@ -408,7 +456,7 @@ export function OnboardingPage() {
               Paso {step} de {ONBOARDING_STEPS.length}
             </span>
             <button type="button" className="onboarding-header__exit" onClick={requestLeave}>
-              Salir
+              {isProfileEdit ? "Cancelar" : "Salir"}
             </button>
           </div>
         </header>
@@ -459,8 +507,10 @@ export function OnboardingPage() {
             />
           ) : (
             <OnboardingActions
-              backLabel="Editar preferencias"
-              continueLabel={saving ? "Guardando…" : "Guardar y explorar"}
+              backLabel={isProfileEdit ? "Seguir editando" : "Editar preferencias"}
+              continueLabel={
+                saving ? "Guardando…" : isProfileEdit ? "Guardar cambios" : "Guardar y explorar"
+              }
               onBack={() => goTo(5)}
               onContinue={() => void onExplore()}
               continueLoading={saving}
@@ -469,6 +519,10 @@ export function OnboardingPage() {
           <OnboardingStepper
             currentStep={step}
             onStepSelect={(next) => {
+              if (isProfileEdit) {
+                goTo(next);
+                return;
+              }
               void persistDraft()
                 .then(() => goTo(next))
                 .catch((error) => {
@@ -481,10 +535,14 @@ export function OnboardingPage() {
 
       <KeyConfirmDialog
         open={exitOpen}
-        title="¿Salir del perfil?"
-        description="Podrás continuar más tarde. El catálogo se abre cuando el perfil esté completo."
-        cancelLabel="Seguir personalizando"
-        confirmLabel="Salir"
+        title={isProfileEdit ? "¿Cancelar edición?" : "¿Salir del perfil?"}
+        description={
+          isProfileEdit
+            ? "Los cambios no guardados se descartarán y volverás a tu perfil."
+            : "Podrás continuar más tarde. El catálogo se abre cuando el perfil esté completo."
+        }
+        cancelLabel={isProfileEdit ? "Seguir editando" : "Seguir personalizando"}
+        confirmLabel={isProfileEdit ? "Descartar cambios" : "Salir"}
         onCancel={() => setExitOpen(false)}
         onConfirm={() => void onLeave()}
       />

@@ -7,6 +7,7 @@ import {
   Map,
   MapPinned,
   Menu,
+  UserRound,
   Users,
   X,
 } from "lucide-react";
@@ -29,10 +30,10 @@ const NAV_LINKS: Array<{
   { to: "/visitados", label: "Visitados", icon: MapPinned, end: true },
 ];
 
-const EXPLORER_SHELL_PATHS = new Set(["/favoritos", "/mapa", "/plan-con-amigos", "/visitados"]);
+const EXPLORER_SHELL_PATHS = new Set(["/favoritos", "/mapa", "/plan-con-amigos", "/visitados", "/perfil"]);
 
 export function isExplorerShellPath(pathname: string) {
-  return pathname.startsWith("/explorar") || EXPLORER_SHELL_PATHS.has(pathname);
+  return pathname.startsWith("/explorar") || pathname === "/perfil" || EXPLORER_SHELL_PATHS.has(pathname);
 }
 
 export function ExplorerNavbar() {
@@ -80,7 +81,8 @@ export function ExplorerNavbar() {
     return () => window.cancelAnimationFrame(frame);
   }, [hash, pathname]);
 
-  const isExplorer = isExplorerShellPath(pathname) || pathname.endsWith("/cambiar-contrasena");
+  const isExplorer =
+    isExplorerShellPath(pathname) || pathname.endsWith("/cambiar-contrasena") || pathname === "/perfil";
 
   return (
     <header
@@ -160,17 +162,28 @@ export function ExplorerNavbar() {
             );
           })}
           {user ? (
-            <button
-              type="button"
-              className="explorer-nav__drawer-link"
-              onClick={() => {
-                setMenuOpen(false);
-                void logout();
-              }}
-            >
-              <LogOut size={18} strokeWidth={1.8} aria-hidden="true" />
-              <span>Cerrar sesión</span>
-            </button>
+            <>
+              {user?.role === "USER" ? (
+                <NavLink
+                  to="/perfil"
+                  className={({ isActive }) => `explorer-nav__drawer-link${isActive ? " is-active" : ""}`}
+                >
+                  <UserRound size={18} strokeWidth={1.8} aria-hidden="true" />
+                  <span>Perfil</span>
+                </NavLink>
+              ) : null}
+              <button
+                type="button"
+                className="explorer-nav__drawer-link"
+                onClick={() => {
+                  setMenuOpen(false);
+                  void logout();
+                }}
+              >
+                <LogOut size={18} strokeWidth={1.8} aria-hidden="true" />
+                <span>Cerrar sesión</span>
+              </button>
+            </>
           ) : (
             <>
               <Link to="/login" className="explorer-nav__drawer-link">

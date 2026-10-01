@@ -18,6 +18,7 @@ import { ExplorePage } from "../pages/ExplorePage";
 import { ExplorerBlankPage } from "../pages/ExplorerBlankPage";
 import { ExperienceDetailPage } from "../pages/ExperienceDetailPage";
 import { FavoritesPage } from "../pages/FavoritesPage";
+import { ProfilePage } from "../pages/ProfilePage";
 import { DashboardPage } from "../pages/admin/DashboardPage";
 import { AdminProfilePage } from "../pages/admin/AdminProfilePage";
 import { AdministratorsPage } from "../pages/admin/AdministratorsPage";
@@ -41,6 +42,8 @@ const PAGE_TITLES: Record<string, string> = {
   "/onboarding": "Personaliza tu experiencia | Entre Caminos",
   "/onboarding/preferencias": "Personaliza tu experiencia | Entre Caminos",
   "/onboarding/listo": "Personaliza tu experiencia | Entre Caminos",
+  "/perfil": "Tu perfil | Entre Caminos",
+  "/perfil/editar": "Editar perfil | Entre Caminos",
 };
 
 const INTRO_SEEN_KEY = "ec-intro-seen";
@@ -110,6 +113,14 @@ export function AppRoutes() {
           </Route>
         </Route>
         <Route element={<OnboardingCatalogGuard />}>
+          <Route element={<ProtectedRoute />}>
+            <Route element={<UserAccountLayout />}>
+              <Route path="/perfil" element={<ProfilePage />} />
+            </Route>
+            <Route element={<OnboardingLayout />}>
+              <Route path="/perfil/editar" element={<OnboardingPage />} />
+            </Route>
+          </Route>
           <Route element={<PublicLayout />}>
             <Route path="/explorar" element={<ExplorePage />} />
             <Route path="/explorar/:id" element={<ExperienceDetailPage />} />
