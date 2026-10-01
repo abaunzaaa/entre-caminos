@@ -1,34 +1,46 @@
 .guide-fab {
   position: fixed;
-  right: 24px;
-  bottom: 28px;
+  right: max(24px, env(safe-area-inset-right, 0px));
+  bottom: max(24px, env(safe-area-inset-bottom, 0px));
   z-index: 10060;
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  justify-content: flex-start;
+  gap: 12px;
+  box-sizing: border-box;
   width: auto;
-  height: 48px;
-  padding: 5px 18px 5px 5px;
+  min-width: 138px;
+  height: 54px;
+  padding: 7px 20px 7px 8px;
   overflow: visible;
   appearance: none;
-  border: 1px solid rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.78);
   border-radius: 999px;
+  /* Exact look from the approved reference capture */
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0.08) 46%),
-    linear-gradient(165deg, rgba(214, 222, 218, 0.82) 0%, rgba(168, 182, 176, 0.78) 100%);
+    linear-gradient(
+      180deg,
+      rgba(198, 197, 190, 0.62) 0%,
+      rgba(186, 186, 176, 0.56) 55%,
+      rgba(168, 170, 164, 0.54) 100%
+    );
   box-shadow:
-    0 12px 28px rgba(16, 22, 16, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.82),
-    inset 0 -1px 0 rgba(41, 73, 66, 0.08);
-  backdrop-filter: blur(26px) saturate(1.12);
-  -webkit-backdrop-filter: blur(26px) saturate(1.12);
-  color: #1c332e;
+    0 8px 20px rgba(20, 24, 28, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -1px 0 rgba(50, 54, 48, 0.08);
+  -webkit-backdrop-filter: blur(20px) saturate(0.95);
+  backdrop-filter: blur(20px) saturate(0.95);
+  color: #2a2a2a;
   font-family: inherit;
   cursor: pointer;
   opacity: 0;
-  transform: translateY(26px);
-  animation: guide-fab-enter 720ms cubic-bezier(0.22, 1, 0.36, 1) 1.15s both;
-  transition: transform 280ms ease, box-shadow 280ms ease, background 280ms ease;
+  transform: translateY(12px);
+  animation: guide-fab-enter 560ms cubic-bezier(0.22, 1, 0.36, 1) 0.9s both;
+  transition:
+    box-shadow 220ms ease,
+    background 220ms ease,
+    border-color 220ms ease,
+    opacity 220ms ease;
 }
 
 .guide-fab[hidden] {
@@ -40,116 +52,86 @@
   display: grid;
   flex: 0 0 auto;
   place-items: center;
-  width: 36px;
-  height: 36px;
-  overflow: hidden;
-  isolation: isolate;
-  border: 1px solid rgba(232, 246, 238, 0.9);
+  width: 40px;
+  height: 40px;
+  overflow: visible;
+  border: 0;
   border-radius: 50%;
+  /* Pearl circle from reference: bright TL highlight + soft BR shadow */
   background:
-    radial-gradient(circle at 32% 26%, rgba(255, 255, 255, 0.95) 0 8%, transparent 36%),
-    linear-gradient(165deg, rgba(236, 248, 242, 0.92) 0%, rgba(186, 216, 200, 0.82) 100%);
+    radial-gradient(
+      circle at 32% 28%,
+      rgb(242, 246, 247) 0%,
+      rgb(210, 214, 220) 45%,
+      rgb(190, 196, 206) 100%
+    );
   box-shadow:
-    inset 0 1px 1px rgba(255, 255, 255, 0.95),
-    inset 0 -8px 12px rgba(41, 73, 66, 0.08),
-    0 1px 3px rgba(41, 73, 66, 0.1);
-  backdrop-filter: blur(18px) saturate(1.15);
-  -webkit-backdrop-filter: blur(18px) saturate(1.15);
-}
-
-.guide-fab__aura {
-  position: absolute;
-  right: 2px;
-  bottom: 1px;
-  width: 18px;
-  height: 16px;
-  border-radius: 50%;
-  background: rgba(210, 236, 222, 0.55);
-  filter: blur(5px);
-  pointer-events: none;
-}
-
-.guide-fab__spec {
-  position: absolute;
-  top: 5px;
-  left: 8px;
-  z-index: 1;
-  width: 11px;
-  height: 7px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.85);
-  filter: blur(0.8px);
-  pointer-events: none;
+    inset 2px 2px 4px rgba(255, 255, 255, 0.85),
+    inset -2px -3px 5px rgba(70, 80, 95, 0.25),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.25),
+    0 1px 2px rgba(20, 24, 28, 0.1);
 }
 
 .guide-fab__key {
   position: relative;
   z-index: 1;
   display: block;
-  width: 15px;
-  height: 21px;
-  background-color: #214e3b;
+  width: 16px;
+  height: 22px;
+  background-color: #2f2f2f;
   -webkit-mask: url("../assets/key-silhouette.png") center / contain no-repeat;
   mask: url("../assets/key-silhouette.png") center / contain no-repeat;
   pointer-events: none;
-  transition: transform 220ms ease;
 }
 
 .guide-fab__label {
   font-size: 15px;
-  font-weight: 550;
+  font-weight: 500;
   letter-spacing: 0.02em;
   line-height: 1;
   white-space: nowrap;
-}
-
-.guide-fab svg {
-  width: 42px;
-  height: 42px;
-  color: #214e3b;
+  color: #2a2a2a;
 }
 
 .guide-fab.is-settled {
   opacity: 1;
-  animation: guide-fab-float 4.5s ease-in-out infinite;
+  transform: none;
+  animation: none;
 }
 
 .guide-fab:hover,
 .guide-fab.is-settled:hover {
-  animation: none;
-  transform: translateY(-4px) scale(1.03);
+  border-color: rgba(255, 255, 255, 0.88);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.1) 46%),
-    linear-gradient(165deg, rgba(222, 230, 226, 0.88) 0%, rgba(176, 190, 184, 0.84) 100%);
+    linear-gradient(
+      180deg,
+      rgba(206, 205, 198, 0.7) 0%,
+      rgba(192, 192, 182, 0.64) 55%,
+      rgba(176, 178, 172, 0.6) 100%
+    );
   box-shadow:
-    0 16px 32px rgba(16, 22, 16, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    inset 0 -1px 0 rgba(41, 73, 66, 0.08);
+    0 10px 24px rgba(20, 24, 28, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.62),
+    inset 0 -1px 0 rgba(50, 54, 48, 0.08);
 }
 
-.guide-fab:hover .guide-fab__key,
-.guide-fab.is-settled:hover .guide-fab__key {
-  transform: translateY(-1px) rotate(-8deg);
+.guide-fab:focus {
+  outline: none;
+}
+
+.guide-fab:focus-visible {
+  outline: 2px solid rgba(42, 42, 42, 0.45);
+  outline-offset: 3px;
 }
 
 @keyframes guide-fab-enter {
   from {
     opacity: 0;
-    transform: translateY(16px);
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-@keyframes guide-fab-float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-2.5px);
   }
 }
 
@@ -161,23 +143,20 @@
     opacity: 1;
     transform: none;
     animation: none;
-  }
-
-  .guide-fab:hover .guide-fab__key,
-  .guide-fab.is-settled:hover .guide-fab__key {
-    transform: none;
+    transition: none;
   }
 }
 
 .guide-fab__dot {
   position: absolute;
-  top: 2px;
-  right: 2px;
+  top: 1px;
+  right: 1px;
   z-index: 2;
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #f7f3ea;
+  background: #c45c3a;
+  box-shadow: 0 0 0 1.5px rgba(232, 235, 240, 0.95);
 }
 
 .guide-overlay {
@@ -516,33 +495,120 @@ body:has(.guide-panel.is-expanded) {
   align-items: stretch;
   border: 0;
   border-radius: 0;
+  /* Real frosted glass: translucent enough to blur the page behind */
+  isolation: auto;
   background:
-    radial-gradient(1200px 520px at 72% -8%, rgba(247, 243, 234, 0.7), transparent 58%),
-    linear-gradient(180deg, rgba(255, 253, 249, 0.94), rgba(252, 249, 243, 0.9));
-  box-shadow: none;
-  backdrop-filter: blur(40px) saturate(1.18);
-  -webkit-backdrop-filter: blur(40px) saturate(1.18);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.42) 0%, rgba(245, 247, 246, 0.28) 45%, rgba(242, 244, 243, 0.5) 100%),
+    rgba(242, 244, 243, 0.38);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  -webkit-backdrop-filter: blur(32px) saturate(1.15);
+  backdrop-filter: blur(32px) saturate(1.15);
 }
 
 .guide-panel.is-expanded::before {
   border-radius: 0;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, transparent 36%);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.38) 0%, transparent 42%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, transparent 50%);
+  pointer-events: none;
 }
 
 .guide-panel.is-expanded::after {
-  display: none;
+  display: block;
+  border-radius: 0;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45);
 }
 
 .guide-panel.is-expanded .guide-panel__top {
   padding: 14px 22px;
   border-radius: 0;
-  border-bottom: 1px solid rgba(31, 41, 51, 0.06);
-  background: rgba(255, 255, 255, 0.62);
-  box-shadow: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.38);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 10px 24px -20px rgba(31, 41, 51, 0.22);
+  -webkit-backdrop-filter: blur(24px) saturate(1.12);
+  backdrop-filter: blur(24px) saturate(1.12);
 }
 
 .guide-panel.is-expanded .guide-panel__brand strong {
   font-size: 15px;
+}
+
+/* Expanded text: black, not green */
+.guide-panel.is-expanded,
+.guide-panel.is-expanded .guide-shell,
+.guide-panel.is-expanded .guide-rail,
+.guide-panel.is-expanded .guide-home,
+.guide-panel.is-expanded .guide-chat,
+.guide-panel.is-expanded .guide-history,
+.guide-panel.is-expanded .guide-panel__top,
+.guide-panel.is-expanded .guide-panel__brand,
+.guide-panel.is-expanded .guide-panel__brand strong,
+.guide-panel.is-expanded .guide-panel__brand span,
+.guide-panel.is-expanded .guide-panel__id,
+.guide-panel.is-expanded .guide-rail__app,
+.guide-panel.is-expanded .guide-rail__brand strong,
+.guide-panel.is-expanded .guide-rail__brand em,
+.guide-panel.is-expanded .guide-rail p,
+.guide-panel.is-expanded .guide-rail__label,
+.guide-panel.is-expanded .guide-rail__thread-title,
+.guide-panel.is-expanded .guide-rail__thread-date,
+.guide-panel.is-expanded .guide-rail__folder-open strong,
+.guide-panel.is-expanded .guide-rail__empty,
+.guide-panel.is-expanded .guide-rail__search input,
+.guide-panel.is-expanded .guide-rail__create input,
+.guide-panel.is-expanded .guide-rail__folder-rename,
+.guide-panel.is-expanded .guide-settings__title,
+.guide-panel.is-expanded .guide-settings__row,
+.guide-panel.is-expanded .guide-home h2,
+.guide-panel.is-expanded .guide-home__copy,
+.guide-panel.is-expanded .guide-action,
+.guide-panel.is-expanded .guide-action strong,
+.guide-panel.is-expanded .guide-action em,
+.guide-panel.is-expanded .guide-hints button,
+.guide-panel.is-expanded .guide-composer__field,
+.guide-panel.is-expanded .guide-composer textarea,
+.guide-panel.is-expanded .guide-stream,
+.guide-panel.is-expanded .guide-row,
+.guide-panel.is-expanded .guide-bubble,
+.guide-panel.is-expanded .guide-focus,
+.guide-panel.is-expanded .guide-focus strong,
+.guide-panel.is-expanded .guide-focus p,
+.guide-panel.is-expanded .guide-focus em,
+.guide-panel.is-expanded .guide-history button,
+.guide-panel.is-expanded .guide-history strong,
+.guide-panel.is-expanded .guide-history em,
+.guide-panel.is-expanded .guide-ghost,
+.guide-panel.is-expanded .guide-progress,
+.guide-panel.is-expanded .guide-xp,
+.guide-panel.is-expanded .guide-dock__btn,
+.guide-panel.is-expanded .guide-icon-btn,
+.guide-panel.is-expanded .guide-rail__find,
+.guide-panel.is-expanded .guide-rail__collapse,
+.guide-panel.is-expanded .guide-rail__label-toggle,
+.guide-panel.is-expanded .guide-rail__label-add,
+.guide-panel.is-expanded .guide-rail__act,
+.guide-panel.is-expanded .guide-rail__more,
+.guide-panel.is-expanded .guide-rail__new,
+.guide-panel.is-expanded .guide-rail__menu,
+.guide-panel.is-expanded .guide-plus,
+.guide-panel.is-expanded .guide-mic {
+  color: #111827;
+}
+
+.guide-panel.is-expanded .guide-composer textarea::placeholder,
+.guide-panel.is-expanded .guide-composer__field::placeholder,
+.guide-panel.is-expanded .guide-rail__search input::placeholder,
+.guide-panel.is-expanded .guide-rail__create input::placeholder {
+  color: #6b7280;
+  opacity: 1;
+}
+
+.guide-panel.is-expanded .guide-send {
+  color: #fff;
 }
 
 .guide-rail {
@@ -555,9 +621,13 @@ body:has(.guide-panel.is-expanded) {
   margin: 0;
   padding: 0;
   overflow: hidden;
-  border-right: 1px solid rgba(33, 78, 59, 0.08);
-  background: rgba(247, 243, 234, 0.58);
-  backdrop-filter: blur(22px);
+  border-right: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.28);
+  -webkit-backdrop-filter: blur(28px) saturate(1.12);
+  backdrop-filter: blur(28px) saturate(1.12);
+  box-shadow:
+    inset -1px 0 0 rgba(31, 41, 51, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
   font-family: inherit;
 }
 
@@ -569,8 +639,10 @@ body:has(.guide-panel.is-expanded) {
   align-items: center;
   gap: 6px;
   padding: 16px 8px 14px;
-  background: rgba(241, 236, 224, 0.72);
-  border-right: 1px solid rgba(33, 78, 59, 0.06);
+  background: rgba(255, 255, 255, 0.22);
+  border-right: 1px solid rgba(255, 255, 255, 0.35);
+  -webkit-backdrop-filter: blur(22px) saturate(1.1);
+  backdrop-filter: blur(22px) saturate(1.1);
 }
 
 .guide-dock__btn {
@@ -1164,7 +1236,7 @@ button.guide-rail__folder-row {
   padding: 8px;
   border: 1px solid rgba(33, 78, 59, 0.1);
   border-radius: 12px;
-  background: rgba(255, 253, 249, 0.98);
+  background: rgba(245, 247, 246, 0.96);
   box-shadow: 0 14px 28px -18px rgba(23, 60, 47, 0.5);
 }
 
@@ -1820,7 +1892,7 @@ button.guide-rail__folder-row {
   padding: 8px;
   border: 1px solid rgba(255, 255, 255, 0.7);
   border-radius: 14px;
-  background: rgba(255, 253, 249, 0.78);
+  background: rgba(245, 247, 246, 0.88);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.85),
     0 18px 36px -22px rgba(23, 60, 47, 0.52);
@@ -2059,6 +2131,85 @@ button.guide-rail__folder-row {
   margin-top: auto;
   margin-bottom: 0;
   padding-top: 4px;
+}
+
+.guide-panel.is-expanded .guide-shell {
+  background: rgba(255, 255, 255, 0.22);
+  -webkit-backdrop-filter: blur(20px) saturate(1.08);
+  backdrop-filter: blur(20px) saturate(1.08);
+  box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.35);
+}
+
+.guide-panel.is-expanded .guide-home,
+.guide-panel.is-expanded .guide-chat,
+.guide-panel.is-expanded .guide-history {
+  background: transparent;
+}
+
+.guide-panel.is-expanded .guide-hints button {
+  background: rgba(255, 255, 255, 0.42);
+  border-color: rgba(255, 255, 255, 0.55);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    0 8px 18px -14px rgba(31, 41, 51, 0.2);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+
+.guide-panel.is-expanded .guide-hints button:hover {
+  background: rgba(255, 255, 255, 0.62);
+  border-color: rgba(255, 255, 255, 0.7);
+}
+
+.guide-panel.is-expanded .guide-history button:not(.guide-ghost),
+.guide-panel.is-expanded .guide-ghost {
+  background: rgba(255, 255, 255, 0.48);
+  border-color: rgba(255, 255, 255, 0.55);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.75),
+    0 8px 18px -14px rgba(31, 41, 51, 0.16);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+
+.guide-panel.is-expanded .guide-xp,
+.guide-panel.is-expanded .guide-xp__ghost,
+.guide-panel.is-expanded .guide-focus {
+  background: rgba(255, 255, 255, 0.4);
+  border-color: rgba(255, 255, 255, 0.5);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 10px 22px -16px rgba(31, 41, 51, 0.18);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+
+.guide-panel.is-expanded .guide-settings,
+.guide-panel.is-expanded .guide-rail__emoji {
+  background: rgba(255, 255, 255, 0.55);
+  border-color: rgba(255, 255, 255, 0.7);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    0 18px 36px -22px rgba(31, 41, 51, 0.28);
+  -webkit-backdrop-filter: blur(22px) saturate(1.12);
+  backdrop-filter: blur(22px) saturate(1.12);
+}
+
+.guide-panel.is-expanded .guide-composer__bar {
+  background: rgba(255, 255, 255, 0.5);
+  border-color: rgba(255, 255, 255, 0.65);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 10px 24px -16px rgba(31, 41, 51, 0.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.1);
+  backdrop-filter: blur(18px) saturate(1.1);
+}
+
+.guide-panel.is-expanded .guide-action {
+  background: rgba(255, 255, 255, 0.45);
+  border-color: rgba(255, 255, 255, 0.55);
+  -webkit-backdrop-filter: blur(14px) saturate(1.08);
+  backdrop-filter: blur(14px) saturate(1.08);
 }
 
 .guide-panel.is-expanded .guide-home {
@@ -3276,8 +3427,21 @@ a.guide-plan__stop:focus-visible {
 
 @media (max-width: 720px) {
   .guide-fab {
-    right: 20px;
-    bottom: 28px;
+    right: max(16px, env(safe-area-inset-right, 0px));
+    bottom: max(16px, env(safe-area-inset-bottom, 0px));
+    min-width: 128px;
+    height: 50px;
+    padding: 5px 16px 5px 7px;
+    gap: 10px;
+  }
+
+  .guide-fab__icon {
+    width: 38px;
+    height: 38px;
+  }
+
+  .guide-fab__label {
+    font-size: 14px;
   }
 
   .guide-panel {
