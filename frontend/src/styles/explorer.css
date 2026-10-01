@@ -1105,13 +1105,19 @@
 }
 
 .explorer-filter-rail {
+  position: relative;
+  z-index: 1000;
   display: flex;
   justify-content: center;
   width: 100%;
   margin: 0 0 1.85rem;
+  overflow: visible;
+  isolation: auto;
 }
 
 .explorer-filter-bar {
+  position: relative;
+  z-index: 1000;
   display: flex;
   flex-wrap: nowrap;
   align-items: stretch;
@@ -1120,6 +1126,7 @@
   max-width: 72rem;
   min-height: 3.55rem;
   padding: 0.28rem 0.28rem 0.28rem 0.45rem;
+  overflow: visible;
   border: 1px solid rgba(41, 73, 66, 0.08);
   border-radius: 999px;
   background: #ffffff;
@@ -1130,8 +1137,14 @@
 
 .explorer-filter-seg {
   position: relative;
+  z-index: 1;
   flex: 1 1 0;
   min-width: 7.25rem;
+  overflow: visible;
+}
+
+.explorer-filter-seg.is-open {
+  z-index: 5;
 }
 
 .explorer-filter-seg.is-wide {
@@ -1343,7 +1356,7 @@
 
 .explorer-filter-seg__menu {
   position: absolute;
-  z-index: 20;
+  z-index: 1000;
   top: calc(100% + 0.55rem);
   left: 0;
   display: flex;
@@ -1378,6 +1391,19 @@
 .explorer-filter-seg.is-end .explorer-filter-seg__menu {
   left: auto;
   right: 0;
+}
+
+/* Portaled menus escape reveal/transform stacking contexts of the discover section */
+.explorer-filter-seg__menu--portal {
+  position: fixed;
+  z-index: 99999;
+  top: auto;
+  left: auto;
+  right: auto;
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+  visibility: visible;
 }
 
 .explorer-filter-seg__menu button {
@@ -1430,15 +1456,22 @@
 @media (max-width: 860px) {
   .explorer-filter-rail {
     overflow-x: auto;
+    overflow-y: visible;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
     padding-bottom: 0.25rem;
+  }
+
+  /* overflow-x:auto clips dropdowns; unlock while a menu is open */
+  .explorer-filter-rail.is-menu-open {
+    overflow: visible;
   }
 
   .explorer-filter-bar {
     width: max-content;
     min-width: min(100%, 48rem);
     max-width: none;
+    overflow: visible;
   }
 
   .explorer-filter-seg {
@@ -1464,6 +1497,8 @@
 }
 
 .explorer-discover-catalog {
+  position: relative;
+  z-index: 1;
   width: 100%;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1509,16 +1544,34 @@
 }
 
 .explorer-discover-catalog .dash-exps-tile__body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: 6px;
   padding: 12px 13px 14px;
+  text-align: center;
+}
+
+.explorer-discover-catalog .dash-exps-tile__chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
 }
 
 .explorer-discover-catalog .dash-exps-tile h3 {
+  width: 100%;
   font-size: 15px;
+  text-align: center;
 }
 
 .explorer-discover-catalog .dash-exps-tile__place {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   font-size: 12px;
+  text-align: center;
 }
 
 .explorer-discover-catalog .dash-exps-tile__glass {
@@ -1690,10 +1743,13 @@
 }
 
 .explorer-section--discover {
+  position: relative;
+  z-index: 1;
   max-width: 1180px;
   padding-top: 3.5rem;
   /* Extra white air before the gray scalloped edge of the recs section */
   padding-bottom: calc(2rem + 45px);
+  overflow: visible;
 }
 
 

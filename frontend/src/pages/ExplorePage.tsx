@@ -225,31 +225,29 @@ export function ExplorePage() {
           </p>
         </header>
 
-        <div className="explorer-reveal explorer-reveal--soft" style={{ "--reveal-delay": "220ms" } as CSSProperties}>
-          <ExplorerDiscoverFilters
-            experiences={experiences}
-            cityOptions={cities}
-            categoryOptions={categories}
-            value={filters}
-            onChange={(next) => {
-              setFilters(next);
-              setPage(1);
-            }}
-            searchDraft={searchDraft}
-            searchActive={Boolean(activeSearch.trim())}
-            onSearchDraftChange={setSearchDraft}
-            onSearchSubmit={() => {
-              setActiveSearch(searchDraft.trim());
-              setPage(1);
-              document.getElementById("descubrir")?.scrollIntoView({ behavior: "smooth", block: "start" });
-            }}
-            onSearchClear={() => {
-              setSearchDraft("");
-              setActiveSearch("");
-              setPage(1);
-            }}
-          />
-        </div>
+        <ExplorerDiscoverFilters
+          experiences={experiences}
+          cityOptions={cities}
+          categoryOptions={categories}
+          value={filters}
+          onChange={(next) => {
+            setFilters(next);
+            setPage(1);
+          }}
+          searchDraft={searchDraft}
+          searchActive={Boolean(activeSearch.trim())}
+          onSearchDraftChange={setSearchDraft}
+          onSearchSubmit={() => {
+            setActiveSearch(searchDraft.trim());
+            setPage(1);
+            document.getElementById("descubrir")?.scrollIntoView({ behavior: "smooth", block: "start" });
+          }}
+          onSearchClear={() => {
+            setSearchDraft("");
+            setActiveSearch("");
+            setPage(1);
+          }}
+        />
 
         {loading && experiences.length === 0 ? (
           <p className="explorer-empty explorer-empty--search explorer-reveal" style={{ "--reveal-delay": "220ms" } as CSSProperties}>

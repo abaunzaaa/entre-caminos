@@ -1,4 +1,15 @@
-import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
+import { createPortal } from "react-dom";
 import { ChevronDown, Search, X } from "lucide-react";
 import { parseStoredLocation } from "../../data/colombia-locations";
 import { formatDuration } from "../../utils/experience-details";
@@ -233,13 +244,83 @@ type FilterSegmentProps = {
   alignEnd?: boolean;
 };
 
+type MenuCoords = {
+  top: number;
+  left: number;
+  minWidth: number;
+  maxHeight: number;
+};
+
 function FilterSegment({ label, valueLabel, open, onToggle, children, wide, alignEnd }: FilterSegmentProps) {
   const menuId = useId();
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const [coords, setCoords] = useState<MenuCoords | null>(null);
+
+  const updatePosition = useCallback(() => {
+    const trigger = triggerRef.current;
+    if (!trigger || !open) {
+      return;
+    }
+    const rect = trigger.getBoundingClientRect();
+    const minWidth = Math.max(rect.width, 184);
+    const maxWidth = Math.min(288, window.innerWidth - 16);
+    const width = Math.min(minWidth, maxWidth);
+    let left = alignEnd ? rect.right - width : rect.left;
+    left = Math.max(8, Math.min(left, window.innerWidth - width - 8));
+    const top = rect.bottom + 8;
+    const maxHeight = Math.max(120, Math.min(248, window.innerHeight - top - 12));
+    setCoords({ top, left, minWidth: width, maxHeight });
+  }, [alignEnd, open]);
+
+  useLayoutEffect(() => {
+    if (!open) {
+      setCoords(null);
+      return;
+    }
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [open, updatePosition]);
+
+  const menuStyle = coords
+    ? ({
+        position: "fixed",
+        top: coords.top,
+        left: coords.left,
+        minWidth: coords.minWidth,
+        maxWidth: Math.min(288, window.innerWidth - 16),
+        maxHeight: coords.maxHeight,
+        zIndex: 99999,
+      } as CSSProperties)
+    : undefined;
+
+  const menu =
+    open && coords && typeof document !== "undefined"
+      ? createPortal(
+          <div
+            id={menuId}
+            className="explorer-filter-seg__menu explorer-filter-seg__menu--portal is-open"
+            style={menuStyle}
+            role="listbox"
+            aria-label={label}
+            data-explorer-filter-menu="true"
+          >
+            {children}
+          </div>,
+          document.body,
+        )
+      : null;
+
   return (
     <div
       className={`explorer-filter-seg${open ? " is-open" : ""}${wide ? " is-wide" : ""}${alignEnd ? " is-end" : ""}`}
     >
       <button
+        ref={triggerRef}
         type="button"
         className="explorer-filter-seg__trigger"
         aria-haspopup="listbox"
@@ -253,15 +334,7 @@ function FilterSegment({ label, valueLabel, open, onToggle, children, wide, alig
           <ChevronDown size={14} strokeWidth={2} className="explorer-filter-seg__chevron" aria-hidden="true" />
         </span>
       </button>
-      <div
-        id={menuId}
-        className={`explorer-filter-seg__menu${open ? " is-open" : ""}`}
-        role="listbox"
-        aria-label={label}
-        aria-hidden={!open}
-      >
-        {children}
-      </div>
+      {menu}
     </div>
   );
 }
@@ -296,9 +369,17 @@ export function ExplorerDiscoverFilters({
 
   useEffect(() => {
     function onPointerDown(event: MouseEvent) {
-      if (!rootRef.current?.contains(event.target as Node)) {
-        setOpenKey(null);
+      const target = event.target as Node | null;
+      if (!target) {
+        return;
       }
+      if (rootRef.current?.contains(target)) {
+        return;
+      }
+      if (target instanceof Element && target.closest("[data-explorer-filter-menu='true']")) {
+        return;
+      }
+      setOpenKey(null);
     }
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
@@ -367,7 +448,10 @@ export function ExplorerDiscoverFilters({
   const canClearSearch = searchActive || Boolean(searchDraft.trim());
 
   return (
-    <div className="explorer-filter-rail" ref={rootRef}>
+    <div
+      className={`explorer-filter-rail${openKey ? " is-menu-open" : ""}`}
+      ref={rootRef}
+    >
       <div className="explorer-filter-bar" role="toolbar" aria-label="Filtros de exploración">
         <FilterSegment
           label="Ciudad"
