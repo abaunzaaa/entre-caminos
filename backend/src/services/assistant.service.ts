@@ -78,7 +78,7 @@ Reglas:
 - Nunca pongas Cultura/Naturaleza si estás preguntando el día, la ciudad, el presupuesto o con quién.
 - Nunca copies reply. Nunca pongas la misma pregunta en suggestions. Si no hay atajos claros, deja suggestions [].
 - Si el modo es una experiencia específica, NO preguntes el tipo de experiencia: ya está. Pregunta solo lo que falte (día, con quién, presupuesto) o responde sobre esa ficha.
-- Responde SOLO un JSON con esta forma:
+- Responde SOLO un JSON con esta forma (sin markdown, sin texto antes ni después):
 {
   "reply": "texto para la persona",
   "intent": "chat" | "clarify" | "recommend" | "plan" | "experience",
@@ -97,7 +97,8 @@ Reglas:
   },
   "planProgress": null | { "step": 1, "total": 5 },
   "experienceIds": ["id"]
-}`;
+}
+- Si vas a preguntar “¿Con quién…?”, reply debe ser esa pregunta y suggestions: ["Solo","En pareja","Con amigos","En familia"], todo dentro del JSON.`;
 
 function asString(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
