@@ -114,6 +114,7 @@ model User {
   folders                  Folder[]
   experienceFavorites      ExperienceFavorite[]
   experienceVisitorReviews ExperienceVisitorReview[]
+  favoriteCollections      FavoriteCollection[]
 
   @@index([roleId])
   @@index([status])
@@ -187,6 +188,7 @@ model Experience {
   experienceDetailViews    ExperienceDetailView[]
   experienceFavorites      ExperienceFavorite[]
   experienceVisitorReviews ExperienceVisitorReview[]
+  favoriteCollectionItems  FavoriteCollectionItem[]
 
   @@index([status])
   @@index([categoryId])
@@ -252,6 +254,36 @@ model ExperienceFavorite {
   @@unique([experienceId, userId])
   @@index([experienceId])
   @@map("experience_favorites")
+}
+
+model FavoriteCollection {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user  User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items FavoriteCollectionItem[]
+
+  @@unique([userId, name])
+  @@index([userId, createdAt])
+  @@map("favorite_collections")
+}
+
+model FavoriteCollectionItem {
+  id           String   @id @default(uuid())
+  collectionId String   @map("collection_id")
+  experienceId String   @map("experience_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  collection FavoriteCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  experience Experience         @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+
+  @@unique([collectionId, experienceId])
+  @@index([experienceId])
+  @@index([collectionId, createdAt])
+  @@map("favorite_collection_items")
 }
 
 model ExperienceVisitorReview {

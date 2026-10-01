@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import * as favoriteService from "../services/favorite.service.js";
+import * as collectionService from "../services/favorite-collection.service.js";
 import { parseLimitQuery } from "../utils/query.js";
 
 export async function list(req: Request, res: Response) {
@@ -14,6 +15,20 @@ export async function status(req: Request, res: Response) {
 }
 
 export async function add(req: Request, res: Response) {
+  const body = req.body && typeof req.body === "object" ? (req.body as { collectionIds?: unknown }) : {};
+  const collectionIds = Array.isArray(body.collectionIds)
+    ? body.collectionIds.filter((item): item is string => typeof item === "string" && Boolean(item.trim()))
+    : [];
+
+  if (collectionIds.length) {
+    const data = await collectionService.setExperienceCollections(
+      req.user!.id,
+      req.params.experienceId,
+      collectionIds,
+    );
+    return res.status(201).json({ success: true, data });
+  }
+
   const data = await favoriteService.addFavorite(req.user!.id, req.params.experienceId);
   return res.status(201).json({ success: true, data });
 }

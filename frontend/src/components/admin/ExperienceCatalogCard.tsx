@@ -53,14 +53,17 @@ function formatSentAt(value?: string | null) {
 
 function TouristFavoriteButton({
   experienceId,
+  experienceTitle,
   initialFavorited,
 }: {
   experienceId: string;
+  experienceTitle?: string;
   initialFavorited?: boolean;
 }) {
   const { favorited, busy, toggle } = useFavoriteToggle(experienceId, {
     initialFavorited,
     loginRedirectTo: `/explorar/${experienceId}`,
+    experienceTitle,
   });
 
   return (
@@ -157,7 +160,11 @@ export function ExperienceCatalogCard({
         {isTourist ? (
           <div className="dash-exps-tile__actions">
             {viewLink}
-            <TouristFavoriteButton experienceId={experience.id} initialFavorited={favorited} />
+            <TouristFavoriteButton
+              experienceId={experience.id}
+              experienceTitle={experience.title}
+              initialFavorited={favorited}
+            />
           </div>
         ) : (
           viewLink

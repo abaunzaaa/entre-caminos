@@ -24,6 +24,7 @@ export function ExperienceDetailPage() {
   const [error, setError] = useState("");
   const favorite = useFavoriteToggle(id ?? "", {
     loginRedirectTo: id ? `/explorar/${id}` : "/explorar",
+    experienceTitle: experience?.title,
   });
 
   const fetchNearby = useCallback(async () => {

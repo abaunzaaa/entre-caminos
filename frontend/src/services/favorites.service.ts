@@ -15,8 +15,11 @@ export async function getFavoriteStatus(experienceId: string) {
   return Boolean(data.data.favorited);
 }
 
-export async function addFavorite(experienceId: string) {
-  const { data } = await api.post<ApiResponse<{ favorited: boolean }>>(`/favorites/${experienceId}`);
+export async function addFavorite(experienceId: string, options?: { collectionIds?: string[] }) {
+  const { data } = await api.post<ApiResponse<{ favorited: boolean; collectionIds?: string[] }>>(
+    `/favorites/${experienceId}`,
+    options?.collectionIds?.length ? { collectionIds: options.collectionIds } : undefined,
+  );
   return Boolean(data.data.favorited);
 }
 

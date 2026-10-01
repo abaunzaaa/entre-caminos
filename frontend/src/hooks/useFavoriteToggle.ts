@@ -1,13 +1,22 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "./useAuth";
-import { addFavorite, getFavoriteStatus, removeFavorite } from "../services/favorites.service";
-import { notifyFavoritesChanged, showFavoriteToast } from "../services/favorites-sync";
+import { getFavoriteStatus, removeFavorite } from "../services/favorites.service";
+import {
+  notifyFavoritesChanged,
+  notifyFavoriteStatus,
+  onFavoriteStatus,
+  openFavoriteSaveModal,
+  showFavoriteToast,
+} from "../services/favorites-sync";
 
 type UseFavoriteToggleOptions = {
   /** When provided, skips per-card status fetch (prefer a shared batch on the page). */
   initialFavorited?: boolean;
   loginRedirectTo?: string;
+  experienceTitle?: string;
+  /** If true, remove directly without the save modal when adding. */
+  skipSaveModal?: boolean;
 };
 
 export function useFavoriteToggle(experienceId: string, options: UseFavoriteToggleOptions = {}) {
@@ -47,6 +56,14 @@ export function useFavoriteToggle(experienceId: string, options: UseFavoriteTogg
     };
   }, [experienceId, hasInitial, user?.id]);
 
+  useEffect(() => {
+    return onFavoriteStatus((id, value) => {
+      if (id === experienceId) {
+        setFavorited(value);
+      }
+    });
+  }, [experienceId]);
+
   async function toggle() {
     if (!experienceId || busy) {
       return;
@@ -58,18 +75,20 @@ export function useFavoriteToggle(experienceId: string, options: UseFavoriteTogg
       return;
     }
 
+    if (!favorited) {
+      openFavoriteSaveModal(experienceId, options.experienceTitle);
+      return;
+    }
+
     const previous = favorited;
-    setFavorited(!previous);
+    setFavorited(false);
     setBusy(true);
     try {
-      if (previous) {
-        await removeFavorite(experienceId);
-        showFavoriteToast("Eliminado de favoritos");
-      } else {
-        await addFavorite(experienceId);
-        showFavoriteToast("Añadido a favoritos");
-      }
+      await removeFavorite(experienceId);
+      showFavoriteToast("Eliminado de favoritos");
+      notifyFavoriteStatus(experienceId, false);
       notifyFavoritesChanged();
+      window.dispatchEvent(new Event("ec-favorite-collections-changed"));
     } catch {
       setFavorited(previous);
     } finally {

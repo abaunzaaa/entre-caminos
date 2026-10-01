@@ -68,8 +68,16 @@ export async function addFavorite(userId: string, experienceId: string) {
 }
 
 export async function removeFavorite(userId: string, experienceId: string) {
-  await prisma.experienceFavorite.deleteMany({
-    where: { userId, experienceId },
-  });
+  await prisma.$transaction([
+    prisma.favoriteCollectionItem.deleteMany({
+      where: {
+        experienceId,
+        collection: { userId },
+      },
+    }),
+    prisma.experienceFavorite.deleteMany({
+      where: { userId, experienceId },
+    }),
+  ]);
   return { favorited: false as const };
 }

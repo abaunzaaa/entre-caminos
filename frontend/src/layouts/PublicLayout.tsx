@@ -1,6 +1,7 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { MapHeartLogo } from "../components/brand/MapHeartLogo";
 import { ExplorerNavbar, isExplorerShellPath } from "../components/explorer/ExplorerNavbar";
+import { FavoriteSaveModal } from "../components/explorer/FavoriteSaveModal";
 import { FavoriteToast } from "../components/explorer/FavoriteToast";
 import { useAuth } from "../hooks/useAuth";
 import { formatPersonName } from "../utils/person-name";
@@ -17,6 +18,7 @@ export function PublicLayout() {
         <ExplorerNavbar />
         <Outlet />
         <FavoriteToast />
+        <FavoriteSaveModal />
       </div>
     );
   }
