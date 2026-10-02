@@ -4,8 +4,11 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
-dotenv.config({ path: path.resolve(__dirname, "../../.env"), override: true });
+// En test, tests/env.ts ya fijó DATABASE_URL/DIRECT_URL a la BD de prueba.
+// Nunca hacer override:true ahí: reescribía la base compartida y permitía wipes.
+const allowEnvFileOverride = process.env.NODE_ENV !== "test";
+dotenv.config({ path: path.resolve(__dirname, "../../../.env"), override: allowEnvFileOverride });
+dotenv.config({ path: path.resolve(__dirname, "../../.env"), override: allowEnvFileOverride });
 
 const emptyToUndefined = (value: unknown) => {
   if (typeof value !== "string") {

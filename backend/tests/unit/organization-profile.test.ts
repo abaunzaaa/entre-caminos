@@ -11,13 +11,14 @@ describe("OrganizationProfile — completitud y payload público", () => {
       tradeName: "Finca El Sendero",
       description: null,
       contactPhone: null,
+      website: null,
       department: "Antioquia",
       city: "",
     });
     expect(result.complete).toBe(false);
     expect(result.missing).toEqual([
       "Descripción de la empresa",
-      "Teléfono público de contacto",
+      "Teléfono público de contacto o sitio web / canal oficial de atención",
       "Municipio",
     ]);
   });
@@ -34,6 +35,34 @@ describe("OrganizationProfile — completitud y payload público", () => {
     });
     expect(result.complete).toBe(true);
     expect(result.missing).toEqual([]);
+  });
+
+  it("permite enviar experiencias con canal web oficial y sin teléfono", () => {
+    const result = getOrganizationProfileCompleteness({
+      tradeName: "Candlelight",
+      description: "Conciertos a la luz de las velas.",
+      contactPhone: null,
+      website: "https://feverup.com/es/medellin/candlelight",
+      department: "Antioquia",
+      city: "Medellín",
+    });
+    expect(result.complete).toBe(true);
+    expect(result.missing).toEqual([]);
+  });
+
+  it("sigue bloqueando perfiles sin teléfono y sin canal oficial de contacto", () => {
+    const result = getOrganizationProfileCompleteness({
+      tradeName: "Candlelight",
+      description: "Conciertos a la luz de las velas.",
+      contactPhone: null,
+      website: null,
+      department: "Antioquia",
+      city: "Medellín",
+    });
+    expect(result.complete).toBe(false);
+    expect(result.missing).toEqual([
+      "Teléfono público de contacto o sitio web / canal oficial de atención",
+    ]);
   });
 
   it("el payload público omite datos privados y solo expone contactos públicos", () => {
