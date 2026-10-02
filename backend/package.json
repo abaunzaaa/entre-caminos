@@ -20,9 +20,9 @@
     "catalog:restore-backup": "tsx scripts/restore-catalog-backup.ts",
     "catalog:restore": "tsx scripts/restore-catalog.ts",
     "test": "vitest run --reporter=verbose",
-    "test:local": "vitest run --config vitest.unit.config.ts --reporter=verbose",
-    "test:unit": "vitest run --config vitest.unit.config.ts --reporter=verbose",
-    "test:integration": "vitest run --reporter=verbose",
+    "test:local": "vitest run --reporter=verbose",
+    "test:unit": "vitest run --reporter=verbose",
+    "test:integration": "node -e \"console.error('test:integration deshabilitado: el reset de setup.ts borró la BD compartida. Solo usa npm run test:unit.'); process.exit(1)\"",
     "test:coverage": "vitest run --coverage --reporter=verbose",
     "test:watch": "vitest",
     "dev:fast": "tsx watch src/index.ts"

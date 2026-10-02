@@ -29,10 +29,28 @@ export type OrganizationProfileCompleteness = {
 const REQUIRED_LABELS: Record<string, string> = {
   tradeName: "Nombre comercial",
   description: "Descripción de la empresa",
-  contactPhone: "Teléfono público de contacto",
+  contactChannel: "Teléfono público de contacto o sitio web / canal oficial de atención",
   department: "Departamento",
   city: "Municipio",
 };
+
+function hasValidOfficialWebsite(website: string | null | undefined) {
+  const trimmed = website?.trim();
+  if (!trimmed) {
+    return false;
+  }
+  try {
+    const withProtocol = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+    const url = new URL(withProtocol);
+    return (url.protocol === "http:" || url.protocol === "https:") && url.hostname.includes(".");
+  } catch {
+    return false;
+  }
+}
+
+function hasPublicContactChannel(profile: Partial<OrganizationProfile> | null | undefined) {
+  return Boolean(profile?.contactPhone?.trim()) || hasValidOfficialWebsite(profile?.website);
+}
 
 export function getOrganizationProfileCompleteness(
   profile: Partial<OrganizationProfile> | null | undefined,
@@ -44,8 +62,8 @@ export function getOrganizationProfileCompleteness(
   if (!profile?.description?.trim()) {
     missing.push(REQUIRED_LABELS.description);
   }
-  if (!profile?.contactPhone?.trim()) {
-    missing.push(REQUIRED_LABELS.contactPhone);
+  if (!hasPublicContactChannel(profile)) {
+    missing.push(REQUIRED_LABELS.contactChannel);
   }
   if (!profile?.department?.trim()) {
     missing.push(REQUIRED_LABELS.department);
