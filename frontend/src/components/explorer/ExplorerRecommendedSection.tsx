@@ -255,6 +255,11 @@ export function ExplorerRecommendedSection({ experiences }: ExplorerRecommendedS
     setActiveId(id);
   }
 
+  const experience = active?.experience ?? null;
+  const place = experience ? municipalityLabel(experience.location) : "";
+  const description = experience?.description?.replace(/\s+/g, " ").trim() ?? "";
+  const galleryUrls = experience ? experienceGalleryUrls(experience) : [];
+
   return (
     <section className="explorer-section explorer-section--recs" id="recomendados">
       <div className="explorer-recs">
@@ -277,71 +282,77 @@ export function ExplorerRecommendedSection({ experiences }: ExplorerRecommendedS
               Explora nuestra selección
             </p>
           </header>
-          <div className="explorer-recs__shell">
-            <article
-              className="explorer-recs__panel explorer-reveal explorer-reveal--card"
-              aria-labelledby="explorer-recs-title"
-              style={{ "--reveal-delay": "150ms" } as CSSProperties}
-            >
-              <div key={experience.id} className="explorer-recs__swap">
-                <RecsExperienceGallery urls={galleryUrls} />
-                <div className="explorer-recs__body">
-                  {place ? (
-                    <p className="explorer-recs__place">
-                      <MapPin size={13} strokeWidth={2} aria-hidden="true" />
-                      <span>{place}</span>
-                    </p>
-                  ) : null}
-                  <h3 className="explorer-recs__heading" id={`${tablistId}-heading`}>
-                    {experience.title}
-                  </h3>
-                  {description ? <p className="explorer-recs__excerpt">{description}</p> : null}
-                  <div className="explorer-recs__footer">
-                    <span className="explorer-recs__price">{formatPrice(experience.price, experience.currency)}</span>
-                    <Link to={`/explorar/${experience.id}`} className="explorer-recs__cta">
-                      Ver experiencia
-                      <ArrowUpRight size={15} strokeWidth={2.15} aria-hidden="true" />
-                    </Link>
+          {experience ? (
+            <div className="explorer-recs__shell">
+              <article
+                className="explorer-recs__panel explorer-reveal explorer-reveal--card"
+                aria-labelledby="explorer-recs-title"
+                style={{ "--reveal-delay": "150ms" } as CSSProperties}
+              >
+                <div key={experience.id} className="explorer-recs__swap">
+                  <RecsExperienceGallery urls={galleryUrls} />
+                  <div className="explorer-recs__body">
+                    {place ? (
+                      <p className="explorer-recs__place">
+                        <MapPin size={13} strokeWidth={2} aria-hidden="true" />
+                        <span>{place}</span>
+                      </p>
+                    ) : null}
+                    <h3 className="explorer-recs__heading" id={`${tablistId}-heading`}>
+                      {experience.title}
+                    </h3>
+                    {description ? <p className="explorer-recs__excerpt">{description}</p> : null}
+                    <div className="explorer-recs__footer">
+                      <span className="explorer-recs__price">{formatPrice(experience.price, experience.currency)}</span>
+                      <Link to={`/explorar/${experience.id}`} className="explorer-recs__cta">
+                        Ver experiencia
+                        <ArrowUpRight size={15} strokeWidth={2.15} aria-hidden="true" />
+                      </Link>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </article>
+              </article>
 
-            {tabs.length > 1 ? (
-              <div
-                className="explorer-recs__tabs"
-                role="tablist"
-                aria-label="Experiencias destacadas"
-                aria-orientation="vertical"
-              >
-                {tabs.map((tab, index) => {
-                  const selected = tab.id === active.id;
-                  return (
-                    <button
-                      key={tab.id}
-                      type="button"
-                      role="tab"
-                      id={`${tablistId}-${tab.id}`}
-                      className={`explorer-recs__tab explorer-reveal explorer-reveal--from-right${selected ? " is-active" : ""}`}
-                      style={
-                        {
-                          zIndex: selected ? tabs.length + 1 : index + 1,
-                          "--reveal-delay": `${220 + index * 80}ms`,
-                        } as CSSProperties
-                      }
-                      aria-selected={selected}
-                      tabIndex={selected ? 0 : -1}
-                      onMouseEnter={() => selectTab(tab.id)}
-                      onFocus={() => selectTab(tab.id)}
-                      onClick={() => selectTab(tab.id)}
-                    >
-                      <span className="explorer-recs__tab-label">{tab.shortLabel}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            ) : null}
-          </div>
+              {tabs.length > 1 ? (
+                <div
+                  className="explorer-recs__tabs"
+                  role="tablist"
+                  aria-label="Experiencias destacadas"
+                  aria-orientation="vertical"
+                >
+                  {tabs.map((tab, index) => {
+                    const selected = tab.id === active?.id;
+                    return (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        role="tab"
+                        id={`${tablistId}-${tab.id}`}
+                        className={`explorer-recs__tab explorer-reveal explorer-reveal--from-right${selected ? " is-active" : ""}`}
+                        style={
+                          {
+                            zIndex: selected ? tabs.length + 1 : index + 1,
+                            "--reveal-delay": `${220 + index * 80}ms`,
+                          } as CSSProperties
+                        }
+                        aria-selected={selected}
+                        tabIndex={selected ? 0 : -1}
+                        onMouseEnter={() => selectTab(tab.id)}
+                        onFocus={() => selectTab(tab.id)}
+                        onClick={() => selectTab(tab.id)}
+                      >
+                        <span className="explorer-recs__tab-label">{tab.shortLabel}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : null}
+            </div>
+          ) : (
+            <p className="explorer-empty explorer-reveal" style={{ "--reveal-delay": "150ms" } as CSSProperties}>
+              Pronto verás aquí una selección de experiencias destacadas.
+            </p>
+          )}
         </div>
 
         <div
