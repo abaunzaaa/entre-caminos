@@ -25,6 +25,7 @@ import { AdminProfileViewPage } from "../pages/admin/AdminProfileViewPage";
 import { OrganizationProfileEditPage } from "../pages/admin/OrganizationProfileEditPage";
 import { OrganizationProfileViewPage } from "../pages/admin/OrganizationProfileViewPage";
 import { AdministratorsPage } from "../pages/admin/AdministratorsPage";
+import { AdminPersonalProfileGuard } from "./AdminPersonalProfileGuard";
 import { RolesPage } from "../pages/admin/RolesPage";
 import { PermissionsPage } from "../pages/admin/PermissionsPage";
 import { CategoriesPage } from "../pages/admin/CategoriesPage";
@@ -140,8 +141,22 @@ export function AppRoutes() {
         <Route element={<ProtectedRoute admin />}>
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<DashboardPage />} />
-            <Route path="perfil" element={<AdminProfileViewPage />} />
-            <Route path="perfil/editar" element={<AdminProfilePage />} />
+            <Route
+              path="perfil"
+              element={
+                <AdminPersonalProfileGuard>
+                  <AdminProfileViewPage />
+                </AdminPersonalProfileGuard>
+              }
+            />
+            <Route
+              path="perfil/editar"
+              element={
+                <AdminPersonalProfileGuard>
+                  <AdminProfilePage />
+                </AdminPersonalProfileGuard>
+              }
+            />
             <Route path="profile" element={<Navigate to="/admin/perfil" replace />} />
             <Route path="empresa" element={<OrganizationProfileViewPage />} />
             <Route path="empresa/editar" element={<OrganizationProfileEditPage />} />

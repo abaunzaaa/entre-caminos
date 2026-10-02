@@ -137,8 +137,8 @@ export function OrganizationProfileViewPage() {
         </Button>
         <div className="org-profile__actions">
           {!isSuperAdminTarget ? (
-            <Button type="button" variant="secondary" onClick={() => navigate("/admin/perfil")}>
-              Ajustes personales
+            <Button type="button" variant="secondary" onClick={() => navigate("/cambiar-contrasena")}>
+              Cambiar contraseña
             </Button>
           ) : null}
           <Button type="button" onClick={() => navigate(editPath)}>

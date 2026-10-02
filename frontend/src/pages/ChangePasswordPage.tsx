@@ -152,7 +152,9 @@ export function ChangePasswordPage() {
               type="button"
               variant="secondary"
               disabled={saving}
-              onClick={() => navigate(user?.role === "USER" ? "/perfil" : "/admin/perfil")}
+              onClick={() =>
+                navigate(user?.role === "USER" ? "/perfil" : user?.role === "ADMIN" ? "/admin/empresa" : "/admin/perfil")
+              }
             >
               Cancelar
             </Button>

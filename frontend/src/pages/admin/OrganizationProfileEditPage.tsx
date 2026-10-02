@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Building2, Camera, Trash2 } from "lucide-react";
 import { Button } from "../../components/ui/Button";
 import { Spinner } from "../../components/ui/Spinner";
+import { AdminChangePasswordDialog } from "../../components/admin/AdminChangePasswordDialog";
 import { useAuth } from "../../hooks/useAuth";
 import { COLOMBIA_DEPARTMENTS, findDepartment, findMunicipality } from "../../data/colombia-locations";
 import { uploadImage } from "../../services/catalog.service";
@@ -61,6 +62,7 @@ export function OrganizationProfileEditPage() {
   const [loadError, setLoadError] = useState("");
   const [formError, setFormError] = useState("");
   const [toast, setToast] = useState<{ title: string; text: string; tone?: "error" } | null>(null);
+  const [passwordOpen, setPasswordOpen] = useState(false);
 
   const cityOptions = useMemo(() => findDepartment(draft.department)?.cities ?? [], [draft.department]);
   const missingFields = useMemo(() => getOrganizationProfileMissingFields(draft), [draft]);
@@ -268,8 +270,9 @@ export function OrganizationProfileEditPage() {
           </div>
           {!isSuperAdminTarget ? (
             <div className="org-profile__side-links">
-              <Link to="/admin/perfil">Ajustes personales</Link>
-              <Link to="/cambiar-contrasena">Cambiar contraseña</Link>
+              <button type="button" className="org-profile__side-link" onClick={() => setPasswordOpen(true)}>
+                Cambiar contraseña
+              </button>
             </div>
           ) : null}
         </aside>
@@ -489,6 +492,11 @@ export function OrganizationProfileEditPage() {
             </div>
 
             <div className="admin-profile-edit__actions org-profile__form-actions">
+              {!isSuperAdminTarget ? (
+                <Button type="button" variant="secondary" disabled={saving || uploading} onClick={() => setPasswordOpen(true)}>
+                  Cambiar contraseña
+                </Button>
+              ) : null}
               <Button type="button" variant="secondary" disabled={saving || uploading} onClick={() => navigate(viewPath)}>
                 Cancelar
               </Button>
@@ -499,6 +507,9 @@ export function OrganizationProfileEditPage() {
           </form>
         </section>
       </div>
+      {!isSuperAdminTarget ? (
+        <AdminChangePasswordDialog open={passwordOpen} onClose={() => setPasswordOpen(false)} />
+      ) : null}
     </div>
   );
 }

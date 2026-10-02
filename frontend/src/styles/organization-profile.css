@@ -58,15 +58,23 @@
   margin-top: 14px;
 }
 
-.org-profile__side-links a {
+.org-profile__side-links a,
+.org-profile__side-link {
+  border: 0;
+  padding: 0;
+  background: transparent;
   color: #294942;
   font-size: 0.88rem;
   font-weight: 550;
+  text-align: left;
   text-decoration: none;
+  cursor: pointer;
 }
 
 .org-profile__side-links a:hover,
-.org-profile__side-links a:focus-visible {
+.org-profile__side-links a:focus-visible,
+.org-profile__side-link:hover,
+.org-profile__side-link:focus-visible {
   text-decoration: underline;
   outline: none;
 }

@@ -57,8 +57,9 @@ export function AdminUserMenu({
   const firstName = fullName.split(/\s+/)[0] || "Admin";
   const initial = nameInitial(firstName, "A");
   const isExplorerUser = user?.role === "USER";
-  const profilePath = isExplorerUser ? "/perfil" : "/admin/perfil";
-  const profileLabel = "Perfil";
+  const isOrgAdmin = user?.role === "ADMIN";
+  const profilePath = isExplorerUser ? "/perfil" : isOrgAdmin ? "/admin/empresa" : "/admin/perfil";
+  const profileLabel = isOrgAdmin ? "Perfil de empresa" : "Perfil";
 
   useEffect(() => {
     function syncPhoto() {
@@ -380,24 +381,10 @@ export function AdminUserMenu({
               navigate(profilePath);
             }}
           >
-            <UserRound size={18} strokeWidth={1.7} />
+            {isOrgAdmin ? <Building2 size={18} strokeWidth={1.7} /> : <UserRound size={18} strokeWidth={1.7} />}
             {profileLabel}
           </button>
-          {user?.role === "ADMIN" ? (
-            <button
-              type="button"
-              className="admin-usermenu__item"
-              role="menuitem"
-              onClick={() => {
-                setOpen(false);
-                navigate("/admin/empresa");
-              }}
-            >
-              <Building2 size={18} strokeWidth={1.7} />
-              Perfil de empresa
-            </button>
-          ) : null}
-          {isExplorerUser ? (
+          {isExplorerUser || isOrgAdmin ? (
             <button
               type="button"
               className="admin-usermenu__item"
