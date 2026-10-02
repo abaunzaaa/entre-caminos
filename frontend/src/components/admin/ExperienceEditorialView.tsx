@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import { Heart } from "lucide-react";
+import { ExperienceOfferedBy } from "../explorer/ExperienceOfferedBy";
 import { ExperienceEditorialDossier, type ExperienceEditorialFact } from "./ExperienceEditorialDossier";
 import { ExperienceEditorialGallery } from "./ExperienceEditorialGallery";
 import { ExperienceEditorialNearby } from "./ExperienceEditorialNearby";
@@ -62,25 +63,21 @@ export function buildExperienceEditorialFacts(
   const durationText = durationChoice
     ? `${durationChoice.value} ${durationChoice.unitLabel}`
     : formatDuration(experience.durationValue, experience.durationUnit, experience.duration);
-  const publisherName = experience.creator?.name?.trim() || "";
-  const publisherAvatar = experience.creator?.avatarUrl ?? null;
-  const publisherFact: ExperienceEditorialFact | null = publisherName
-    ? { label: "Publicado por", value: publisherName, avatarUrl: publisherAvatar }
-    : null;
+  const publisherName =
+    experience.creator?.organization?.tradeName?.trim() || experience.creator?.name?.trim() || "";
+  const publisherAvatar =
+    experience.creator?.organization?.logoUrl ?? experience.creator?.avatarUrl ?? null;
 
   const noteFacts: ExperienceEditorialFact[] =
     mode === "admin"
       ? [
-          ...(experience.creator?.name
-            ? [{ label: "Creada por", value: experience.creator.name, avatarUrl: publisherAvatar }]
+          ...(publisherName
+            ? [{ label: "Creada por", value: publisherName, avatarUrl: publisherAvatar }]
             : []),
-          ...(experience.creator?.email ? [{ label: "Contacto", value: experience.creator.email }] : []),
+          ...(experience.creator?.email ? [{ label: "Contacto interno", value: experience.creator.email }] : []),
           ...(published ? [{ label: "Fecha de publicación", value: published }] : []),
         ]
-      : [
-          ...(publisherFact ? [publisherFact] : []),
-          ...(published ? [{ label: "Fecha de publicación", value: published }] : []),
-        ];
+      : [...(published ? [{ label: "Fecha de publicación", value: published }] : [])];
 
   const detailFacts: ExperienceEditorialFact[] = [
     ...(experience.description.trim() ? [{ label: "Descripción", value: experience.description }] : []),
@@ -188,6 +185,14 @@ export function ExperienceEditorialView({
         noteFacts={noteFacts}
         facts={detailFacts}
       />
+
+      {mode === "tourist" ? (
+        <ExperienceOfferedBy
+          organization={experience.creator?.organization}
+          fallbackName={experience.creator?.name}
+          fallbackAvatarUrl={experience.creator?.avatarUrl}
+        />
+      ) : null}
 
       <ExperienceEditorialPlace
         experience={experience}

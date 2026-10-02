@@ -115,12 +115,37 @@ model User {
   experienceFavorites      ExperienceFavorite[]
   experienceVisitorReviews ExperienceVisitorReview[]
   favoriteCollections      FavoriteCollection[]
+  organizationProfile      OrganizationProfile?
 
   @@index([roleId])
   @@index([status])
   @@index([createdAt])
   @@index([deletedAt])
   @@map("users")
+}
+
+/// Perfil empresarial de una cuenta ADMIN (1:1). No aplica a SUPER_ADMIN ni a USER.
+model OrganizationProfile {
+  id                 String   @id @default(uuid())
+  userId             String   @unique @map("user_id")
+  tradeName          String?  @map("trade_name")
+  legalName          String?  @map("legal_name")
+  description        String?
+  logoUrl            String?  @map("logo_url")
+  logoPublicId       String?  @map("logo_public_id")
+  contactPhone       String?  @map("contact_phone")
+  contactEmail       String?  @map("contact_email")
+  website            String?
+  department         String?
+  city               String?
+  address            String?
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tradeName])
+  @@map("organization_profiles")
 }
 
 model Category {

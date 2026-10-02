@@ -15,15 +15,28 @@ import {
   notifyExperienceRejected,
   notifyExperienceSubmitted,
 } from "./notification.service.js";
+import {
+  assertAdminCanSubmitExperiences,
+  toPublicOrganizationProfile,
+} from "./organization-profile.service.js";
+
 const experienceCategoryInclude = {
   orderBy: { position: "asc" as const },
   include: { category: true },
 } as const;
 
+const creatorSelect = {
+  id: true,
+  name: true,
+  email: true,
+  avatarUrl: true,
+  organizationProfile: true,
+} as const;
+
 const experienceInclude = {
   category: true,
   experienceCategories: experienceCategoryInclude,
-  creator: { select: { id: true, name: true, email: true, avatarUrl: true } },
+  creator: { select: creatorSelect },
   reviewedBy: { select: { id: true, name: true, email: true } },
 } as const;
 
@@ -63,11 +76,37 @@ const experienceListSelect = {
       category: { select: { id: true, name: true, icon: true, status: true } },
     },
   },
-  creator: { select: { id: true, name: true, email: true, avatarUrl: true } },
+  creator: { select: creatorSelect },
   reviewedBy: { select: { id: true, name: true, email: true } },
 } as const;
 
 const publicCatalogWhere = { status: "PUBLISHED" as const };
+
+export function toPublicExperiencePayload<T>(
+  experience: T & {
+    creator?: {
+      id: string;
+      name: string;
+      email?: string | null;
+      avatarUrl?: string | null;
+      organizationProfile?: Parameters<typeof toPublicOrganizationProfile>[0];
+    } | null;
+  },
+) {
+  const organization = toPublicOrganizationProfile(experience.creator?.organizationProfile);
+  const { creator, ...rest } = experience;
+  return {
+    ...rest,
+    creator: creator
+      ? {
+          id: creator.id,
+          name: organization?.tradeName || creator.name,
+          avatarUrl: organization?.logoUrl ?? creator.avatarUrl ?? null,
+          organization,
+        }
+      : undefined,
+  };
+}
 
 function assertCanAccess(experience: { createdBy: string }, actor: AuthUser) {
   if (!canReviewExperiences(actor) && experience.createdBy !== actor.id) {
@@ -84,7 +123,11 @@ export async function listPublicExperiences(opts?: { take?: number; skip?: numbe
   const [experiences, total] = await prisma.$transaction([
     prisma.experience.findMany({
       where,
-      include: { category: true, experienceCategories: experienceCategoryInclude },
+      include: {
+        category: true,
+        experienceCategories: experienceCategoryInclude,
+        creator: { select: creatorSelect },
+      },
       orderBy: { createdAt: "desc" },
       ...(opts?.take != null ? { take: opts.take } : {}),
       ...(opts?.skip != null ? { skip: opts.skip } : {}),
@@ -238,6 +281,9 @@ export async function createExperience(
   };
 
   const publishesDirectly = publishesExperiencesDirectly(actor);
+  if (!publishesDirectly) {
+    await assertAdminCanSubmitExperiences(actor);
+  }
   const status: ExperienceStatus = publishesDirectly ? "PUBLISHED" : "PENDING";
   const submittedAt = publishesDirectly ? null : new Date();
   const experience = await prisma.experience.create({
@@ -397,6 +443,7 @@ export async function submitExperienceForReview(actor: AuthUser, id: string) {
   if (current.createdBy !== actor.id && !canReviewExperiences(actor)) {
     throw ApiError.forbidden("No puedes enviar esta experiencia a revisión");
   }
+  await assertAdminCanSubmitExperiences(actor);
   if (current.status === "PUBLISHED") {
     throw ApiError.badRequest("Esta experiencia ya está publicada");
   }

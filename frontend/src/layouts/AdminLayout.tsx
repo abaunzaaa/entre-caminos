@@ -120,7 +120,10 @@ export function AdminLayout() {
   const isProfilePage =
     location.pathname === "/admin/perfil" ||
     location.pathname === "/admin/perfil/editar" ||
-    location.pathname === "/admin/profile";
+    location.pathname === "/admin/profile" ||
+    location.pathname === "/admin/empresa" ||
+    location.pathname === "/admin/empresa/editar" ||
+    location.pathname.startsWith("/admin/empresas/");
   const isTeamPage =
     location.pathname === "/admin/administradores" || location.pathname === "/admin/administrators";
   const isAccessPage = location.pathname === "/admin/roles";

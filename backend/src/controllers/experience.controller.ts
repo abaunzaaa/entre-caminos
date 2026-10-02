@@ -37,7 +37,13 @@ export async function listPublic(req: Request, res: Response) {
       plan: queryText(req.query.plan),
       sort: req.query.sort === "oldest" ? "oldest" : "newest",
     });
-    return res.json({ success: true, data });
+    return res.json({
+      success: true,
+      data: {
+        ...data,
+        experiences: data.experiences.map((item) => experienceService.toPublicExperiencePayload(item)),
+      },
+    });
   }
 
   const take = parseLimitQuery(req.query.limit, 100);
@@ -50,7 +56,7 @@ export async function listPublic(req: Request, res: Response) {
   return res.json({
     success: true,
     data: {
-      experiences,
+      experiences: experiences.map((item) => experienceService.toPublicExperiencePayload(item)),
       total,
       hasMore: loaded < total,
     },
@@ -59,12 +65,18 @@ export async function listPublic(req: Request, res: Response) {
 
 export async function featured(_req: Request, res: Response) {
   const experiences = await listCoverFeaturedExperiences();
-  return res.json({ success: true, data: { experiences } });
+  return res.json({
+    success: true,
+    data: { experiences: experiences.map((item) => experienceService.toPublicExperiencePayload(item)) },
+  });
 }
 
 export async function getPublic(req: Request, res: Response) {
   const experience = await experienceService.getExperience(req.params.id, { publishedOnly: true });
-  return res.json({ success: true, data: { experience } });
+  return res.json({
+    success: true,
+    data: { experience: experienceService.toPublicExperiencePayload(experience) },
+  });
 }
 
 export async function recordView(req: Request, res: Response) {

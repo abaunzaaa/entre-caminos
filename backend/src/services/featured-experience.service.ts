@@ -116,6 +116,14 @@ const coverInclude = {
     orderBy: { position: "asc" as const },
     include: { category: true },
   },
+  creator: {
+    select: {
+      id: true,
+      name: true,
+      avatarUrl: true,
+      organizationProfile: true,
+    },
+  },
 } as const;
 
 const savedFeaturedWhere = {
