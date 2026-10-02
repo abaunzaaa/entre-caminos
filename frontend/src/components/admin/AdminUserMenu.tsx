@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { Camera, KeyRound, LogOut, UserRound } from "lucide-react";
+import { Camera, KeyRound, LogOut, Building2, UserRound } from "lucide-react";
 import { Button } from "../ui/Button";
 import { useAuth } from "../../hooks/useAuth";
 import { formatPersonName } from "../../utils/person-name";
@@ -383,6 +383,20 @@ export function AdminUserMenu({
             <UserRound size={18} strokeWidth={1.7} />
             {profileLabel}
           </button>
+          {user?.role === "ADMIN" ? (
+            <button
+              type="button"
+              className="admin-usermenu__item"
+              role="menuitem"
+              onClick={() => {
+                setOpen(false);
+                navigate("/admin/empresa");
+              }}
+            >
+              <Building2 size={18} strokeWidth={1.7} />
+              Perfil de empresa
+            </button>
+          ) : null}
           {isExplorerUser ? (
             <button
               type="button"

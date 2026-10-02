@@ -25,6 +25,7 @@ import {
   updateExperience,
   uploadImage,
 } from "../../services/catalog.service";
+import { getOwnOrganizationProfile } from "../../services/organization-profile.service";
 import { canEditExperience, CATEGORIES_CHANGED_EVENT } from "../../utils/admin-access";
 import { getApiErrorMessage } from "../../utils/api-error";
 import { experienceImages, mediaUrl } from "../../utils/media";
@@ -303,6 +304,7 @@ export function ExperienceFormPage() {
   const isSuperAdmin = user?.role === "SUPER_ADMIN";
   const [categories, setCategories] = useState<Category[]>([]);
   const [error, setError] = useState("");
+  const [orgProfileMissing, setOrgProfileMissing] = useState<string[] | null>(null);
   const [saving, setSaving] = useState(false);
   const [createdOpen, setCreatedOpen] = useState(false);
   const [createdPendingReview, setCreatedPendingReview] = useState(true);
@@ -375,6 +377,49 @@ export function ExperienceFormPage() {
       window.removeEventListener(CATEGORIES_CHANGED_EVENT, loadCategories);
     };
   }, []);
+
+  useEffect(() => {
+    if (!isAdministrator) {
+      setOrgProfileMissing(null);
+      return;
+    }
+    let cancelled = false;
+    getOwnOrganizationProfile()
+      .then((profile) => {
+        if (cancelled) {
+          return;
+        }
+        if (!profile?.complete) {
+          setOrgProfileMissing(
+            profile?.missingFields?.length
+              ? profile.missingFields
+              : [
+                  "Nombre comercial",
+                  "Descripción de la empresa",
+                  "Teléfono público de contacto",
+                  "Departamento",
+                  "Municipio",
+                ],
+          );
+          return;
+        }
+        setOrgProfileMissing(null);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setOrgProfileMissing([
+            "Nombre comercial",
+            "Descripción de la empresa",
+            "Teléfono público de contacto",
+            "Departamento",
+            "Municipio",
+          ]);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isAdministrator]);
 
   useEffect(() => {
     if (id) {
@@ -546,6 +591,12 @@ export function ExperienceFormPage() {
       return;
     }
     setError("");
+    if (isAdministrator && submitToReview && orgProfileMissing?.length) {
+      setError(
+        `Completa el perfil de empresa antes de enviar a revisión. Faltan: ${orgProfileMissing.join(", ")}.`,
+      );
+      return;
+    }
     if (categoryIds.length < 1) {
       setError("Selecciona una categoría.");
       return;
@@ -669,6 +720,29 @@ export function ExperienceFormPage() {
       </article>
 
       <section className="dash-exps-studio" aria-label="Formulario de experiencia">
+        {isAdministrator && orgProfileMissing?.length ? (
+          <div className="dash-profile__row" role="status" style={{ gridColumn: "1 / -1", marginBottom: "0.75rem" }}>
+            <p>
+              Tu perfil de empresa está incompleto. Completa{" "}
+              <button
+                type="button"
+                style={{
+                  border: 0,
+                  padding: 0,
+                  background: "transparent",
+                  color: "#294942",
+                  fontWeight: 650,
+                  textDecoration: "underline",
+                  cursor: "pointer",
+                }}
+                onClick={() => navigate("/admin/empresa")}
+              >
+                Perfil de empresa
+              </button>{" "}
+              antes de enviar experiencias a revisión. Faltan: {orgProfileMissing.join(", ")}.
+            </p>
+          </div>
+        ) : null}
         <aside className="dash-split__panel dash-exps-mapcard" aria-label="Ubicación en el mapa">
           <div className="dash-exps-mapwrap">
             <ExperienceLocationMap

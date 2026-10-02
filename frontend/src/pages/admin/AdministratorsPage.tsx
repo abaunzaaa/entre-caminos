@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { ChevronDown, Search } from "lucide-react";
 import {
   createAdministrator,
@@ -94,6 +95,7 @@ function FilterMenu<T extends string>({
 }
 
 export function AdministratorsPage() {
+  const navigate = useNavigate();
   const { user, hasPermission } = useAuth();
   const canManageAdmins = hasPermission("admins.manage");
   const canCreateAdmins = user?.role === "SUPER_ADMIN";
@@ -649,6 +651,16 @@ export function AdministratorsPage() {
                     </div>
                     {canCreateAdmins && readRole(admin.role) !== "SUPER_ADMIN" && admin.status === "ACTIVE" ? (
                       <div className="dash-team-card__actions">
+                        {readRole(admin.role) === "ADMIN" ? (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => navigate(`/admin/empresas/${admin.id}`)}
+                          >
+                            Perfil de empresa
+                          </Button>
+                        ) : null}
                         <Button
                           type="button"
                           variant="ghost"
@@ -673,6 +685,16 @@ export function AdministratorsPage() {
                       </div>
                     ) : canCreateAdmins && readRole(admin.role) !== "SUPER_ADMIN" ? (
                       <div className="dash-team-card__actions">
+                        {readRole(admin.role) === "ADMIN" ? (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => navigate(`/admin/empresas/${admin.id}`)}
+                          >
+                            Perfil de empresa
+                          </Button>
+                        ) : null}
                         <Button
                           type="button"
                           variant="ghost"
@@ -694,6 +716,17 @@ export function AdministratorsPage() {
                             Eliminar
                           </Button>
                         ) : null}
+                      </div>
+                    ) : canCreateAdmins && readRole(admin.role) === "ADMIN" ? (
+                      <div className="dash-team-card__actions">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => navigate(`/admin/empresas/${admin.id}`)}
+                        >
+                          Perfil de empresa
+                        </Button>
                       </div>
                     ) : null}
                   </article>

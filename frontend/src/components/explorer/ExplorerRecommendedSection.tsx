@@ -205,7 +205,45 @@ export function ExplorerRecommendedSection({ experiences }: ExplorerRecommendedS
   const active = tabs.find((tab) => tab.id === activeId) ?? tabs[0] ?? null;
 
   if (!active) {
-    return null;
+    return (
+      <section className="explorer-section explorer-section--recs" id="recomendados">
+        <div className="explorer-recs">
+          <div
+            ref={featuredRef}
+            className={`explorer-recs__stage explorer-reveal-scope${featuredRevealed ? " is-revealed" : ""}`}
+          >
+            <header className="explorer-recs__column-head">
+              <h2
+                className="explorer-recs__column-title explorer-reveal explorer-reveal--title"
+                id="explorer-recs-title"
+                style={{ "--reveal-delay": "0ms" } as CSSProperties}
+              >
+                Experiencias destacadas
+              </h2>
+              <p
+                className="explorer-recs__column-lead explorer-reveal explorer-reveal--soft"
+                style={{ "--reveal-delay": "80ms" } as CSSProperties}
+              >
+                Aún no hay experiencias publicadas para destacar.
+              </p>
+            </header>
+          </div>
+          <div
+            ref={favoritesRef}
+            className={`explorer-recs__favorites explorer-reveal-scope${favoritesRevealed ? " is-revealed" : ""}`}
+          >
+            <FavoriteFoldersGrid
+              folders={favoriteFolders}
+              emptyMessage={
+                user
+                  ? "Aún no tienes experiencias favoritas"
+                  : "Inicia sesión para guardar tus favoritos"
+              }
+            />
+          </div>
+        </div>
+      </section>
+    );
   }
 
   const experience = active.experience;
