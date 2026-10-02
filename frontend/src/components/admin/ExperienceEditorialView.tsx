@@ -1,6 +1,5 @@
 import type { CSSProperties } from "react";
 import { Heart } from "lucide-react";
-import { ExperienceOfferedBy } from "../explorer/ExperienceOfferedBy";
 import { ExperienceEditorialDossier, type ExperienceEditorialFact } from "./ExperienceEditorialDossier";
 import { ExperienceEditorialGallery } from "./ExperienceEditorialGallery";
 import { ExperienceEditorialNearby } from "./ExperienceEditorialNearby";
@@ -63,10 +62,8 @@ export function buildExperienceEditorialFacts(
   const durationText = durationChoice
     ? `${durationChoice.value} ${durationChoice.unitLabel}`
     : formatDuration(experience.durationValue, experience.durationUnit, experience.duration);
-  const publisherName =
-    experience.creator?.organization?.tradeName?.trim() || experience.creator?.name?.trim() || "";
-  const publisherAvatar =
-    experience.creator?.organization?.logoUrl ?? experience.creator?.avatarUrl ?? null;
+  const publisherName = experience.creator?.name?.trim() || "";
+  const publisherAvatar = experience.creator?.avatarUrl ?? null;
 
   const noteFacts: ExperienceEditorialFact[] =
     mode === "admin"
@@ -185,14 +182,6 @@ export function ExperienceEditorialView({
         noteFacts={noteFacts}
         facts={detailFacts}
       />
-
-      {mode === "tourist" ? (
-        <ExperienceOfferedBy
-          organization={experience.creator?.organization}
-          fallbackName={experience.creator?.name}
-          fallbackAvatarUrl={experience.creator?.avatarUrl}
-        />
-      ) : null}
 
       <ExperienceEditorialPlace
         experience={experience}
