@@ -3517,3 +3517,360 @@ a.guide-plan__stop:focus-visible {
     display: flex;
   }
 }
+
+/* Expanded chat: white canvas, light gray rail. Minimized window keeps its current look. */
+.guide-panel.is-expanded {
+  background: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.guide-panel.is-expanded::before,
+.guide-panel.is-expanded::after {
+  display: none;
+}
+
+.guide-panel.is-expanded .guide-rail {
+  background: rgba(244, 245, 247, 0.94);
+  border-right: 1px solid rgba(17, 24, 39, 0.08);
+  box-shadow: none;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+.guide-panel.is-expanded .guide-dock {
+  background: rgba(241, 242, 244, 0.94);
+  border-right: 1px solid rgba(17, 24, 39, 0.06);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+.guide-panel.is-expanded .guide-dock__btn {
+  color: #6b7280;
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.guide-panel.is-expanded .guide-dock__btn:hover,
+.guide-panel.is-expanded .guide-dock__btn:focus-visible {
+  background: rgba(33, 78, 59, 0.06);
+  color: #214e3b;
+}
+
+.guide-panel.is-expanded .guide-dock__btn.is-on {
+  background: rgba(33, 78, 59, 0.1);
+  color: #214e3b;
+}
+
+.guide-panel.is-expanded .guide-rail__head {
+  align-items: center;
+  margin: 0 0 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(17, 24, 39, 0.06);
+}
+
+.guide-panel.is-expanded .guide-rail__brand {
+  align-items: center;
+  gap: 10px;
+}
+
+.guide-panel.is-expanded .guide-rail__brand strong {
+  font-size: 14.5px;
+  font-weight: 650;
+  line-height: 1.15;
+}
+
+.guide-panel.is-expanded .guide-rail__brand em {
+  margin-top: 2px;
+  color: #8a938e;
+  font-size: 11.5px;
+  line-height: 1.2;
+}
+
+.guide-panel.is-expanded .guide-rail__new {
+  min-height: 34px;
+  margin: 4px auto 16px;
+  padding: 0 16px;
+}
+
+.guide-panel.is-expanded .guide-rail__new:hover {
+  border-color: rgba(33, 78, 59, 0.22);
+  background: rgba(33, 78, 59, 0.05);
+  box-shadow: none;
+}
+
+.guide-panel.is-expanded .guide-rail__list--folders {
+  gap: 3px;
+  margin-bottom: 16px;
+}
+
+.guide-panel.is-expanded .guide-rail__folder-row {
+  align-items: center;
+  min-height: 34px;
+}
+
+.guide-panel.is-expanded .guide-rail__folder-row:hover {
+  background: rgba(17, 24, 39, 0.04);
+}
+
+.guide-panel.is-expanded .guide-rail__list--nav {
+  margin-bottom: 14px;
+}
+
+.guide-panel.is-expanded .guide-rail__list--threads {
+  gap: 4px;
+}
+
+.guide-panel.is-expanded .guide-rail__thread {
+  align-items: center;
+  transition: background 160ms ease, box-shadow 160ms ease;
+}
+
+.guide-panel.is-expanded .guide-rail__thread-open {
+  padding: 9px 8px 9px 10px;
+}
+
+.guide-panel.is-expanded .guide-rail__thread-acts {
+  align-items: center;
+  align-self: center;
+  margin-top: 0;
+  gap: 2px;
+}
+
+.guide-panel.is-expanded .guide-rail__thread:hover {
+  background: rgba(17, 24, 39, 0.04);
+}
+
+.guide-panel.is-expanded .guide-rail__thread.is-on {
+  background: rgba(33, 78, 59, 0.08);
+  box-shadow: inset 2px 0 0 rgba(33, 78, 59, 0.28);
+}
+
+.guide-panel.is-expanded .guide-shell {
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: none;
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+}
+
+.guide-panel.is-expanded .guide-home,
+.guide-panel.is-expanded .guide-chat,
+.guide-panel.is-expanded .guide-history {
+  background: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.guide-panel.is-expanded .guide-panel__top {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  left: auto;
+  z-index: 6;
+  width: auto;
+  padding: 2px;
+  border: 0;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 8px 20px -16px rgba(17, 24, 39, 0.45);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+
+.guide-panel.is-expanded .guide-panel__brand {
+  display: none;
+}
+
+.guide-home__mark {
+  display: none;
+}
+
+.guide-panel.is-expanded .guide-home__mark {
+  display: grid;
+  width: auto;
+  height: auto;
+  margin: 0 auto 16px;
+  place-items: center;
+  border-radius: 0;
+  background: none;
+}
+
+.guide-home__mark-key {
+  display: block;
+  width: 40px;
+  height: 56px;
+  background-color: #214e3b;
+  -webkit-mask: url("../assets/key-silhouette.png") center / contain no-repeat;
+  mask: url("../assets/key-silhouette.png") center / contain no-repeat;
+}
+
+.guide-panel.is-expanded .guide-home {
+  justify-content: center;
+  align-items: center;
+  gap: 22px;
+  padding: 8px 40px 72px;
+}
+
+.guide-panel.is-expanded .guide-home__intro {
+  flex: 0 0 auto;
+  gap: 8px;
+  margin-top: 0;
+  padding: 0;
+}
+
+.guide-panel.is-expanded .guide-home h2 {
+  margin: 0;
+}
+
+.guide-panel.is-expanded .guide-home h2 {
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1.15;
+}
+
+.guide-panel.is-expanded .guide-home__copy {
+  font-size: 15px;
+  font-weight: 450;
+  color: #6b7280;
+}
+
+.guide-panel.is-expanded .guide-home__dock {
+  display: flex;
+  flex: 0 1 auto;
+  flex-direction: column;
+  width: min(760px, 100%);
+  gap: 22px;
+}
+
+.guide-panel.is-expanded .guide-home .guide-composer {
+  order: 1;
+  width: 100%;
+  margin: 0;
+}
+
+.guide-panel.is-expanded .guide-actions {
+  order: 2;
+  align-items: stretch;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-auto-rows: 1fr;
+  width: 100%;
+  max-width: none;
+  gap: 12px;
+}
+
+.guide-panel.is-expanded .guide-action {
+  align-self: stretch;
+  height: 100%;
+  min-height: 72px;
+  padding: 12px 14px;
+  border: 1px solid rgba(17, 24, 39, 0.08);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 1px 2px rgba(17, 24, 39, 0.04);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  transition: background 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.guide-panel.is-expanded .guide-action:hover {
+  transform: translateY(-1px);
+  border-color: rgba(33, 78, 59, 0.16);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 6px 12px -10px rgba(17, 24, 39, 0.2);
+}
+
+.guide-panel.is-expanded .guide-action strong {
+  font-size: 13px;
+}
+
+.guide-panel.is-expanded .guide-action em {
+  font-size: 11px;
+}
+
+.guide-panel.is-expanded .guide-composer__bar {
+  height: auto;
+  min-height: 64px;
+  padding: 8px 8px 8px 16px;
+  border: 1px solid rgba(17, 24, 39, 0.1);
+  border-radius: 22px;
+  background: #ffffff;
+  box-shadow: 0 10px 28px -18px rgba(17, 24, 39, 0.28);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.guide-panel.is-expanded .guide-home .guide-composer__bar {
+  min-height: 92px;
+  padding: 16px 14px 16px 22px;
+  border: 1px solid rgba(17, 24, 39, 0.08);
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 8px 16px -14px rgba(17, 24, 39, 0.18);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.guide-panel.is-expanded .guide-home .guide-composer__bar:hover {
+  border-color: rgba(17, 24, 39, 0.12);
+}
+
+.guide-panel.is-expanded .guide-composer__bar .guide-plus,
+.guide-panel.is-expanded .guide-composer__bar .guide-mic {
+  margin-inline: 2px;
+}
+
+.guide-panel.is-expanded .guide-home .guide-composer__field {
+  height: 28px;
+  min-height: 28px;
+  max-height: 28px;
+  font-size: 15px;
+  line-height: 24px;
+}
+
+.guide-panel.is-expanded .guide-composer:focus-within .guide-composer__bar {
+  border-color: rgba(33, 78, 59, 0.32);
+  background: #ffffff;
+  box-shadow:
+    0 6px 14px -12px rgba(17, 24, 39, 0.16),
+    0 0 0 3px rgba(33, 78, 59, 0.08);
+}
+
+.guide-panel.is-expanded .guide-chat {
+  padding: 0 24px 12px;
+}
+
+.guide-panel.is-expanded .guide-chat .guide-composer {
+  width: min(768px, 100%);
+  margin: 8px auto 12px;
+}
+
+.guide-panel.is-expanded .guide-focus {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(17, 24, 39, 0.08);
+  box-shadow: 0 1px 2px rgba(17, 24, 39, 0.04);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.guide-panel.is-expanded .guide-bubble {
+  border-color: rgba(17, 24, 39, 0.06);
+  background: #f7f8f7;
+  box-shadow: none;
+}
+
+.guide-panel.is-expanded .guide-row--user .guide-bubble {
+  background: #e7efe8;
+  border-color: transparent;
+}
+
+@media (max-width: 980px) {
+  .guide-panel.is-expanded .guide-actions {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .guide-panel.is-expanded .guide-home h2 {
+    font-size: 26px;
+  }
+}

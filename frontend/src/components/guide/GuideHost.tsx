@@ -908,8 +908,8 @@ export function GuideHost() {
                   <div className="guide-rail__brand">
                     <span className="guide-rail__logo" aria-hidden="true" />
                     <span>
-                      <strong>Entre Caminos</strong>
-                      <em>Tu guía IA</em>
+                      <strong>Tu guía</strong>
+                      <em>Entre Caminos</em>
                     </span>
                   </div>
                   <div className="guide-rail__tools">
@@ -1343,6 +1343,9 @@ export function GuideHost() {
             {guide.view === "home" || (guide.expanded && guide.view === "history") ? (
               <div className="guide-home">
                 <div className="guide-home__intro">
+                  <span className="guide-home__mark" aria-hidden="true">
+                    <span className="guide-home__mark-key" />
+                  </span>
                   <h2>¿Qué quieres descubrir?</h2>
                   <p className="guide-home__copy">Encuentra experiencias y planes según tus gustos.</p>
                 </div>
