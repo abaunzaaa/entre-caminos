@@ -35,6 +35,8 @@ export type UserOnboardingProfile = {
   music: string[];
   budget: string[];
   climate: string[];
+  age: number | null;
+  gender: string | null;
   onboardingCompleted: boolean;
   onboardingCompletedAt: string | null;
   updatedAt: string;

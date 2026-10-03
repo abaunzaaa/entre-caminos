@@ -442,6 +442,8 @@ model UserProfile {
   music                 String[]         @default([])
   budget                String[]         @default([])
   climate               String[]         @default([])
+  age                   Int?
+  gender                String?
   onboardingCompleted   Boolean          @default(false) @map("onboarding_completed")
   onboardingCompletedAt DateTime?        @map("onboarding_completed_at")
   createdAt             DateTime         @default(now()) @map("created_at")

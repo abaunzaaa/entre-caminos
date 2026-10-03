@@ -1,8 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Mail, Phone, UserRound } from "lucide-react";
 import logoEntreCaminos from "../../assets/logo.png";
 import { CompanyStep } from "../../components/onboarding/CompanyStep";
+import {
+  EditAccountFields,
+  compactPhone,
+  formatPhoneDisplay,
+  validateAccountName,
+  validateAccountPhone,
+} from "../../components/onboarding/EditAccountFields";
 import { LocationStep, type LocationStatus } from "../../components/onboarding/LocationStep";
 import { OnboardingActions } from "../../components/onboarding/OnboardingActions";
 import { OnboardingOptionCard } from "../../components/onboarding/OnboardingOptionCard";
@@ -49,62 +55,6 @@ const COPY = [
   { title: "Todo listo", lead: "Así se verá tu perfil en Entre Caminos." },
 ] as const;
 
-function compactPhone(value: string) {
-  const compact = value.replace(/[\s.-]/g, "");
-  if (compact.startsWith("+")) {
-    return `+${compact.slice(1).replace(/\+/g, "")}`;
-  }
-  return compact.replace(/\+/g, "");
-}
-
-function formatPhoneDisplay(value: string) {
-  const compact = compactPhone(value);
-  if (!compact) {
-    return "";
-  }
-  const hasCountry = compact.startsWith("+57");
-  const national = hasCountry ? compact.slice(3) : compact.startsWith("+") ? compact.slice(1) : compact;
-  if (/^3\d{0,9}$/.test(national) || /^60\d{0,8}$/.test(national)) {
-    const groups = [national.slice(0, 3), national.slice(3, 6), national.slice(6, 10)].filter(Boolean);
-    return `${hasCountry ? "+57 " : ""}${groups.join(" ")}`;
-  }
-  return compact;
-}
-
-function isValidColombianPhone(value: string) {
-  const compact = value.replace(/[\s.-]/g, "");
-  const national = compact.startsWith("+57") ? compact.slice(3) : compact;
-  return /^3\d{9}$/.test(national) || /^60\d{8}$/.test(national);
-}
-
-function validateAccountName(value: string) {
-  const trimmed = value.trim();
-  if (!trimmed) {
-    return "El nombre es obligatorio";
-  }
-  if (trimmed.length < 2) {
-    return "El nombre debe tener al menos 2 caracteres";
-  }
-  if (trimmed.length > 80) {
-    return "El nombre es demasiado largo";
-  }
-  return "";
-}
-
-function validateAccountPhone(value: string) {
-  const trimmed = value.trim();
-  if (!trimmed) {
-    return "";
-  }
-  if (trimmed.length > 20) {
-    return "El teléfono es demasiado largo";
-  }
-  if (!isValidColombianPhone(trimmed)) {
-    return "Ingresa un teléfono colombiano válido. Ejemplo: 300 123 4567";
-  }
-  return "";
-}
-
 const EDIT_COPY = [
   { title: "Ubicación", lead: "Actualiza dónde estás para acercarte mejores experiencias." },
   { title: "Tu imagen", lead: "Elige cómo quieres presentarte en Entre Caminos." },
@@ -113,87 +63,6 @@ const EDIT_COPY = [
   { title: "Preferencias", lead: "Afina ambientes, música, presupuesto y clima." },
   { title: "Revisa tu perfil", lead: "Confirma los cambios antes de guardarlos." },
 ] as const;
-
-function EditAccountFields({
-  name,
-  phone,
-  email,
-  errors,
-  onName,
-  onPhone,
-}: {
-  name: string;
-  phone: string;
-  email: string;
-  errors: { name?: string; phone?: string };
-  onName: (value: string) => void;
-  onPhone: (value: string) => void;
-}) {
-  return (
-    <div className="onboarding-account">
-      <label className="onboarding-field">
-        <span className="onboarding-field__icon" aria-hidden="true">
-          <UserRound size={20} strokeWidth={1.6} />
-        </span>
-        <span className="onboarding-field__copy">
-          <span className="onboarding-field__label">Nombre</span>
-          <span className="onboarding-control">
-            <input
-              id="profile-edit-name"
-              name="name"
-              value={name}
-              maxLength={80}
-              autoComplete="name"
-              onChange={(event) => onName(event.target.value)}
-            />
-          </span>
-        </span>
-      </label>
-      {errors.name ? <p className="onboarding-error">{errors.name}</p> : null}
-      <label className="onboarding-field">
-        <span className="onboarding-field__icon" aria-hidden="true">
-          <Mail size={20} strokeWidth={1.6} />
-        </span>
-        <span className="onboarding-field__copy">
-          <span className="onboarding-field__label">Correo</span>
-          <span className="onboarding-control">
-            <input value={email} readOnly aria-readonly="true" />
-          </span>
-        </span>
-      </label>
-      <p className="onboarding-account__hint">El correo requiere verificación y no puede modificarse aquí.</p>
-      <label className="onboarding-field">
-        <span className="onboarding-field__icon" aria-hidden="true">
-          <Phone size={20} strokeWidth={1.6} />
-        </span>
-        <span className="onboarding-field__copy">
-          <span className="onboarding-field__label">Número</span>
-          <span className="onboarding-control">
-            <input
-              name="phone"
-              type="tel"
-              inputMode="tel"
-              autoComplete="tel"
-              placeholder="300 123 4567"
-              maxLength={16}
-              value={phone}
-              onChange={(event) => onPhone(formatPhoneDisplay(event.target.value))}
-            />
-          </span>
-        </span>
-      </label>
-      {errors.phone ? <p className="onboarding-error">{errors.phone}</p> : null}
-      <div className="onboarding-account__missing">
-        <span>Edad</span>
-        <strong>No registrado</strong>
-      </div>
-      <div className="onboarding-account__missing">
-        <span>Género</span>
-        <strong>No registrado</strong>
-      </div>
-    </div>
-  );
-}
 
 export function OnboardingPage() {
   const { user, refresh, updateProfile } = useAuth();

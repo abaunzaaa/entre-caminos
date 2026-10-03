@@ -11,10 +11,12 @@ export function AuthForgotModalLayout({
   children,
   titleId = "forgot-password-title",
   onClose,
+  className,
 }: {
   children: ReactNode;
   titleId?: string;
   onClose?: () => void;
+  className?: string;
 }) {
   const closeRef = useRef<HTMLAnchorElement>(null);
   const overlayCloseRef = useRef<HTMLButtonElement>(null);
@@ -42,7 +44,7 @@ export function AuthForgotModalLayout({
         <AuthScrollLock />
         <div className="auth-recovery-layer is-fixed" onClick={onOverlayClick}>
           <div
-            className="auth-recovery-modal"
+            className={className ? `auth-recovery-modal ${className}` : "auth-recovery-modal"}
             role="dialog"
             aria-modal="true"
             aria-labelledby={titleId}

@@ -785,3 +785,313 @@
     padding-inline: 14px;
   }
 }
+
+.auth-recovery-modal.profile-edit-modal {
+  --ob-forest: #294942;
+  --ob-forest-deep: #1c332e;
+  --ob-sage-soft: #e6eee9;
+  --ob-label: #6b746f;
+  --ob-line: #eceeed;
+  --ob-line-strong: #d5ddd8;
+  --interest-selected: #dce9e2;
+  --interest-selected-border: #86a397;
+  --onboarding-title: #17201d;
+  width: min(720px, calc(100vw - 48px));
+  max-width: 720px;
+  max-height: min(680px, calc(100dvh - 80px));
+  padding: 0;
+  overflow: hidden;
+}
+
+.profile-edit-modal__header {
+  flex: 0 0 auto;
+  padding: 1.15rem 3.1rem 0 1.35rem;
+}
+
+.profile-edit-modal__header .dash-profile__name {
+  margin: 0;
+  color: #111111;
+}
+
+.profile-edit-modal__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 0.8rem 1.35rem 1.85rem;
+  scroll-behavior: smooth;
+  scrollbar-gutter: stable;
+}
+
+.profile-edit-section + .profile-edit-section {
+  margin-top: 1.1rem;
+  padding-top: 1.05rem;
+  border-top: 1px solid #eef2f0;
+}
+
+.profile-edit-modal .dash-exps-dossier__kicker {
+  margin-bottom: 0.6rem;
+  color: #6b746f;
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  line-height: 1.45;
+}
+
+.profile-edit-modal .onboarding-account,
+.profile-edit-modal .location-grid {
+  width: 100%;
+  margin: 0;
+  gap: 10px 12px;
+}
+
+.profile-edit-modal .onboarding-account > .onboarding-field:first-child,
+.profile-edit-modal .onboarding-account > .onboarding-error,
+.profile-edit-modal .onboarding-account > .onboarding-location {
+  grid-column: 1 / -1;
+}
+
+.profile-edit-modal .onboarding-field {
+  min-height: 0;
+  gap: 8px;
+  padding: 6px 10px;
+  border-color: #e7ece9;
+  border-radius: 12px;
+  background: #f3f5f4;
+  box-shadow: none;
+}
+
+.profile-edit-modal .onboarding-field__copy {
+  gap: 3px;
+}
+
+.profile-edit-modal .onboarding-field__icon {
+  width: 22px;
+  height: 22px;
+  flex-basis: 22px;
+}
+
+.profile-edit-modal .onboarding-field__icon svg {
+  width: 13px;
+  height: 13px;
+}
+
+.profile-edit-modal .onboarding-field__label {
+  color: #6b746f;
+  font-size: 0.68rem;
+  font-weight: 400;
+}
+
+.profile-edit-modal .onboarding-control input,
+.profile-edit-modal .onboarding-control--select {
+  min-height: 18px;
+  color: #1c332e;
+  font-size: 0.84rem;
+  font-weight: 400;
+  line-height: 1.35;
+}
+
+.profile-edit-modal .onboarding-control input::placeholder,
+.profile-edit-modal .onboarding-control--select.is-placeholder {
+  color: #a7b0ac;
+  font-weight: 400;
+}
+
+.profile-edit-modal .onboarding-field--select {
+  padding-right: 32px;
+  border-color: #c5d0ca;
+}
+
+.profile-edit-modal .onboarding-field--select::after {
+  top: 50%;
+  right: 13px;
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid #1c332e;
+  border-bottom: 2px solid #1c332e;
+  transform: translateY(-65%) rotate(45deg);
+}
+
+.profile-edit-modal .onboarding-field--select.is-open::after {
+  transform: translateY(-20%) rotate(225deg);
+}
+
+.profile-edit-modal .onboarding-address-row {
+  gap: 8px;
+}
+
+.profile-edit-modal .onboarding-geo {
+  min-height: 34px;
+  padding: 0 10px;
+  border-color: #e1e6e3;
+  background: #f3f5f4;
+  color: #6b746f;
+  font-size: 0.76rem;
+  font-weight: 500;
+}
+
+.profile-edit-modal .onboarding-geo:hover:not(:disabled),
+.profile-edit-modal .onboarding-geo.is-success {
+  border-color: #d5ddd8;
+  background: #e8eeea;
+  color: #4d5c57;
+}
+
+.profile-edit-modal .onboarding-geo.is-error {
+  border-color: #e4d2cf;
+  background: #f7f3f2;
+  color: #8d4e48;
+}
+
+.profile-edit-modal .onboarding-select-panel {
+  z-index: 40;
+  width: 100%;
+  max-width: 100%;
+  border-radius: 12px;
+}
+
+.profile-edit-modal .onboarding-select-search {
+  margin: 6px 6px 4px;
+  padding: 6px 8px;
+  border-radius: 10px;
+}
+
+.profile-edit-modal .onboarding-select-search input {
+  font-size: 0.8rem;
+  font-weight: 400;
+}
+
+.profile-edit-modal .onboarding-select-menu {
+  padding: 4px;
+}
+
+.profile-edit-modal .onboarding-select-option {
+  min-height: 32px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 400;
+}
+
+.profile-edit-modal .onboarding-select-option.is-selected {
+  font-weight: 600;
+}
+
+.profile-edit-blocks {
+  display: grid;
+  gap: 0;
+}
+
+.profile-edit-block + .profile-edit-block {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid #eef2f0;
+}
+
+.profile-edit-block__title {
+  margin: 0;
+  color: #8a938e;
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.profile-edit-block__hint,
+.profile-edit-modal .onboarding-limit,
+.profile-edit-modal .onboarding-error {
+  margin: 0.2rem 0 0.5rem;
+  color: #8b9893;
+  font-size: 0.72rem;
+  font-weight: 400;
+  line-height: 1.35;
+}
+
+.profile-edit-modal .onboarding-chips {
+  justify-content: flex-start;
+  gap: 6px;
+}
+
+.profile-edit-modal .onboarding-chip {
+  gap: 5px;
+  border-radius: 999px;
+  min-height: 28px;
+  padding: 0 9px;
+  border: 1px solid #d5ddd8;
+  background: transparent;
+  color: #6b746f;
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+
+.profile-edit-modal .onboarding-chip svg {
+  width: 13px;
+  height: 13px;
+}
+
+.profile-edit-modal .onboarding-chip.is-selected {
+  border-color: #b7c6be;
+  background: #e8eeea;
+  color: #1c332e;
+  font-weight: 500;
+}
+
+.profile-edit-modal__footer {
+  position: relative;
+  z-index: 2;
+  flex: 0 0 auto;
+  display: grid;
+  gap: 8px;
+  padding: 0.7rem 1.35rem 0.9rem;
+  border-top: 1px solid #eef2f0;
+  background: #fff;
+}
+
+.auth-recovery-modal.profile-edit-modal .auth-recovery-close {
+  width: 40px;
+  height: 40px;
+}
+
+.profile-edit-modal__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.profile-edit-modal__actions > button,
+.profile-edit-modal__actions .tourist-hero__cta {
+  box-sizing: border-box;
+  height: 34px;
+  min-height: 34px;
+  margin: 0;
+  padding: 0 1.05rem;
+  font-size: 0.72rem;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.04em;
+}
+
+@media (max-width: 640px) {
+  .auth-recovery-modal.profile-edit-modal {
+    width: calc(100vw - 24px);
+    max-height: calc(100dvh - 24px);
+  }
+
+  .profile-edit-modal__header,
+  .profile-edit-modal__body,
+  .profile-edit-modal__footer {
+    padding-right: 1rem;
+    padding-left: 1rem;
+  }
+
+  .profile-edit-modal .onboarding-account,
+  .profile-edit-modal .location-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-edit-modal__actions {
+    justify-content: center;
+  }
+}

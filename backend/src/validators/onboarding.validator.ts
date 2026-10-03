@@ -67,6 +67,8 @@ export const avatarConfigSchema = z
     glasses: value.glasses ?? "none",
   }));
 
+const PROFILE_GENDERS = ["Mujer", "Hombre", "No binario", "Otro", "Prefiero no decir"] as const;
+
 const stringList = (allowed: readonly string[], aliases: Record<string, string> = {}) =>
   z.array(z.string()).transform((values) => {
     const allowedSet = new Set<string>(allowed);
@@ -96,6 +98,8 @@ export const onboardingSaveSchema = z.object({
   music: stringList(ONBOARDING_MUSIC).optional(),
   budget: stringList(ONBOARDING_BUDGETS).optional(),
   climate: stringList(ONBOARDING_CLIMATES).optional(),
+  age: z.number().int().min(1).max(120).nullable().optional(),
+  gender: z.preprocess(emptyToNull, z.enum(PROFILE_GENDERS).nullable().optional()),
   completed: z.boolean().optional(),
 });
 

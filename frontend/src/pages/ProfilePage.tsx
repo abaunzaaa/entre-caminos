@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   Cake,
   CalendarDays,
@@ -26,6 +25,7 @@ import { AvatarPreview } from "../components/onboarding/AvatarPreview";
 import { UnderConstruction } from "../components/explorer/UnderConstruction";
 import { ChangePasswordModal } from "../components/auth/ChangePasswordModal";
 import { DeleteAccountModal } from "../components/auth/DeleteAccountModal";
+import { EditProfileModal } from "../components/profile/EditProfileModal";
 import { useAuth } from "../hooks/useAuth";
 import { listFavoriteExperiences } from "../services/favorites.service";
 import { onFavoritesChanged } from "../services/favorites-sync";
@@ -107,7 +107,6 @@ function displayPhone(value: string | null | undefined) {
 
 export function ProfilePage() {
   const { user, loading: authLoading } = useAuth();
-  const navigate = useNavigate();
   const form = profileToForm(user?.profile);
   const storedName = user?.name?.trim() ?? "";
   const displayName = formatPersonName(storedName) || storedName || "Tu perfil";
@@ -120,6 +119,7 @@ export function ProfilePage() {
   const [tab, setTab] = useState<ProfileTab>("informacion");
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [passwordOpen, setPasswordOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [favorites, setFavorites] = useState<Experience[]>([]);
   const [favoritesLoading, setFavoritesLoading] = useState(true);
   const [favoritesError, setFavoritesError] = useState("");
@@ -190,8 +190,8 @@ export function ProfilePage() {
     { label: "Ubicación", icon: MapPin, text: location },
     { label: "Correo", icon: Mail, text: email },
     { label: "Número", icon: Phone, text: phone },
-    { label: "Edad", icon: Cake, text: "" },
-    { label: "Género", icon: VenusAndMars, text: "" },
+    { label: "Edad", icon: Cake, text: form.age },
+    { label: "Género", icon: VenusAndMars, text: form.gender },
   ];
   const preferenceRows: ProfileField[] = [
     { label: "Intereses", icon: Sparkles, ...preferenceField(form.interests) },
@@ -290,7 +290,7 @@ export function ProfilePage() {
           {tab === "informacion" ? (
             <div className="profile-info-layout">
               <div className="profile-info-actions">
-                <button type="button" className="tourist-hero__cta" onClick={() => navigate("/perfil/editar")}>
+                <button type="button" className="tourist-hero__cta" onClick={() => setEditOpen(true)}>
                   Editar perfil
                 </button>
               </div>
@@ -392,6 +392,7 @@ export function ProfilePage() {
       </section>
       <ChangePasswordModal open={passwordOpen} onClose={() => setPasswordOpen(false)} />
       <DeleteAccountModal open={deleteOpen} onClose={() => setDeleteOpen(false)} />
+      <EditProfileModal open={editOpen} onClose={() => setEditOpen(false)} />
     </div>
   );
 }

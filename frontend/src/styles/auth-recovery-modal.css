@@ -25,7 +25,7 @@
 
 .auth-recovery-layer.is-fixed {
   position: fixed;
-  z-index: 70;
+  z-index: 10100;
 }
 
 .auth-recovery-layer {

@@ -107,16 +107,20 @@ export function OnboardingSelect(props: OnboardingSelectProps) {
         return;
       }
       const rect = field.getBoundingClientRect();
-      const footer = document.querySelector(".onboarding-footer");
-      const viewBottom = footer?.getBoundingClientRect().top ?? window.innerHeight;
-      const viewTop = 8;
+      const modal = field.closest(".profile-edit-modal");
+      const body = modal?.querySelector(".profile-edit-modal__body");
+      const bodyRect = body?.getBoundingClientRect();
+      const footer = modal ? null : document.querySelector(".onboarding-footer");
+      const viewBottom = bodyRect ? bodyRect.bottom - 6 : (footer?.getBoundingClientRect().top ?? window.innerHeight);
+      const viewTop = bodyRect ? bodyRect.top + 6 : 8;
       const gap = 8;
-      const forceDown = props.placement === "down";
+      const forceDown = props.placement === "down" && !modal;
       const floor = forceDown ? window.innerHeight - 8 : viewBottom;
-      const spaceBelow = floor - rect.bottom - gap;
-      const spaceAbove = rect.top - viewTop - gap;
+      const spaceBelow = Math.max(0, floor - rect.bottom - gap);
+      const spaceAbove = Math.max(0, rect.top - viewTop - gap);
       const openUp = !forceDown && spaceBelow < 168 && spaceAbove > spaceBelow;
-      const maxHeight = Math.max(160, Math.min(320, openUp ? spaceAbove : spaceBelow));
+      const available = openUp ? spaceAbove : spaceBelow;
+      const maxHeight = modal ? Math.min(220, available) : Math.max(160, Math.min(320, available));
       setMenuBox({ openUp, maxHeight });
     }
     place();
@@ -144,7 +148,18 @@ export function OnboardingSelect(props: OnboardingSelectProps) {
     if (!open) {
       return;
     }
-    optionRefs.current[activeIndex]?.scrollIntoView({ block: "nearest" });
+    const option = optionRefs.current[activeIndex];
+    const menu = option?.closest(".onboarding-select-menu");
+    if (!option || !menu) {
+      return;
+    }
+    const optionRect = option.getBoundingClientRect();
+    const menuRect = menu.getBoundingClientRect();
+    if (optionRect.top < menuRect.top) {
+      menu.scrollTop -= menuRect.top - optionRect.top;
+    } else if (optionRect.bottom > menuRect.bottom) {
+      menu.scrollTop += optionRect.bottom - menuRect.bottom;
+    }
   }, [activeIndex, open, visible.length]);
 
   useEffect(() => {
@@ -157,7 +172,7 @@ export function OnboardingSelect(props: OnboardingSelectProps) {
         searchRef.current?.focus();
         return;
       }
-      optionRefs.current[activeIndex]?.focus();
+      optionRefs.current[activeIndex]?.focus({ preventScroll: true });
     }, 0);
 
     function onPointerDown(event: PointerEvent) {
