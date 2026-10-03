@@ -1,37 +1,61 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Heart, Shield, Stamp, UserRound, type LucideIcon } from "lucide-react";
+import {
+  Cake,
+  CalendarDays,
+  Leaf,
+  Mail,
+  MapPin,
+  Music,
+  Phone,
+  Sparkles,
+  Star,
+  Stamp,
+  Sun,
+  UserRound,
+  Users,
+  VenusAndMars,
+  Wallet,
+  type LucideIcon,
+} from "lucide-react";
 import encabezado from "../assets/encabezado.png";
 import { getPreferenceLabel } from "../data/onboarding";
 import { AvatarPreview } from "../components/onboarding/AvatarPreview";
-import {
-  BouquetIcon,
-  CheersIcon,
-  LandscapeIcon,
-  RecordPlayerIcon,
-  SunFaceIcon,
-  WalletIcon,
-} from "../components/onboarding/SummaryLineIcons";
 import { UnderConstruction } from "../components/explorer/UnderConstruction";
-import { Button } from "../components/ui/Button";
 import { KeyConfirmDialog } from "../components/ui/KeyConfirmDialog";
 import { useAuth } from "../hooks/useAuth";
 import { listFavoriteExperiences } from "../services/favorites.service";
 import { onFavoritesChanged } from "../services/favorites-sync";
 import type { Experience, PublicUser } from "../types";
 import { mediaUrl } from "../utils/media";
-import { locationSummary, profileToForm } from "../utils/onboarding";
+import { profileToForm, type OnboardingForm } from "../utils/onboarding";
 import { roleCopy } from "../utils/access-copy";
 import { formatPersonName } from "../utils/person-name";
+import "../styles/experience-editorial-dossier.css";
 import "../styles/onboarding.css";
 import "../styles/profile-view.css";
 
-type ProfileTab = "informacion" | "intereses" | "seguridad" | "estampitas";
+type ProfileTab = "informacion" | "agenda" | "resenas" | "estampitas";
+
+type ProfileField = {
+  label: string;
+  icon: LucideIcon;
+  text: string;
+  chips?: string[];
+};
+
+function preferenceField(values: string[]): Pick<ProfileField, "text" | "chips"> {
+  const labels = preferenceLabels(values);
+  if (labels.length > 1) {
+    return { text: "", chips: labels };
+  }
+  return { text: labels[0] ?? "" };
+}
 
 const TABS: Array<{ id: ProfileTab; label: string; icon: LucideIcon }> = [
   { id: "informacion", label: "Información", icon: UserRound },
-  { id: "intereses", label: "Intereses", icon: Heart },
-  { id: "seguridad", label: "Seguridad", icon: Shield },
+  { id: "agenda", label: "Agenda", icon: CalendarDays },
+  { id: "resenas", label: "Reseñas", icon: Star },
   { id: "estampitas", label: "Estampitas", icon: Stamp },
 ];
 
@@ -55,8 +79,12 @@ function accountStatus(status: PublicUser["status"] | undefined) {
   return null;
 }
 
-function preferenceText(values: string[]) {
-  return values.map((value) => getPreferenceLabel(value)).filter(Boolean).join(" · ");
+function preferenceLabels(values: string[]) {
+  return values.map((value) => getPreferenceLabel(value)).filter(Boolean);
+}
+
+function profilePlace(form: OnboardingForm) {
+  return [form.department, form.city].map((part) => part.trim()).filter(Boolean).join(" · ");
 }
 
 function displayPhone(value: string | null | undefined) {
@@ -79,7 +107,7 @@ export function ProfilePage() {
   const form = profileToForm(user?.profile);
   const storedName = user?.name?.trim() ?? "";
   const displayName = formatPersonName(storedName) || storedName || "Tu perfil";
-  const place = locationSummary(form);
+  const location = profilePlace(form);
   const roleLabel = !user || user.role === "USER" ? "Turista" : roleCopy(user.role).title;
   const status = accountStatus(user?.status);
   const photo = form.localPhotoUrl || (form.profileImageUrl ? mediaUrl(form.profileImageUrl) : "");
@@ -152,22 +180,21 @@ export function ProfilePage() {
     },
   ];
 
-  const preferenceCards: Array<{ id: string; title: string; icon: ReactNode; values: string[] }> = [
-    { id: "intereses", title: "Intereses", icon: <BouquetIcon />, values: form.interests },
-    { id: "ambientes", title: "Ambientes", icon: <LandscapeIcon />, values: form.places },
-    { id: "presupuesto", title: "Presupuesto", icon: <WalletIcon />, values: form.budget },
-    { id: "compania", title: "Compañía", icon: <CheersIcon />, values: form.companions },
-    { id: "musica", title: "Música", icon: <RecordPlayerIcon />, values: form.music },
-    { id: "clima", title: "Clima", icon: <SunFaceIcon />, values: form.climate },
+  const personalRows: ProfileField[] = [
+    { label: "Nombre", icon: UserRound, text: storedName ? displayName : "" },
+    { label: "Ubicación", icon: MapPin, text: location },
+    { label: "Correo", icon: Mail, text: email },
+    { label: "Número", icon: Phone, text: phone },
+    { label: "Edad", icon: Cake, text: "" },
+    { label: "Género", icon: VenusAndMars, text: "" },
   ];
-
-  const infoRows = [
-    { label: "Nombre", value: storedName ? displayName : "", emptyLabel: "Sin completar" },
-    { label: "Ubicación", value: place, emptyLabel: "Sin completar" },
-    { label: "Correo", value: email, emptyLabel: "Sin completar" },
-    { label: "Número", value: phone, emptyLabel: "Sin completar" },
-    { label: "Edad", value: "", emptyLabel: "No registrado" },
-    { label: "Género", value: "", emptyLabel: "No registrado" },
+  const preferenceRows: ProfileField[] = [
+    { label: "Intereses", icon: Sparkles, ...preferenceField(form.interests) },
+    { label: "Ambientes", icon: Leaf, ...preferenceField(form.places) },
+    { label: "Presupuesto", icon: Wallet, ...preferenceField(form.budget) },
+    { label: "Compañía", icon: Users, ...preferenceField(form.companions) },
+    { label: "Música", icon: Music, ...preferenceField(form.music) },
+    { label: "Clima", icon: Sun, ...preferenceField(form.climate) },
   ];
 
   return (
@@ -191,9 +218,6 @@ export function ProfilePage() {
                   </p>
                 ) : null}
               </div>
-              <Button type="button" className="profile-hero__edit" onClick={() => navigate("/perfil/editar")}>
-                Editar perfil
-              </Button>
             </div>
 
             <ul className="profile-hero__stats">
@@ -259,99 +283,96 @@ export function ProfilePage() {
           aria-labelledby={`profile-tab-${tab}`}
         >
           {tab === "informacion" ? (
-            <section className="profile-info-card" aria-labelledby="profile-info-title">
-              <h2 id="profile-info-title" className="profile-info-card__title">
-                Información
-              </h2>
-              <dl className="profile-info">
-                {infoRows.map((row) => {
-                  const empty = !row.value;
-                  return (
-                    <div key={row.label} className="profile-info__row">
-                      <dt>{row.label}</dt>
-                      <dd className={empty ? "is-empty" : undefined}>{empty ? row.emptyLabel : row.value}</dd>
-                    </div>
-                  );
-                })}
-              </dl>
-            </section>
-          ) : null}
-
-          {tab === "intereses" ? (
-            <div className="profile-interests">
-              {preferenceCards.map((card) => {
-                const text = preferenceText(card.values);
-                return (
-                  <section key={card.id} className="profile-info-card" aria-labelledby={`profile-pref-${card.id}`}>
-                    <h2 id={`profile-pref-${card.id}`} className="profile-info-card__title profile-info-card__title--icon">
-                      <span className="profile-info-card__glyph" aria-hidden="true">
-                        {card.icon}
-                      </span>
-                      {card.title}
+            <div className="profile-info-layout">
+              <div className="profile-info-actions">
+                <button type="button" className="tourist-hero__cta" onClick={() => navigate("/perfil/editar")}>
+                  Editar perfil
+                </button>
+              </div>
+              <div className="profile-info-groups">
+                {(
+                  [
+                    { id: "profile-data-title", title: "Mis datos", rows: personalRows },
+                    { id: "profile-prefs-title", title: "Mis preferencias", rows: preferenceRows },
+                  ] as const
+                ).map((group) => (
+                  <section key={group.id} className="profile-info-card" aria-labelledby={group.id}>
+                    <h2 id={group.id} className="dash-exps-dossier__kicker">
+                      {group.title}
                     </h2>
-                    <p className={`profile-info profile-info__statement${text ? "" : " is-empty"}`}>
-                      {text || "Sin especificar"}
-                    </p>
+                    <dl className="dash-exps-dossier__facts">
+                      {group.rows.map((row) => {
+                        const Icon = row.icon;
+                        const chips = row.chips ?? [];
+                        const empty = !row.text && chips.length === 0;
+                        return (
+                          <div key={row.label} className="dash-exps-dossier__row">
+                            <div className="dash-exps-dossier__copy">
+                              <dt className="dash-exps-dossier__label">
+                                <Icon size={14} strokeWidth={1.75} aria-hidden="true" />
+                                {row.label}
+                              </dt>
+                              <dd className={`dash-exps-dossier__value${empty ? " is-empty" : ""}`}>
+                                {empty ? (
+                                  "Sin completar"
+                                ) : chips.length > 1 ? (
+                                  <ul className="profile-chips">
+                                    {chips.map((chip) => (
+                                      <li key={chip}>{chip}</li>
+                                    ))}
+                                  </ul>
+                                ) : (
+                                  row.text
+                                )}
+                              </dd>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </dl>
                   </section>
-                );
-              })}
+                ))}
+              </div>
+
+              <section className="profile-info-card" aria-labelledby="profile-security-title">
+                <h2 id="profile-security-title" className="dash-exps-dossier__kicker">
+                  Seguridad
+                </h2>
+                <dl className="dash-exps-dossier__facts">
+                  <div className="dash-exps-dossier__row">
+                    <div className="dash-exps-dossier__copy">
+                      <dt className="dash-exps-dossier__label">Contraseña</dt>
+                      <dd className="dash-exps-dossier__value">
+                        <button type="button" className="tourist-hero__cta" onClick={() => navigate("/cambiar-contrasena")}>
+                          Cambiar contraseña
+                        </button>
+                      </dd>
+                    </div>
+                  </div>
+                  <div className="dash-exps-dossier__row">
+                    <div className="dash-exps-dossier__copy">
+                      <dt className="dash-exps-dossier__label">Cuenta</dt>
+                      <dd className="dash-exps-dossier__value">
+                        <button type="button" className="tourist-hero__cta" onClick={() => setDeleteOpen(true)}>
+                          Eliminar cuenta
+                        </button>
+                      </dd>
+                    </div>
+                  </div>
+                </dl>
+              </section>
             </div>
           ) : null}
 
-          {tab === "seguridad" ? (
-            <div className="profile-security">
-              <section className="profile-info-card" aria-labelledby="profile-password-title">
-                <h2 id="profile-password-title" className="profile-info-card__title">
-                  Contraseña
-                </h2>
-                <dl className="profile-info">
-                  <div className="profile-info__row">
-                    <dt>Cambiar contraseña</dt>
-                    <dd>
-                      <Button type="button" onClick={() => navigate("/cambiar-contrasena")}>
-                        Cambiar contraseña
-                      </Button>
-                    </dd>
-                  </div>
-                </dl>
-              </section>
+          {tab === "agenda" ? (
+            <div className="profile-agenda">
+              <UnderConstruction title="AGENDA" />
+            </div>
+          ) : null}
 
-              <section className="profile-info-card" aria-labelledby="profile-email-title">
-                <h2 id="profile-email-title" className="profile-info-card__title">
-                  Correo electrónico
-                </h2>
-                <dl className="profile-info">
-                  <div className="profile-info__row">
-                    <dt>Correo asociado</dt>
-                    <dd className={email ? undefined : "is-empty"}>{email || "Sin completar"}</dd>
-                  </div>
-                  <div className="profile-info__row">
-                    <dt>Estado</dt>
-                    <dd>{user?.emailVerified ? "Correo verificado" : "Sin verificar"}</dd>
-                  </div>
-                </dl>
-              </section>
-
-              <section className="profile-info-card" aria-labelledby="profile-account-title">
-                <h2 id="profile-account-title" className="profile-info-card__title">
-                  Cuenta
-                </h2>
-                <dl className="profile-info">
-                  <div className="profile-info__row">
-                    <dt>Eliminar cuenta</dt>
-                    <dd>
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        className="profile-info__danger"
-                        onClick={() => setDeleteOpen(true)}
-                      >
-                        Eliminar cuenta
-                      </Button>
-                    </dd>
-                  </div>
-                </dl>
-              </section>
+          {tab === "resenas" ? (
+            <div className="profile-reviews">
+              <UnderConstruction title="RESEÑAS" />
             </div>
           ) : null}
 
