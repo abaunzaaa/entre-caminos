@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Mail, Phone, UserRound } from "lucide-react";
 import logoEntreCaminos from "../../assets/logo.png";
 import { CompanyStep } from "../../components/onboarding/CompanyStep";
 import { LocationStep, type LocationStatus } from "../../components/onboarding/LocationStep";
@@ -48,6 +49,62 @@ const COPY = [
   { title: "Todo listo", lead: "Así se verá tu perfil en Entre Caminos." },
 ] as const;
 
+function compactPhone(value: string) {
+  const compact = value.replace(/[\s.-]/g, "");
+  if (compact.startsWith("+")) {
+    return `+${compact.slice(1).replace(/\+/g, "")}`;
+  }
+  return compact.replace(/\+/g, "");
+}
+
+function formatPhoneDisplay(value: string) {
+  const compact = compactPhone(value);
+  if (!compact) {
+    return "";
+  }
+  const hasCountry = compact.startsWith("+57");
+  const national = hasCountry ? compact.slice(3) : compact.startsWith("+") ? compact.slice(1) : compact;
+  if (/^3\d{0,9}$/.test(national) || /^60\d{0,8}$/.test(national)) {
+    const groups = [national.slice(0, 3), national.slice(3, 6), national.slice(6, 10)].filter(Boolean);
+    return `${hasCountry ? "+57 " : ""}${groups.join(" ")}`;
+  }
+  return compact;
+}
+
+function isValidColombianPhone(value: string) {
+  const compact = value.replace(/[\s.-]/g, "");
+  const national = compact.startsWith("+57") ? compact.slice(3) : compact;
+  return /^3\d{9}$/.test(national) || /^60\d{8}$/.test(national);
+}
+
+function validateAccountName(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return "El nombre es obligatorio";
+  }
+  if (trimmed.length < 2) {
+    return "El nombre debe tener al menos 2 caracteres";
+  }
+  if (trimmed.length > 80) {
+    return "El nombre es demasiado largo";
+  }
+  return "";
+}
+
+function validateAccountPhone(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return "";
+  }
+  if (trimmed.length > 20) {
+    return "El teléfono es demasiado largo";
+  }
+  if (!isValidColombianPhone(trimmed)) {
+    return "Ingresa un teléfono colombiano válido. Ejemplo: 300 123 4567";
+  }
+  return "";
+}
+
 const EDIT_COPY = [
   { title: "Ubicación", lead: "Actualiza dónde estás para acercarte mejores experiencias." },
   { title: "Tu imagen", lead: "Elige cómo quieres presentarte en Entre Caminos." },
@@ -57,8 +114,89 @@ const EDIT_COPY = [
   { title: "Revisa tu perfil", lead: "Confirma los cambios antes de guardarlos." },
 ] as const;
 
+function EditAccountFields({
+  name,
+  phone,
+  email,
+  errors,
+  onName,
+  onPhone,
+}: {
+  name: string;
+  phone: string;
+  email: string;
+  errors: { name?: string; phone?: string };
+  onName: (value: string) => void;
+  onPhone: (value: string) => void;
+}) {
+  return (
+    <div className="onboarding-account">
+      <label className="onboarding-field">
+        <span className="onboarding-field__icon" aria-hidden="true">
+          <UserRound size={20} strokeWidth={1.6} />
+        </span>
+        <span className="onboarding-field__copy">
+          <span className="onboarding-field__label">Nombre</span>
+          <span className="onboarding-control">
+            <input
+              id="profile-edit-name"
+              name="name"
+              value={name}
+              maxLength={80}
+              autoComplete="name"
+              onChange={(event) => onName(event.target.value)}
+            />
+          </span>
+        </span>
+      </label>
+      {errors.name ? <p className="onboarding-error">{errors.name}</p> : null}
+      <label className="onboarding-field">
+        <span className="onboarding-field__icon" aria-hidden="true">
+          <Mail size={20} strokeWidth={1.6} />
+        </span>
+        <span className="onboarding-field__copy">
+          <span className="onboarding-field__label">Correo</span>
+          <span className="onboarding-control">
+            <input value={email} readOnly aria-readonly="true" />
+          </span>
+        </span>
+      </label>
+      <p className="onboarding-account__hint">El correo requiere verificación y no puede modificarse aquí.</p>
+      <label className="onboarding-field">
+        <span className="onboarding-field__icon" aria-hidden="true">
+          <Phone size={20} strokeWidth={1.6} />
+        </span>
+        <span className="onboarding-field__copy">
+          <span className="onboarding-field__label">Número</span>
+          <span className="onboarding-control">
+            <input
+              name="phone"
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              placeholder="300 123 4567"
+              maxLength={16}
+              value={phone}
+              onChange={(event) => onPhone(formatPhoneDisplay(event.target.value))}
+            />
+          </span>
+        </span>
+      </label>
+      {errors.phone ? <p className="onboarding-error">{errors.phone}</p> : null}
+      <div className="onboarding-account__missing">
+        <span>Edad</span>
+        <strong>No registrado</strong>
+      </div>
+      <div className="onboarding-account__missing">
+        <span>Género</span>
+        <strong>No registrado</strong>
+      </div>
+    </div>
+  );
+}
+
 export function OnboardingPage() {
-  const { user, refresh } = useAuth();
+  const { user, refresh, updateProfile } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const isProfileEdit = location.pathname.startsWith("/perfil/editar");
@@ -86,6 +224,9 @@ export function OnboardingPage() {
   const [saving, setSaving] = useState(false);
   const [draftSaving, setDraftSaving] = useState(false);
   const [exitOpen, setExitOpen] = useState(false);
+  const [accountName, setAccountName] = useState("");
+  const [accountPhone, setAccountPhone] = useState("");
+  const [accountErrors, setAccountErrors] = useState<{ name?: string; phone?: string }>({});
 
   useEffect(() => {
     if (!isProfileEdit && user?.profile?.onboardingCompleted) {
@@ -104,6 +245,11 @@ export function OnboardingPage() {
     setForm((current) => ({ ...next, localPhotoUrl: current.localPhotoUrl }));
     setHydrated(true);
   }, [user?.id, user?.profile?.updatedAt]);
+
+  useEffect(() => {
+    setAccountName(user?.name ?? "");
+    setAccountPhone(formatPhoneDisplay(user?.phone ?? ""));
+  }, [user?.id]);
 
   useEffect(() => {
     const next = profileToForm(user?.profile);
@@ -255,6 +401,15 @@ export function OnboardingPage() {
     await saveOnboardingProfile(nextForm, false);
   }
 
+  function accountFieldErrors() {
+    const name = validateAccountName(accountName);
+    const phone = validateAccountPhone(accountPhone);
+    return {
+      name: name || undefined,
+      phone: phone || undefined,
+    };
+  }
+
   async function onContinue() {
     if (!canContinue || draftSaving) {
       return;
@@ -279,7 +434,11 @@ export function OnboardingPage() {
     const saved = profileToForm(user?.profile);
     const current = { ...formRef.current, localPhotoUrl: null };
     const baseline = { ...saved, localPhotoUrl: null };
-    return JSON.stringify(current) !== JSON.stringify(baseline);
+    const accountChanged =
+      isProfileEdit &&
+      (accountName.trim() !== (user?.name ?? "").trim() ||
+        compactPhone(accountPhone) !== compactPhone(user?.phone ?? ""));
+    return accountChanged || JSON.stringify(current) !== JSON.stringify(baseline);
   }
 
   function requestLeave() {
@@ -313,6 +472,20 @@ export function OnboardingPage() {
     setSaving(true);
     setFormError("");
     try {
+      if (isProfileEdit) {
+        const nextErrors = accountFieldErrors();
+        setAccountErrors(nextErrors);
+        if (nextErrors.name || nextErrors.phone) {
+          savingLock.current = false;
+          setSaving(false);
+          goTo(6);
+          return;
+        }
+        await updateProfile({
+          name: accountName.trim(),
+          phone: compactPhone(accountPhone) || null,
+        });
+      }
       await saveOnboardingProfile(form, true);
       await refresh();
       navigate(isProfileEdit ? "/perfil" : "/explorar", { replace: true });
@@ -329,11 +502,11 @@ export function OnboardingPage() {
     if (step === 1) {
       return (
         <LocationStep
-          form={form}
-          locating={locating}
-          locationStatus={locationStatus}
-          locationError={locationError}
-          onChange={setForm}
+            form={form}
+            locating={locating}
+            locationStatus={locationStatus}
+            locationError={locationError}
+            onChange={setForm}
           onUseLocation={() => void onUseLocation()}
         />
       );
@@ -408,27 +581,74 @@ export function OnboardingPage() {
         />
       );
     }
-    const displayName = formatPersonName(user?.name ?? "") || user?.name?.trim() || "";
+    const sourceName = isProfileEdit ? accountName : (user?.name ?? "");
+    const displayName = formatPersonName(sourceName) || sourceName.trim() || "";
     return (
-      <SummaryStep
-        form={form}
-        userName={displayName}
-        onChangeImage={() => goTo(2)}
-        onEdit={(section) => {
-          if (section === "interests") {
-            goTo(3);
-            return;
-          }
-          if (section === "company") {
-            goTo(4);
-            return;
-          }
-          setPrefTab(section);
-          goTo(5);
-        }}
-      />
+      <>
+        {isProfileEdit ? (
+          <EditAccountFields
+            name={accountName}
+            phone={accountPhone}
+            email={user?.email ?? ""}
+            errors={accountErrors}
+            onName={(value) => {
+              setAccountName(value);
+              if (accountErrors.name) {
+                setAccountErrors((current) => ({
+                  ...current,
+                  name: validateAccountName(value) || undefined,
+                }));
+              }
+            }}
+            onPhone={(value) => {
+              setAccountPhone(value);
+              if (accountErrors.phone) {
+                setAccountErrors((current) => ({
+                  ...current,
+                  phone: validateAccountPhone(value) || undefined,
+                }));
+              }
+            }}
+          />
+        ) : null}
+        <SummaryStep
+          form={form}
+          userName={displayName}
+          onChangeImage={() => goTo(2)}
+          onEdit={(section) => {
+            if (section === "interests") {
+              goTo(3);
+              return;
+            }
+            if (section === "company") {
+              goTo(4);
+              return;
+            }
+            setPrefTab(section);
+            goTo(5);
+          }}
+        />
+      </>
     );
-  }, [avatarTab, form, locating, locationError, locationStatus, photoError, photoLoading, photoProgress, prefTab, step, user?.name]);
+  }, [
+    accountErrors.name,
+    accountErrors.phone,
+    accountName,
+    accountPhone,
+    avatarTab,
+    form,
+    isProfileEdit,
+    locating,
+    locationError,
+    locationStatus,
+    photoError,
+    photoLoading,
+    photoProgress,
+    prefTab,
+    step,
+    user?.email,
+    user?.name,
+  ]);
 
   if (!hydrated) {
     return <div className="onboarding-page" />;
@@ -485,7 +705,11 @@ export function OnboardingPage() {
                 </p>
               ) : null}
             </div>
-            <div className={`onboarding-body${step === 2 || step === 6 ? " onboarding-body--fit" : ""}`}>{body}</div>
+            <div
+            className={`onboarding-body${step === 2 || (step === 6 && !isProfileEdit) ? " onboarding-body--fit" : ""}`}
+          >
+            {body}
+          </div>
           </div>
           </div>
         </div>
