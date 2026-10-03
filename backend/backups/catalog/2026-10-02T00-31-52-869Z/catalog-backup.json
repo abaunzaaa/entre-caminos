@@ -1,0 +1,1386 @@
+{
+  "meta": {
+    "exportedAt": "2026-10-02T00:32:07.746Z",
+    "databaseHost": "aws-0-us-west-2.pooler.supabase.com:6543",
+    "supabase": true,
+    "experienceCount": 10,
+    "note": "Respaldo recuperable del catálogo. No contiene contraseñas ni tokens. Las imágenes de Cloudinary no se descargan; solo se guardan URL y public_id inferido."
+  },
+  "owners": [
+    {
+      "id": "2600275d-ba04-4da1-8d69-b905e5f8f2d4",
+      "name": "Angie Diaz",
+      "email": "angie.diaz@entrecaminos.com",
+      "role": "SUPER_ADMIN",
+      "count": 10
+    }
+  ],
+  "categories": [
+    {
+      "id": "ddd0566c-b605-45a4-ba0f-3ec18cf8fcaa",
+      "name": "Arte prueba",
+      "status": "APPROVED",
+      "description": "prueba dddddddddddddddddddddddddddddddd"
+    },
+    {
+      "id": "51e47ec1-ffa1-4085-9e7e-02e8f80933be",
+      "name": "Cultural",
+      "status": "APPROVED",
+      "description": "Arte, oficios y tradiciones."
+    },
+    {
+      "id": "9e45d5e5-4683-4c40-b5bb-4fd7ed43764d",
+      "name": "Deportivo",
+      "status": "APPROVED",
+      "description": "Movimiento, rutas y bienestar."
+    },
+    {
+      "id": "043f78c9-941a-466a-b6cb-181abae43e95",
+      "name": "Recreativo",
+      "status": "APPROVED",
+      "description": "Planes para compartir y desconectar."
+    },
+    {
+      "id": "8191d52c-cb7b-4bd0-b91e-e054a2180e59",
+      "name": "Turístico",
+      "status": "APPROVED",
+      "description": "Recorridos y destinos para descubrir."
+    }
+  ],
+  "usersSummary": [
+    {
+      "id": "2600275d-ba04-4da1-8d69-b905e5f8f2d4",
+      "name": "Angie Diaz",
+      "email": "angie.diaz@entrecaminos.com",
+      "status": "ACTIVE",
+      "role": "SUPER_ADMIN",
+      "experiencesCreated": 10
+    },
+    {
+      "id": "2a2bb739-aeaf-4af7-b074-f515803f3e29",
+      "name": "Natalia Florez",
+      "email": "natalia.florez@entrecaminos.com",
+      "status": "ACTIVE",
+      "role": "SUPER_ADMIN",
+      "experiencesCreated": 0
+    },
+    {
+      "id": "787bd762-f766-45b9-a8e7-c55996c6d953",
+      "name": "Juliana Casas",
+      "email": "juliana.casas@entrecaminos.com",
+      "status": "ACTIVE",
+      "role": "SUPER_ADMIN",
+      "experiencesCreated": 0
+    },
+    {
+      "id": "0f75e0d6-6c02-4a20-955f-956c6dc31abe",
+      "name": "natalia florez",
+      "email": "nataliaflorezz7282@gmail.com",
+      "status": "ACTIVE",
+      "role": "USER",
+      "experiencesCreated": 0
+    },
+    {
+      "id": "079ce6a0-edda-4a57-bf7e-da6059b637aa",
+      "name": "Valentina Prada",
+      "email": "valentina.prada@entrecaminos.com",
+      "status": "ACTIVE",
+      "role": "ADMIN",
+      "experiencesCreated": 0
+    },
+    {
+      "id": "dde94d57-2533-4146-8679-4d8ed3520998",
+      "name": "Evelin Cartagena",
+      "email": "evelin.cartagena@entrecaminos.com",
+      "status": "ACTIVE",
+      "role": "ADMIN",
+      "experiencesCreated": 0
+    },
+    {
+      "id": "d6c30034-ceae-4780-bbda-79d859dd787f",
+      "name": "Entre Caminos",
+      "email": "entre.caminos@entrecaminos.com",
+      "status": "ACTIVE",
+      "role": "SUPER_ADMIN",
+      "experiencesCreated": 0
+    },
+    {
+      "id": "a5858e15-33fb-4ace-afe1-1d7b502c8934",
+      "name": "Juliana Casas Ramirez",
+      "email": "julianacasas3@gmail.com",
+      "status": "ACTIVE",
+      "role": "USER",
+      "experiencesCreated": 0
+    },
+    {
+      "id": "99710be0-bfcf-4c50-8404-e00a9471b44f",
+      "name": "Daniela Hernandez",
+      "email": "daniela.hernandez@entrecaminos.com",
+      "status": "ACTIVE",
+      "role": "SUPER_ADMIN",
+      "experiencesCreated": 0
+    },
+    {
+      "id": "d1567062-db9e-4ab2-ba6d-8171822c680c",
+      "name": "Juliana Casas Ramirez",
+      "email": "juliadmin@gmail.com",
+      "status": "ACTIVE",
+      "role": "ADMIN",
+      "experiencesCreated": 0
+    },
+    {
+      "id": "5371ace4-f3b3-4e04-ace0-525efa69fdd6",
+      "name": "Angie Diaz Abaunza",
+      "email": "adiazabaunza@gmail.com",
+      "status": "ACTIVE",
+      "role": "USER",
+      "experiencesCreated": 0
+    }
+  ],
+  "favoriteCollections": [],
+  "experiences": [
+    {
+      "id": "2b83d997-0a34-49fb-8bac-e8d3a269e6fa",
+      "title": "Jardines del Belvedere",
+      "description": "Recorrido por los jardines, el estanque y los salones de Jardines del Belvedere: un plan al aire libre con rincones para caminar, sentarse y fotografiar.",
+      "categoryId": "043f78c9-941a-466a-b6cb-181abae43e95",
+      "price": "45000",
+      "currency": "COP",
+      "location": "El Poblado, Medellín, Antioquia",
+      "latitude": "6.2089",
+      "longitude": "-75.5674",
+      "externalUrl": null,
+      "duration": "2 horas",
+      "durationValue": 2,
+      "durationUnit": "HOURS",
+      "availability": {
+        "type": "EVERY_DAY"
+      },
+      "howToGetThere": "Llega a El Poblado; el acceso está señalizado desde la avenida principal del sector.",
+      "imageUrl": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897441/entre-caminos/experiences/gltbfp49axhr3ymcqfmw.jpg",
+      "imageUrls": [
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897441/entre-caminos/experiences/gltbfp49axhr3ymcqfmw.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897443/entre-caminos/experiences/lqstcqqsou7in3hni6mz.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897444/entre-caminos/experiences/xw5a9cu7uze1toib4nah.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897445/entre-caminos/experiences/yqapnrip6ppasjcqpmg7.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897447/entre-caminos/experiences/dq5rvinymh3psbukiwkx.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897448/entre-caminos/experiences/cacdlugbhddklss3fozw.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897449/entre-caminos/experiences/hseadtrz9u9ql9avvaan.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897450/entre-caminos/experiences/whxdyrginqjrwtt2xqpw.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897451/entre-caminos/experiences/n7nwvuhqvkfqwauyuxeq.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897452/entre-caminos/experiences/verpsagajnxxhysdqw7d.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897453/entre-caminos/experiences/zlfza6ktetwhdtx9i8hs.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897454/entre-caminos/experiences/z43nxtluwqduyalfgiat.jpg"
+      ],
+      "stampImageUrl": null,
+      "status": "PUBLISHED",
+      "createdBy": "2600275d-ba04-4da1-8d69-b905e5f8f2d4",
+      "submittedAt": null,
+      "rejectionReason": null,
+      "reviewedAt": "2026-10-01T23:30:55.203Z",
+      "reviewedById": "2600275d-ba04-4da1-8d69-b905e5f8f2d4",
+      "isFeatured": false,
+      "featuredOrder": null,
+      "featuredFrom": null,
+      "featuredUntil": null,
+      "createdAt": "2026-10-01T23:30:55.208Z",
+      "updatedAt": "2026-10-01T23:43:18.691Z",
+      "creator": {
+        "id": "2600275d-ba04-4da1-8d69-b905e5f8f2d4",
+        "name": "Angie Diaz",
+        "email": "angie.diaz@entrecaminos.com",
+        "role": {
+          "name": "SUPER_ADMIN"
+        }
+      },
+      "reviewedBy": {
+        "id": "2600275d-ba04-4da1-8d69-b905e5f8f2d4",
+        "name": "Angie Diaz",
+        "email": "angie.diaz@entrecaminos.com"
+      },
+      "category": {
+        "id": "043f78c9-941a-466a-b6cb-181abae43e95",
+        "name": "Recreativo",
+        "status": "APPROVED"
+      },
+      "experienceCategories": [],
+      "reviews": [],
+      "experienceDetailViews": [],
+      "experienceFavorites": [],
+      "experienceVisitorReviews": [],
+      "conversations": [],
+      "favoriteCollectionItems": []
+    },
+    {
+      "id": "813a35d1-d23e-4b48-aae2-f703ed6a4bf2",
+      "title": "Candlelight: Concierto bajo la luz de las velas",
+      "description": "Concierto íntimo con piano o cuerdas entre cientos de velas. Un plan nocturno para escuchar música clásica o contemporánea en un salón iluminado solo con cera.",
+      "categoryId": "51e47ec1-ffa1-4085-9e7e-02e8f80933be",
+      "price": "120000",
+      "currency": "COP",
+      "location": "Medellín, Antioquia",
+      "latitude": "6.2476",
+      "longitude": "-75.5658",
+      "externalUrl": null,
+      "duration": "90 minutos",
+      "durationValue": 90,
+      "durationUnit": "MINUTES",
+      "availability": {
+        "type": "EVERY_DAY"
+      },
+      "howToGetThere": "El punto exacto se confirma al reservar; suele ser un salón céntrico o en El Poblado.",
+      "imageUrl": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897456/entre-caminos/experiences/ob2dyu84wmqimedgqdv4.jpg",
+      "imageUrls": [
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897456/entre-caminos/experiences/ob2dyu84wmqimedgqdv4.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897456/entre-caminos/experiences/bzf7si9grvwf3a6xxfep.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897457/entre-caminos/experiences/j59whiwhdufxskdeznxy.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897458/entre-caminos/experiences/h6lga7kv73stt436blnj.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897458/entre-caminos/experiences/j296xuva7lqefxsy4bmb.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897459/entre-caminos/experiences/kfwwovkb9vorahnqjnth.jpg"
+      ],
+      "stampImageUrl": null,
+      "status": "PUBLISHED",
+      "createdBy": "2600275d-ba04-4da1-8d69-b905e5f8f2d4",
+      "submittedAt": null,
+      "rejectionReason": null,
+      "reviewedAt": "2026-10-01T23:31:00.435Z",
+      "reviewedById": "2600275d-ba04-4da1-8d69-b905e5f8f2d4",
+      "isFeatured": false,
+      "featuredOrder": null,
+      "featuredFrom": null,
+      "featuredUntil": null,
+      "createdAt": "2026-10-01T23:31:00.438Z",
+      "updatedAt": "2026-10-01T23:43:18.691Z",
+      "creator": {
+        "id": "2600275d-ba04-4da1-8d69-b905e5f8f2d4",
+        "name": "Angie Diaz",
+        "email": "angie.diaz@entrecaminos.com",
+        "role": {
+          "name": "SUPER_ADMIN"
+        }
+      },
+      "reviewedBy": {
+        "id": "2600275d-ba04-4da1-8d69-b905e5f8f2d4",
+        "name": "Angie Diaz",
+        "email": "angie.diaz@entrecaminos.com"
+      },
+      "category": {
+        "id": "51e47ec1-ffa1-4085-9e7e-02e8f80933be",
+        "name": "Cultural",
+        "status": "APPROVED"
+      },
+      "experienceCategories": [],
+      "reviews": [],
+      "experienceDetailViews": [],
+      "experienceFavorites": [],
+      "experienceVisitorReviews": [],
+      "conversations": [],
+      "favoriteCollectionItems": []
+    },
+    {
+      "id": "e9e26541-9c0e-4904-9cf9-090f87a9ed1a",
+      "title": "Tour por la Comuna 13",
+      "description": "Recorrido a pie por la Comuna 13: grafitis, escaleras eléctricas, miradores y la historia de transformación del barrio, con parada en el Cristo y las vistas del valle.",
+      "categoryId": "8191d52c-cb7b-4bd0-b91e-e054a2180e59",
+      "price": "80000",
+      "currency": "COP",
+      "location": "Comuna 13, Medellín, Antioquia",
+      "latitude": "6.2486",
+      "longitude": "-75.6214",
+      "externalUrl": null,
+      "duration": "3 horas",
+      "durationValue": 3,
+      "durationUnit": "HOURS",
+      "availability": {
+        "type": "EVERY_DAY"
+      },
+      "howToGetThere": "Metro hasta San Javier y luego alimentador o taxi hacia las escaleras eléctricas de la Comuna 13.",
+      "imageUrl": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897461/entre-caminos/experiences/lfkyx1br2bl92dfovduj.jpg",
+      "imageUrls": [
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897461/entre-caminos/experiences/lfkyx1br2bl92dfovduj.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897462/entre-caminos/experiences/e3bpclx8xasbbgavofhq.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897463/entre-caminos/experiences/it5ogysgbrg5qr7uu1y2.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897464/entre-caminos/experiences/qup7upywimyuambhtqrx.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897464/entre-caminos/experiences/dpyqmyosupmane8oni8p.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897465/entre-caminos/experiences/yjwvvc8s65mb1dum9eos.jpg"
+      ],
+      "stampImageUrl": null,
+      "status": "PUBLISHED",
+      "createdBy": "2600275d-ba04-4da1-8d69-b905e5f8f2d4",
+      "submittedAt": null,
+      "rejectionReason": null,
+      "reviewedAt": "2026-10-01T23:31:06.605Z",
+      "reviewedById": "2600275d-ba04-4da1-8d69-b905e5f8f2d4",
+      "isFeatured": false,
+      "featuredOrder": null,
+      "featuredFrom": null,
+      "featuredUntil": null,
+      "createdAt": "2026-10-01T23:31:06.607Z",
+      "updatedAt": "2026-10-01T23:43:18.691Z",
+      "creator": {
+        "id": "2600275d-ba04-4da1-8d69-b905e5f8f2d4",
+        "name": "Angie Diaz",
+        "email": "angie.diaz@entrecaminos.com",
+        "role": {
+          "name": "SUPER_ADMIN"
+        }
+      },
+      "reviewedBy": {
+        "id": "2600275d-ba04-4da1-8d69-b905e5f8f2d4",
+        "name": "Angie Diaz",
+        "email": "angie.diaz@entrecaminos.com"
+      },
+      "category": {
+        "id": "8191d52c-cb7b-4bd0-b91e-e054a2180e59",
+        "name": "Turístico",
+        "status": "APPROVED"
+      },
+      "experienceCategories": [],
+      "reviews": [],
+      "experienceDetailViews": [],
+      "experienceFavorites": [],
+      "experienceVisitorReviews": [],
+      "conversations": [],
+      "favoriteCollectionItems": []
+    },
+    {
+      "id": "e7837d3b-cdfb-47e9-a99b-15395c762374",
+      "title": "Ruta en bicicleta: Entre cerros y cerámica",
+      "description": "Salida en bici entre cerros antioqueños con parada en un taller de cerámica: casco, ruta y una visita al oficio artesanal del oriente cercano.",
+      "categoryId": "9e45d5e5-4683-4c40-b5bb-4fd7ed43764d",
+      "price": "110000",
+      "currency": "COP",
+      "location": "El Carmen de Viboral, Antioquia",
+      "latitude": "6.085",
+      "longitude": "-75.335",
+      "externalUrl": null,
+      "duration": "4 horas",
+      "durationValue": 4,
+      "durationUnit": "HOURS",
+      "availability": {
+        "type": "EVERY_DAY"
+      },
+      "howToGetThere": "Punto de encuentro en El Carmen de Viboral; lleva ropa cómoda y se entrega casco.",
+      "imageUrl": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897467/entre-caminos/experiences/orlu9jwru4kwvhw2afnu.jpg",
+      "imageUrls": [
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897467/entre-caminos/experiences/orlu9jwru4kwvhw2afnu.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897468/entre-caminos/experiences/evprreeq0t4mbugbjcgm.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897469/entre-caminos/experiences/g4o2nt3szfyd46kv1vez.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897467/entre-caminos/experiences/orlu9jwru4kwvhw2afnu.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897467/entre-caminos/experiences/orlu9jwru4kwvhw2afnu.jpg"
+      ],
+      "stampImageUrl": null,
+      "status": "PUBLISHED",
+      "createdBy": "2600275d-ba04-4da1-8d69-b905e5f8f2d4",
+      "submittedAt": null,
+      "rejectionReason": null,
+      "reviewedAt": "2026-10-01T23:31:10.174Z",
+      "reviewedById": "2600275d-ba04-4da1-8d69-b905e5f8f2d4",
+      "isFeatured": false,
+      "featuredOrder": null,
+      "featuredFrom": null,
+      "featuredUntil": null,
+      "createdAt": "2026-10-01T23:31:10.176Z",
+      "updatedAt": "2026-10-01T23:43:18.691Z",
+      "creator": {
+        "id": "2600275d-ba04-4da1-8d69-b905e5f8f2d4",
+        "name": "Angie Diaz",
+        "email": "angie.diaz@entrecaminos.com",
+        "role": {
+          "name": "SUPER_ADMIN"
+        }
+      },
+      "reviewedBy": {
+        "id": "2600275d-ba04-4da1-8d69-b905e5f8f2d4",
+        "name": "Angie Diaz",
+        "email": "angie.diaz@entrecaminos.com"
+      },
+      "category": {
+        "id": "9e45d5e5-4683-4c40-b5bb-4fd7ed43764d",
+        "name": "Deportivo",
+        "status": "APPROVED"
+      },
+      "experienceCategories": [],
+      "reviews": [],
+      "experienceDetailViews": [],
+      "experienceFavorites": [],
+      "experienceVisitorReviews": [],
+      "conversations": [],
+      "favoriteCollectionItems": []
+    },
+    {
+      "id": "d23d3542-25f6-42eb-8e70-c871351e4ca7",
+      "title": "Taller de cerámica",
+      "description": "Clase práctica de cerámica: pintar, torno y piezas hechas a mano en taller (El Dorado / Herencia). Te llevas lo que creas o dejas secar según el proceso.",
+      "categoryId": "51e47ec1-ffa1-4085-9e7e-02e8f80933be",
+      "price": "70000",
+      "currency": "COP",
+      "location": "El Carmen de Viboral, Antioquia",
+      "latitude": "6.0824",
+      "longitude": "-75.3336",
+      "externalUrl": null,
+      "duration": "2 horas",
+      "durationValue": 2,
+      "durationUnit": "HOURS",
+      "availability": {
+        "type": "EVERY_DAY"
+      },
+      "howToGetThere": "El taller queda en el casco urbano de El Carmen de Viboral; confirma la dirección al reservar.",
+      "imageUrl": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897471/entre-caminos/experiences/p6y9s9xnm3oanxijo4ui.jpg",
+      "imageUrls": [
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897471/entre-caminos/experiences/p6y9s9xnm3oanxijo4ui.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897471/entre-caminos/experiences/ynzejl663wbkdwdmgsom.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897473/entre-caminos/experiences/unrmrmph4i7sqf7pssrd.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897473/entre-caminos/experiences/y2lcm95cg7q7izutiutj.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897474/entre-caminos/experiences/kn09eztlgx05isqhaqnu.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897474/entre-caminos/experiences/l62dbkpcis0qq6kklzzc.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897475/entre-caminos/experiences/treztkdmudyapvaobqgk.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897476/entre-caminos/experiences/u1r1nse6jo6ebff8v2kd.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897477/entre-caminos/experiences/jpn8ho3cbotwugbvdyaw.jpg"
+      ],
+      "stampImageUrl": null,
+      "status": "PUBLISHED",
+      "createdBy": "2600275d-ba04-4da1-8d69-b905e5f8f2d4",
+      "submittedAt": null,
+      "rejectionReason": null,
+      "reviewedAt": "2026-10-01T23:31:18.279Z",
+      "reviewedById": "2600275d-ba04-4da1-8d69-b905e5f8f2d4",
+      "isFeatured": false,
+      "featuredOrder": null,
+      "featuredFrom": null,
+      "featuredUntil": null,
+      "createdAt": "2026-10-01T23:31:18.281Z",
+      "updatedAt": "2026-10-01T23:43:18.691Z",
+      "creator": {
+        "id": "2600275d-ba04-4da1-8d69-b905e5f8f2d4",
+        "name": "Angie Diaz",
+        "email": "angie.diaz@entrecaminos.com",
+        "role": {
+          "name": "SUPER_ADMIN"
+        }
+      },
+      "reviewedBy": {
+        "id": "2600275d-ba04-4da1-8d69-b905e5f8f2d4",
+        "name": "Angie Diaz",
+        "email": "angie.diaz@entrecaminos.com"
+      },
+      "category": {
+        "id": "51e47ec1-ffa1-4085-9e7e-02e8f80933be",
+        "name": "Cultural",
+        "status": "APPROVED"
+      },
+      "experienceCategories": [],
+      "reviews": [],
+      "experienceDetailViews": [],
+      "experienceFavorites": [
+        {
+          "id": "92bee3b8-9987-400c-9702-d31e06a1be28",
+          "experienceId": "d23d3542-25f6-42eb-8e70-c871351e4ca7",
+          "userId": "5371ace4-f3b3-4e04-ace0-525efa69fdd6",
+          "createdAt": "2026-10-01T23:45:03.829Z"
+        }
+      ],
+      "experienceVisitorReviews": [],
+      "conversations": [],
+      "favoriteCollectionItems": []
+    },
+    {
+      "id": "38514600-b5e2-46ed-ab01-84ac5aad63cb",
+      "title": "Cerámicas Esmaltarte",
+      "description": "Visita al taller de producción: moldes, esmaltado y piezas terminadas de Cerámicas Esmaltarte (y el entorno de Cerámicas El Dorado). Para ver el oficio de cerca.",
+      "categoryId": "51e47ec1-ffa1-4085-9e7e-02e8f80933be",
+      "price": "35000",
+      "currency": "COP",
+      "location": "El Carmen de Viboral, Antioquia",
+      "latitude": "6.081",
+      "longitude": "-75.336",
+      "externalUrl": null,
+      "duration": "90 minutos",
+      "durationValue": 90,
+      "durationUnit": "MINUTES",
+      "availability": {
+        "type": "EVERY_DAY"
+      },
+      "howToGetThere": "En El Carmen de Viboral, cerca del circuito artesanal del municipio.",
+      "imageUrl": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897479/entre-caminos/experiences/gcookzfhf9s2fpajyqjo.jpg",
+      "imageUrls": [
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897479/entre-caminos/experiences/gcookzfhf9s2fpajyqjo.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897480/entre-caminos/experiences/r3beemwqp2hix2es6efs.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897481/entre-caminos/experiences/b7v9c6fb7hjpmlcimsfy.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897482/entre-caminos/experiences/qy5zyyiov29vjua0ivmz.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897482/entre-caminos/experiences/n0w2oat1h4lio8laptsw.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897483/entre-caminos/experiences/kuurxufwjidvwlxw8yr9.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897483/entre-caminos/experiences/ecukok2brh9covvf6sbw.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897484/entre-caminos/experiences/fd80uxvkduvvdmbyrqjl.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897485/entre-caminos/experiences/cqs0zs5urf30gqkfih6g.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897485/entre-caminos/experiences/wp5s5jkfevtq8hrijyai.jpg"
+      ],
+      "stampImageUrl": null,
+      "status": "PUBLISHED",
+      "createdBy": "2600275d-ba04-4da1-8d69-b905e5f8f2d4",
+      "submittedAt": null,
+      "rejectionReason": null,
+      "reviewedAt": "2026-10-01T23:31:26.967Z",
+      "reviewedById": "2600275d-ba04-4da1-8d69-b905e5f8f2d4",
+      "isFeatured": true,
+      "featuredOrder": 5,
+      "featuredFrom": "2026-10-01T23:43:20.407Z",
+      "featuredUntil": null,
+      "createdAt": "2026-10-01T23:31:26.969Z",
+      "updatedAt": "2026-10-01T23:43:26.663Z",
+      "creator": {
+        "id": "2600275d-ba04-4da1-8d69-b905e5f8f2d4",
+        "name": "Angie Diaz",
+        "email": "angie.diaz@entrecaminos.com",
+        "role": {
+          "name": "SUPER_ADMIN"
+        }
+      },
+      "reviewedBy": {
+        "id": "2600275d-ba04-4da1-8d69-b905e5f8f2d4",
+        "name": "Angie Diaz",
+        "email": "angie.diaz@entrecaminos.com"
+      },
+      "category": {
+        "id": "51e47ec1-ffa1-4085-9e7e-02e8f80933be",
+        "name": "Cultural",
+        "status": "APPROVED"
+      },
+      "experienceCategories": [],
+      "reviews": [],
+      "experienceDetailViews": [],
+      "experienceFavorites": [],
+      "experienceVisitorReviews": [],
+      "conversations": [],
+      "favoriteCollectionItems": []
+    },
+    {
+      "id": "c00bb082-5f08-4885-b10d-7722bd12f92d",
+      "title": "Taller de velas artesanales",
+      "description": "Taller de velas en Candle Bar / Cadmiel: aromas, cera y un café del mismo lugar. Sales con tus velas y un rato pausado en el local.",
+      "categoryId": "51e47ec1-ffa1-4085-9e7e-02e8f80933be",
+      "price": "65000",
+      "currency": "COP",
+      "location": "Medellín, Antioquia",
+      "latitude": "6.2105",
+      "longitude": "-75.5712",
+      "externalUrl": null,
+      "duration": "2 horas",
+      "durationValue": 2,
+      "durationUnit": "HOURS",
+      "availability": {
+        "type": "EVERY_DAY"
+      },
+      "howToGetThere": "Cadmiel / Candle Bar en Medellín; pide la dirección actualizada al confirmar el cupo.",
+      "imageUrl": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897488/entre-caminos/experiences/mazjexsofu4jdwieiwsp.jpg",
+      "imageUrls": [
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897488/entre-caminos/experiences/mazjexsofu4jdwieiwsp.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897488/entre-caminos/experiences/amubmg0lodrdahcbsk08.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897489/entre-caminos/experiences/vclfvmh9lv3hyhfdilw7.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897490/entre-caminos/experiences/vfdn2rqrglklgui29awb.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897491/entre-caminos/experiences/eqyamcandxcdtwoiksim.jpg"
+      ],
+      "stampImageUrl": null,
+      "status": "PUBLISHED",
+      "createdBy": "2600275d-ba04-4da1-8d69-b905e5f8f2d4",
+      "submittedAt": null,
+      "rejectionReason": null,
+      "reviewedAt": "2026-10-01T23:31:32.418Z",
+      "reviewedById": "2600275d-ba04-4da1-8d69-b905e5f8f2d4",
+      "isFeatured": true,
+      "featuredOrder": 4,
+      "featuredFrom": "2026-10-01T23:43:20.407Z",
+      "featuredUntil": null,
+      "createdAt": "2026-10-01T23:31:32.420Z",
+      "updatedAt": "2026-10-01T23:43:24.864Z",
+      "creator": {
+        "id": "2600275d-ba04-4da1-8d69-b905e5f8f2d4",
+        "name": "Angie Diaz",
+        "email": "angie.diaz@entrecaminos.com",
+        "role": {
+          "name": "SUPER_ADMIN"
+        }
+      },
+      "reviewedBy": {
+        "id": "2600275d-ba04-4da1-8d69-b905e5f8f2d4",
+        "name": "Angie Diaz",
+        "email": "angie.diaz@entrecaminos.com"
+      },
+      "category": {
+        "id": "51e47ec1-ffa1-4085-9e7e-02e8f80933be",
+        "name": "Cultural",
+        "status": "APPROVED"
+      },
+      "experienceCategories": [],
+      "reviews": [],
+      "experienceDetailViews": [],
+      "experienceFavorites": [],
+      "experienceVisitorReviews": [],
+      "conversations": [],
+      "favoriteCollectionItems": []
+    },
+    {
+      "id": "a7170c6f-704a-42f3-8b2d-9f6e718c0947",
+      "title": "Clase de Pilates",
+      "description": "Clase de Pilates en estudio con luz natural y vista al jardín. Mat, respiración y un grupo reducido para moverte sin prisa.",
+      "categoryId": "9e45d5e5-4683-4c40-b5bb-4fd7ed43764d",
+      "price": "50000",
+      "currency": "COP",
+      "location": "Medellín, Antioquia",
+      "latitude": "6.217",
+      "longitude": "-75.574",
+      "externalUrl": null,
+      "duration": "1 hora",
+      "durationValue": 1,
+      "durationUnit": "HOURS",
+      "availability": {
+        "type": "EVERY_DAY"
+      },
+      "howToGetThere": "Estudio en Medellín; llega 10 minutos antes con ropa cómoda. Lleva tapete si te lo piden.",
+      "imageUrl": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897493/entre-caminos/experiences/yu0aw1zvzlmqpt4qaxfy.jpg",
+      "imageUrls": [
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897493/entre-caminos/experiences/yu0aw1zvzlmqpt4qaxfy.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897494/entre-caminos/experiences/cqxbdfcb9p0aud7wzj0z.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897494/entre-caminos/experiences/sqs0ebci8mdxair4ug7q.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897495/entre-caminos/experiences/dklcr7z1gjfnmrytqwsg.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897496/entre-caminos/experiences/ra8jjs5qvmss92r1by6i.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897496/entre-caminos/experiences/onyae7jg2n4elw9yhaj2.jpg"
+      ],
+      "stampImageUrl": null,
+      "status": "PUBLISHED",
+      "createdBy": "2600275d-ba04-4da1-8d69-b905e5f8f2d4",
+      "submittedAt": null,
+      "rejectionReason": null,
+      "reviewedAt": "2026-10-01T23:31:37.694Z",
+      "reviewedById": "2600275d-ba04-4da1-8d69-b905e5f8f2d4",
+      "isFeatured": true,
+      "featuredOrder": 3,
+      "featuredFrom": "2026-10-01T23:43:20.407Z",
+      "featuredUntil": null,
+      "createdAt": "2026-10-01T23:31:37.697Z",
+      "updatedAt": "2026-10-01T23:43:23.324Z",
+      "creator": {
+        "id": "2600275d-ba04-4da1-8d69-b905e5f8f2d4",
+        "name": "Angie Diaz",
+        "email": "angie.diaz@entrecaminos.com",
+        "role": {
+          "name": "SUPER_ADMIN"
+        }
+      },
+      "reviewedBy": {
+        "id": "2600275d-ba04-4da1-8d69-b905e5f8f2d4",
+        "name": "Angie Diaz",
+        "email": "angie.diaz@entrecaminos.com"
+      },
+      "category": {
+        "id": "9e45d5e5-4683-4c40-b5bb-4fd7ed43764d",
+        "name": "Deportivo",
+        "status": "APPROVED"
+      },
+      "experienceCategories": [],
+      "reviews": [],
+      "experienceDetailViews": [],
+      "experienceFavorites": [],
+      "experienceVisitorReviews": [],
+      "conversations": [],
+      "favoriteCollectionItems": []
+    },
+    {
+      "id": "cf924378-4da1-4ce5-b6ef-557420405a55",
+      "title": "Clase de cocina",
+      "description": "Clase de cocina en The Butter Club: recetas, mesa compartida y un menú que preparas en grupo. Ideal para un plan de tarde entre fogones.",
+      "categoryId": "043f78c9-941a-466a-b6cb-181abae43e95",
+      "price": "160000",
+      "currency": "COP",
+      "location": "Medellín, Antioquia",
+      "latitude": "6.2098",
+      "longitude": "-75.5691",
+      "externalUrl": null,
+      "duration": "3 horas",
+      "durationValue": 3,
+      "durationUnit": "HOURS",
+      "availability": {
+        "type": "EVERY_DAY"
+      },
+      "howToGetThere": "The Butter Club en Medellín; confirma sede y horario al reservar.",
+      "imageUrl": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897499/entre-caminos/experiences/lbrekrj8smyiubol7kcb.jpg",
+      "imageUrls": [
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897499/entre-caminos/experiences/lbrekrj8smyiubol7kcb.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897499/entre-caminos/experiences/l5bluo7go413qmcqwat8.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897500/entre-caminos/experiences/c4s8pujxjrbnal0mts47.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897500/entre-caminos/experiences/fj7gh5o79ko13ur2uepv.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897501/entre-caminos/experiences/r9cxx31nm58lywvosip0.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897502/entre-caminos/experiences/hdgso8vsawhrjgxa6zgr.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897503/entre-caminos/experiences/nbxrgq28t1xfeckxgcwc.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897503/entre-caminos/experiences/kidzaxayd7si94jzzprc.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897504/entre-caminos/experiences/ve7ufwduvcztw7nz2nzu.jpg"
+      ],
+      "stampImageUrl": null,
+      "status": "PUBLISHED",
+      "createdBy": "2600275d-ba04-4da1-8d69-b905e5f8f2d4",
+      "submittedAt": null,
+      "rejectionReason": null,
+      "reviewedAt": "2026-10-01T23:31:45.280Z",
+      "reviewedById": "2600275d-ba04-4da1-8d69-b905e5f8f2d4",
+      "isFeatured": true,
+      "featuredOrder": 2,
+      "featuredFrom": "2026-10-01T23:43:20.407Z",
+      "featuredUntil": null,
+      "createdAt": "2026-10-01T23:31:45.282Z",
+      "updatedAt": "2026-10-01T23:43:22.220Z",
+      "creator": {
+        "id": "2600275d-ba04-4da1-8d69-b905e5f8f2d4",
+        "name": "Angie Diaz",
+        "email": "angie.diaz@entrecaminos.com",
+        "role": {
+          "name": "SUPER_ADMIN"
+        }
+      },
+      "reviewedBy": {
+        "id": "2600275d-ba04-4da1-8d69-b905e5f8f2d4",
+        "name": "Angie Diaz",
+        "email": "angie.diaz@entrecaminos.com"
+      },
+      "category": {
+        "id": "043f78c9-941a-466a-b6cb-181abae43e95",
+        "name": "Recreativo",
+        "status": "APPROVED"
+      },
+      "experienceCategories": [],
+      "reviews": [],
+      "experienceDetailViews": [],
+      "experienceFavorites": [],
+      "experienceVisitorReviews": [],
+      "conversations": [],
+      "favoriteCollectionItems": []
+    },
+    {
+      "id": "e244053d-9828-4a94-9262-ec33094fe4e7",
+      "title": "Taller de flores",
+      "description": "Taller floral en grupo: delantales, ramiletes y un rato entre flores. Sales con tu arreglo y fotos del taller.",
+      "categoryId": "043f78c9-941a-466a-b6cb-181abae43e95",
+      "price": "90000",
+      "currency": "COP",
+      "location": "Medellín, Antioquia",
+      "latitude": "6.2442",
+      "longitude": "-75.5812",
+      "externalUrl": null,
+      "duration": "2 horas",
+      "durationValue": 2,
+      "durationUnit": "HOURS",
+      "availability": {
+        "type": "EVERY_DAY"
+      },
+      "howToGetThere": "Local en Medellín; el cupo incluye materiales. Llega puntual para armar tu estación.",
+      "imageUrl": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897506/entre-caminos/experiences/zpdxoioas0s1djv8augd.jpg",
+      "imageUrls": [
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897506/entre-caminos/experiences/zpdxoioas0s1djv8augd.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897507/entre-caminos/experiences/xdbbmtxv4giomccsjlfh.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897507/entre-caminos/experiences/xeetvvk5ychva4bcd58y.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897508/entre-caminos/experiences/yegutbfhzhju7ifc4gll.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897508/entre-caminos/experiences/cemotutay2icimu8uunk.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897509/entre-caminos/experiences/jxjrzebfofuegmwpjkcz.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897509/entre-caminos/experiences/gj9a4m70tpuemmdlxxkh.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897510/entre-caminos/experiences/lmlgk8t4wbavp0xzz5ee.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897511/entre-caminos/experiences/qe4gy04l3cgfgvsmjzue.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897511/entre-caminos/experiences/u4uclcsdkolatj21apdo.jpg",
+        "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897512/entre-caminos/experiences/jktrijvo5zomlbdzzyum.jpg"
+      ],
+      "stampImageUrl": null,
+      "status": "PUBLISHED",
+      "createdBy": "2600275d-ba04-4da1-8d69-b905e5f8f2d4",
+      "submittedAt": null,
+      "rejectionReason": null,
+      "reviewedAt": "2026-10-01T23:31:53.343Z",
+      "reviewedById": "2600275d-ba04-4da1-8d69-b905e5f8f2d4",
+      "isFeatured": true,
+      "featuredOrder": 1,
+      "featuredFrom": "2026-10-01T23:43:20.407Z",
+      "featuredUntil": null,
+      "createdAt": "2026-10-01T23:31:53.346Z",
+      "updatedAt": "2026-10-01T23:43:20.414Z",
+      "creator": {
+        "id": "2600275d-ba04-4da1-8d69-b905e5f8f2d4",
+        "name": "Angie Diaz",
+        "email": "angie.diaz@entrecaminos.com",
+        "role": {
+          "name": "SUPER_ADMIN"
+        }
+      },
+      "reviewedBy": {
+        "id": "2600275d-ba04-4da1-8d69-b905e5f8f2d4",
+        "name": "Angie Diaz",
+        "email": "angie.diaz@entrecaminos.com"
+      },
+      "category": {
+        "id": "043f78c9-941a-466a-b6cb-181abae43e95",
+        "name": "Recreativo",
+        "status": "APPROVED"
+      },
+      "experienceCategories": [],
+      "reviews": [],
+      "experienceDetailViews": [],
+      "experienceFavorites": [],
+      "experienceVisitorReviews": [],
+      "conversations": [],
+      "favoriteCollectionItems": []
+    }
+  ],
+  "related": {
+    "auditLogs": [],
+    "notifications": []
+  },
+  "cloudinaryImageRefs": [
+    {
+      "experienceId": "2b83d997-0a34-49fb-8bac-e8d3a269e6fa",
+      "title": "Jardines del Belvedere",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897441/entre-caminos/experiences/gltbfp49axhr3ymcqfmw.jpg",
+      "publicId": "entre-caminos/experiences/gltbfp49axhr3ymcqfmw",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "2b83d997-0a34-49fb-8bac-e8d3a269e6fa",
+      "title": "Jardines del Belvedere",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897443/entre-caminos/experiences/lqstcqqsou7in3hni6mz.jpg",
+      "publicId": "entre-caminos/experiences/lqstcqqsou7in3hni6mz",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "2b83d997-0a34-49fb-8bac-e8d3a269e6fa",
+      "title": "Jardines del Belvedere",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897444/entre-caminos/experiences/xw5a9cu7uze1toib4nah.jpg",
+      "publicId": "entre-caminos/experiences/xw5a9cu7uze1toib4nah",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "2b83d997-0a34-49fb-8bac-e8d3a269e6fa",
+      "title": "Jardines del Belvedere",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897445/entre-caminos/experiences/yqapnrip6ppasjcqpmg7.jpg",
+      "publicId": "entre-caminos/experiences/yqapnrip6ppasjcqpmg7",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "2b83d997-0a34-49fb-8bac-e8d3a269e6fa",
+      "title": "Jardines del Belvedere",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897447/entre-caminos/experiences/dq5rvinymh3psbukiwkx.jpg",
+      "publicId": "entre-caminos/experiences/dq5rvinymh3psbukiwkx",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "2b83d997-0a34-49fb-8bac-e8d3a269e6fa",
+      "title": "Jardines del Belvedere",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897448/entre-caminos/experiences/cacdlugbhddklss3fozw.jpg",
+      "publicId": "entre-caminos/experiences/cacdlugbhddklss3fozw",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "2b83d997-0a34-49fb-8bac-e8d3a269e6fa",
+      "title": "Jardines del Belvedere",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897449/entre-caminos/experiences/hseadtrz9u9ql9avvaan.jpg",
+      "publicId": "entre-caminos/experiences/hseadtrz9u9ql9avvaan",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "2b83d997-0a34-49fb-8bac-e8d3a269e6fa",
+      "title": "Jardines del Belvedere",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897450/entre-caminos/experiences/whxdyrginqjrwtt2xqpw.jpg",
+      "publicId": "entre-caminos/experiences/whxdyrginqjrwtt2xqpw",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "2b83d997-0a34-49fb-8bac-e8d3a269e6fa",
+      "title": "Jardines del Belvedere",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897451/entre-caminos/experiences/n7nwvuhqvkfqwauyuxeq.jpg",
+      "publicId": "entre-caminos/experiences/n7nwvuhqvkfqwauyuxeq",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "2b83d997-0a34-49fb-8bac-e8d3a269e6fa",
+      "title": "Jardines del Belvedere",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897452/entre-caminos/experiences/verpsagajnxxhysdqw7d.jpg",
+      "publicId": "entre-caminos/experiences/verpsagajnxxhysdqw7d",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "2b83d997-0a34-49fb-8bac-e8d3a269e6fa",
+      "title": "Jardines del Belvedere",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897453/entre-caminos/experiences/zlfza6ktetwhdtx9i8hs.jpg",
+      "publicId": "entre-caminos/experiences/zlfza6ktetwhdtx9i8hs",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "2b83d997-0a34-49fb-8bac-e8d3a269e6fa",
+      "title": "Jardines del Belvedere",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897454/entre-caminos/experiences/z43nxtluwqduyalfgiat.jpg",
+      "publicId": "entre-caminos/experiences/z43nxtluwqduyalfgiat",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "813a35d1-d23e-4b48-aae2-f703ed6a4bf2",
+      "title": "Candlelight: Concierto bajo la luz de las velas",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897456/entre-caminos/experiences/ob2dyu84wmqimedgqdv4.jpg",
+      "publicId": "entre-caminos/experiences/ob2dyu84wmqimedgqdv4",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "813a35d1-d23e-4b48-aae2-f703ed6a4bf2",
+      "title": "Candlelight: Concierto bajo la luz de las velas",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897456/entre-caminos/experiences/bzf7si9grvwf3a6xxfep.jpg",
+      "publicId": "entre-caminos/experiences/bzf7si9grvwf3a6xxfep",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "813a35d1-d23e-4b48-aae2-f703ed6a4bf2",
+      "title": "Candlelight: Concierto bajo la luz de las velas",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897457/entre-caminos/experiences/j59whiwhdufxskdeznxy.jpg",
+      "publicId": "entre-caminos/experiences/j59whiwhdufxskdeznxy",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "813a35d1-d23e-4b48-aae2-f703ed6a4bf2",
+      "title": "Candlelight: Concierto bajo la luz de las velas",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897458/entre-caminos/experiences/h6lga7kv73stt436blnj.jpg",
+      "publicId": "entre-caminos/experiences/h6lga7kv73stt436blnj",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "813a35d1-d23e-4b48-aae2-f703ed6a4bf2",
+      "title": "Candlelight: Concierto bajo la luz de las velas",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897458/entre-caminos/experiences/j296xuva7lqefxsy4bmb.jpg",
+      "publicId": "entre-caminos/experiences/j296xuva7lqefxsy4bmb",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "813a35d1-d23e-4b48-aae2-f703ed6a4bf2",
+      "title": "Candlelight: Concierto bajo la luz de las velas",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897459/entre-caminos/experiences/kfwwovkb9vorahnqjnth.jpg",
+      "publicId": "entre-caminos/experiences/kfwwovkb9vorahnqjnth",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "e9e26541-9c0e-4904-9cf9-090f87a9ed1a",
+      "title": "Tour por la Comuna 13",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897461/entre-caminos/experiences/lfkyx1br2bl92dfovduj.jpg",
+      "publicId": "entre-caminos/experiences/lfkyx1br2bl92dfovduj",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "e9e26541-9c0e-4904-9cf9-090f87a9ed1a",
+      "title": "Tour por la Comuna 13",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897462/entre-caminos/experiences/e3bpclx8xasbbgavofhq.jpg",
+      "publicId": "entre-caminos/experiences/e3bpclx8xasbbgavofhq",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "e9e26541-9c0e-4904-9cf9-090f87a9ed1a",
+      "title": "Tour por la Comuna 13",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897463/entre-caminos/experiences/it5ogysgbrg5qr7uu1y2.jpg",
+      "publicId": "entre-caminos/experiences/it5ogysgbrg5qr7uu1y2",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "e9e26541-9c0e-4904-9cf9-090f87a9ed1a",
+      "title": "Tour por la Comuna 13",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897464/entre-caminos/experiences/qup7upywimyuambhtqrx.jpg",
+      "publicId": "entre-caminos/experiences/qup7upywimyuambhtqrx",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "e9e26541-9c0e-4904-9cf9-090f87a9ed1a",
+      "title": "Tour por la Comuna 13",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897464/entre-caminos/experiences/dpyqmyosupmane8oni8p.jpg",
+      "publicId": "entre-caminos/experiences/dpyqmyosupmane8oni8p",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "e9e26541-9c0e-4904-9cf9-090f87a9ed1a",
+      "title": "Tour por la Comuna 13",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897465/entre-caminos/experiences/yjwvvc8s65mb1dum9eos.jpg",
+      "publicId": "entre-caminos/experiences/yjwvvc8s65mb1dum9eos",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "e7837d3b-cdfb-47e9-a99b-15395c762374",
+      "title": "Ruta en bicicleta: Entre cerros y cerámica",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897467/entre-caminos/experiences/orlu9jwru4kwvhw2afnu.jpg",
+      "publicId": "entre-caminos/experiences/orlu9jwru4kwvhw2afnu",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "e7837d3b-cdfb-47e9-a99b-15395c762374",
+      "title": "Ruta en bicicleta: Entre cerros y cerámica",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897468/entre-caminos/experiences/evprreeq0t4mbugbjcgm.jpg",
+      "publicId": "entre-caminos/experiences/evprreeq0t4mbugbjcgm",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "e7837d3b-cdfb-47e9-a99b-15395c762374",
+      "title": "Ruta en bicicleta: Entre cerros y cerámica",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897469/entre-caminos/experiences/g4o2nt3szfyd46kv1vez.jpg",
+      "publicId": "entre-caminos/experiences/g4o2nt3szfyd46kv1vez",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "d23d3542-25f6-42eb-8e70-c871351e4ca7",
+      "title": "Taller de cerámica",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897471/entre-caminos/experiences/p6y9s9xnm3oanxijo4ui.jpg",
+      "publicId": "entre-caminos/experiences/p6y9s9xnm3oanxijo4ui",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "d23d3542-25f6-42eb-8e70-c871351e4ca7",
+      "title": "Taller de cerámica",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897471/entre-caminos/experiences/ynzejl663wbkdwdmgsom.jpg",
+      "publicId": "entre-caminos/experiences/ynzejl663wbkdwdmgsom",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "d23d3542-25f6-42eb-8e70-c871351e4ca7",
+      "title": "Taller de cerámica",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897473/entre-caminos/experiences/unrmrmph4i7sqf7pssrd.jpg",
+      "publicId": "entre-caminos/experiences/unrmrmph4i7sqf7pssrd",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "d23d3542-25f6-42eb-8e70-c871351e4ca7",
+      "title": "Taller de cerámica",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897473/entre-caminos/experiences/y2lcm95cg7q7izutiutj.jpg",
+      "publicId": "entre-caminos/experiences/y2lcm95cg7q7izutiutj",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "d23d3542-25f6-42eb-8e70-c871351e4ca7",
+      "title": "Taller de cerámica",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897474/entre-caminos/experiences/kn09eztlgx05isqhaqnu.jpg",
+      "publicId": "entre-caminos/experiences/kn09eztlgx05isqhaqnu",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "d23d3542-25f6-42eb-8e70-c871351e4ca7",
+      "title": "Taller de cerámica",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897474/entre-caminos/experiences/l62dbkpcis0qq6kklzzc.jpg",
+      "publicId": "entre-caminos/experiences/l62dbkpcis0qq6kklzzc",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "d23d3542-25f6-42eb-8e70-c871351e4ca7",
+      "title": "Taller de cerámica",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897475/entre-caminos/experiences/treztkdmudyapvaobqgk.jpg",
+      "publicId": "entre-caminos/experiences/treztkdmudyapvaobqgk",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "d23d3542-25f6-42eb-8e70-c871351e4ca7",
+      "title": "Taller de cerámica",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897476/entre-caminos/experiences/u1r1nse6jo6ebff8v2kd.jpg",
+      "publicId": "entre-caminos/experiences/u1r1nse6jo6ebff8v2kd",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "d23d3542-25f6-42eb-8e70-c871351e4ca7",
+      "title": "Taller de cerámica",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897477/entre-caminos/experiences/jpn8ho3cbotwugbvdyaw.jpg",
+      "publicId": "entre-caminos/experiences/jpn8ho3cbotwugbvdyaw",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "38514600-b5e2-46ed-ab01-84ac5aad63cb",
+      "title": "Cerámicas Esmaltarte",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897479/entre-caminos/experiences/gcookzfhf9s2fpajyqjo.jpg",
+      "publicId": "entre-caminos/experiences/gcookzfhf9s2fpajyqjo",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "38514600-b5e2-46ed-ab01-84ac5aad63cb",
+      "title": "Cerámicas Esmaltarte",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897480/entre-caminos/experiences/r3beemwqp2hix2es6efs.jpg",
+      "publicId": "entre-caminos/experiences/r3beemwqp2hix2es6efs",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "38514600-b5e2-46ed-ab01-84ac5aad63cb",
+      "title": "Cerámicas Esmaltarte",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897481/entre-caminos/experiences/b7v9c6fb7hjpmlcimsfy.jpg",
+      "publicId": "entre-caminos/experiences/b7v9c6fb7hjpmlcimsfy",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "38514600-b5e2-46ed-ab01-84ac5aad63cb",
+      "title": "Cerámicas Esmaltarte",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897482/entre-caminos/experiences/qy5zyyiov29vjua0ivmz.jpg",
+      "publicId": "entre-caminos/experiences/qy5zyyiov29vjua0ivmz",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "38514600-b5e2-46ed-ab01-84ac5aad63cb",
+      "title": "Cerámicas Esmaltarte",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897482/entre-caminos/experiences/n0w2oat1h4lio8laptsw.jpg",
+      "publicId": "entre-caminos/experiences/n0w2oat1h4lio8laptsw",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "38514600-b5e2-46ed-ab01-84ac5aad63cb",
+      "title": "Cerámicas Esmaltarte",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897483/entre-caminos/experiences/kuurxufwjidvwlxw8yr9.jpg",
+      "publicId": "entre-caminos/experiences/kuurxufwjidvwlxw8yr9",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "38514600-b5e2-46ed-ab01-84ac5aad63cb",
+      "title": "Cerámicas Esmaltarte",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897483/entre-caminos/experiences/ecukok2brh9covvf6sbw.jpg",
+      "publicId": "entre-caminos/experiences/ecukok2brh9covvf6sbw",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "38514600-b5e2-46ed-ab01-84ac5aad63cb",
+      "title": "Cerámicas Esmaltarte",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897484/entre-caminos/experiences/fd80uxvkduvvdmbyrqjl.jpg",
+      "publicId": "entre-caminos/experiences/fd80uxvkduvvdmbyrqjl",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "38514600-b5e2-46ed-ab01-84ac5aad63cb",
+      "title": "Cerámicas Esmaltarte",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897485/entre-caminos/experiences/cqs0zs5urf30gqkfih6g.jpg",
+      "publicId": "entre-caminos/experiences/cqs0zs5urf30gqkfih6g",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "38514600-b5e2-46ed-ab01-84ac5aad63cb",
+      "title": "Cerámicas Esmaltarte",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897485/entre-caminos/experiences/wp5s5jkfevtq8hrijyai.jpg",
+      "publicId": "entre-caminos/experiences/wp5s5jkfevtq8hrijyai",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "c00bb082-5f08-4885-b10d-7722bd12f92d",
+      "title": "Taller de velas artesanales",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897488/entre-caminos/experiences/mazjexsofu4jdwieiwsp.jpg",
+      "publicId": "entre-caminos/experiences/mazjexsofu4jdwieiwsp",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "c00bb082-5f08-4885-b10d-7722bd12f92d",
+      "title": "Taller de velas artesanales",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897488/entre-caminos/experiences/amubmg0lodrdahcbsk08.jpg",
+      "publicId": "entre-caminos/experiences/amubmg0lodrdahcbsk08",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "c00bb082-5f08-4885-b10d-7722bd12f92d",
+      "title": "Taller de velas artesanales",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897489/entre-caminos/experiences/vclfvmh9lv3hyhfdilw7.jpg",
+      "publicId": "entre-caminos/experiences/vclfvmh9lv3hyhfdilw7",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "c00bb082-5f08-4885-b10d-7722bd12f92d",
+      "title": "Taller de velas artesanales",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897490/entre-caminos/experiences/vfdn2rqrglklgui29awb.jpg",
+      "publicId": "entre-caminos/experiences/vfdn2rqrglklgui29awb",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "c00bb082-5f08-4885-b10d-7722bd12f92d",
+      "title": "Taller de velas artesanales",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897491/entre-caminos/experiences/eqyamcandxcdtwoiksim.jpg",
+      "publicId": "entre-caminos/experiences/eqyamcandxcdtwoiksim",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "a7170c6f-704a-42f3-8b2d-9f6e718c0947",
+      "title": "Clase de Pilates",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897493/entre-caminos/experiences/yu0aw1zvzlmqpt4qaxfy.jpg",
+      "publicId": "entre-caminos/experiences/yu0aw1zvzlmqpt4qaxfy",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "a7170c6f-704a-42f3-8b2d-9f6e718c0947",
+      "title": "Clase de Pilates",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897494/entre-caminos/experiences/cqxbdfcb9p0aud7wzj0z.jpg",
+      "publicId": "entre-caminos/experiences/cqxbdfcb9p0aud7wzj0z",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "a7170c6f-704a-42f3-8b2d-9f6e718c0947",
+      "title": "Clase de Pilates",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897494/entre-caminos/experiences/sqs0ebci8mdxair4ug7q.jpg",
+      "publicId": "entre-caminos/experiences/sqs0ebci8mdxair4ug7q",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "a7170c6f-704a-42f3-8b2d-9f6e718c0947",
+      "title": "Clase de Pilates",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897495/entre-caminos/experiences/dklcr7z1gjfnmrytqwsg.jpg",
+      "publicId": "entre-caminos/experiences/dklcr7z1gjfnmrytqwsg",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "a7170c6f-704a-42f3-8b2d-9f6e718c0947",
+      "title": "Clase de Pilates",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897496/entre-caminos/experiences/ra8jjs5qvmss92r1by6i.jpg",
+      "publicId": "entre-caminos/experiences/ra8jjs5qvmss92r1by6i",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "a7170c6f-704a-42f3-8b2d-9f6e718c0947",
+      "title": "Clase de Pilates",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897496/entre-caminos/experiences/onyae7jg2n4elw9yhaj2.jpg",
+      "publicId": "entre-caminos/experiences/onyae7jg2n4elw9yhaj2",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "cf924378-4da1-4ce5-b6ef-557420405a55",
+      "title": "Clase de cocina",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897499/entre-caminos/experiences/lbrekrj8smyiubol7kcb.jpg",
+      "publicId": "entre-caminos/experiences/lbrekrj8smyiubol7kcb",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "cf924378-4da1-4ce5-b6ef-557420405a55",
+      "title": "Clase de cocina",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897499/entre-caminos/experiences/l5bluo7go413qmcqwat8.jpg",
+      "publicId": "entre-caminos/experiences/l5bluo7go413qmcqwat8",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "cf924378-4da1-4ce5-b6ef-557420405a55",
+      "title": "Clase de cocina",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897500/entre-caminos/experiences/c4s8pujxjrbnal0mts47.jpg",
+      "publicId": "entre-caminos/experiences/c4s8pujxjrbnal0mts47",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "cf924378-4da1-4ce5-b6ef-557420405a55",
+      "title": "Clase de cocina",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897500/entre-caminos/experiences/fj7gh5o79ko13ur2uepv.jpg",
+      "publicId": "entre-caminos/experiences/fj7gh5o79ko13ur2uepv",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "cf924378-4da1-4ce5-b6ef-557420405a55",
+      "title": "Clase de cocina",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897501/entre-caminos/experiences/r9cxx31nm58lywvosip0.jpg",
+      "publicId": "entre-caminos/experiences/r9cxx31nm58lywvosip0",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "cf924378-4da1-4ce5-b6ef-557420405a55",
+      "title": "Clase de cocina",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897502/entre-caminos/experiences/hdgso8vsawhrjgxa6zgr.jpg",
+      "publicId": "entre-caminos/experiences/hdgso8vsawhrjgxa6zgr",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "cf924378-4da1-4ce5-b6ef-557420405a55",
+      "title": "Clase de cocina",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897503/entre-caminos/experiences/nbxrgq28t1xfeckxgcwc.jpg",
+      "publicId": "entre-caminos/experiences/nbxrgq28t1xfeckxgcwc",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "cf924378-4da1-4ce5-b6ef-557420405a55",
+      "title": "Clase de cocina",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897503/entre-caminos/experiences/kidzaxayd7si94jzzprc.jpg",
+      "publicId": "entre-caminos/experiences/kidzaxayd7si94jzzprc",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "cf924378-4da1-4ce5-b6ef-557420405a55",
+      "title": "Clase de cocina",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897504/entre-caminos/experiences/ve7ufwduvcztw7nz2nzu.jpg",
+      "publicId": "entre-caminos/experiences/ve7ufwduvcztw7nz2nzu",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "e244053d-9828-4a94-9262-ec33094fe4e7",
+      "title": "Taller de flores",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897506/entre-caminos/experiences/zpdxoioas0s1djv8augd.jpg",
+      "publicId": "entre-caminos/experiences/zpdxoioas0s1djv8augd",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "e244053d-9828-4a94-9262-ec33094fe4e7",
+      "title": "Taller de flores",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897507/entre-caminos/experiences/xdbbmtxv4giomccsjlfh.jpg",
+      "publicId": "entre-caminos/experiences/xdbbmtxv4giomccsjlfh",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "e244053d-9828-4a94-9262-ec33094fe4e7",
+      "title": "Taller de flores",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897507/entre-caminos/experiences/xeetvvk5ychva4bcd58y.jpg",
+      "publicId": "entre-caminos/experiences/xeetvvk5ychva4bcd58y",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "e244053d-9828-4a94-9262-ec33094fe4e7",
+      "title": "Taller de flores",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897508/entre-caminos/experiences/yegutbfhzhju7ifc4gll.jpg",
+      "publicId": "entre-caminos/experiences/yegutbfhzhju7ifc4gll",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "e244053d-9828-4a94-9262-ec33094fe4e7",
+      "title": "Taller de flores",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897508/entre-caminos/experiences/cemotutay2icimu8uunk.jpg",
+      "publicId": "entre-caminos/experiences/cemotutay2icimu8uunk",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "e244053d-9828-4a94-9262-ec33094fe4e7",
+      "title": "Taller de flores",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897509/entre-caminos/experiences/jxjrzebfofuegmwpjkcz.jpg",
+      "publicId": "entre-caminos/experiences/jxjrzebfofuegmwpjkcz",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "e244053d-9828-4a94-9262-ec33094fe4e7",
+      "title": "Taller de flores",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897509/entre-caminos/experiences/gj9a4m70tpuemmdlxxkh.jpg",
+      "publicId": "entre-caminos/experiences/gj9a4m70tpuemmdlxxkh",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "e244053d-9828-4a94-9262-ec33094fe4e7",
+      "title": "Taller de flores",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897510/entre-caminos/experiences/lmlgk8t4wbavp0xzz5ee.jpg",
+      "publicId": "entre-caminos/experiences/lmlgk8t4wbavp0xzz5ee",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "e244053d-9828-4a94-9262-ec33094fe4e7",
+      "title": "Taller de flores",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897511/entre-caminos/experiences/qe4gy04l3cgfgvsmjzue.jpg",
+      "publicId": "entre-caminos/experiences/qe4gy04l3cgfgvsmjzue",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "e244053d-9828-4a94-9262-ec33094fe4e7",
+      "title": "Taller de flores",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897511/entre-caminos/experiences/u4uclcsdkolatj21apdo.jpg",
+      "publicId": "entre-caminos/experiences/u4uclcsdkolatj21apdo",
+      "host": "res.cloudinary.com"
+    },
+    {
+      "experienceId": "e244053d-9828-4a94-9262-ec33094fe4e7",
+      "title": "Taller de flores",
+      "url": "https://res.cloudinary.com/ww23jhyp/image/upload/v1790897512/entre-caminos/experiences/jktrijvo5zomlbdzzyum.jpg",
+      "publicId": "entre-caminos/experiences/jktrijvo5zomlbdzzyum",
+      "host": "res.cloudinary.com"
+    }
+  ],
+  "deletionIdList": [
+    "2b83d997-0a34-49fb-8bac-e8d3a269e6fa",
+    "813a35d1-d23e-4b48-aae2-f703ed6a4bf2",
+    "e9e26541-9c0e-4904-9cf9-090f87a9ed1a",
+    "e7837d3b-cdfb-47e9-a99b-15395c762374",
+    "d23d3542-25f6-42eb-8e70-c871351e4ca7",
+    "38514600-b5e2-46ed-ab01-84ac5aad63cb",
+    "c00bb082-5f08-4885-b10d-7722bd12f92d",
+    "a7170c6f-704a-42f3-8b2d-9f6e718c0947",
+    "cf924378-4da1-4ce5-b6ef-557420405a55",
+    "e244053d-9828-4a94-9262-ec33094fe4e7"
+  ]
+}
