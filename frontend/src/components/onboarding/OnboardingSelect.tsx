@@ -16,6 +16,7 @@ type OnboardingSelectBase = {
   disabled?: boolean;
   searchable?: boolean;
   placement?: "down" | "auto";
+  pinDown?: boolean;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   wide?: boolean;
@@ -115,10 +116,13 @@ export function OnboardingSelect(props: OnboardingSelectProps) {
       const viewTop = bodyRect ? bodyRect.top + 6 : 8;
       const gap = 8;
       const forceDown = props.placement === "down" && !modal;
+      const pinDown = Boolean(modal) && props.pinDown;
       const floor = forceDown ? window.innerHeight - 8 : viewBottom;
       const spaceBelow = Math.max(0, floor - rect.bottom - gap);
       const spaceAbove = Math.max(0, rect.top - viewTop - gap);
-      const openUp = !forceDown && spaceBelow < 168 && spaceAbove > spaceBelow;
+      const openUp = pinDown
+        ? spaceBelow < 96 && spaceAbove > spaceBelow
+        : !forceDown && spaceBelow < 168 && spaceAbove > spaceBelow;
       const available = openUp ? spaceAbove : spaceBelow;
       const maxHeight = modal ? Math.min(220, available) : Math.max(160, Math.min(320, available));
       setMenuBox({ openUp, maxHeight });
@@ -134,7 +138,7 @@ export function OnboardingSelect(props: OnboardingSelectProps) {
       window.visualViewport?.removeEventListener("resize", place);
       window.visualViewport?.removeEventListener("scroll", place);
     };
-  }, [open, visible.length, query, props.placement]);
+  }, [open, visible.length, query, props.placement, props.pinDown]);
 
   useEffect(() => {
     if (!open) {

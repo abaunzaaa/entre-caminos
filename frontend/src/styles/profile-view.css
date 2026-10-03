@@ -98,17 +98,52 @@
   text-align: center;
 }
 
-.profile-hero__photo {
-  display: grid;
-  place-items: center;
+.profile-hero__photo-hit {
+  position: relative;
+  display: block;
   width: 132px;
   height: 132px;
   margin: 0 auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.profile-hero__photo-hit:focus-visible {
+  outline: 2px solid var(--profile-forest-mid);
+  outline-offset: 4px;
+  border-radius: 50%;
+}
+
+.profile-hero__photo {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  margin: 0;
   overflow: hidden;
   border: 4px solid #fff;
   border-radius: 50%;
   background: var(--profile-soft);
   box-shadow: 0 14px 32px -18px rgba(28, 51, 46, 0.55);
+}
+
+.profile-hero__camera {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: var(--profile-forest-mid);
+  color: #fff;
+  pointer-events: none;
+  box-shadow: 0 6px 14px -8px rgba(28, 51, 46, 0.65);
 }
 
 .profile-hero__photo img,
@@ -716,9 +751,14 @@
     justify-content: center;
   }
 
-  .profile-hero__photo {
+  .profile-hero__photo-hit {
     width: 112px;
     height: 112px;
+  }
+
+  .profile-hero__camera {
+    width: 28px;
+    height: 28px;
   }
 
   .profile-hero__photo img,
@@ -805,12 +845,14 @@
 
 .profile-edit-modal__header {
   flex: 0 0 auto;
-  padding: 1.15rem 3.1rem 0 1.35rem;
+  padding: 1.15rem 3.25rem 0.95rem;
+  text-align: center;
 }
 
 .profile-edit-modal__header .dash-profile__name {
   margin: 0;
   color: #111111;
+  text-align: center;
 }
 
 .profile-edit-modal__body {
@@ -944,7 +986,10 @@
 
 .profile-edit-modal .onboarding-select-panel {
   z-index: 40;
-  width: 100%;
+  right: 0;
+  left: 0;
+  box-sizing: border-box;
+  width: auto;
   max-width: 100%;
   border-radius: 12px;
 }
@@ -1056,7 +1101,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;
   gap: 10px;
 }
 
@@ -1093,5 +1138,223 @@
 
   .profile-edit-modal__actions {
     justify-content: center;
+  }
+}
+
+.auth-recovery-modal.profile-image-modal {
+  --ob-forest: #294942;
+  --ob-forest-deep: #1c332e;
+  --ob-sage: #91a69e;
+  --ob-sage-soft: #f3f5f4;
+  --interest-selected: #e8eeea;
+  --interest-selected-border: #b7c6be;
+  --onboarding-title: #17201d;
+  --ob-muted: #6d7a74;
+  --ob-label: #4a5c56;
+  --ob-line: #eceeed;
+  --ob-line-strong: #dfe3e1;
+  --ob-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  display: flex;
+  flex-direction: column;
+  width: min(760px, calc(100vw - 48px));
+  max-width: 760px;
+  max-height: min(720px, calc(100dvh - 80px));
+  padding: 0;
+  overflow: hidden;
+}
+
+.profile-image-modal__header {
+  flex: 0 0 auto;
+  padding: 1.15rem 3.25rem 0.85rem;
+  text-align: center;
+}
+
+.profile-image-modal__header .dash-profile__name {
+  margin: 0;
+  color: #111111;
+  text-align: center;
+}
+
+.profile-image-modal__lead {
+  margin: 8px 0 0;
+  color: #6d7a74;
+  font-size: 0.92rem;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+.profile-image-modal__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 0.2rem 1.35rem 1.5rem;
+  scroll-behavior: smooth;
+}
+
+.auth-recovery-modal.profile-image-modal .auth-recovery-close {
+  width: 40px;
+  height: 40px;
+}
+
+.profile-image-modal .onboarding-profile {
+  height: auto;
+  overflow: visible;
+}
+
+.profile-image-modal .onboarding-photo-layout,
+.profile-image-modal .onboarding-avatar-studio,
+.profile-image-modal .onboarding-segment--profile {
+  width: 100%;
+}
+
+.profile-image-modal .onboarding-photo-layout {
+  grid-template-columns: 1fr;
+  justify-items: center;
+  gap: 18px;
+}
+
+.profile-image-modal .onboarding-photo-preview,
+.profile-image-modal .onboarding-photo-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.profile-image-modal .onboarding-photo-copy {
+  gap: 0;
+  max-width: 28rem;
+}
+
+.profile-image-modal .onboarding-photo-copy p {
+  text-align: center;
+}
+
+.profile-image-modal .onboarding-photo-preview__actions {
+  align-items: center;
+  justify-content: center;
+  margin-top: 6px;
+}
+
+.profile-image-modal .tourist-hero__cta,
+.profile-image-modal .profile-image-modal__secondary {
+  box-sizing: border-box;
+  height: 34px;
+  min-height: 34px;
+  margin: 0;
+  padding: 0 1.15rem;
+  border-radius: 999px;
+  font-family: Poppins, Nunito, system-ui, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.profile-image-modal .tourist-hero__cta {
+  border: 0;
+}
+
+.profile-image-modal .profile-image-modal__secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(28, 51, 46, 0.15);
+  background: #fff;
+  color: #1c332e;
+}
+
+.profile-image-modal .profile-image-modal__secondary:hover:not(:disabled) {
+  background: #f3f5f4;
+}
+
+.profile-image-modal .tourist-hero__cta:disabled,
+.profile-image-modal .profile-image-modal__secondary:disabled {
+  opacity: 0.55;
+  cursor: default;
+  transform: none;
+}
+
+.profile-image-modal .onboarding-avatar-studio__panel {
+  border-color: #e7ece9;
+  background: #f3f5f4;
+}
+
+.profile-image-modal .onboarding-avatar-studio__panel .onboarding-segment--four {
+  background: #fff;
+  box-shadow: inset 0 0 0 1px #e7ece9;
+}
+
+.profile-image-modal .onboarding-avatar-studio__panel .onboarding-segment__btn.is-active {
+  background: #e8eeea;
+  color: #1c332e;
+}
+
+.profile-image-modal .onboarding-choice-pill {
+  border-color: #d5ddd8;
+  background: transparent;
+  color: #6b746f;
+  font-weight: 400;
+}
+
+.profile-image-modal .onboarding-choice-pill:hover {
+  border-color: #b7c6be;
+  background: #fff;
+}
+
+.profile-image-modal .onboarding-choice-pill.is-selected {
+  border-color: #1c332e;
+  background: #fff;
+  color: #1c332e;
+  font-weight: 600;
+}
+
+.profile-image-modal .onboarding-photo-frame,
+.profile-image-modal .onboarding-photo-empty {
+  width: 148px;
+  height: 148px;
+}
+
+.profile-image-modal .onboarding-photo-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 18px;
+}
+
+.profile-image-modal .onboarding-photo-empty svg {
+  width: 22px;
+  height: 22px;
+  flex: none;
+}
+
+.profile-image-modal .onboarding-photo-empty span {
+  font-size: 0.72rem;
+  font-weight: 500;
+  line-height: 1.25;
+  text-align: center;
+}
+
+.profile-image-modal__save {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 1.35rem;
+}
+
+@media (max-width: 640px) {
+  .auth-recovery-modal.profile-image-modal {
+    width: calc(100vw - 24px);
+    max-height: calc(100dvh - 24px);
+  }
+
+  .profile-image-modal__header,
+  .profile-image-modal__body {
+    padding-right: 1rem;
+    padding-left: 1rem;
   }
 }

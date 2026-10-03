@@ -218,6 +218,7 @@ export function EditAccountFields({
             options={PROFILE_GENDERS.map((value) => ({ value, label: value }))}
             allowEmpty={true}
             searchable={false}
+            pinDown
             open={genderOpen}
             onOpenChange={setGenderOpen}
             onChange={onGender}

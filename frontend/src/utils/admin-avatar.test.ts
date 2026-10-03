@@ -26,7 +26,7 @@ describe("resolveAvatarUrl", () => {
     expect(
       resolveAvatarUrl({
         id: "u1",
-        avatarUrl: null,
+        avatarUrl: "/uploads/avatars/u1.jpg",
         profile: { profileImageUrl: "/uploads/old.png", profileImageType: "AVATAR" },
       }),
     ).toBeNull();

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import {
   Cake,
   CalendarDays,
+  Camera,
   KeyRound,
   Leaf,
   Mail,
@@ -26,6 +27,7 @@ import { UnderConstruction } from "../components/explorer/UnderConstruction";
 import { ChangePasswordModal } from "../components/auth/ChangePasswordModal";
 import { DeleteAccountModal } from "../components/auth/DeleteAccountModal";
 import { EditProfileModal } from "../components/profile/EditProfileModal";
+import { ProfileImageModal } from "../components/profile/ProfileImageModal";
 import { useAuth } from "../hooks/useAuth";
 import { listFavoriteExperiences } from "../services/favorites.service";
 import { onFavoritesChanged } from "../services/favorites-sync";
@@ -120,6 +122,7 @@ export function ProfilePage() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [passwordOpen, setPasswordOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [imageOpen, setImageOpen] = useState(false);
   const [favorites, setFavorites] = useState<Experience[]>([]);
   const [favoritesLoading, setFavoritesLoading] = useState(true);
   const [favoritesError, setFavoritesError] = useState("");
@@ -209,7 +212,17 @@ export function ProfilePage() {
           <div className="profile-hero__banner" style={{ backgroundImage: `url(${encabezado})` }} aria-hidden="true" />
 
           <div className="profile-hero__sheet">
-            <div className="profile-hero__photo">{photoNode}</div>
+            <button
+              type="button"
+              className="profile-hero__photo-hit"
+              onClick={() => setImageOpen(true)}
+              aria-label="Cambiar imagen de perfil"
+            >
+              <span className="profile-hero__photo">{photoNode}</span>
+              <span className="profile-hero__camera" aria-hidden="true">
+                <Camera size={15} strokeWidth={1.8} />
+              </span>
+            </button>
             <div className="profile-hero__identity">
               <div className="profile-hero__copy">
                 <h1 id="profile-view-title" className="profile-hero__name">
@@ -393,6 +406,7 @@ export function ProfilePage() {
       <ChangePasswordModal open={passwordOpen} onClose={() => setPasswordOpen(false)} />
       <DeleteAccountModal open={deleteOpen} onClose={() => setDeleteOpen(false)} />
       <EditProfileModal open={editOpen} onClose={() => setEditOpen(false)} />
+      <ProfileImageModal open={imageOpen} onClose={() => setImageOpen(false)} />
     </div>
   );
 }
