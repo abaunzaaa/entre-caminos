@@ -423,6 +423,52 @@ function historyFromMessages(messages: SerializedMessage[]): AssistantChatMessag
     .map((item) => ({ role: item.role, content: item.content }));
 }
 
+function resolveTurnContext(
+  input: { experienceId?: string; context?: GuideChatContext },
+  stored: SerializedConversation,
+): { context: GuideChatContext; experienceId?: string } {
+  if (input.context?.mode === "general") {
+    return { context: { mode: "general" } };
+  }
+
+  const storedExperience = stored.experienceData ?? undefined;
+  if (input.context?.mode === "experience") {
+    const fromClient = input.context.experience;
+    const id = input.experienceId || fromClient?.id || undefined;
+    const experience =
+      fromClient && (fromClient.id || fromClient.name)
+        ? { ...fromClient, id: fromClient.id ?? id }
+        : {
+            id: id ?? stored.experienceId ?? storedExperience?.id,
+            name: stored.experienceName ?? storedExperience?.name,
+            ...storedExperience,
+          };
+    return {
+      experienceId: experience.id || id || stored.experienceId || undefined,
+      context: { mode: "experience", experience },
+    };
+  }
+
+  if (stored.contextType === "experience") {
+    return {
+      experienceId: stored.experienceId ?? undefined,
+      context: {
+        mode: "experience",
+        experience: {
+          id: stored.experienceId ?? storedExperience?.id,
+          name: stored.experienceName ?? storedExperience?.name,
+          ...storedExperience,
+        },
+      },
+    };
+  }
+
+  return {
+    experienceId: input.experienceId || input.context?.experience?.id,
+    context: input.context ?? { mode: "general" },
+  };
+}
+
 export async function chatInConversation(input: {
   userId: string;
   message?: string;
@@ -433,8 +479,9 @@ export async function chatInConversation(input: {
   context?: GuideChatContext;
   location?: { latitude?: number; longitude?: number; city?: string };
 }) {
-  const contextExperience = input.context?.experience;
-  const experienceId = input.experienceId || contextExperience?.id;
+  const contextExperience = input.context?.mode === "general" ? undefined : input.context?.experience;
+  const experienceId =
+    input.context?.mode === "general" ? undefined : input.experienceId || contextExperience?.id;
   let conversation = input.conversationId
     ? await getOwned(input.userId, input.conversationId)
     : null;
@@ -450,18 +497,7 @@ export async function chatInConversation(input: {
   }
 
   const stored = serializeConversation(conversation);
-  const storedExperience = stored.experienceData ?? undefined;
-  const context: GuideChatContext =
-    stored.contextType === "experience"
-      ? {
-          mode: "experience",
-          experience: {
-            id: stored.experienceId ?? storedExperience?.id,
-            name: stored.experienceName ?? storedExperience?.name,
-            ...storedExperience,
-          },
-        }
-      : input.context ?? { mode: "general" };
+  const turn = resolveTurnContext(input, stored);
 
   let working = stored.messages;
 
@@ -516,8 +552,8 @@ export async function chatInConversation(input: {
     userId: input.userId,
     message: content,
     history: prior.length ? prior : input.history ?? [],
-    experienceId: stored.experienceId ?? experienceId,
-    context,
+    experienceId: turn.experienceId,
+    context: turn.context,
     location: input.location,
   });
 

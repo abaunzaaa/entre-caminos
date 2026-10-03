@@ -425,6 +425,35 @@
   padding-right: 2px;
 }
 
+.guide-new-chat {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  margin-right: 2px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #4b5563;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.guide-new-chat:hover,
+.guide-new-chat:focus-visible {
+  color: #1f2933;
+  outline: none;
+}
+
+.guide-new-chat:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
 .guide-icon-btn svg {
   width: 14px;
   height: 14px;

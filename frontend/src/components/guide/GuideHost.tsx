@@ -1311,6 +1311,18 @@ export function GuideHost() {
                 </div>
               </div>
               <div className="guide-win">
+                {!guide.expanded ? (
+                  <button
+                    type="button"
+                    className="guide-new-chat"
+                    aria-label="Nuevo chat"
+                    disabled={guide.sending}
+                    onClick={() => guide.newConversation(activeFolderId)}
+                  >
+                    <SquarePen size={13} strokeWidth={1.8} aria-hidden="true" />
+                    <span>Nuevo chat</span>
+                  </button>
+                ) : null}
                 <button type="button" className="guide-icon-btn" aria-label="Minimizar" onClick={guide.minimizeGuide}>
                   <Minus size={14} strokeWidth={2} />
                 </button>
@@ -1358,7 +1370,7 @@ export function GuideHost() {
 
             {guide.view === "chat" ? (
               <div className="guide-chat">
-                {guide.thread?.experienceId && guide.experienceTitle ? (
+                {guide.experienceId && guide.experienceTitle ? (
                   <div className="guide-focus">
                     {guide.experienceImage ? <img src={mediaUrl(guide.experienceImage, 80)} alt="" /> : <span className="guide-focus__mark" />}
                     <div>

@@ -77,7 +77,8 @@ export async function loadGuideContext(input: {
   context?: GuideChatContext;
   location?: { latitude?: number; longitude?: number; city?: string };
 }) {
-  const experienceId = input.experienceId || input.context?.experience?.id;
+  const generalMode = input.context?.mode === "general";
+  const experienceId = generalMode ? undefined : input.experienceId || input.context?.experience?.id;
   const [user, profile, focus, published] = await Promise.all([
     prisma.user.findUnique({
       where: { id: input.userId },
@@ -126,7 +127,7 @@ export async function loadGuideContext(input: {
     .slice(-20)
     .filter((item) => item.content.trim());
 
-  const clientExperience = input.context?.experience;
+  const clientExperience = generalMode ? undefined : input.context?.experience;
   const experienceBlock = focus
     ? [
         "MODO: experiencia específica. Prioriza siempre esta información y no inventes lo que no aparezca aquí.",

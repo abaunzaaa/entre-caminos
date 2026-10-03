@@ -11,7 +11,6 @@ import {
   saveActiveConversationId,
   savePlan,
   saveThreads,
-  isBlankThread,
   isPersistedConversationId,
   isPlaceholderTitle,
   titleFromText,
@@ -76,6 +75,51 @@ function snapshotExperience(item: Experience) {
   }
 }
 
+type ActiveExperience = {
+  id: string;
+  name: string;
+  category?: string;
+  location: string;
+  price?: string | number;
+  duration?: string;
+  description?: string;
+  availableDays?: unknown;
+  howToGetThere?: string;
+  imageUrl?: string;
+};
+
+function hasUserMessage(thread: GuideThread) {
+  return thread.messages.some((item) => item.role === "user" && item.content.trim());
+}
+
+function asActiveExperience(snap: ReturnType<typeof snapshotExperience>): ActiveExperience {
+  return {
+    ...snap,
+    name: snap.name ?? "",
+    location: snap.location ?? "",
+  };
+}
+
+function guideTurn(
+  experienceId: string | undefined,
+  experienceContext: ActiveExperience | undefined,
+  experienceTitle?: string,
+) {
+  if (!experienceId) {
+    return { context: { mode: "general" as const } };
+  }
+  return {
+    experienceId,
+    context: {
+      mode: "experience" as const,
+      experience:
+        experienceContext?.id === experienceId
+          ? experienceContext
+          : { id: experienceId, name: experienceTitle },
+    },
+  };
+}
+
 async function createExperienceConversation(input: {
   experienceId?: string;
   experienceName?: string;
@@ -121,24 +165,12 @@ export function GuideProvider({ children }: { children: ReactNode }) {
   const [threadQuery, setThreadQuery] = useState("");
   const [favorites, setFavorites] = useState<string[]>([]);
   const [savedPlans, setSavedPlans] = useState<NonNullable<GuideStoredMessage["plan"]>[]>([]);
-  const [experienceTitle, setExperienceTitle] = useState<string>();
-  const [experienceImage, setExperienceImage] = useState<string>();
-  const [experienceLocation, setExperienceLocation] = useState<string>();
-  const [experienceContext, setExperienceContext] = useState<{
-    id: string;
-    name: string;
-    category?: string;
-    location: string;
-    price?: string | number;
-    duration?: string;
-    description?: string;
-    availableDays?: unknown;
-    howToGetThere?: string;
-    imageUrl?: string;
-  }>();
-  const [catalogFocus, setCatalogFocusState] = useState<Experience | null>(null);
+  const [experienceContext, setExperienceContext] = useState<ActiveExperience>();
+  const routeExperience = experienceId && experienceContext?.id === experienceId ? experienceContext : undefined;
   const sendingRef = useRef(false);
   const creatingRef = useRef(false);
+  const openingRef = useRef(false);
+  const actionRef = useRef(0);
 
   useEffect(() => {
     if (!user) {
@@ -176,10 +208,18 @@ export function GuideProvider({ children }: { children: ReactNode }) {
         }
         if (rows) {
           const mapped = rows.map(conversationToThread);
-          setThreads(mapped);
-          saveThreads(user.id, mapped);
+          setThreads((current) => {
+            const ids = new Set(mapped.map((item) => item.id));
+            const localOnly = current.filter((item) => isPersistedConversationId(item.id) && !ids.has(item.id));
+            const next = [...localOnly, ...mapped];
+            saveThreads(user.id, next);
+            return next;
+          });
           const activeId = loadActiveConversationId(user.id);
           setThread((current) => {
+            if (creatingRef.current) {
+              return current;
+            }
             if (current) {
               return mapped.find((item) => item.id === current.id) ?? current;
             }
@@ -191,44 +231,33 @@ export function GuideProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [user?.id, open]);
+  }, [user?.id]);
 
   useEffect(() => {
     let cancelled = false;
-    const lookupId = thread?.experienceId || experienceId;
-    if (!lookupId) {
-      if (!catalogFocus) {
-        setExperienceTitle(undefined);
-        setExperienceImage(undefined);
-        setExperienceLocation(undefined);
-        setExperienceContext(undefined);
-      }
+    if (!experienceId) {
+      setExperienceContext(undefined);
       return;
     }
-    import("../../services/catalog.service").then(({ getPublicExperience }) =>
-      getPublicExperience(lookupId)
+    setExperienceContext((current) => (current?.id === experienceId ? current : undefined));
+    void import("../../services/catalog.service").then(({ getPublicExperience }) =>
+      getPublicExperience(experienceId)
         .then((item) => {
-          if (!cancelled) {
-            const snap = snapshotExperience(item);
-            setExperienceTitle(snap.name);
-            setExperienceImage(snap.imageUrl);
-            setExperienceLocation(snap.location);
-            setExperienceContext(snap);
+          if (cancelled) {
+            return;
           }
+          setExperienceContext(asActiveExperience(snapshotExperience(item)));
         })
         .catch(() => {
-          if (!cancelled && !catalogFocus) {
-            setExperienceTitle(undefined);
-            setExperienceImage(undefined);
-            setExperienceLocation(undefined);
-            setExperienceContext(undefined);
+          if (!cancelled) {
+            setExperienceContext((current) => (current?.id === experienceId ? current : undefined));
           }
         }),
     );
     return () => {
       cancelled = true;
     };
-  }, [catalogFocus, experienceId, thread?.experienceId]);
+  }, [experienceId]);
 
   const persist = useCallback(
     (next: GuideThread) => {
@@ -257,31 +286,13 @@ export function GuideProvider({ children }: { children: ReactNode }) {
     (conversation: GuideConversation) => {
       const next = conversationToThread(conversation);
       persist(next);
-      const data = conversation.experienceData;
-      if (conversation.contextType === "experience" && (conversation.experienceId || data?.id)) {
-        setExperienceTitle(data?.name ?? conversation.experienceName ?? undefined);
-        setExperienceImage(data?.imageUrl);
-        setExperienceLocation(data?.location);
-        setExperienceContext({
-          id: data?.id ?? conversation.experienceId ?? "",
-          name: data?.name ?? conversation.experienceName ?? "",
-          category: data?.category,
-          location: data?.location ?? "",
-          price: data?.price,
-          duration: data?.duration,
-          description: data?.description,
-          availableDays: data?.availableDays,
-          howToGetThere: data?.howToGetThere,
-          imageUrl: data?.imageUrl,
-        });
-      }
       return next;
     },
     [persist],
   );
 
   useEffect(() => {
-    if (!open || !user || thread || experienceId || !threads.length) {
+    if (!open || !user || thread || experienceId || !threads.length || creatingRef.current || openingRef.current) {
       return;
     }
     const activeId = loadActiveConversationId(user.id);
@@ -289,10 +300,11 @@ export function GuideProvider({ children }: { children: ReactNode }) {
     if (!recent) {
       return;
     }
+    const action = actionRef.current;
     let cancelled = false;
     getGuideConversation(recent.id)
       .then((conversation) => {
-        if (cancelled) {
+        if (cancelled || action !== actionRef.current || creatingRef.current) {
           return;
         }
         applyConversation(conversation);
@@ -329,17 +341,22 @@ export function GuideProvider({ children }: { children: ReactNode }) {
     setPlusOpen(false);
     setError("");
     setDraft("");
-    if (!user) {
+    if (!user || creatingRef.current || sendingRef.current) {
       return;
     }
+    const action = ++actionRef.current;
+    openingRef.current = false;
     const targetFolder = folderId;
-    const blanks = threads.filter(
-      (item) =>
-        isBlankThread(item) &&
-        (item.folderId ?? undefined) === targetFolder &&
-        (experienceId ? item.experienceId === experienceId : !item.experienceId),
-    );
-    const keep = blanks[0];
+    const reusable = threads
+      .filter(
+        (item) =>
+          isPersistedConversationId(item.id) &&
+          !hasUserMessage(item) &&
+          (item.folderId ?? undefined) === targetFolder &&
+          (experienceId ? item.experienceId === experienceId : !item.experienceId),
+      )
+      .sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt));
+    const keep = reusable.find((item) => item.id === thread?.id) ?? reusable[0];
     if (keep) {
       setThread(keep);
       saveActiveConversationId(user.id, keep.id);
@@ -349,20 +366,22 @@ export function GuideProvider({ children }: { children: ReactNode }) {
       setView("chat");
       return;
     }
-    if (creatingRef.current) {
-      return;
-    }
+    const previous = thread;
     creatingRef.current = true;
+    setView("chat");
+    setThread(null);
     void (async () => {
       try {
-        const snap = experienceId ? experienceContext : undefined;
         const created = experienceId
           ? await createExperienceConversation({
               experienceId,
-              experienceName: experienceTitle ?? snap?.name,
-              experienceData: snap,
+              experienceName: routeExperience?.name,
+              experienceData: routeExperience,
             })
           : await createGuideConversation({ contextType: "general" });
+        if (action !== actionRef.current) {
+          return;
+        }
         applyConversation(created);
         if (targetFolder) {
           setThreads((current) =>
@@ -374,28 +393,30 @@ export function GuideProvider({ children }: { children: ReactNode }) {
         }
         setView("chat");
       } catch (err) {
+        if (action !== actionRef.current) {
+          return;
+        }
+        if (previous) {
+          setThread(previous);
+        }
         setError(getApiErrorMessage(err, "No pude crear la conversación."));
       } finally {
         creatingRef.current = false;
       }
     })();
-  }, [applyConversation, experienceContext, experienceId, experienceTitle, threads, user]);
+  }, [applyConversation, experienceId, routeExperience, thread, threads, user]);
 
   const setCatalogFocus = useCallback((experience?: Experience | null) => {
-    setCatalogFocusState(experience ?? null);
-    if (experience) {
-      const snap = snapshotExperience(experience);
-      setExperienceTitle(snap.name);
-      setExperienceImage(snap.imageUrl);
-      setExperienceLocation(snap.location);
-      setExperienceContext(snap);
+    if (!experience || !experienceId || experience.id !== experienceId) {
+      return;
     }
-  }, []);
+    setExperienceContext(asActiveExperience(snapshotExperience(experience)));
+  }, [experienceId]);
 
   const send = useCallback(
     async (text?: string, source?: GuideThread | null) => {
       const content = (text ?? draft).trim();
-      if (!content || sendingRef.current || !user) {
+      if (!content || sendingRef.current || creatingRef.current || !user) {
         return;
       }
       sendingRef.current = true;
@@ -406,12 +427,11 @@ export function GuideProvider({ children }: { children: ReactNode }) {
       let base = source ?? thread;
       try {
         if (!isPersistedConversationId(base?.id)) {
-          const snap = experienceId ? experienceContext : undefined;
           const created = experienceId
             ? await createExperienceConversation({
                 experienceId,
-                experienceName: experienceTitle ?? snap?.name,
-                experienceData: snap,
+                experienceName: routeExperience?.name,
+                experienceData: routeExperience,
               })
             : await createGuideConversation({ contextType: "general" });
           base = conversationToThread(created);
@@ -449,26 +469,11 @@ export function GuideProvider({ children }: { children: ReactNode }) {
         messages: chronologicalMessages([...base.messages, userMessage]),
       });
       try {
-        const activeExperienceId = source?.experienceId ?? base.experienceId ?? experienceId;
-        const focused =
-          experienceContext?.id === activeExperienceId
-            ? experienceContext
-            : catalogFocus && catalogFocus.id === activeExperienceId
-              ? snapshotExperience(catalogFocus)
-              : activeExperienceId
-                ? { id: activeExperienceId, name: experienceTitle }
-                : undefined;
         const reply: GuideReply = await sendGuideMessage({
           message: content,
           conversationId: base.id,
           history: (base.messages ?? []).map((item) => ({ role: item.role, content: item.content })),
-          experienceId: activeExperienceId,
-          context: activeExperienceId
-            ? {
-                mode: "experience",
-                experience: focused,
-              }
-            : { mode: "general" },
+          ...guideTurn(experienceId, routeExperience, routeExperience?.name),
           location: user.profile
             ? {
                 city: user.profile.city ?? user.city ?? undefined,
@@ -489,12 +494,10 @@ export function GuideProvider({ children }: { children: ReactNode }) {
     },
     [
       applyConversation,
-      catalogFocus,
       draft,
-      experienceContext,
       experienceId,
-      experienceTitle,
       persist,
+      routeExperience,
       folderFilter,
       thread,
       user,
@@ -512,40 +515,60 @@ export function GuideProvider({ children }: { children: ReactNode }) {
       if (opts?.prompt) {
         setDraft(opts.prompt);
       }
-      const onExploreHome = /^\/explorar\/?$/.test(location.pathname);
-      const featured = opts?.experience ?? (onExploreHome ? catalogFocus : null);
-      const focusId = featured?.id ?? experienceId;
-      if (featured) {
-        const snap = snapshotExperience(featured);
-        setExperienceTitle(snap.name);
-        setExperienceImage(snap.imageUrl);
-        setExperienceLocation(snap.location);
-        setExperienceContext(snap);
+      const consult =
+        opts?.experience && experienceId && opts.experience.id === experienceId ? opts.experience : null;
+      if (consult) {
+        setExperienceContext(asActiveExperience(snapshotExperience(consult)));
       }
+      if (creatingRef.current || sendingRef.current) {
+        return;
+      }
+      const action = ++actionRef.current;
+      openingRef.current = true;
       void (async () => {
         try {
-          if (focusId) {
-            const existing = threads.find((item) => item.experienceId === focusId);
+          if (consult) {
+            const existing = threads.find((item) => item.experienceId === consult.id);
+            if (action !== actionRef.current) {
+              return;
+            }
             if (existing && thread?.id === existing.id) {
               setView("chat");
               return;
             }
             if (existing) {
               const conversation = await getGuideConversation(existing.id);
+              if (action !== actionRef.current) {
+                return;
+              }
               applyConversation(conversation);
               setView("chat");
               return;
             }
-            const created = await createExperienceConversation({
-              experienceId: focusId,
-              experienceName: featured?.title ?? experienceTitle,
-              experienceData: featured ? snapshotExperience(featured) : experienceContext,
-            });
-            applyConversation(created);
-            setView("chat");
+            if (creatingRef.current) {
+              return;
+            }
+            creatingRef.current = true;
+            try {
+              const created = await createExperienceConversation({
+                experienceId: consult.id,
+                experienceName: consult.title,
+                experienceData: snapshotExperience(consult),
+              });
+              if (action !== actionRef.current) {
+                return;
+              }
+              applyConversation(created);
+              setView("chat");
+            } finally {
+              creatingRef.current = false;
+            }
             return;
           }
           if (thread?.messages.length) {
+            if (action !== actionRef.current) {
+              return;
+            }
             setView("chat");
             return;
           }
@@ -553,24 +576,33 @@ export function GuideProvider({ children }: { children: ReactNode }) {
           const recent = threads.find((item) => item.id === activeId) ?? threads[0];
           if (recent) {
             const conversation = await getGuideConversation(recent.id);
+            if (action !== actionRef.current || creatingRef.current) {
+              return;
+            }
             applyConversation(conversation);
             setView(conversation.messages.length ? "chat" : "home");
             return;
           }
+          if (action !== actionRef.current) {
+            return;
+          }
           setView(opts?.view ?? "home");
         } catch (err) {
+          if (action !== actionRef.current) {
+            return;
+          }
           setError(getApiErrorMessage(err, "No pude abrir la conversación."));
           setView(opts?.view ?? "home");
+        } finally {
+          if (action === actionRef.current) {
+            openingRef.current = false;
+          }
         }
       })();
     },
     [
       applyConversation,
-      catalogFocus,
-      experienceContext,
       experienceId,
-      experienceTitle,
-      location.pathname,
       thread,
       threads,
       user,
@@ -580,33 +612,50 @@ export function GuideProvider({ children }: { children: ReactNode }) {
   const startThread = useCallback(
     (prompt?: string) => {
       setError("");
+      if (creatingRef.current || sendingRef.current) {
+        return;
+      }
+      const action = ++actionRef.current;
+      openingRef.current = false;
+      creatingRef.current = true;
       void (async () => {
         try {
           const created = experienceId
             ? await createExperienceConversation({
                 experienceId,
-                experienceName: experienceTitle,
-                experienceData: experienceContext,
+                experienceName: routeExperience?.name,
+                experienceData: routeExperience,
               })
             : await createGuideConversation({ contextType: "general" });
+          if (action !== actionRef.current) {
+            return;
+          }
           const next = applyConversation(created);
           setView("chat");
+          creatingRef.current = false;
           if (prompt) {
             void send(prompt, next);
           }
         } catch (err) {
-          setError(getApiErrorMessage(err, "No pude crear la conversación."));
+          if (action === actionRef.current) {
+            setError(getApiErrorMessage(err, "No pude crear la conversación."));
+          }
+        } finally {
+          creatingRef.current = false;
         }
       })();
     },
-    [applyConversation, experienceContext, experienceId, experienceTitle, send],
+    [applyConversation, experienceId, routeExperience, send],
   );
 
   const startFlow = useCallback(
     (kind: "plan" | "search" | "nearby" | "interests") => {
-      if (!user) {
+      if (!user || creatingRef.current || sendingRef.current) {
         return;
       }
+      const action = ++actionRef.current;
+      openingRef.current = false;
+      creatingRef.current = true;
       setPlusOpen(false);
       setError("");
       setDraft("");
@@ -615,22 +664,30 @@ export function GuideProvider({ children }: { children: ReactNode }) {
           const created = experienceId
             ? await createExperienceConversation({
                 experienceId,
-                experienceName: experienceTitle,
-                experienceData: experienceContext,
+                experienceName: routeExperience?.name,
+                experienceData: routeExperience,
                 starter: kind,
               })
             : await createGuideConversation({
                 contextType: "general",
                 starter: kind,
               });
+          if (action !== actionRef.current) {
+            return;
+          }
           applyConversation(created);
           setView("chat");
         } catch (err) {
+          if (action !== actionRef.current) {
+            return;
+          }
           setError(getApiErrorMessage(err, "No pude iniciar el flujo."));
+        } finally {
+          creatingRef.current = false;
         }
       })();
     },
-    [applyConversation, experienceContext, experienceId, experienceTitle, user],
+    [applyConversation, experienceId, routeExperience, user],
   );
 
   const toggleConversationFavorite = useCallback(
@@ -666,7 +723,7 @@ export function GuideProvider({ children }: { children: ReactNode }) {
   );
 
   const regenerate = useCallback(async () => {
-    if (!thread?.id || sendingRef.current || !isPersistedConversationId(thread.id)) {
+    if (!thread?.id || sendingRef.current || creatingRef.current || !isPersistedConversationId(thread.id)) {
       setError("No pude regenerar esta respuesta.");
       return;
     }
@@ -677,6 +734,7 @@ export function GuideProvider({ children }: { children: ReactNode }) {
       const reply = await sendGuideMessage({
         conversationId: thread.id,
         regenerate: true,
+        ...guideTurn(experienceId, routeExperience, routeExperience?.name),
       });
       applyConversation(reply.conversation);
     } catch (err) {
@@ -685,7 +743,7 @@ export function GuideProvider({ children }: { children: ReactNode }) {
       sendingRef.current = false;
       setSending(false);
     }
-  }, [applyConversation, thread]);
+  }, [applyConversation, experienceId, routeExperience, thread]);
 
   const value = useMemo<GuideContextValue>(
     () => ({
@@ -703,9 +761,9 @@ export function GuideProvider({ children }: { children: ReactNode }) {
       threadQuery,
       draft,
       experienceId,
-      experienceTitle,
-      experienceImage,
-      experienceLocation,
+      experienceTitle: routeExperience?.name,
+      experienceImage: routeExperience?.imageUrl,
+      experienceLocation: routeExperience?.location,
       favorites,
       savedPlans,
       setDraft,
@@ -862,9 +920,7 @@ export function GuideProvider({ children }: { children: ReactNode }) {
       error,
       expanded,
       experienceId,
-      experienceImage,
-      experienceLocation,
-      experienceTitle,
+      routeExperience,
       favorites,
       folderFilter,
       folders,
