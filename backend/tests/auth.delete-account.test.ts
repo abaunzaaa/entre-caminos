@@ -1,6 +1,6 @@
 import request from "supertest";
 import { describe, expect, it } from "vitest";
-import { ACCOUNT_REMOVED_MESSAGE } from "../src/config/constants.js";
+import { archivedAccountEmail } from "../src/utils/account.js";
 import { adminCredentials, api, app, prisma, uniqueEmail } from "./helpers.js";
 
 const password = "Caminos#2026";
@@ -42,12 +42,15 @@ describe("Eliminar cuenta propia", () => {
       });
     }
 
-    const deleted = await tourist.agent.delete("/api/auth/me");
+    const deleted = await tourist.agent
+      .delete("/api/auth/me")
+      .set("Authorization", `Bearer ${tourist.accessToken}`);
     expect(deleted.status).toBe(200);
     expect(deleted.body.message).toMatch(/eliminada/i);
 
     const stored = await prisma.user.findUnique({ where: { id: tourist.userId } });
     expect(stored?.deletedAt).toBeTruthy();
+    expect(stored?.email).toBe(archivedAccountEmail(tourist.userId));
     expect(stored?.name).toBe("Cuenta eliminada");
     expect(stored?.phone).toBeNull();
     expect(await prisma.userProfile.count({ where: { userId: tourist.userId } })).toBe(0);
@@ -65,8 +68,41 @@ describe("Eliminar cuenta propia", () => {
     expect((await api().get("/api/auth/me").set("Authorization", `Bearer ${tourist.accessToken}`)).status).toBe(401);
 
     const login = await api().post("/api/auth/login").send({ email: tourist.email, password });
-    expect(login.status).toBe(403);
-    expect(login.body.error.message).toBe(ACCOUNT_REMOVED_MESSAGE);
+    expect(login.status).toBe(401);
+    expect(login.body.error.message).toBe("Credenciales incorrectas");
+
+    const again = await api().post("/api/auth/register").send({
+      name: "Turista Nueva",
+      email: tourist.email,
+      password,
+      confirmPassword: password,
+      termsAccepted: true,
+    });
+    expect(again.status).toBe(201);
+    expect(again.body.data.user.id).not.toBe(tourist.userId);
+    expect(again.body.data.user.email).toBe(tourist.email);
+
+    const verified = await api().post("/api/auth/verify-email").send({
+      email: tourist.email,
+      code: again.body.data.devCode,
+    });
+    expect(verified.status).toBe(200);
+    expect(verified.body.data.user.id).toBe(again.body.data.user.id);
+
+    const newLogin = await api().post("/api/auth/login").send({ email: tourist.email, password });
+    expect(newLogin.status).toBe(200);
+    expect(newLogin.body.data.user.id).toBe(again.body.data.user.id);
+    expect(newLogin.body.data.user.emailVerified).toBe(true);
+
+    const previous = await prisma.user.findUnique({ where: { id: tourist.userId } });
+    expect(previous?.deletedAt).toBeTruthy();
+    expect(previous?.email).toBe(archivedAccountEmail(tourist.userId));
+    expect(await prisma.userProfile.count({ where: { userId: again.body.data.user.id } })).toBe(1);
+
+    await api()
+      .delete("/api/auth/me")
+      .set("Authorization", `Bearer ${newLogin.body.data.accessToken}`);
+    await other.agent.delete("/api/auth/me");
   });
 
   it("rechaza la eliminación sin sesión y no permite que un administrador borre su cuenta por este acceso", async () => {

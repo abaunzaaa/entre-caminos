@@ -9,7 +9,7 @@ import {
   ROLES,
 } from "../config/constants.js";
 import { env } from "../config/env.js";
-import { ACCOUNT_REMOVED_MESSAGE, isAccountRemoved } from "../utils/account.js";
+import { archivedAccountEmail, isAccountRemoved } from "../utils/account.js";
 import { ApiError } from "../utils/api-error.js";
 import { hashPassword, verifyPassword } from "../utils/password.js";
 import { publicUser } from "../utils/serializers.js";
@@ -30,8 +30,11 @@ export async function registerUser(input: { name: string; email: string; passwor
   const email = input.email.trim().toLowerCase();
   const name = input.name.trim();
 
-  const existing = await prisma.user.findUnique({ where: { email } });
-  if (existing) {
+  const existing = await prisma.user.findUnique({
+    where: { email },
+    include: { role: true },
+  });
+  if (existing && (!isAccountRemoved(existing) || existing.role.name !== ROLES.USER)) {
     throw ApiError.conflict(DUPLICATE_EMAIL);
   }
 
@@ -46,19 +49,27 @@ export async function registerUser(input: { name: string; email: string; passwor
 
   let user: Prisma.UserGetPayload<{ include: typeof userInclude }> | undefined;
   try {
-    user = await prisma.user.create({
-      data: {
-        name,
-        email,
-        passwordHash,
-        roleId: userRole.id,
-        status: "ACTIVE",
-        emailVerified: false,
-        verificationCode: hash,
-        verificationCodeExpires: new Date(Date.now() + EMAIL_VERIFICATION_TTL_MS),
-        profile: { create: {} },
-      },
-      include: userInclude,
+    user = await prisma.$transaction(async (tx) => {
+      if (existing?.deletedAt) {
+        await tx.user.update({
+          where: { id: existing.id },
+          data: { email: archivedAccountEmail(existing.id) },
+        });
+      }
+      return tx.user.create({
+        data: {
+          name,
+          email,
+          passwordHash,
+          roleId: userRole.id,
+          status: "ACTIVE",
+          emailVerified: false,
+          verificationCode: hash,
+          verificationCodeExpires: new Date(Date.now() + EMAIL_VERIFICATION_TTL_MS),
+          profile: { create: {} },
+        },
+        include: userInclude,
+      });
     });
   } catch (error) {
     if (user) {
@@ -115,12 +126,8 @@ export async function loginUser(input: { email: string; password: string }) {
     include: userInclude,
   });
 
-  if (!user) {
+  if (!user || isAccountRemoved(user)) {
     throw ApiError.unauthorized("Credenciales incorrectas");
-  }
-
-  if (isAccountRemoved(user)) {
-    throw ApiError.forbidden(ACCOUNT_REMOVED_MESSAGE);
   }
 
   if (user.status !== "ACTIVE") {
@@ -535,6 +542,7 @@ export async function deleteMyAccount(userId: string) {
       where: { id: userId },
       data: {
         deletedAt: new Date(),
+        email: archivedAccountEmail(userId),
         name: "Cuenta eliminada",
         passwordHash,
         phone: null,

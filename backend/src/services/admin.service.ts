@@ -1,7 +1,7 @@
 import { prisma } from "../database/prisma.js";
 import { ROLES, type RoleName } from "../config/constants.js";
 import type { AuthUser } from "../models/auth-user.js";
-import { livingUserWhere } from "../utils/account.js";
+import { archivedAccountEmail, livingUserWhere } from "../utils/account.js";
 import { ApiError } from "../utils/api-error.js";
 import { canReviewExperiences, isSuperAdmin } from "../utils/permissions.js";
 import { hashPassword } from "../utils/password.js";
@@ -57,9 +57,18 @@ export async function createAdministrator(
   if (!isSuperAdmin(actor)) {
     throw ApiError.forbidden("Solo un super administrador puede crear cuentas administrativas");
   }
-  const existing = await prisma.user.findUnique({ where: { email: input.email } });
-  if (existing) {
+  const existing = await prisma.user.findUnique({
+    where: { email: input.email },
+    include: { role: true },
+  });
+  if (existing && (!existing.deletedAt || existing.role.name !== ROLES.USER)) {
     throw ApiError.conflict("Ya existe un usuario con este correo");
+  }
+  if (existing?.deletedAt) {
+    await prisma.user.update({
+      where: { id: existing.id },
+      data: { email: archivedAccountEmail(existing.id) },
+    });
   }
 
   const role = await prisma.role.findUnique({ where: { name: input.role } });

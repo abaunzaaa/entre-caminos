@@ -320,22 +320,25 @@
 }
 
 .profile-info-layout {
-  display: grid;
-  gap: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  width: 100%;
 }
 
 .profile-info-groups {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 20px;
-  align-items: stretch;
-}
-
-.profile-info-groups .profile-info-card {
   display: flex;
   flex-direction: column;
+  gap: 28px;
+  width: 100%;
   min-width: 0;
-  height: 100%;
+}
+
+.profile-info-layout .profile-info-card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
   background: transparent;
 }
 
@@ -751,7 +754,6 @@
     line-height: 1.2;
   }
 
-  .profile-info-groups,
   .profile-info__row,
   .profile-pref-grid {
     grid-template-columns: 1fr;

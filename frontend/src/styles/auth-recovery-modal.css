@@ -73,6 +73,25 @@
 .auth-recovery-modal .profile-delete-modal {
   display: grid;
   gap: 16px;
+  text-align: center;
+}
+
+.auth-recovery-modal .profile-delete-modal .dash-profile__identity {
+  align-items: center;
+  width: 100%;
+  text-align: center;
+}
+
+.auth-recovery-modal .profile-delete-modal .dash-profile__name,
+.auth-recovery-modal .profile-delete-modal .dash-section__lead {
+  width: 100%;
+  max-width: none;
+  text-align: center;
+}
+
+.auth-recovery-modal .profile-delete-modal .dash-password__actions {
+  justify-content: center;
+  width: 100%;
 }
 
 .auth-recovery-modal .profile-password-modal__error {
