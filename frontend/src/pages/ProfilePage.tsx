@@ -1,11 +1,20 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { Heart, KeyRound, MapPinned, Shield, UserRound, type LucideIcon } from "lucide-react";
+import { Heart, Shield, Stamp, UserRound, type LucideIcon } from "lucide-react";
 import encabezado from "../assets/encabezado.png";
+import { getPreferenceLabel } from "../data/onboarding";
 import { AvatarPreview } from "../components/onboarding/AvatarPreview";
+import {
+  BouquetIcon,
+  CheersIcon,
+  LandscapeIcon,
+  RecordPlayerIcon,
+  SunFaceIcon,
+  WalletIcon,
+} from "../components/onboarding/SummaryLineIcons";
 import { UnderConstruction } from "../components/explorer/UnderConstruction";
-import { FavoritesLibrary } from "../components/explorer/FavoritesLibrary";
 import { Button } from "../components/ui/Button";
+import { KeyConfirmDialog } from "../components/ui/KeyConfirmDialog";
 import { useAuth } from "../hooks/useAuth";
 import { listFavoriteExperiences } from "../services/favorites.service";
 import { onFavoritesChanged } from "../services/favorites-sync";
@@ -17,13 +26,13 @@ import { formatPersonName } from "../utils/person-name";
 import "../styles/onboarding.css";
 import "../styles/profile-view.css";
 
-type ProfileTab = "informacion" | "seguridad" | "favoritos" | "visitados";
+type ProfileTab = "informacion" | "intereses" | "seguridad" | "estampitas";
 
 const TABS: Array<{ id: ProfileTab; label: string; icon: LucideIcon }> = [
   { id: "informacion", label: "Información", icon: UserRound },
+  { id: "intereses", label: "Intereses", icon: Heart },
   { id: "seguridad", label: "Seguridad", icon: Shield },
-  { id: "favoritos", label: "Favoritos", icon: Heart },
-  { id: "visitados", label: "Visitados", icon: MapPinned },
+  { id: "estampitas", label: "Estampitas", icon: Stamp },
 ];
 
 function StatValue({ value }: { value: number | null }) {
@@ -44,6 +53,10 @@ function accountStatus(status: PublicUser["status"] | undefined) {
     return { label: "Activo", active: true };
   }
   return null;
+}
+
+function preferenceText(values: string[]) {
+  return values.map((value) => getPreferenceLabel(value)).filter(Boolean).join(" · ");
 }
 
 function displayPhone(value: string | null | undefined) {
@@ -73,6 +86,7 @@ export function ProfilePage() {
   const phone = displayPhone(user?.phone);
   const email = user?.email?.trim() ?? "";
   const [tab, setTab] = useState<ProfileTab>("informacion");
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [favorites, setFavorites] = useState<Experience[]>([]);
   const [favoritesLoading, setFavoritesLoading] = useState(true);
   const [favoritesError, setFavoritesError] = useState("");
@@ -129,14 +143,22 @@ export function ProfilePage() {
     );
 
   const stats: Array<{ id: string; label: string; value: number | null; tab?: ProfileTab }> = [
-    { id: "visited", label: "Lugares visitados", value: 0, tab: "visitados" },
+    { id: "visited", label: "Visitados", value: 0, tab: "estampitas" },
     { id: "reviews", label: "Reseñas", value: 0 },
     {
       id: "favorites",
       label: "Favoritos",
       value: favoritesError ? null : favoritesLoading ? null : favorites.length,
-      tab: "favoritos",
     },
+  ];
+
+  const preferenceCards: Array<{ id: string; title: string; icon: ReactNode; values: string[] }> = [
+    { id: "intereses", title: "Intereses", icon: <BouquetIcon />, values: form.interests },
+    { id: "ambientes", title: "Ambientes", icon: <LandscapeIcon />, values: form.places },
+    { id: "presupuesto", title: "Presupuesto", icon: <WalletIcon />, values: form.budget },
+    { id: "compania", title: "Compañía", icon: <CheersIcon />, values: form.companions },
+    { id: "musica", title: "Música", icon: <RecordPlayerIcon />, values: form.music },
+    { id: "clima", title: "Clima", icon: <SunFaceIcon />, values: form.climate },
   ];
 
   const infoRows = [
@@ -255,50 +277,100 @@ export function ProfilePage() {
             </section>
           ) : null}
 
-          {tab === "seguridad" ? (
-            <section className="profile-security" aria-labelledby="profile-security-title">
-              <h2 id="profile-security-title" className="profile-info-card__title">
-                Seguridad
-              </h2>
-              <div className="profile-security__card">
-                <span className="profile-security__icon" aria-hidden="true">
-                  <KeyRound size={18} strokeWidth={1.8} />
-                </span>
-                <div className="profile-security__copy">
-                  <p className="profile-security__label">Contraseña</p>
-                  <p className="profile-security__lead">Actualiza la contraseña de tu cuenta.</p>
-                </div>
-                <Button type="button" onClick={() => navigate("/cambiar-contrasena")}>
-                  Cambiar contraseña
-                </Button>
-              </div>
-            </section>
-          ) : null}
-
-          {tab === "favoritos" ? (
-            <div className="profile-favorites">
-              {authLoading || favoritesLoading ? (
-                <div className="favorites-library__status">
-                  <p className="favorites-library__status-text">Cargando tus favoritos…</p>
-                </div>
-              ) : favoritesError ? (
-                <div className="favorites-library__status">
-                  <h2 className="favorites-library__title">Favoritos</h2>
-                  <p className="favorites-library__status-text">{favoritesError}</p>
-                </div>
-              ) : (
-                <FavoritesLibrary experiences={favorites} />
-              )}
+          {tab === "intereses" ? (
+            <div className="profile-interests">
+              {preferenceCards.map((card) => {
+                const text = preferenceText(card.values);
+                return (
+                  <section key={card.id} className="profile-info-card" aria-labelledby={`profile-pref-${card.id}`}>
+                    <h2 id={`profile-pref-${card.id}`} className="profile-info-card__title profile-info-card__title--icon">
+                      <span className="profile-info-card__glyph" aria-hidden="true">
+                        {card.icon}
+                      </span>
+                      {card.title}
+                    </h2>
+                    <p className={`profile-info profile-info__statement${text ? "" : " is-empty"}`}>
+                      {text || "Sin especificar"}
+                    </p>
+                  </section>
+                );
+              })}
             </div>
           ) : null}
 
-          {tab === "visitados" ? (
+          {tab === "seguridad" ? (
+            <div className="profile-security">
+              <section className="profile-info-card" aria-labelledby="profile-password-title">
+                <h2 id="profile-password-title" className="profile-info-card__title">
+                  Contraseña
+                </h2>
+                <dl className="profile-info">
+                  <div className="profile-info__row">
+                    <dt>Cambiar contraseña</dt>
+                    <dd>
+                      <Button type="button" onClick={() => navigate("/cambiar-contrasena")}>
+                        Cambiar contraseña
+                      </Button>
+                    </dd>
+                  </div>
+                </dl>
+              </section>
+
+              <section className="profile-info-card" aria-labelledby="profile-email-title">
+                <h2 id="profile-email-title" className="profile-info-card__title">
+                  Correo electrónico
+                </h2>
+                <dl className="profile-info">
+                  <div className="profile-info__row">
+                    <dt>Correo asociado</dt>
+                    <dd className={email ? undefined : "is-empty"}>{email || "Sin completar"}</dd>
+                  </div>
+                  <div className="profile-info__row">
+                    <dt>Estado</dt>
+                    <dd>{user?.emailVerified ? "Correo verificado" : "Sin verificar"}</dd>
+                  </div>
+                </dl>
+              </section>
+
+              <section className="profile-info-card" aria-labelledby="profile-account-title">
+                <h2 id="profile-account-title" className="profile-info-card__title">
+                  Cuenta
+                </h2>
+                <dl className="profile-info">
+                  <div className="profile-info__row">
+                    <dt>Eliminar cuenta</dt>
+                    <dd>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        className="profile-info__danger"
+                        onClick={() => setDeleteOpen(true)}
+                      >
+                        Eliminar cuenta
+                      </Button>
+                    </dd>
+                  </div>
+                </dl>
+              </section>
+            </div>
+          ) : null}
+
+          {tab === "estampitas" ? (
             <div className="profile-visited">
-              <UnderConstruction title="VISITADOS" />
+              <UnderConstruction title="ESTAMPITAS" />
             </div>
           ) : null}
         </div>
       </section>
+      <KeyConfirmDialog
+        open={deleteOpen}
+        title="¿Eliminar cuenta?"
+        description="Confirma si quieres eliminar tu cuenta. Esta acción todavía no se puede completar."
+        confirmLabel="Eliminar cuenta"
+        cancelLabel="Cancelar"
+        onCancel={() => setDeleteOpen(false)}
+        onConfirm={() => setDeleteOpen(false)}
+      />
     </div>
   );
 }
