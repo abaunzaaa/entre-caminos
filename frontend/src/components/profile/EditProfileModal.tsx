@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { AuthForgotModalLayout } from "../auth/AuthForgotModalLayout";
+import { AuthKeyIcon } from "../auth/AuthKeyIcon";
 import { LocationStep, type LocationStatus } from "../onboarding/LocationStep";
 import { OnboardingOptionCard } from "../onboarding/OnboardingOptionCard";
 import {
@@ -13,6 +14,7 @@ import {
 import { Button } from "../ui/Button";
 import { COMPANY_OPTIONS, INTEREST_OPTIONS, PREFERENCE_GROUPS } from "../../data/onboarding";
 import { useAuth } from "../../hooks/useAuth";
+import { showFavoriteToast } from "../../services/favorites-sync";
 import { saveOnboardingProfile } from "../../services/onboarding.service";
 import { getApiErrorMessage } from "../../utils/api-error";
 import { reverseGeocodeColombia } from "../../utils/geocode";
@@ -172,10 +174,12 @@ export function EditProfileModal({ open, onClose }: { open: boolean; onClose: ()
       });
       await saveOnboardingProfile(form, true);
       await refresh();
+      showFavoriteToast("Perfil actualizado correctamente");
       onClose();
     } catch (error) {
       savingLock.current = false;
       setSaving(false);
+      showFavoriteToast("No se pudo actualizar el perfil correctamente");
       setFormError(getApiErrorMessage(error, "No pudimos guardar tu perfil. Conservamos tus datos para reintentar."));
     }
   }
@@ -184,7 +188,9 @@ export function EditProfileModal({ open, onClose }: { open: boolean; onClose: ()
 
   return (
     <AuthForgotModalLayout titleId={titleId} className="profile-edit-modal" onClose={requestClose}>
+      <div className="profile-edit-modal__scroll">
       <header className="profile-edit-modal__header">
+        <AuthKeyIcon className="auth-recovery-icon" />
         <h1 id={titleId} className="dash-profile__name">
           Editar perfil
         </h1>
@@ -355,6 +361,7 @@ export function EditProfileModal({ open, onClose }: { open: boolean; onClose: ()
             })}
           </div>
         </section>
+      </div>
       </div>
       <footer className="profile-edit-modal__footer">
         {formError ? (

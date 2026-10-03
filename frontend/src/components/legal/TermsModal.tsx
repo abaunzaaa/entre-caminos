@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, type ReactNode } from "react";
+import { AuthKeyIcon } from "../auth/AuthKeyIcon";
 import "../../styles/terms-modal.css";
 
 const CONTACT_EMAIL = "entrecaminos.e@gmail.com";
@@ -370,6 +371,7 @@ export function TermsModal({
         </button>
 
         <header className="terms-modal__header">
+          <AuthKeyIcon className="auth-recovery-icon" />
           <p className="terms-modal__kicker">{copy.kicker}</p>
           <h2 id={titleId} className="terms-modal__title">
             {copy.title}

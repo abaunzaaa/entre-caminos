@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
+import { AuthKeyIcon } from "./AuthKeyIcon";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
 import { PasswordRequirements } from "./PasswordRequirements";
@@ -103,6 +104,7 @@ export function ChangePasswordForm({
           </p>
         ) : null}
         <div className="dash-profile__identity dash-team-invite__full">
+          {layout === "modal" ? <AuthKeyIcon className="auth-recovery-icon" /> : null}
           <h1 id={titleId} className="dash-profile__name">
             Cambiar contraseña
           </h1>
@@ -145,10 +147,10 @@ export function ChangePasswordForm({
             required
           />
         </div>
-        <div className="dash-password__actions">
+        <div className={layout === "modal" ? "dash-password__actions profile-account-actions" : "dash-password__actions"}>
           {layout === "modal" ? (
             <button type="submit" className="tourist-hero__cta" disabled={saving}>
-              {saving ? "Guardando..." : "Actualizar contraseña"}
+              {saving ? "Guardando..." : "Actualizar"}
             </button>
           ) : (
             <Button type="submit" disabled={saving}>

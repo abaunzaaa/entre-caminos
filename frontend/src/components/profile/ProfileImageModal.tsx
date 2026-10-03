@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { AuthForgotModalLayout } from "../auth/AuthForgotModalLayout";
+import { AuthKeyIcon } from "../auth/AuthKeyIcon";
 import { ProfileStep } from "../onboarding/ProfileStep";
 import { useAuth } from "../../hooks/useAuth";
+import { showFavoriteToast } from "../../services/favorites-sync";
 import { deleteOnboardingPhoto, saveOnboardingProfile, uploadOnboardingPhoto } from "../../services/onboarding.service";
 import { getApiErrorMessage } from "../../utils/api-error";
 import { prepareOnboardingPhoto } from "../../utils/onboarding-photo";
@@ -168,11 +170,15 @@ export function ProfileImageModal({ open, onClose }: { open: boolean; onClose: (
       await saveOnboardingProfile({ ...next, localPhotoUrl: null }, false);
       revokeLocal(draft.localPhotoUrl);
       await refresh();
+      showFavoriteToast(
+        next.profileImageType === "PHOTO" ? "Imagen actualizada correctamente" : "Avatar actualizado correctamente",
+      );
       onClose();
     } catch (error) {
       if (uploaded) {
         await refresh().catch(() => undefined);
       }
+      showFavoriteToast("No se pudo actualizar la imagen correctamente");
       const message = getApiErrorMessage(error, "No pudimos guardar tu imagen. Inténtalo de nuevo.");
       if (formRef.current.profileImageType === "PHOTO" && pendingFile.current) {
         setPhotoError(message);
@@ -191,6 +197,7 @@ export function ProfileImageModal({ open, onClose }: { open: boolean; onClose: (
   return (
     <AuthForgotModalLayout titleId="profile-image-title" className="profile-image-modal" onClose={discard}>
       <header className="profile-image-modal__header">
+        <AuthKeyIcon className="auth-recovery-icon" />
         <h1 id="profile-image-title" className="dash-profile__name">
           Tu imagen
         </h1>

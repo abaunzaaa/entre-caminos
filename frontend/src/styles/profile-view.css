@@ -52,13 +52,13 @@
   position: relative;
   width: 100vw;
   max-width: none;
-  height: 196px;
+  height: 232px;
   margin-top: -1px;
   margin-left: calc(50% - 50vw);
   overflow: hidden;
   border-radius: 0;
   background-color: #d7e4dc;
-  background-position: center 42%;
+  background-position: center 34%;
   background-repeat: no-repeat;
   background-size: cover;
 }
@@ -163,7 +163,7 @@
 .profile-hero__identity {
   display: flex;
   justify-content: center;
-  margin-top: 14px;
+  margin-top: 18px;
 }
 
 .profile-hero__copy {
@@ -182,7 +182,7 @@
 }
 
 .profile-hero__role {
-  margin: 8px 0 0;
+  margin: 10px 0 0;
   color: var(--profile-muted);
   font-size: 0.72rem;
   font-weight: 500;
@@ -197,7 +197,7 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  margin: 10px 0 0;
+  margin: 13px 0 0;
   color: var(--profile-forest-mid);
   font-size: 0.92rem;
   font-weight: 500;
@@ -221,7 +221,7 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
   width: min(640px, 100%);
-  margin: 22px auto 0;
+  margin: 28px auto 0;
   padding: 0;
   list-style: none;
 }
@@ -738,7 +738,7 @@
   }
 
   .profile-hero__banner {
-    height: 148px;
+    height: 174px;
     border-radius: 0;
   }
 
@@ -770,7 +770,7 @@
 
   .profile-hero__stats {
     gap: 12px 8px;
-    margin-top: 18px;
+    margin-top: 22px;
   }
 
   .profile-security__card {
@@ -843,8 +843,15 @@
   overflow: hidden;
 }
 
+.profile-edit-modal__scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  scroll-behavior: smooth;
+  scrollbar-gutter: stable;
+}
+
 .profile-edit-modal__header {
-  flex: 0 0 auto;
   padding: 1.15rem 3.25rem 0.95rem;
   text-align: center;
 }
@@ -856,12 +863,7 @@
 }
 
 .profile-edit-modal__body {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow: auto;
   padding: 0.8rem 1.35rem 1.85rem;
-  scroll-behavior: smooth;
-  scrollbar-gutter: stable;
 }
 
 .profile-edit-section + .profile-edit-section {
@@ -1093,6 +1095,7 @@
 }
 
 .auth-recovery-modal.profile-edit-modal .auth-recovery-close {
+  z-index: 3;
   width: 40px;
   height: 40px;
 }

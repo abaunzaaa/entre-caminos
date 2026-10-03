@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
+import { AuthKeyIcon } from "../auth/AuthKeyIcon";
 import bannerCategoria from "../../assets/banner_categoria.png";
 import bannerExperiencia from "../../assets/banner_experiencia.png";
 import "../../styles/contact-modal.css";
@@ -108,7 +109,11 @@ export function SuccessConfirm({
             className={`contact-success__icon contact-success__icon--${image ? "password" : variant}`}
             aria-hidden="true"
           />
-        ) : null}
+        ) : (
+          <div className="contact-success__media">
+            <AuthKeyIcon className="auth-reset-success__mark" />
+          </div>
+        )}
         <h2 id={titleId} className="contact-success__title">
           {title}
         </h2>

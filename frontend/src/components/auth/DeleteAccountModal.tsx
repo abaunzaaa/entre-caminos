@@ -1,5 +1,6 @@
 import { useEffect, useId, useState } from "react";
 import { AuthForgotModalLayout } from "./AuthForgotModalLayout";
+import { AuthKeyIcon } from "./AuthKeyIcon";
 import { SuccessConfirm } from "../feedback/SuccessConfirm";
 import { Button } from "../ui/Button";
 import { useAuth } from "../../hooks/useAuth";
@@ -56,6 +57,7 @@ export function DeleteAccountModal({ open, onClose }: { open: boolean; onClose: 
       {confirmed ? null : (
         <AuthForgotModalLayout titleId={titleId} onClose={requestClose}>
           <div className="profile-delete-modal">
+            <AuthKeyIcon className="auth-recovery-icon" />
             <div className="dash-profile__identity">
               <h1 id={titleId} className="dash-profile__name">
                 ¿Eliminar cuenta?
@@ -69,7 +71,7 @@ export function DeleteAccountModal({ open, onClose }: { open: boolean; onClose: 
                 {error}
               </p>
             ) : null}
-            <div className="dash-password__actions">
+            <div className="dash-password__actions profile-account-actions">
               <Button type="button" variant="secondary" disabled={saving} onClick={requestClose}>
                 Cancelar
               </Button>

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { Camera, KeyRound, LogOut, Building2, UserRound } from "lucide-react";
+import { AuthKeyIcon } from "../auth/AuthKeyIcon";
 import { Button } from "../ui/Button";
 import { useAuth } from "../../hooks/useAuth";
 import { roleCopy } from "../../utils/access-copy";
@@ -291,6 +292,7 @@ export function AdminUserMenu({
 
               {photoDialog === "confirm-delete" ? (
                 <>
+                  <AuthKeyIcon className="auth-recovery-icon" />
                   <h2 id="admin-photo-title" className="dash-team-confirm__title">
                     ¿Estás seguro de que deseas eliminar tu foto de perfil?
                   </h2>

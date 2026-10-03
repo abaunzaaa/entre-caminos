@@ -70,6 +70,48 @@
   margin-left: 0;
 }
 
+.auth-recovery-modal .profile-password-modal__form .dash-profile__identity {
+  align-items: center;
+  width: 100%;
+  text-align: center;
+}
+
+.auth-recovery-modal .profile-password-modal__form .dash-profile__name,
+.auth-recovery-modal .profile-password-modal__form .dash-section__lead {
+  width: 100%;
+  max-width: none;
+  text-align: center;
+}
+
+.auth-recovery-modal .profile-account-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.auth-recovery-modal .profile-account-actions > button {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 8.75rem;
+  width: 8.75rem;
+  height: 38px;
+  min-height: 38px;
+  margin: 0;
+  padding: 0 1.15rem;
+  border-radius: 999px;
+  font-family: Poppins, Nunito, system-ui, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
 .auth-recovery-modal .profile-delete-modal {
   display: grid;
   gap: 16px;
@@ -89,10 +131,6 @@
   text-align: center;
 }
 
-.auth-recovery-modal .profile-delete-modal .dash-password__actions {
-  justify-content: center;
-  width: 100%;
-}
 
 .auth-recovery-modal .profile-password-modal__error {
   position: static;

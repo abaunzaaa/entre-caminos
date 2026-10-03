@@ -730,6 +730,7 @@ export function AdministratorsPage() {
             aria-describedby="team-deactivate-copy"
             onClick={(event) => event.stopPropagation()}
           >
+            <AuthKeyIcon className="auth-recovery-icon" />
             <h2 id="team-deactivate-title" className="dash-team-confirm__title">
               ¿Estás seguro de que quieres desactivar este usuario?
             </h2>
@@ -775,6 +776,7 @@ export function AdministratorsPage() {
             aria-describedby="team-delete-copy"
             onClick={(event) => event.stopPropagation()}
           >
+            <AuthKeyIcon className="auth-recovery-icon" />
             <h2 id="team-delete-title" className="dash-team-confirm__title">
               ¿Eliminar administrador?
             </h2>

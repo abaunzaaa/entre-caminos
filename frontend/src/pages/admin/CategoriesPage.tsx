@@ -624,6 +624,7 @@ export function CategoriesPage() {
                 aria-labelledby="cat-reject-title"
                 onClick={(event) => event.stopPropagation()}
               >
+                <AuthKeyIcon className="auth-recovery-icon" />
                 <h2 id="cat-reject-title" className="dash-team-confirm__title">
                   ¿Rechazar categoría?
                 </h2>

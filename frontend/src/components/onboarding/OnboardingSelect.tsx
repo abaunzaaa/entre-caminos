@@ -109,7 +109,7 @@ export function OnboardingSelect(props: OnboardingSelectProps) {
       }
       const rect = field.getBoundingClientRect();
       const modal = field.closest(".profile-edit-modal");
-      const body = modal?.querySelector(".profile-edit-modal__body");
+      const body = modal?.querySelector(".profile-edit-modal__scroll") ?? modal?.querySelector(".profile-edit-modal__body");
       const bodyRect = body?.getBoundingClientRect();
       const footer = modal ? null : document.querySelector(".onboarding-footer");
       const viewBottom = bodyRect ? bodyRect.bottom - 6 : (footer?.getBoundingClientRect().top ?? window.innerHeight);
