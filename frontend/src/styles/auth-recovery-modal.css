@@ -65,6 +65,32 @@
     0 2px 8px rgba(24, 36, 32, 0.06);
 }
 
+.auth-recovery-modal .profile-password-modal__form {
+  width: 100%;
+  margin-left: 0;
+}
+
+.auth-recovery-modal .profile-password-modal__error {
+  position: static;
+  width: 100%;
+  margin: 0;
+  transform: none;
+  animation: none;
+}
+
+.auth-recovery-modal .tourist-hero__cta {
+  margin-top: 0;
+  border: 0;
+  cursor: pointer;
+}
+
+.auth-recovery-modal .tourist-hero__cta:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  transform: none;
+  box-shadow: none;
+}
+
 .auth-key-icon {
   display: flex;
   flex: none;

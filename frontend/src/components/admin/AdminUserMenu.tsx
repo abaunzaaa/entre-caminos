@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Camera, KeyRound, LogOut, Building2, UserRound } from "lucide-react";
 import { Button } from "../ui/Button";
 import { useAuth } from "../../hooks/useAuth";
+import { roleCopy } from "../../utils/access-copy";
 import { formatPersonName } from "../../utils/person-name";
 import type { PublicUser } from "../../types";
 import { UserAvatar } from "../user/UserAvatar";
@@ -21,16 +22,10 @@ import { cn } from "../../utils/cn";
 type PhotoDialog = "choose" | "preview" | "confirm-delete";
 
 function roleLabel(role: PublicUser["role"] | undefined) {
-  if (role === "SUPER_ADMIN") {
-    return "Super administrador";
+  if (!role) {
+    return "Administración";
   }
-  if (role === "ADMIN") {
-    return "Administrador";
-  }
-  if (role === "USER") {
-    return "Explorador";
-  }
-  return "Administración";
+  return roleCopy(role).title;
 }
 
 export function AdminUserMenu({

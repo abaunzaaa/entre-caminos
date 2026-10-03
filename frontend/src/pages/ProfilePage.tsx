@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   Cake,
   CalendarDays,
+  KeyRound,
   Leaf,
   Mail,
   MapPin,
@@ -12,6 +13,7 @@ import {
   Star,
   Stamp,
   Sun,
+  Trash2,
   UserRound,
   Users,
   VenusAndMars,
@@ -22,6 +24,7 @@ import encabezado from "../assets/encabezado.png";
 import { getPreferenceLabel } from "../data/onboarding";
 import { AvatarPreview } from "../components/onboarding/AvatarPreview";
 import { UnderConstruction } from "../components/explorer/UnderConstruction";
+import { ChangePasswordModal } from "../components/auth/ChangePasswordModal";
 import { KeyConfirmDialog } from "../components/ui/KeyConfirmDialog";
 import { useAuth } from "../hooks/useAuth";
 import { listFavoriteExperiences } from "../services/favorites.service";
@@ -32,6 +35,7 @@ import { profileToForm, type OnboardingForm } from "../utils/onboarding";
 import { roleCopy } from "../utils/access-copy";
 import { formatPersonName } from "../utils/person-name";
 import "../styles/experience-editorial-dossier.css";
+import "../styles/experience-editorial-gallery.css";
 import "../styles/onboarding.css";
 import "../styles/profile-view.css";
 
@@ -108,13 +112,14 @@ export function ProfilePage() {
   const storedName = user?.name?.trim() ?? "";
   const displayName = formatPersonName(storedName) || storedName || "Tu perfil";
   const location = profilePlace(form);
-  const roleLabel = !user || user.role === "USER" ? "Turista" : roleCopy(user.role).title;
+  const roleLabel = roleCopy(user?.role ?? "USER").title;
   const status = accountStatus(user?.status);
   const photo = form.localPhotoUrl || (form.profileImageUrl ? mediaUrl(form.profileImageUrl) : "");
   const phone = displayPhone(user?.phone);
   const email = user?.email?.trim() ?? "";
   const [tab, setTab] = useState<ProfileTab>("informacion");
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [passwordOpen, setPasswordOpen] = useState(false);
   const [favorites, setFavorites] = useState<Experience[]>([]);
   const [favoritesLoading, setFavoritesLoading] = useState(true);
   const [favoritesError, setFavoritesError] = useState("");
@@ -343,8 +348,9 @@ export function ProfilePage() {
                     <div className="dash-exps-dossier__copy">
                       <dt className="dash-exps-dossier__label">Contraseña</dt>
                       <dd className="dash-exps-dossier__value">
-                        <button type="button" className="tourist-hero__cta" onClick={() => navigate("/cambiar-contrasena")}>
-                          Cambiar contraseña
+                        <button type="button" className="dash-exps-editorial__favorite" onClick={() => setPasswordOpen(true)}>
+                          <KeyRound size={14} strokeWidth={1.8} aria-hidden="true" />
+                          <span>Cambiar contraseña</span>
                         </button>
                       </dd>
                     </div>
@@ -353,8 +359,9 @@ export function ProfilePage() {
                     <div className="dash-exps-dossier__copy">
                       <dt className="dash-exps-dossier__label">Cuenta</dt>
                       <dd className="dash-exps-dossier__value">
-                        <button type="button" className="tourist-hero__cta" onClick={() => setDeleteOpen(true)}>
-                          Eliminar cuenta
+                        <button type="button" className="dash-exps-editorial__favorite" onClick={() => setDeleteOpen(true)}>
+                          <Trash2 size={14} strokeWidth={1.8} aria-hidden="true" />
+                          <span>Eliminar cuenta</span>
                         </button>
                       </dd>
                     </div>
@@ -383,6 +390,7 @@ export function ProfilePage() {
           ) : null}
         </div>
       </section>
+      <ChangePasswordModal open={passwordOpen} onClose={() => setPasswordOpen(false)} />
       <KeyConfirmDialog
         open={deleteOpen}
         title="¿Eliminar cuenta?"
