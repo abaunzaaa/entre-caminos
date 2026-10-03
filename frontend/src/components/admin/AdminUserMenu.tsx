@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { Camera, KeyRound, LogOut, UserRound } from "lucide-react";
+import { Camera, KeyRound, LogOut, Building2, UserRound } from "lucide-react";
 import { Button } from "../ui/Button";
 import { useAuth } from "../../hooks/useAuth";
 import { formatPersonName } from "../../utils/person-name";
@@ -57,8 +57,9 @@ export function AdminUserMenu({
   const firstName = fullName.split(/\s+/)[0] || "Admin";
   const initial = nameInitial(firstName, "A");
   const isExplorerUser = user?.role === "USER";
-  const profilePath = isExplorerUser ? "/perfil" : "/admin/perfil";
-  const profileLabel = "Perfil";
+  const isOrgAdmin = user?.role === "ADMIN";
+  const profilePath = isExplorerUser ? "/perfil" : isOrgAdmin ? "/admin/empresa" : "/admin/perfil";
+  const profileLabel = isOrgAdmin ? "Perfil de empresa" : "Perfil";
 
   useEffect(() => {
     function syncPhoto() {
@@ -380,10 +381,10 @@ export function AdminUserMenu({
               navigate(profilePath);
             }}
           >
-            <UserRound size={18} strokeWidth={1.7} />
+            {isOrgAdmin ? <Building2 size={18} strokeWidth={1.7} /> : <UserRound size={18} strokeWidth={1.7} />}
             {profileLabel}
           </button>
-          {isExplorerUser ? (
+          {isExplorerUser || isOrgAdmin ? (
             <button
               type="button"
               className="admin-usermenu__item"

@@ -13,6 +13,7 @@ import {
 import { getApiErrorMessage } from "../../utils/api-error";
 import "../../styles/admin-profile-edit.css";
 import "../../styles/admin-profile-view.css";
+import "../../styles/organization-profile.css";
 
 function roleLabel(role: PublicUser["role"] | undefined) {
   if (role === "SUPER_ADMIN") {
@@ -160,6 +161,19 @@ export function AdminProfileViewPage() {
         <h1 className="admin-profile-view__title">Tu perfil</h1>
         <p className="admin-profile-view__lead">Consulta la información de tu cuenta de administración.</p>
       </div>
+
+      {user.role === "ADMIN" ? (
+        <div className="org-profile__missing" role="status">
+          <p className="org-profile__missing-title">Perfil de empresa</p>
+          <p className="org-profile__missing-text">
+            Completa el perfil empresarial para aparecer como proveedor de tus experiencias y poder enviarlas a
+            revisión.
+          </p>
+          <Button type="button" onClick={() => navigate("/admin/empresa")}>
+            Ir al perfil de empresa
+          </Button>
+        </div>
+      ) : null}
 
       {loadError ? (
         <p className="admin-profile-edit__banner" role="status">

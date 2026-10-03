@@ -1,8 +1,11 @@
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ChevronDown, Clock, ImagePlus, MapPin, Plus, X } from "lucide-react";
+import { ExperienceDatesCalendar } from "../../components/admin/ExperienceDatesCalendar";
 import { ExperienceLocationMap } from "../../components/admin/ExperienceLocationMap";
+import { ExperiencePlaceTabs } from "../../components/admin/ExperiencePlaceTabs";
 import { ExperienceStampField } from "../../components/admin/ExperienceStampField";
+import { ExperienceTimesField } from "../../components/admin/ExperienceTimesField";
 import { AuthKeyIcon } from "../../components/auth/AuthKeyIcon";
 import { SuccessConfirm } from "../../components/feedback/SuccessConfirm";
 import { Button } from "../../components/ui/Button";
@@ -15,7 +18,6 @@ import {
   findDepartment,
   findMunicipality,
   isValidDepartmentMunicipality,
-  parseStoredLocation,
 } from "../../data/colombia-locations";
 import {
   createExperience,
@@ -25,6 +27,7 @@ import {
   updateExperience,
   uploadImage,
 } from "../../services/catalog.service";
+import { getOwnOrganizationProfile } from "../../services/organization-profile.service";
 import { canEditExperience, CATEGORIES_CHANGED_EVENT } from "../../utils/admin-access";
 import { getApiErrorMessage } from "../../utils/api-error";
 import { experienceImages, mediaUrl } from "../../utils/media";
@@ -34,12 +37,21 @@ import {
   DURATION_UNITS,
   WEEKDAYS,
   availabilityLabel,
-  parseAvailability,
+  durationUnitLabel,
   parseDurationFields,
+  selectAvailability,
+  serializeAvailability,
   type DurationUnit,
   type ExperienceAvailability,
 } from "../../utils/experience-details";
 import { EXPERIENCE_CURRENCIES, isExperienceCurrency, type ExperienceCurrency } from "../../utils/currencies";
+import {
+  emptyPlace,
+  placeHasContent,
+  placeTabLabel,
+  placesFromExperience,
+  type ExperiencePlaceDraft,
+} from "../../utils/experience-places";
 import type { Category, ExperienceStatus } from "../../types";
 import superadmIlus2 from "../../assets/superadm-ilus2.png";
 import "../../styles/admin-access.css";
@@ -245,7 +257,7 @@ function CategoryMultiPicker({
             setQuery("");
           }}
         >
-          <span>{ordered.length ? "Categorías seleccionadas" : "Seleccionar categorías"}</span>
+          <span>{ordered.length ? "Categorías seleccionadas" : "Seleccionar"}</span>
           <ChevronDown size={18} strokeWidth={1.7} aria-hidden="true" />
         </button>
         {ordered.length ? (
@@ -303,6 +315,7 @@ export function ExperienceFormPage() {
   const isSuperAdmin = user?.role === "SUPER_ADMIN";
   const [categories, setCategories] = useState<Category[]>([]);
   const [error, setError] = useState("");
+  const [orgProfileMissing, setOrgProfileMissing] = useState<string[] | null>(null);
   const [saving, setSaving] = useState(false);
   const [createdOpen, setCreatedOpen] = useState(false);
   const [createdPendingReview, setCreatedPendingReview] = useState(true);
@@ -324,9 +337,11 @@ export function ExperienceFormPage() {
   const [externalUrl, setExternalUrl] = useState("");
   const [durationValue, setDurationValue] = useState("");
   const [durationUnit, setDurationUnit] = useState<DurationUnit>("HOURS");
-  const [availability, setAvailability] = useState<ExperienceAvailability>({ type: "EVERY_DAY" });
-  const [nextDate, setNextDate] = useState("");
+  const [availability, setAvailability] = useState<ExperienceAvailability>({ type: "EVERY_DAY", times: [] });
+  const [places, setPlaces] = useState<ExperiencePlaceDraft[]>(() => [emptyPlace()]);
+  const [activePlace, setActivePlace] = useState(0);
   const [howToGetThere, setHowToGetThere] = useState("");
+  const [companyContact, setCompanyContact] = useState("");
   const [latitude, setLatitude] = useState("");
   const [longitude, setLongitude] = useState("");
   const [geocodedLabel, setGeocodedLabel] = useState("");
@@ -338,11 +353,11 @@ export function ExperienceFormPage() {
   const reverseSeq = useRef(0);
   const geocodeTrigger = useRef<"user" | "pin" | "load">("user");
   const locationRef = useRef({ municipality: "", department: "" });
+  const availabilityDirty = useRef(false);
   locationRef.current = { municipality, department };
 
   const selectedDepartment = findDepartment(department);
   const cityOptions = selectedDepartment?.cities ?? EMPTY_CITIES;
-  const locationLabel = composeLocation(address, municipality, department);
   const latNumber = latitude ? Number(latitude) : null;
   const lngNumber = longitude ? Number(longitude) : null;
   const hasMapPoint = Number.isFinite(latNumber) && Number.isFinite(lngNumber);
@@ -377,42 +392,182 @@ export function ExperienceFormPage() {
   }, []);
 
   useEffect(() => {
-    if (id) {
-      getAdminExperience(id)
-        .then((experience) => {
-          const parsed = parseStoredLocation(experience.location);
-          const loadedDepartment = findDepartment(parsed.department)?.name ?? "";
-          const loadedMunicipality = loadedDepartment
-            ? findMunicipality(loadedDepartment, parsed.municipality)
-            : "";
-          setTitle(experience.title);
-          setDescription(experience.description);
-          const links = [...(experience.experienceCategories ?? [])].sort((left, right) => left.position - right.position);
-          setCategoryIds(links.length ? links.map((link) => link.categoryId) : experience.categoryId ? [experience.categoryId] : []);
-          setCategoryLimitOpen(false);
-          setPrice(String(experience.price));
-          setCurrency(experience.currency && isExperienceCurrency(experience.currency) ? experience.currency : "COP");
-          setDepartment(loadedDepartment);
-          setMunicipality(loadedMunicipality);
-          setAddress(parsed.address);
-          setExternalUrl(experience.externalUrl ?? "");
-          const parsedDuration = parseDurationFields(experience);
-          setDurationValue(parsedDuration.value);
-          setDurationUnit(parsedDuration.unit);
-          setAvailability(parseAvailability(experience.availability));
-          setHowToGetThere(experience.howToGetThere ?? "");
-          geocodeTrigger.current = "load";
-          setLatitude(experience.latitude ? String(experience.latitude) : "");
-          setLongitude(experience.longitude ? String(experience.longitude) : "");
-          setGeocodeStatus(experience.latitude && experience.longitude ? "manual" : "idle");
-          setGeocodedLabel("");
-          setImageUrls(experienceImages(experience));
-          setStampImageUrl(experience.stampImageUrl ?? null);
-          setStatus(experience.status);
-          setRejectionReason(experience.rejectionReason ?? "");
-        })
-        .catch((err) => setError(getApiErrorMessage(err, "No se pudo cargar")));
+    if (!isAdministrator) {
+      setOrgProfileMissing(null);
+      return;
     }
+    let cancelled = false;
+    getOwnOrganizationProfile()
+      .then((profile) => {
+        if (cancelled) {
+          return;
+        }
+        if (!profile?.complete) {
+          setOrgProfileMissing(
+            profile?.missingFields?.length
+              ? profile.missingFields
+              : [
+                  "Nombre comercial",
+                  "Descripción de la empresa",
+                  "Teléfono público de contacto",
+                  "Departamento",
+                  "Municipio",
+                ],
+          );
+          return;
+        }
+        setOrgProfileMissing(null);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setOrgProfileMissing([
+            "Nombre comercial",
+            "Descripción de la empresa",
+            "Teléfono público de contacto",
+            "Departamento",
+            "Municipio",
+          ]);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isAdministrator]);
+
+  function editAvailability(updater: (current: ExperienceAvailability) => ExperienceAvailability) {
+    availabilityDirty.current = true;
+    setAvailability(updater);
+  }
+
+  function captureActivePlace(source = places): ExperiencePlaceDraft[] {
+    return source.map((place, index) =>
+      index === activePlace
+        ? {
+            ...place,
+            department,
+            municipality,
+            address,
+            latitude,
+            longitude,
+            geocodeStatus,
+            geocodedLabel,
+            howToGetThere,
+            availability,
+          }
+        : place,
+    );
+  }
+
+  function applyPlace(place: ExperiencePlaceDraft) {
+    geocodeTrigger.current = "load";
+    setDepartment(place.department);
+    setMunicipality(place.municipality);
+    setAddress(place.address);
+    setLatitude(place.latitude);
+    setLongitude(place.longitude);
+    setGeocodeStatus(place.geocodeStatus);
+    setGeocodedLabel(place.geocodedLabel);
+    setHowToGetThere(place.howToGetThere);
+    setAvailability(place.availability);
+  }
+
+  function selectPlace(index: number) {
+    if (index === activePlace || index < 0 || index >= places.length) {
+      return;
+    }
+    availabilityDirty.current = true;
+    const nextPlaces = captureActivePlace();
+    setPlaces(nextPlaces);
+    setActivePlace(index);
+    applyPlace(nextPlaces[index]);
+  }
+
+  function addPlace() {
+    if (places.length >= 8) {
+      setError("Puedes agregar máximo 8 ubicaciones.");
+      return;
+    }
+    availabilityDirty.current = true;
+    const nextPlaces = [...captureActivePlace(), emptyPlace()];
+    const index = nextPlaces.length - 1;
+    setPlaces(nextPlaces);
+    setActivePlace(index);
+    applyPlace(nextPlaces[index]);
+    setError("");
+  }
+
+  function removePlace(index: number) {
+    if (places.length < 2) {
+      return;
+    }
+    const current = captureActivePlace();
+    const place = current[index];
+    if (
+      placeHasContent(place) &&
+      !window.confirm(`¿Quitar ${placeTabLabel(place, index, current)}? Se perderán su dirección, mapa y disponibilidad.`)
+    ) {
+      return;
+    }
+    availabilityDirty.current = true;
+    const nextPlaces = current.filter((_, itemIndex) => itemIndex !== index);
+    const nextIndex = Math.min(index, nextPlaces.length - 1);
+    setPlaces(nextPlaces);
+    setActivePlace(nextIndex);
+    applyPlace(nextPlaces[nextIndex]);
+  }
+
+  useEffect(() => {
+    if (!id) {
+      return;
+    }
+    let ignore = false;
+    availabilityDirty.current = false;
+    getAdminExperience(id)
+      .then((experience) => {
+        if (ignore) {
+          return;
+        }
+        setTitle(experience.title);
+        setDescription(experience.description);
+        const links = [...(experience.experienceCategories ?? [])].sort((left, right) => left.position - right.position);
+        setCategoryIds(links.length ? links.map((link) => link.categoryId) : experience.categoryId ? [experience.categoryId] : []);
+        setCategoryLimitOpen(false);
+        setPrice(String(experience.price));
+        setCurrency(experience.currency && isExperienceCurrency(experience.currency) ? experience.currency : "COP");
+        setExternalUrl(experience.externalUrl ?? "");
+        const parsedDuration = parseDurationFields(experience);
+        setDurationValue(parsedDuration.value);
+        setDurationUnit(parsedDuration.unit);
+        if (!availabilityDirty.current) {
+          const loadedPlaces = placesFromExperience(experience);
+          const first = loadedPlaces[0];
+          geocodeTrigger.current = "load";
+          setPlaces(loadedPlaces);
+          setActivePlace(0);
+          setDepartment(first.department);
+          setMunicipality(first.municipality);
+          setAddress(first.address);
+          setLatitude(first.latitude);
+          setLongitude(first.longitude);
+          setGeocodeStatus(first.geocodeStatus);
+          setGeocodedLabel("");
+          setHowToGetThere(first.howToGetThere);
+          setAvailability(first.availability);
+        }
+        setCompanyContact(experience.companyContact ?? "");
+        setImageUrls(experienceImages(experience));
+        setStampImageUrl(experience.stampImageUrl ?? null);
+        setStatus(experience.status);
+        setRejectionReason(experience.rejectionReason ?? "");
+      })
+      .catch((err) => {
+        if (!ignore) {
+          setError(getApiErrorMessage(err, "No se pudo cargar"));
+        }
+      });
+    return () => {
+      ignore = true;
+    };
   }, [id]);
 
   const applyReverseGeocode = useCallback(async (nextLat: number, nextLng: number) => {
@@ -546,6 +701,12 @@ export function ExperienceFormPage() {
       return;
     }
     setError("");
+    if (isAdministrator && submitToReview && orgProfileMissing?.length) {
+      setError(
+        `Completa el perfil de empresa antes de enviar a revisión. Faltan: ${orgProfileMissing.join(", ")}.`,
+      );
+      return;
+    }
     if (categoryIds.length < 1) {
       setError("Selecciona una categoría.");
       return;
@@ -554,14 +715,36 @@ export function ExperienceFormPage() {
       setError("Puedes seleccionar máximo 3 categorías por experiencia.");
       return;
     }
-    if (!department || !municipality || !address.trim()) {
-      setError("Completa departamento, municipio y dirección.");
-      return;
+    const savedPlaces = captureActivePlace();
+    setPlaces(savedPlaces);
+    for (const [index, place] of savedPlaces.entries()) {
+      const name = placeTabLabel(place, index, savedPlaces);
+      if (!place.department || !place.municipality || !place.address.trim()) {
+        setActivePlace(index);
+        applyPlace(place);
+        setError(`Completa departamento, municipio y dirección de ${name}.`);
+        return;
+      }
+      if (!isValidDepartmentMunicipality(place.department, place.municipality)) {
+        setActivePlace(index);
+        applyPlace(place);
+        setError(`Selecciona un municipio que pertenezca al departamento de ${name}.`);
+        return;
+      }
+      if (place.availability.type === "WEEKDAYS" && place.availability.days.length === 0) {
+        setActivePlace(index);
+        applyPlace(place);
+        setError(`Selecciona al menos un día de la semana en ${name}.`);
+        return;
+      }
+      if (place.availability.type === "DATES" && place.availability.dates.length === 0) {
+        setActivePlace(index);
+        applyPlace(place);
+        setError(`Agrega al menos una fecha disponible en ${name}.`);
+        return;
+      }
     }
-    if (!isValidDepartmentMunicipality(department, municipality)) {
-      setError("Selecciona un municipio que pertenezca al departamento.");
-      return;
-    }
+    const primary = savedPlaces[0];
     if (imageUrls.length < MIN_EXPERIENCE_IMAGES) {
       setError(MIN_EXPERIENCE_IMAGES_MESSAGE);
       return;
@@ -579,12 +762,8 @@ export function ExperienceFormPage() {
         return;
       }
     }
-    if (availability.type === "WEEKDAYS" && availability.days.length === 0) {
-      setError("Selecciona al menos un día de la semana.");
-      return;
-    }
-    if (availability.type === "DATES" && availability.dates.length === 0) {
-      setError("Agrega al menos una fecha disponible.");
+    if (!companyContact.trim()) {
+      setError("Ingresa el contacto de la empresa.");
       return;
     }
     if (!price.trim()) {
@@ -606,14 +785,24 @@ export function ExperienceFormPage() {
       categoryIds,
       price: Number(price.replace(",", ".")),
       currency,
-      location: locationLabel,
-      latitude: latitude ? Number(latitude) : null,
-      longitude: longitude ? Number(longitude) : null,
+      location: composeLocation(primary.address, primary.municipality, primary.department),
+      latitude: primary.latitude ? Number(primary.latitude) : null,
+      longitude: primary.longitude ? Number(primary.longitude) : null,
       externalUrl: externalUrl.trim() || null,
       durationValue: durationValue ? Number(durationValue) : null,
       durationUnit: durationValue ? durationUnit : null,
-      availability,
-      howToGetThere: howToGetThere.trim() || null,
+      availability: serializeAvailability(primary.availability),
+      howToGetThere: primary.howToGetThere.trim() || null,
+      locations: savedPlaces.map((place) => ({
+        department: place.department,
+        municipality: place.municipality,
+        address: place.address.trim(),
+        latitude: place.latitude ? Number(place.latitude) : null,
+        longitude: place.longitude ? Number(place.longitude) : null,
+        howToGetThere: place.howToGetThere.trim() || null,
+        availability: serializeAvailability(place.availability),
+      })),
+      companyContact: companyContact.trim(),
       imageUrl: imageUrls[0] || null,
       imageUrls,
       stampImageUrl,
@@ -644,6 +833,8 @@ export function ExperienceFormPage() {
     await persist(!id || status === "REJECTED" || status === "DRAFT");
   }
 
+  const shownPlaces = captureActivePlace();
+
   return (
     <div className="dash dash--exps">
       <article className="dash-profile">
@@ -669,12 +860,36 @@ export function ExperienceFormPage() {
       </article>
 
       <section className="dash-exps-studio" aria-label="Formulario de experiencia">
+        {isAdministrator && orgProfileMissing?.length ? (
+          <div className="dash-profile__row" role="status" style={{ gridColumn: "1 / -1", marginBottom: "0.75rem" }}>
+            <p>
+              Tu perfil de empresa está incompleto. Completa{" "}
+              <button
+                type="button"
+                style={{
+                  border: 0,
+                  padding: 0,
+                  background: "transparent",
+                  color: "#294942",
+                  fontWeight: 650,
+                  textDecoration: "underline",
+                  cursor: "pointer",
+                }}
+                onClick={() => navigate("/admin/empresa")}
+              >
+                Perfil de empresa
+              </button>{" "}
+              antes de enviar experiencias a revisión. Faltan: {orgProfileMissing.join(", ")}.
+            </p>
+          </div>
+        ) : null}
         <aside className="dash-split__panel dash-exps-mapcard" aria-label="Ubicación en el mapa">
           <div className="dash-exps-mapwrap">
             <ExperienceLocationMap
               latitude={hasMapPoint ? latNumber : selectedDepartment?.lat ?? 4.570868}
               longitude={hasMapPoint ? lngNumber : selectedDepartment?.lng ?? -74.297333}
               zoom={mapZoom}
+              key={shownPlaces[activePlace]?.key ?? "place"}
               onChange={(nextLat, nextLng) => {
                 reverseSeq.current += 1;
                 geocodeTrigger.current = "pin";
@@ -723,10 +938,24 @@ export function ExperienceFormPage() {
                 onChange={setCategoryIds}
                 onLimit={() => setCategoryLimitOpen(true)}
               />
+            </div>
+            <ExperiencePlaceTabs
+              label="Ubicaciones"
+              tabs={shownPlaces.map((place, index) => placeTabLabel(place, index, shownPlaces))}
+              active={activePlace}
+              onSelect={selectPlace}
+              onAdd={addPlace}
+            />
+            {places.length > 1 ? (
+              <button type="button" className="dash-exps-places__remove" onClick={() => removePlace(activePlace)}>
+                Quitar esta ubicación
+              </button>
+            ) : null}
+            <div className="dash-exps-form__grid">
               <FieldPicker
                 label="Departamento"
                 value={department}
-                placeholder="Seleccionar departamento"
+                placeholder="Seleccionar"
                 options={COLOMBIA_DEPARTMENTS.map((item) => item.name)}
                 searchable
                 onChange={(value) => {
@@ -773,13 +1002,97 @@ export function ExperienceFormPage() {
               placeholder="Calle, carrera, vereda o punto de referencia"
               required
             />
-            <div className="dash-exps-form__grid dash-exps-form__grid--link">
+            <Textarea
+              label="Cómo llegar"
+              value={howToGetThere}
+              onChange={(e) => setHowToGetThere(e.target.value)}
+              placeholder="Ruta recomendada, transporte público cercano, punto de referencia e indicaciones adicionales."
+            />
+            <FieldPicker
+              label="Próximas fechas / disponibilidad"
+              value={availabilityLabel(availability.type)}
+              placeholder="Seleccionar"
+              options={AVAILABILITY_TYPES.map((item) => item.label)}
+              onChange={(label) => {
+                const next = AVAILABILITY_TYPES.find((item) => item.label === label)?.id ?? "EVERY_DAY";
+                editAvailability((current) => selectAvailability(current, next));
+              }}
+            />
+            {availability.type === "WEEKDAYS" ? (
+              <div className="dash-exps-days" role="group" aria-label="Días de la semana">
+                {WEEKDAYS.map((day) => (
+                  <button
+                    key={day}
+                    type="button"
+                    className={availability.days.includes(day) ? "is-active" : ""}
+                    onClick={() => {
+                      editAvailability((current) => {
+                        if (current.type !== "WEEKDAYS") {
+                          return current;
+                        }
+                        const selected = current.days.includes(day)
+                          ? current.days.filter((item) => item !== day)
+                          : [...current.days, day];
+                        return {
+                          type: "WEEKDAYS",
+                          days: WEEKDAYS.filter((item) => selected.includes(item)),
+                          times: current.times,
+                        };
+                      });
+                    }}
+                  >
+                    {day}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+            {availability.type === "DATES" ? (
+              <ExperienceDatesCalendar
+                dates={availability.dates}
+                onChange={(dates) =>
+                  editAvailability((current) =>
+                    current.type === "DATES" ? { type: "DATES", dates, times: current.times } : current,
+                  )
+                }
+              />
+            ) : null}
+            {availability.type === "COMING_SOON" ? (
+              <p className="dash-exps-calendar__hint">Esta experiencia aún no tiene una fecha confirmada.</p>
+            ) : (
+              <ExperienceTimesField
+                times={availability.times}
+                onChange={(times) => {
+                  editAvailability((current) => {
+                    if (current.type === "COMING_SOON") {
+                      return current;
+                    }
+                    if (current.type === "WEEKDAYS") {
+                      return { type: "WEEKDAYS", days: current.days, times };
+                    }
+                    if (current.type === "DATES") {
+                      return { type: "DATES", dates: current.dates, times };
+                    }
+                    return { type: "EVERY_DAY", times };
+                  });
+                }}
+              />
+            )}
+            <div className="dash-exps-form__grid">
+              <Input
+                label="Contacto de la empresa"
+                value={companyContact}
+                onChange={(e) => setCompanyContact(e.target.value)}
+                placeholder="Teléfono, WhatsApp o medio de contacto"
+                required
+              />
               <Input
                 label="Enlace de la experiencia"
                 value={externalUrl}
                 onChange={(e) => setExternalUrl(e.target.value)}
-                placeholder="Página oficial, WhatsApp o Instagram"
+                placeholder="Página oficial, WhatsApp o enlace"
               />
+            </div>
+            <div className="dash-exps-form__grid">
               <label className="dash-exps-duration">
                 <span className="dash-exps-duration__label">Duración de la actividad</span>
                 <input
@@ -815,127 +1128,17 @@ export function ExperienceFormPage() {
                   }}
                 />
               </label>
-              <label className="dash-exps-duration">
-                <span className="dash-exps-duration__label">Unidad</span>
-                <select
-                  className="dash-exps-duration__unit"
-                  name="durationUnit"
-                  aria-label="Unidad de tiempo"
-                  value={durationUnit}
-                  onChange={(event) => setDurationUnit(event.target.value as DurationUnit)}
-                >
-                  {DURATION_UNITS.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <FieldPicker
+                label="Unidad"
+                value={durationUnitLabel(durationUnit)}
+                placeholder="Seleccionar"
+                options={DURATION_UNITS.map((item) => item.label)}
+                onChange={(label) => {
+                  const next = DURATION_UNITS.find((item) => item.label === label)?.id ?? "HOURS";
+                  setDurationUnit(next);
+                }}
+              />
             </div>
-            <FieldPicker
-              label="Próximas fechas / disponibilidad"
-              value={availabilityLabel(availability.type)}
-              placeholder="Selecciona la disponibilidad"
-              options={AVAILABILITY_TYPES.map((item) => item.label)}
-              onChange={(label) => {
-                const next = AVAILABILITY_TYPES.find((item) => item.label === label)?.id ?? "EVERY_DAY";
-                if (next === "WEEKDAYS") {
-                  setAvailability({
-                    type: "WEEKDAYS",
-                    days: availability.type === "WEEKDAYS" ? availability.days : [],
-                  });
-                  return;
-                }
-                if (next === "DATES") {
-                  setAvailability({
-                    type: "DATES",
-                    dates: availability.type === "DATES" ? availability.dates : [],
-                  });
-                  return;
-                }
-                setAvailability({ type: "EVERY_DAY" });
-              }}
-            />
-            {availability.type === "WEEKDAYS" ? (
-              <div className="dash-exps-days" role="group" aria-label="Días de la semana">
-                {WEEKDAYS.map((day) => (
-                  <button
-                    key={day}
-                    type="button"
-                    className={availability.days.includes(day) ? "is-active" : ""}
-                    onClick={() => {
-                      const selected = availability.days.includes(day)
-                        ? availability.days.filter((item) => item !== day)
-                        : [...availability.days, day];
-                      setAvailability({
-                        type: "WEEKDAYS",
-                        days: WEEKDAYS.filter((item) => selected.includes(item)),
-                      });
-                    }}
-                  >
-                    {day}
-                  </button>
-                ))}
-              </div>
-            ) : null}
-            {availability.type === "DATES" ? (
-              <div className="dash-exps-dates">
-                <div className="dash-exps-dates__row">
-                  <Input
-                    label="Fecha"
-                    type="date"
-                    value={nextDate}
-                    onChange={(e) => setNextDate(e.target.value)}
-                  />
-                  <button
-                    type="button"
-                    className="dash-exps-dates__add"
-                    onClick={() => {
-                      if (!/^\d{4}-\d{2}-\d{2}$/.test(nextDate) || availability.dates.includes(nextDate)) {
-                        return;
-                      }
-                      setAvailability({
-                        type: "DATES",
-                        dates: [...availability.dates, nextDate].sort(),
-                      });
-                      setNextDate("");
-                    }}
-                  >
-                    Agregar fecha
-                  </button>
-                </div>
-                {availability.dates.length ? (
-                  <div className="dash-exps-dates__chips">
-                    {availability.dates.map((date) => {
-                      const [year, month, day] = date.split("-");
-                      return (
-                        <span key={date} className="dash-exps-dates__chip">
-                          {`${day}/${month}/${year}`}
-                          <button
-                            type="button"
-                            aria-label={`Quitar ${date}`}
-                            onClick={() =>
-                              setAvailability({
-                                type: "DATES",
-                                dates: availability.dates.filter((item) => item !== date),
-                              })
-                            }
-                          >
-                            ×
-                          </button>
-                        </span>
-                      );
-                    })}
-                  </div>
-                ) : null}
-              </div>
-            ) : null}
-            <Textarea
-              label="Cómo llegar"
-              value={howToGetThere}
-              onChange={(e) => setHowToGetThere(e.target.value)}
-              placeholder="Ruta recomendada, transporte público cercano, punto de referencia e indicaciones adicionales."
-            />
             <Textarea
               label="Descripción"
               className="dash-exps-desc min-h-0 resize-none overflow-y-auto"
@@ -1123,27 +1326,18 @@ export function ExperienceFormPage() {
                   }}
                 />
               </label>
-              <label className="dash-exps-duration">
-                <span className="dash-exps-duration__label">Moneda</span>
-                <select
-                  className="dash-exps-duration__unit"
-                  name="currency"
-                  aria-label="Moneda"
-                  value={currency}
-                  required
-                  onChange={(event) => {
-                    if (isExperienceCurrency(event.target.value)) {
-                      setCurrency(event.target.value);
-                    }
-                  }}
-                >
-                  {EXPERIENCE_CURRENCIES.map((item) => (
-                    <option key={item.code} value={item.code}>
-                      {item.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <FieldPicker
+                label="Moneda"
+                value={EXPERIENCE_CURRENCIES.find((item) => item.code === currency)?.label ?? ""}
+                placeholder="Seleccionar"
+                options={EXPERIENCE_CURRENCIES.map((item) => item.label)}
+                onChange={(label) => {
+                  const next = EXPERIENCE_CURRENCIES.find((item) => item.label === label)?.code;
+                  if (next) {
+                    setCurrency(next);
+                  }
+                }}
+              />
             </div>
           </div>
           {status === "REJECTED" && rejectionReason ? (

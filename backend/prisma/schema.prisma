@@ -115,12 +115,37 @@ model User {
   experienceFavorites      ExperienceFavorite[]
   experienceVisitorReviews ExperienceVisitorReview[]
   favoriteCollections      FavoriteCollection[]
+  organizationProfile      OrganizationProfile?
 
   @@index([roleId])
   @@index([status])
   @@index([createdAt])
   @@index([deletedAt])
   @@map("users")
+}
+
+/// Perfil empresarial de una cuenta ADMIN (1:1). No aplica a SUPER_ADMIN ni a USER.
+model OrganizationProfile {
+  id                 String   @id @default(uuid())
+  userId             String   @unique @map("user_id")
+  tradeName          String?  @map("trade_name")
+  legalName          String?  @map("legal_name")
+  description        String?
+  logoUrl            String?  @map("logo_url")
+  logoPublicId       String?  @map("logo_public_id")
+  contactPhone       String?  @map("contact_phone")
+  contactEmail       String?  @map("contact_email")
+  website            String?
+  department         String?
+  city               String?
+  address            String?
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tradeName])
+  @@map("organization_profiles")
 }
 
 model Category {
@@ -161,6 +186,7 @@ model Experience {
   durationUnit    DurationUnit?    @map("duration_unit")
   availability    Json?
   howToGetThere   String?          @map("how_to_get_there")
+  companyContact  String?          @map("company_contact")
   imageUrl        String?          @map("image_url")
   imageUrls       String[]         @default([]) @map("image_urls")
   stampImageUrl   String?          @map("stamp_image_url")
@@ -181,6 +207,7 @@ model Experience {
   /// La fuente principal de categorías es experienceCategories.
   category                 Category                  @relation(fields: [categoryId], references: [id])
   experienceCategories     ExperienceCategory[]
+  locations                ExperienceLocation[]
   creator                  User                      @relation(fields: [createdBy], references: [id])
   reviewedBy               User?                     @relation("ExperienceReviewedBy", fields: [reviewedById], references: [id])
   reviews                  ExperienceReview[]
@@ -197,6 +224,28 @@ model Experience {
   @@index([submittedAt])
   @@index([isFeatured, featuredOrder])
   @@map("experiences")
+}
+
+/// Sedes de una experiencia. La primera también se refleja en location, coordenadas, availability y howToGetThere.
+model ExperienceLocation {
+  id            String   @id @default(uuid())
+  experienceId  String   @map("experience_id")
+  position      Int
+  department    String
+  municipality  String
+  address       String   @default("")
+  latitude      Decimal? @db.Decimal(10, 7)
+  longitude     Decimal? @db.Decimal(10, 7)
+  howToGetThere String?  @map("how_to_get_there")
+  availability  Json?
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  experience Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+
+  @@unique([experienceId, position])
+  @@index([experienceId])
+  @@map("experience_locations")
 }
 
 /// Categorías de una experiencia, en el orden en que se registraron. Máximo 3.

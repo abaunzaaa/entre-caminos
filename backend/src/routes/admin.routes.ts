@@ -17,6 +17,8 @@ import {
   createRoleSchema,
   updateAdminSchema,
 } from "../validators/admin.validator.js";
+import { organizationProfileUpsertSchema } from "../validators/organization-profile.validator.js";
+import * as organizationProfileController from "../controllers/organization-profile.controller.js";
 import {
   editorialFeaturedSchema,
   featureExperienceSchema,
@@ -29,6 +31,24 @@ export const adminRouter = Router();
 
 adminRouter.use(authMiddleware);
 adminRouter.use(roleMiddleware([ROLES.SUPER_ADMIN, ROLES.ADMIN]));
+
+adminRouter.get("/organization-profile", asyncHandler(organizationProfileController.getOwn));
+adminRouter.put(
+  "/organization-profile",
+  validate(organizationProfileUpsertSchema),
+  asyncHandler(organizationProfileController.upsertOwn),
+);
+adminRouter.get(
+  "/organization-profiles/:userId",
+  roleMiddleware([ROLES.SUPER_ADMIN]),
+  asyncHandler(organizationProfileController.getByUserId),
+);
+adminRouter.put(
+  "/organization-profiles/:userId",
+  roleMiddleware([ROLES.SUPER_ADMIN]),
+  validate(organizationProfileUpsertSchema),
+  asyncHandler(organizationProfileController.upsertByUserId),
+);
 
 adminRouter.get(
   "/dashboard",

@@ -89,6 +89,18 @@ export type Experience = {
   durationUnit?: "MINUTES" | "HOURS" | "DAYS" | null;
   availability?: unknown;
   howToGetThere?: string | null;
+  companyContact?: string | null;
+  locations?: Array<{
+    id?: string;
+    position?: number;
+    department?: string | null;
+    municipality?: string | null;
+    address?: string | null;
+    latitude?: string | number | null;
+    longitude?: string | number | null;
+    howToGetThere?: string | null;
+    availability?: unknown;
+  }>;
   imageUrl: string | null;
   imageUrls?: string[];
   stampImageUrl?: string | null;
@@ -102,8 +114,26 @@ export type Experience = {
   category?: Category;
   categories?: Category[];
   experienceCategories?: Array<{ position: number; categoryId: string; category: Category }>;
-  creator?: { id: string; name: string; email: string; avatarUrl?: string | null };
+  creator?: {
+    id: string;
+    name: string;
+    email?: string | null;
+    avatarUrl?: string | null;
+    organization?: PublicOrganizationProfile | null;
+  };
   reviewedBy?: { id: string; name: string; email: string } | null;
+};
+
+export type PublicOrganizationProfile = {
+  tradeName: string;
+  description: string;
+  logoUrl: string | null;
+  department: string;
+  city: string;
+  contactPhone: string | null;
+  contactEmail: string | null;
+  website: string | null;
+  address: string | null;
 };
 
 export type AdminNotification = {

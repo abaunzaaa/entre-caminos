@@ -40,11 +40,25 @@ function formatAvailability(value: unknown) {
   }
   if (typeof value === "object") {
     const record = value as Record<string, unknown>;
-    if (Array.isArray(record.days)) {
-      return record.days.map(String).join(", ");
+    const times = Array.isArray(record.times)
+      ? record.times.filter((item): item is string => typeof item === "string").join(", ")
+      : "";
+    if (record.type === "COMING_SOON") {
+      return "Próximamente";
+    }
+    if (record.type === "EVERY_DAY") {
+      return times ? `Todos los días · Horarios: ${times}` : "Todos los días";
+    }
+    if (record.type === "WEEKDAYS" && Array.isArray(record.days)) {
+      const days = record.days.map(String).join(", ");
+      return times ? `${days} · Horarios: ${times}` : days;
     }
     if (Array.isArray(record.availableDays)) {
       return record.availableDays.map(String).join(", ");
+    }
+    if (record.type === "DATES" && Array.isArray(record.dates)) {
+      const dates = record.dates.map(String).join(", ");
+      return times ? `${dates} · Horarios: ${times}` : dates;
     }
     try {
       return JSON.stringify(value).slice(0, 280);

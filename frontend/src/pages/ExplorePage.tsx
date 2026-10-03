@@ -12,10 +12,12 @@ import { experienceCoverUrl } from "../components/explorer/explorer-media";
 import { useGuide } from "../components/guide/GuideContext";
 import { useAuth } from "../hooks/useAuth";
 import { useInViewReveal } from "../hooks/useInViewReveal";
-import avionIcon from "../assets/avion-icon.png";
-import camIcon from "../assets/cam-icon.png";
+import footerUser from "../assets/footer-user.png";
 import descubreIcon from "../assets/icon-descubre.png";
+import brandLogo from "../assets/logo.png";
 import mapaIcon from "../assets/mapa-icon.png";
+import paloma1 from "../assets/paloma1.png";
+import paloma2 from "../assets/paloma 2.png";
 import { getCoverFeaturedExperiences, getPublicExperiences, getRecommendedExperiences } from "../services/catalog.service";
 import { listFavoriteExperiences } from "../services/favorites.service";
 import { onFavoritesChanged } from "../services/favorites-sync";
@@ -100,10 +102,9 @@ export function ExplorePage() {
     let cancelled = false;
     getCoverFeaturedExperiences()
       .then((items) => {
-        if (cancelled || items.length === 0) {
-          return;
+        if (!cancelled) {
+          setCoverFeatured(items);
         }
-        setCoverFeatured(items);
       })
       .catch(() => {
         if (!cancelled) {
@@ -381,43 +382,61 @@ export function ExplorePage() {
             })}
           </div>
         )}
+        <img
+          className="explorer-map__dove explorer-map__dove--left explorer-reveal explorer-reveal--soft"
+          src={paloma1}
+          alt=""
+          aria-hidden="true"
+          decoding="async"
+          style={{ "--reveal-delay": "260ms" } as CSSProperties}
+        />
+        <img
+          className="explorer-map__dove explorer-map__dove--right explorer-reveal explorer-reveal--soft"
+          src={paloma2}
+          alt=""
+          aria-hidden="true"
+          decoding="async"
+          style={{ "--reveal-delay": "300ms" } as CSSProperties}
+        />
       </section>
 
-      <section
+      <footer
         ref={storiesRef}
-        className={`explorer-stories explorer-reveal-scope${storiesRevealed ? " is-revealed" : ""}`}
+        className={`explorer-user-footer explorer-reveal-scope${storiesRevealed ? " is-revealed" : ""}`}
         aria-labelledby="explorer-stories-title"
       >
-        <div className="explorer-stories__inner">
-          <img
-            className="explorer-stories__icon explorer-stories__icon--cam explorer-reveal explorer-reveal--soft"
-            src={camIcon}
-            alt=""
-            aria-hidden="true"
-            style={{ "--reveal-delay": "0ms" } as CSSProperties}
-          />
-          <h2
-            className="explorer-discover-title explorer-reveal explorer-reveal--title"
-            id="explorer-stories-title"
-            style={{ "--reveal-delay": "80ms" } as CSSProperties}
-          >
-            Entre caminos, nacen historias
-          </h2>
-          <p
-            className="explorer-section__lead explorer-reveal explorer-reveal--soft"
-            style={{ "--reveal-delay": "150ms" } as CSSProperties}
-          >
-            A veces, solo hace falta elegir un lugar, salir de la rutina y dejar que una nueva experiencia te encuentre.
-          </p>
-          <img
-            className="explorer-stories__icon explorer-stories__icon--plane explorer-reveal explorer-reveal--soft"
-            src={avionIcon}
-            alt=""
-            aria-hidden="true"
-            style={{ "--reveal-delay": "220ms" } as CSSProperties}
-          />
+        <img
+          className="explorer-user-footer__image"
+          src={footerUser}
+          alt=""
+          decoding="async"
+        />
+        <div className="explorer-user-footer__content">
+          <div className="explorer-user-footer__cluster">
+            <img
+              className="explorer-user-footer__logo explorer-reveal explorer-reveal--soft"
+              src={brandLogo}
+              alt="Entre caminos"
+              width={80}
+              decoding="async"
+              style={{ "--reveal-delay": "40ms" } as CSSProperties}
+            />
+            <h2
+              className="explorer-discover-title explorer-reveal explorer-reveal--title"
+              id="explorer-stories-title"
+              style={{ "--reveal-delay": "100ms" } as CSSProperties}
+            >
+              Entre caminos, nacen historias
+            </h2>
+            <p
+              className="explorer-section__lead explorer-reveal explorer-reveal--soft"
+              style={{ "--reveal-delay": "170ms" } as CSSProperties}
+            >
+              A veces, solo hace falta elegir un lugar, salir de la rutina y dejar que una nueva experiencia te encuentre.
+            </p>
+          </div>
         </div>
-      </section>
+      </footer>
     </div>
   );
 }

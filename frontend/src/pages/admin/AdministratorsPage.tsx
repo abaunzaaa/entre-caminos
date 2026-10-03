@@ -1,4 +1,5 @@
-import { FormEvent, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { ChevronDown, Search } from "lucide-react";
 import {
   createAdministrator,
@@ -45,7 +46,7 @@ function countActiveByRole(users: PublicUser[], role: PublicUser["role"]) {
   return users.filter((user) => user.status === "ACTIVE" && readRole(user.role) === role).length;
 }
 
-/** Visible window for Equipo registrado. The filtered list still renders in full; this size caps the scroll viewport and is the future pagination page size. */
+/** Misma ventana que ya tenía el listado de equipo: una página, sin scroll interno. */
 const TEAM_DIRECTORY_PAGE_SIZE = 5;
 
 type FilterMenuOption<T extends string> = { value: T; label: string };
@@ -94,6 +95,7 @@ function FilterMenu<T extends string>({
 }
 
 export function AdministratorsPage() {
+  const navigate = useNavigate();
   const { user, hasPermission } = useAuth();
   const canManageAdmins = hasPermission("admins.manage");
   const canCreateAdmins = user?.role === "SUPER_ADMIN";
@@ -105,6 +107,7 @@ export function AdministratorsPage() {
   const [roleFilter, setRoleFilter] = useState<"" | "ADMIN" | "SUPER_ADMIN">("");
   const [dateSort, setDateSort] = useState<"newest" | "oldest">("newest");
   const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
 
   const [inviteRole, setInviteRole] = useState<"" | "ADMIN" | "SUPER_ADMIN">("");
   const [inviteName, setInviteName] = useState("");
@@ -318,47 +321,20 @@ export function AdministratorsPage() {
     });
   }, [admins, canCreateAdmins, dateSort, query, roleFilter, statusFilter]);
 
-  const directoryRef = useRef<HTMLDivElement>(null);
-  const directoryScrollable = visibleAdmins.length > TEAM_DIRECTORY_PAGE_SIZE;
+  const pageCount = Math.max(1, Math.ceil(visibleAdmins.length / TEAM_DIRECTORY_PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount);
+  const pageStart = (currentPage - 1) * TEAM_DIRECTORY_PAGE_SIZE;
+  const pagedAdmins = visibleAdmins.slice(pageStart, pageStart + TEAM_DIRECTORY_PAGE_SIZE);
 
-  useLayoutEffect(() => {
-    const node = directoryRef.current;
-    if (!node) {
-      return;
-    }
-    if (!directoryScrollable) {
-      node.style.removeProperty("--team-list-max");
-      return;
-    }
+  useEffect(() => {
+    setPage(1);
+  }, [query, statusFilter, roleFilter, dateSort]);
 
-    const list = node.querySelector<HTMLElement>(".dash-team-board__people");
-
-    function applyViewportHeight() {
-      const cards = node.querySelectorAll<HTMLElement>(".dash-team-card");
-      const first = cards[0];
-      const last = cards[TEAM_DIRECTORY_PAGE_SIZE - 1];
-      if (!first || !last) {
-        return;
-      }
-      const height = Math.ceil(last.getBoundingClientRect().bottom - first.getBoundingClientRect().top);
-      const next = `${height}px`;
-      if (node.style.getPropertyValue("--team-list-max") !== next) {
-        node.style.setProperty("--team-list-max", next);
-      }
+  useEffect(() => {
+    if (page > pageCount) {
+      setPage(pageCount);
     }
-
-    applyViewportHeight();
-    const observer = new ResizeObserver(applyViewportHeight);
-    observer.observe(node);
-    if (list) {
-      observer.observe(list);
-    }
-    window.addEventListener("resize", applyViewportHeight);
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("resize", applyViewportHeight);
-    };
-  }, [directoryScrollable, visibleAdmins]);
+  }, [page, pageCount]);
 
   return (
     <div className="dash dash--team">
@@ -519,7 +495,7 @@ export function AdministratorsPage() {
         ) : null}
 
         <section
-          className={`dash-split__panel dash-team-roster${directoryScrollable ? " is-scrollable" : ""}`}
+          className="dash-split__panel dash-team-roster"
           aria-label="Equipo registrado"
         >
           <header className="dash-team-roster__head">
@@ -614,22 +590,10 @@ export function AdministratorsPage() {
               <p>No hay coincidencias con estos filtros.</p>
             </Panel>
           ) : (
-            <div
-              ref={directoryRef}
-              className={`dash-team-roster__viewport${directoryScrollable ? " is-scrollable" : ""}`}
-              tabIndex={directoryScrollable ? 0 : undefined}
-              role="region"
-              aria-label="Listado del equipo"
-              aria-describedby={directoryScrollable ? "team-directory-scroll-hint" : undefined}
-              data-page-size={TEAM_DIRECTORY_PAGE_SIZE}
-            >
-              {directoryScrollable ? (
-                <p id="team-directory-scroll-hint" className="sr-only">
-                  Desplázate para ver más administradores.
-                </p>
-              ) : null}
+            <>
+            <div className="dash-team-roster__viewport" role="region" aria-label="Listado del equipo">
               <div className="dash-team-board__people">
-              {visibleAdmins.map((admin) => {
+              {pagedAdmins.map((admin) => {
                 const avatar = resolveAvatarUrl(admin);
                 const initial = nameInitial(admin.name, "A");
                 return (
@@ -649,6 +613,16 @@ export function AdministratorsPage() {
                     </div>
                     {canCreateAdmins && readRole(admin.role) !== "SUPER_ADMIN" && admin.status === "ACTIVE" ? (
                       <div className="dash-team-card__actions">
+                        {readRole(admin.role) === "ADMIN" ? (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => navigate(`/admin/empresas/${admin.id}`)}
+                          >
+                            Perfil de empresa
+                          </Button>
+                        ) : null}
                         <Button
                           type="button"
                           variant="ghost"
@@ -673,6 +647,16 @@ export function AdministratorsPage() {
                       </div>
                     ) : canCreateAdmins && readRole(admin.role) !== "SUPER_ADMIN" ? (
                       <div className="dash-team-card__actions">
+                        {readRole(admin.role) === "ADMIN" ? (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => navigate(`/admin/empresas/${admin.id}`)}
+                          >
+                            Perfil de empresa
+                          </Button>
+                        ) : null}
                         <Button
                           type="button"
                           variant="ghost"
@@ -695,12 +679,35 @@ export function AdministratorsPage() {
                           </Button>
                         ) : null}
                       </div>
+                    ) : canCreateAdmins && readRole(admin.role) === "ADMIN" ? (
+                      <div className="dash-team-card__actions">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => navigate(`/admin/empresas/${admin.id}`)}
+                        >
+                          Perfil de empresa
+                        </Button>
+                      </div>
                     ) : null}
                   </article>
                 );
               })}
               </div>
             </div>
+            {pageCount > 1 ? (
+              <nav className="dash-team-pager" aria-label="Páginas de administradores">
+                <button type="button" onClick={() => setPage(currentPage - 1)} disabled={currentPage <= 1}>
+                  Anterior
+                </button>
+                <span>Página {currentPage}</span>
+                <button type="button" onClick={() => setPage(currentPage + 1)} disabled={currentPage >= pageCount}>
+                  Siguiente
+                </button>
+              </nav>
+            ) : null}
+            </>
           )}
         </section>
       </section>

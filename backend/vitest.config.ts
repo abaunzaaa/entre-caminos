@@ -1,14 +1,14 @@
 import { defineConfig } from "vitest/config";
 
+/**
+ * Configuración por defecto: solo unitarias, sin BD.
+ * NO usa tests/setup.ts (ese reset borró la base compartida).
+ */
 export default defineConfig({
   test: {
     environment: "node",
     globals: false,
-    fileParallelism: false,
-    sequence: { concurrent: false },
-    setupFiles: ["./tests/setup.ts"],
-    globalTeardown: "./tests/teardown.ts",
-    testTimeout: 30000,
-    hookTimeout: 60000,
+    include: ["tests/unit/**/*.test.ts"],
+    testTimeout: 10000,
   },
 });

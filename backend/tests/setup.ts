@@ -1,38 +1,13 @@
-import { execSync } from "node:child_process";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-import "./env.js";
-import { prisma } from "../src/database/prisma.js";
-import { seedCore } from "../prisma/seed.js";
-
-const backendRoot = path.resolve(fileURLToPath(new URL(".", import.meta.url)), "..");
-
-export async function resetDatabase() {
-  if (!process.env.TEST_DATABASE_URL) {
-    throw new Error("resetDatabase solo corre con TEST_DATABASE_URL (nunca la base compartida).");
-  }
-
-  execSync("npx prisma migrate deploy", {
-    cwd: backendRoot,
-    stdio: "inherit",
-    env: { ...process.env },
-  });
-
-  await prisma.auditLog.deleteMany();
-  await prisma.passwordResetToken.deleteMany();
-  await prisma.emailVerificationToken.deleteMany();
-  await prisma.contact.deleteMany();
-  await prisma.notification.deleteMany();
-  await prisma.experienceReview.deleteMany();
-  await prisma.experience.deleteMany();
-  await prisma.category.deleteMany();
-  await prisma.oAuthAccount.deleteMany();
-  await prisma.user.deleteMany();
-  await prisma.rolePermission.deleteMany();
-  await prisma.permission.deleteMany();
-  await prisma.role.deleteMany();
-
-  await seedCore();
-}
-
-await resetDatabase();
+/**
+ * ANTIGUO setup de integración con resetDatabase().
+ * Deshabilitado: borraba usuarios/experiencias de la base compartida
+ * porque dotenv override en src/config/env.ts restauraba DATABASE_URL.
+ *
+ * No volver a habilitar sin:
+ * 1) BD de prueba 100% aislada
+ * 2) comparación de host/project ref contra DATABASE_URL compartida
+ * 3) comando explícito distinto de `npm test`
+ */
+throw new Error(
+  "tests/setup.ts está deshabilitado. No ejecuta resetDatabase sobre ninguna base. Usa: npm run test:unit",
+);

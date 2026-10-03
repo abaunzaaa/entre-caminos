@@ -11,6 +11,7 @@
   color: var(--explorer-ink);
   background: #ffffff;
   min-height: 100vh;
+  overflow-x: clip;
 }
 
 .explorer-page--shell {
@@ -94,18 +95,26 @@
   display: inline-flex;
   align-items: center;
   color: #1c332e;
+  cursor: pointer;
+  font-family: Poppins, Nunito, system-ui, sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
   text-decoration: none;
   white-space: nowrap;
+  transition: color 200ms ease, opacity 200ms ease;
 }
 
-.explorer-nav__logo {
-  display: block;
-  width: 2.65rem;
-  height: 2.65rem;
-  flex-shrink: 0;
-  object-fit: contain;
-  object-position: center;
-  user-select: none;
+.explorer-nav__brand:hover {
+  opacity: 0.78;
+  text-decoration: none;
+}
+
+.explorer-nav__brand:focus-visible {
+  outline: 2px solid rgba(41, 73, 66, 0.35);
+  outline-offset: 3px;
+  border-radius: 0.35rem;
 }
 
 .explorer-nav__links {
@@ -573,24 +582,25 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin: 0 0 1.45rem;
+  margin: 0 0 1.15rem;
   text-align: center;
 }
 
 .tourist-hero__intro .explorer-discover-title {
   max-width: 100%;
-  font-size: clamp(0.7rem, 1.05vw, 0.8rem);
-  line-height: 1.4;
+  font-size: clamp(1.2rem, 1.7vw, 1.375rem);
+  line-height: 1.28;
 }
 
 .tourist-hero__intro .explorer-discover-lead {
   max-width: 100%;
-  margin-top: 0.5rem;
-  font-size: 0.58rem;
+  margin-top: 0.45rem;
+  font-size: clamp(0.8rem, 1.05vw, 0.875rem);
+  letter-spacing: 0.16em;
 }
 
 .tourist-hero__kicker {
-  margin: 0 0 0.65rem;
+  margin: 0 0 0.5rem;
   color: var(--explorer-forest, #1c332e);
   font-family: Poppins, Nunito, system-ui, sans-serif;
   font-size: 0.66rem;
@@ -605,17 +615,21 @@
   max-width: 100%;
   color: var(--explorer-forest, #1c332e);
   font-family: Poppins, Nunito, system-ui, sans-serif;
-  font-size: clamp(0.92rem, 1.35vw, 1.18rem);
+  font-size: 1.0625rem;
   font-weight: 600;
   font-style: normal;
-  letter-spacing: 0.12em;
-  line-height: 1.4;
+  letter-spacing: 0.06em;
+  line-height: 1.3;
   text-transform: none;
   text-wrap: pretty;
   white-space: normal;
   word-break: normal;
   overflow-wrap: break-word;
   hyphens: manual;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
 }
 
 .tourist-hero__place {
@@ -970,9 +984,9 @@
   }
 
   .tourist-hero__title {
-    font-size: clamp(0.84rem, 3.2vw, 1.02rem);
-    letter-spacing: 0.1em;
-    line-height: 1.38;
+    font-size: 1rem;
+    letter-spacing: 0.05em;
+    line-height: 1.28;
   }
 
   .tourist-hero__bloom {
@@ -981,11 +995,15 @@
   }
 
   .tourist-hero__intro {
-    margin-bottom: 1rem;
+    margin-bottom: 0.85rem;
   }
 
   .tourist-hero__intro .explorer-discover-title {
-    font-size: clamp(0.62rem, 2.4vw, 0.72rem);
+    font-size: clamp(1.1rem, 4.2vw, 1.25rem);
+  }
+
+  .tourist-hero__intro .explorer-discover-lead {
+    font-size: clamp(0.75rem, 2.8vw, 0.8125rem);
   }
 
   .experience-gallery {
@@ -1047,14 +1065,51 @@
 }
 
 #mapa.explorer-section {
+  position: relative;
+  z-index: 1;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   justify-content: center;
+  width: 100%;
+  max-width: none;
   min-height: calc(100vh - var(--explorer-nav-height, 4.75rem));
   min-height: calc(100svh - var(--explorer-nav-height, 4.75rem));
-  padding: 5rem 1.25rem 4.25rem;
+  margin: 0;
+  padding: 5rem 1.25rem 4.75rem;
+  overflow: visible;
   scroll-margin-top: var(--explorer-nav-height, 4.75rem);
+  background: #ffffff;
+}
+
+#mapa .explorer-map__dove {
+  position: absolute;
+  z-index: 1;
+  display: block;
+  box-sizing: border-box;
+  bottom: clamp(0.85rem, 2.5vw, 1.6rem);
+  width: clamp(2.85rem, 6.5vw, 4.25rem);
+  height: clamp(2.85rem, 6.5vw, 4.25rem);
+  object-fit: contain;
+  object-position: center;
+  pointer-events: none;
+  user-select: none;
+  filter: brightness(0) invert(0.78);
+  opacity: 0.55;
+}
+
+#mapa .explorer-map__dove--left {
+  left: clamp(1rem, 4.5vw, 3rem);
+}
+
+#mapa .explorer-map__dove--right {
+  right: clamp(1rem, 4.5vw, 3rem);
+}
+
+@media (max-width: 480px) {
+  #mapa .explorer-map__dove {
+    display: none;
+  }
 }
 
 #mapa .explorer-section__head {
@@ -1744,14 +1799,12 @@
 
 .explorer-section--discover {
   position: relative;
-  z-index: 1;
+  z-index: 5;
   max-width: 1180px;
   padding-top: 3.5rem;
-  /* Extra white air before the gray scalloped edge of the recs section */
-  padding-bottom: calc(2rem + 45px);
+  padding-bottom: calc(2rem + 28px);
   overflow: visible;
 }
-
 
 .explorer-discover-intro {
   display: flex;
@@ -1983,6 +2036,7 @@
   --recommendation-radius-inner: 18px;
   --recs-surface: #e9f0df;
   position: relative;
+  z-index: 4;
   box-sizing: border-box;
   display: flex;
   align-items: center;
@@ -4969,97 +5023,103 @@ button.fav-folder:focus-visible {
   line-height: 1.4;
 }
 
-.explorer-stories {
+.explorer-user-footer {
   position: relative;
+  z-index: 2;
   box-sizing: border-box;
   width: 100%;
   max-width: none;
+  min-height: clamp(360px, 46vw, 520px);
   margin: 0;
-  padding: 1.6rem 1.25rem 1.75rem;
-  background: var(--recs-surface, #f1f1ee);
+  padding: 0;
+  overflow: hidden;
+  background: transparent;
+  border: 0;
 }
 
-.explorer-stories::before {
-  content: "";
+.explorer-user-footer__image {
+  display: block;
   position: absolute;
-  top: 1px;
-  left: 0;
-  right: 0;
-  height: 16px;
-  transform: translateY(-100%);
-  background-image: radial-gradient(
-    circle at 50% 100%,
-    var(--recs-surface, #f1f1ee) 16px,
-    transparent 16.5px
-  );
-  background-size: 32px 16px;
-  background-repeat: repeat-x;
-  background-position: center;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  object-fit: cover;
+  object-position: center 8%;
+  user-select: none;
   pointer-events: none;
 }
 
-.explorer-stories__inner {
-  position: relative;
+.explorer-user-footer__content {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
   box-sizing: border-box;
-  max-width: 48rem;
-  margin: 0 auto;
-  padding: 2.15rem 5.25rem 2.25rem;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding:
+    clamp(7.5rem, 18vw, 11rem)
+    1.25rem
+    clamp(2.75rem, 7vw, 4.25rem);
   text-align: center;
 }
 
-.explorer-stories .explorer-discover-title {
-  max-width: 42rem;
-  margin-left: auto;
-  margin-right: auto;
+.explorer-user-footer__cluster {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(100%, 40rem);
+  max-width: 40rem;
+  padding: 0.25rem 1.5rem;
+  text-align: center;
+}
+
+.explorer-user-footer__logo {
+  display: block;
+  width: clamp(4.5rem, 7.5vw, 5.5rem);
+  height: auto;
+  margin: 0 auto 1.15rem;
+  object-fit: contain;
+  object-position: center;
+  user-select: none;
+  /* Dark mark → white for contrast on green footer */
+  filter: brightness(0) invert(1);
+}
+
+.explorer-user-footer__cluster .explorer-discover-title {
+  max-width: 36rem;
+  margin: 0 auto;
+  color: #ffffff;
   font-size: clamp(1.08rem, 1.8vw, 1.36rem);
 }
 
-.explorer-stories .explorer-section__lead {
-  max-width: 38rem;
-  margin-top: 0.85rem;
-}
-
-.explorer-stories__icon {
-  position: absolute;
-  z-index: 1;
-  display: block;
-  height: auto;
-  object-fit: contain;
-  pointer-events: none;
-  user-select: none;
-}
-
-.explorer-stories__icon--cam {
-  top: 0.1rem;
-  left: 1.05rem;
-  width: 4.6rem;
-}
-
-.explorer-stories__icon--plane {
-  right: 0.7rem;
-  bottom: 0.15rem;
-  width: 4.5rem;
+.explorer-user-footer__cluster .explorer-section__lead {
+  max-width: 34rem;
+  margin: 0.85rem auto 0;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 @media (max-width: 720px) {
-  .explorer-stories {
-    padding: 1.35rem 1.1rem 1.5rem;
+  .explorer-user-footer {
+    min-height: clamp(300px, 72vw, 420px);
   }
 
-  .explorer-stories__inner {
-    padding: 1.85rem 1.35rem 2rem;
+  .explorer-user-footer__content {
+    padding: 5.5rem 1.1rem 2.35rem;
   }
 
-  .explorer-stories__icon--cam {
-    top: 0;
-    left: 0.3rem;
-    width: 3.45rem;
+  .explorer-user-footer__logo {
+    width: 4.15rem;
+    margin-bottom: 0.95rem;
   }
 
-  .explorer-stories__icon--plane {
-    right: 0.15rem;
-    bottom: 0;
-    width: 3.3rem;
+  .explorer-user-footer__cluster {
+    padding: 0.25rem 1.1rem;
   }
 }
 

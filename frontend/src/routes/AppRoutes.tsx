@@ -22,7 +22,10 @@ import { ProfilePage } from "../pages/ProfilePage";
 import { DashboardPage } from "../pages/admin/DashboardPage";
 import { AdminProfilePage } from "../pages/admin/AdminProfilePage";
 import { AdminProfileViewPage } from "../pages/admin/AdminProfileViewPage";
+import { OrganizationProfileEditPage } from "../pages/admin/OrganizationProfileEditPage";
+import { OrganizationProfileViewPage } from "../pages/admin/OrganizationProfileViewPage";
 import { AdministratorsPage } from "../pages/admin/AdministratorsPage";
+import { AdminPersonalProfileGuard } from "./AdminPersonalProfileGuard";
 import { RolesPage } from "../pages/admin/RolesPage";
 import { PermissionsPage } from "../pages/admin/PermissionsPage";
 import { CategoriesPage } from "../pages/admin/CategoriesPage";
@@ -47,6 +50,8 @@ const PAGE_TITLES: Record<string, string> = {
   "/perfil/editar": "Editar perfil | Entre Caminos",
   "/admin/perfil": "Tu perfil | Entre Caminos",
   "/admin/perfil/editar": "Editar perfil | Entre Caminos",
+  "/admin/empresa": "Perfil de empresa | Entre Caminos",
+  "/admin/empresa/editar": "Editar perfil de empresa | Entre Caminos",
 };
 
 const INTRO_SEEN_KEY = "ec-intro-seen";
@@ -136,9 +141,27 @@ export function AppRoutes() {
         <Route element={<ProtectedRoute admin />}>
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<DashboardPage />} />
-            <Route path="perfil" element={<AdminProfileViewPage />} />
-            <Route path="perfil/editar" element={<AdminProfilePage />} />
+            <Route
+              path="perfil"
+              element={
+                <AdminPersonalProfileGuard>
+                  <AdminProfileViewPage />
+                </AdminPersonalProfileGuard>
+              }
+            />
+            <Route
+              path="perfil/editar"
+              element={
+                <AdminPersonalProfileGuard>
+                  <AdminProfilePage />
+                </AdminPersonalProfileGuard>
+              }
+            />
             <Route path="profile" element={<Navigate to="/admin/perfil" replace />} />
+            <Route path="empresa" element={<OrganizationProfileViewPage />} />
+            <Route path="empresa/editar" element={<OrganizationProfileEditPage />} />
+            <Route path="empresas/:userId" element={<OrganizationProfileViewPage />} />
+            <Route path="empresas/:userId/editar" element={<OrganizationProfileEditPage />} />
             <Route path="administrators" element={<AdministratorsPage />} />
             <Route path="administradores" element={<AdministratorsPage />} />
             <Route path="roles" element={<RolesPage />} />

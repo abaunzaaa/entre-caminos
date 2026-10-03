@@ -1,6 +1,34 @@
 import type { NextFunction, Request, Response } from "express";
-import { ZodSchema } from "zod";
+import { ZodSchema, type ZodIssue } from "zod";
 import { ApiError } from "../utils/api-error.js";
+
+const TECHNICAL_VALIDATION = /invalid|expected|required|received|unrecognized|discriminator/i;
+
+export function toPublicValidationDetails(issues: ZodIssue[], source = "body") {
+  return issues.map((issue) => {
+    const field = issue.path.map(String).join(".") || source;
+    return { field, message: publicValidationMessage(field, issue.message) };
+  });
+}
+
+function publicValidationMessage(field: string, message: string) {
+  if (/[áéíóúñ¿¡]/i.test(message) || !TECHNICAL_VALIDATION.test(message)) {
+    return message;
+  }
+  if (field.startsWith("companyContact")) {
+    return "Ingresa el contacto de la empresa.";
+  }
+  if (field.startsWith("availability")) {
+    return "Revisa la disponibilidad seleccionada.";
+  }
+  if (field === "location" || field.startsWith("latitude") || field.startsWith("longitude")) {
+    return "Agrega una ubicación válida.";
+  }
+  if (field.startsWith("externalUrl")) {
+    return "Ingresa un enlace válido.";
+  }
+  return "Revisa los datos del formulario.";
+}
 
 export const validate =
   (schema: ZodSchema, source: "body" | "query" | "params" = "body") =>
@@ -8,12 +36,10 @@ export const validate =
     const result = schema.safeParse(req[source]);
 
     if (!result.success) {
-      const details = result.error.issues.map((issue) => ({
-        field: issue.path.join(".") || source,
-        message: issue.message,
-      }));
+      const details = toPublicValidationDetails(result.error.issues, source);
+      const message = details[0]?.message ?? "Revisa los datos del formulario.";
 
-      return next(ApiError.unprocessable("Datos inválidos", details));
+      return next(ApiError.unprocessable(message, details));
     }
 
     req[source] = result.data as never;

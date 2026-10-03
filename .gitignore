@@ -29,6 +29,9 @@ npm-debug.log*
 backend/uploads/*
 !backend/uploads/.gitkeep
 
+# Respaldos locales de catálogo (pueden contener datos de producción)
+backend/backups/
+
 # Prisma
 backend/prisma/*.db
 backend/prisma/*.db-journal

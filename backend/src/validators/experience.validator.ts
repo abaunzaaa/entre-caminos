@@ -73,17 +73,91 @@ function isValidExperienceUrl(value: string) {
 
 const weekdays = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"] as const;
 
-const availabilitySchema = z.discriminatedUnion("type", [
-  z.object({ type: z.literal("EVERY_DAY") }),
-  z.object({
-    type: z.literal("WEEKDAYS"),
-    days: z.array(z.enum(weekdays)).min(1, "Selecciona al menos un día"),
-  }),
-  z.object({
-    type: z.literal("DATES"),
-    dates: z.array(z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Fecha inválida")).min(1, "Agrega al menos una fecha"),
-  }),
-]);
+const availabilityTime = z
+  .string()
+  .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Hora inválida");
+
+const availabilityTimes = z
+  .array(availabilityTime)
+  .max(12, "Puedes agregar máximo 12 horarios")
+  .superRefine((times, ctx) => {
+    if (new Set(times).size !== times.length) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "No se permiten horarios duplicados",
+      });
+    }
+  })
+  .optional();
+
+const absentList = z.array(z.string()).max(0, "Revisa la disponibilidad seleccionada.").optional();
+
+const availabilitySchema = z
+  .discriminatedUnion("type", [
+    z.object({
+      type: z.literal("EVERY_DAY"),
+      times: availabilityTimes,
+      dates: absentList,
+      days: absentList,
+    }),
+    z.object({
+      type: z.literal("WEEKDAYS"),
+      days: z.array(z.enum(weekdays)).min(1, "Selecciona al menos un día"),
+      times: availabilityTimes,
+      dates: absentList,
+    }),
+    z.object({
+      type: z.literal("DATES"),
+      dates: z.array(z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Fecha inválida")).min(1, "Agrega al menos una fecha"),
+      times: availabilityTimes,
+      days: absentList,
+    }),
+    z.object({
+      type: z.literal("COMING_SOON"),
+      dates: absentList,
+      days: absentList,
+      times: absentList,
+    }),
+  ])
+  .transform((value) => {
+    if (value.type === "COMING_SOON") {
+      return { type: "COMING_SOON" as const };
+    }
+    if (value.type === "WEEKDAYS") {
+      return {
+        type: "WEEKDAYS" as const,
+        days: value.days,
+        ...(value.times?.length ? { times: value.times } : {}),
+      };
+    }
+    if (value.type === "DATES") {
+      return {
+        type: "DATES" as const,
+        dates: value.dates,
+        ...(value.times?.length ? { times: value.times } : {}),
+      };
+    }
+  return {
+    type: "EVERY_DAY" as const,
+    ...(value.times?.length ? { times: value.times } : {}),
+  };
+});
+
+const experienceLocationSchema = z.object({
+  department: z.string().trim().min(2, "Selecciona el departamento."),
+  municipality: z.string().trim().min(2, "Selecciona el municipio o la ciudad."),
+  address: z.string().trim().min(2, "Ingresa la dirección.").max(160, "La dirección es demasiado larga"),
+  latitude: z.number().min(-90).max(90).nullable().optional(),
+  longitude: z.number().min(-180).max(180).nullable().optional(),
+  howToGetThere: z.preprocess(
+    emptyToNull,
+    z.string().trim().max(2000, "Las indicaciones son demasiado largas").nullable().optional(),
+  ),
+  availability: z.preprocess(
+    (value) => (value === "" || value === undefined ? undefined : value),
+    availabilitySchema.nullable().optional(),
+  ),
+});
 
 export const EXPERIENCE_CURRENCIES = ["COP", "USD", "EUR"] as const;
 
@@ -131,10 +205,16 @@ const experienceFields = z.object({
     (value) => (value === "" || value === undefined ? undefined : value),
     availabilitySchema.nullable().optional(),
   ),
+  companyContact: z.string().trim().min(3, "Ingresa el contacto de la empresa").max(160, "El contacto es demasiado largo"),
   howToGetThere: z.preprocess(
     emptyToNull,
     z.string().trim().max(2000, "Las indicaciones son demasiado largas").nullable().optional(),
   ),
+  locations: z
+    .array(experienceLocationSchema)
+    .min(1, "Agrega al menos una ubicación.")
+    .max(8, "Puedes agregar máximo 8 ubicaciones.")
+    .optional(),
   imageUrl: imageUrlValue.optional().nullable(),
   imageUrls: z.array(imageUrlValue).max(12).optional(),
   stampImageUrl: imageUrlValue.optional().nullable(),
