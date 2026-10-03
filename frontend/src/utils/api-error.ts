@@ -31,16 +31,26 @@ export function getApiErrorMessage(err: unknown, fallback = "Ocurrió un error")
 
   const body = err as ApiErrorBody;
   const error = body.response?.data?.error;
-  const details = error?.details?.map((item) => item.message).filter(Boolean) ?? [];
   if (isExpiredSessionMessage(error?.message)) {
     return SESSION_ENDED_MESSAGE;
   }
+  if (error?.code === "INTERNAL_ERROR") {
+    return "No pudimos completar la solicitud. Inténtalo de nuevo.";
+  }
+  const details = error?.details?.map((item) => item.message).filter((message) => message && !isTechnicalMessage(message)) ?? [];
   if (details.length > 0) {
     return details.join(". ");
   }
-  return error?.message ?? fallback;
+  if (error?.message && !isTechnicalMessage(error.message)) {
+    return error.message;
+  }
+  return fallback;
 }
 
 function isExpiredSessionMessage(message?: string) {
   return Boolean(message && TOKEN_ERROR_MESSAGES.has(message));
+}
+
+function isTechnicalMessage(message: string) {
+  return /prisma|stack trace|node_modules|invalid discriminator/i.test(message);
 }

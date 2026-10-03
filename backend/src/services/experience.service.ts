@@ -36,6 +36,7 @@ const creatorSelect = {
 const experienceInclude = {
   category: true,
   experienceCategories: experienceCategoryInclude,
+  locations: { orderBy: { position: "asc" as const } },
   creator: { select: creatorSelect },
   reviewedBy: { select: { id: true, name: true, email: true } },
 } as const;
@@ -56,6 +57,7 @@ const experienceListSelect = {
   durationUnit: true,
   availability: true,
   howToGetThere: true,
+  companyContact: true,
   imageUrl: true,
   imageUrls: true,
   stampImageUrl: true,
@@ -245,6 +247,49 @@ function categoryLinks(ids: string[]) {
   return ids.map((categoryId, index) => ({ categoryId, position: index + 1 }));
 }
 
+type ExperienceLocationInput = {
+  department: string;
+  municipality: string;
+  address: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  howToGetThere?: string | null;
+  availability?: Prisma.InputJsonValue | null;
+};
+
+function composeStoredLocation(place: Pick<ExperienceLocationInput, "address" | "municipality" | "department">) {
+  return [place.address, place.municipality, place.department]
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .join(", ")
+    .slice(0, 160);
+}
+
+function mirrorFirstLocation(places: ExperienceLocationInput[]) {
+  const first = places[0];
+  return {
+    location: composeStoredLocation(first),
+    latitude: first.latitude ?? null,
+    longitude: first.longitude ?? null,
+    howToGetThere: first.howToGetThere ?? null,
+    availability:
+      first.availability == null ? Prisma.DbNull : (structuredClone(first.availability) as Prisma.InputJsonValue),
+  };
+}
+
+function locationCreateRows(places: ExperienceLocationInput[]) {
+  return places.map((place, index) => ({
+    position: index + 1,
+    department: place.department.trim(),
+    municipality: place.municipality.trim(),
+    address: place.address.trim(),
+    latitude: place.latitude ?? null,
+    longitude: place.longitude ?? null,
+    howToGetThere: place.howToGetThere ?? null,
+    availability: place.availability == null ? undefined : (structuredClone(place.availability) as Prisma.InputJsonValue),
+  }));
+}
+
 export async function createExperience(
   actor: AuthUser,
   input: {
@@ -263,6 +308,8 @@ export async function createExperience(
     durationUnit?: DurationUnit | null;
     availability?: Prisma.InputJsonValue | null;
     howToGetThere?: string | null;
+    companyContact: string;
+    locations?: ExperienceLocationInput[];
     imageUrl?: string | null;
     imageUrls?: string[];
     stampImageUrl?: string | null;
@@ -286,6 +333,8 @@ export async function createExperience(
   }
   const status: ExperienceStatus = publishesDirectly ? "PUBLISHED" : "PENDING";
   const submittedAt = publishesDirectly ? null : new Date();
+  const places = input.locations?.length ? input.locations : null;
+  const primary = places ? mirrorFirstLocation(places) : null;
   const experience = await prisma.experience.create({
     data: {
       title: input.title,
@@ -294,15 +343,23 @@ export async function createExperience(
       experienceCategories: { create: categoryLinks(categoryIds) },
       price: input.price,
       currency: input.currency ?? "COP",
-      location: input.location,
-      latitude: input.latitude ?? null,
-      longitude: input.longitude ?? null,
+      location: primary?.location ?? input.location,
+      latitude: primary ? primary.latitude : (input.latitude ?? null),
+      longitude: primary ? primary.longitude : (input.longitude ?? null),
       externalUrl: input.externalUrl ?? null,
       duration: durationFields.duration,
       durationValue: durationFields.durationValue,
       durationUnit: durationFields.durationUnit,
-      availability: input.availability === undefined || input.availability === null ? undefined : input.availability,
-      howToGetThere: input.howToGetThere ?? null,
+      availability: primary
+        ? primary.availability === Prisma.DbNull
+          ? undefined
+          : primary.availability
+        : input.availability === undefined || input.availability === null
+          ? undefined
+          : structuredClone(input.availability),
+      howToGetThere: primary ? primary.howToGetThere : (input.howToGetThere ?? null),
+      companyContact: input.companyContact,
+      ...(places ? { locations: { create: locationCreateRows(places) } } : {}),
       imageUrl: gallery.imageUrl,
       imageUrls: gallery.imageUrls,
       stampImageUrl: input.stampImageUrl ?? null,
@@ -351,6 +408,7 @@ function pickExperienceUpdate(input: Prisma.ExperienceUncheckedUpdateInput) {
     "durationUnit",
     "availability",
     "howToGetThere",
+    "companyContact",
     "imageUrl",
     "imageUrls",
     "stampImageUrl",
@@ -359,6 +417,8 @@ function pickExperienceUpdate(input: Prisma.ExperienceUncheckedUpdateInput) {
     if (input[key] !== undefined) {
       if (key === "availability" && input[key] === null) {
         data.availability = Prisma.DbNull;
+      } else if (key === "availability") {
+        data.availability = structuredClone(input[key]) as Prisma.InputJsonValue;
       } else {
         data[key] = input[key] as never;
       }
@@ -370,7 +430,7 @@ function pickExperienceUpdate(input: Prisma.ExperienceUncheckedUpdateInput) {
 export async function updateExperience(
   actor: AuthUser,
   id: string,
-  input: Prisma.ExperienceUncheckedUpdateInput & { categoryIds?: string[] },
+  input: Prisma.ExperienceUncheckedUpdateInput & { categoryIds?: string[]; locations?: ExperienceLocationInput[] },
 ) {
   const current = await getExperience(id, { actor });
   const reviewer = canReviewExperiences(actor);
@@ -391,6 +451,10 @@ export async function updateExperience(
       : null;
 
   const data = pickExperienceUpdate(input);
+  const places = Array.isArray(input.locations) ? input.locations : null;
+  if (places?.length) {
+    Object.assign(data, mirrorFirstLocation(places));
+  }
   if (nextCategoryIds) {
     data.categoryId = nextCategoryIds[0];
   }
@@ -419,6 +483,12 @@ export async function updateExperience(
       await tx.experienceCategory.deleteMany({ where: { experienceId: id } });
       await tx.experienceCategory.createMany({
         data: categoryLinks(nextCategoryIds).map((link) => ({ experienceId: id, ...link })),
+      });
+    }
+    if (places?.length) {
+      await tx.experienceLocation.deleteMany({ where: { experienceId: id } });
+      await tx.experienceLocation.createMany({
+        data: locationCreateRows(places).map((row) => ({ experienceId: id, ...row })),
       });
     }
     return tx.experience.update({

@@ -150,6 +150,14 @@
   margin-top: 2.15rem;
 }
 
+.dash-exps-dossier__places {
+  margin-top: 1.15rem;
+}
+
+.dash-exps-dossier__facts--place {
+  margin-top: 0.85rem;
+}
+
 .dash-exps-dossier__row {
   padding: 1.05rem 0 1.12rem;
   border-bottom: 1px solid #e4e6e1;
@@ -183,6 +191,20 @@
   line-height: 1.55;
   overflow-wrap: anywhere;
   white-space: pre-wrap;
+}
+
+.dash-exps-dossier__link {
+  color: #294942;
+  text-decoration: underline;
+  text-decoration-color: rgba(41, 73, 66, 0.35);
+  text-underline-offset: 3px;
+}
+
+.dash-exps-dossier__link:hover,
+.dash-exps-dossier__link:focus-visible {
+  color: #1c332e;
+  text-decoration-color: rgba(41, 73, 66, 0.7);
+  outline: none;
 }
 
 .dash-exps-dossier__value--publisher {
@@ -285,6 +307,14 @@
 
   .dash-exps-dossier__facts {
     margin-top: 1.6rem;
+  }
+
+  .dash-exps-dossier__places {
+    margin-top: 1rem;
+  }
+
+  .dash-exps-dossier__facts--place {
+    margin-top: 0.7rem;
   }
 }
 

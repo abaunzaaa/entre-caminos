@@ -106,7 +106,13 @@ export function ExperienceEditorialPlace({
         {hasPoint ? (
           <div className="dash-exps-place__stage">
             <div className="dash-exps-place__frame">
-              <ExperienceLocationMap latitude={latitude} longitude={longitude} zoom={15} interactive={false} />
+              <ExperienceLocationMap
+                key={`${latitude ?? ""}-${longitude ?? ""}`}
+                latitude={latitude}
+                longitude={longitude}
+                zoom={15}
+                interactive={false}
+              />
             </div>
             <aside className="dash-exps-place__glass">
               {place ? (
