@@ -137,11 +137,27 @@ const availabilitySchema = z
         ...(value.times?.length ? { times: value.times } : {}),
       };
     }
-    return {
-      type: "EVERY_DAY" as const,
-      ...(value.times?.length ? { times: value.times } : {}),
-    };
-  });
+  return {
+    type: "EVERY_DAY" as const,
+    ...(value.times?.length ? { times: value.times } : {}),
+  };
+});
+
+const experienceLocationSchema = z.object({
+  department: z.string().trim().min(2, "Selecciona el departamento."),
+  municipality: z.string().trim().min(2, "Selecciona el municipio o la ciudad."),
+  address: z.string().trim().min(2, "Ingresa la dirección.").max(160, "La dirección es demasiado larga"),
+  latitude: z.number().min(-90).max(90).nullable().optional(),
+  longitude: z.number().min(-180).max(180).nullable().optional(),
+  howToGetThere: z.preprocess(
+    emptyToNull,
+    z.string().trim().max(2000, "Las indicaciones son demasiado largas").nullable().optional(),
+  ),
+  availability: z.preprocess(
+    (value) => (value === "" || value === undefined ? undefined : value),
+    availabilitySchema.nullable().optional(),
+  ),
+});
 
 export const EXPERIENCE_CURRENCIES = ["COP", "USD", "EUR"] as const;
 
@@ -194,6 +210,11 @@ const experienceFields = z.object({
     emptyToNull,
     z.string().trim().max(2000, "Las indicaciones son demasiado largas").nullable().optional(),
   ),
+  locations: z
+    .array(experienceLocationSchema)
+    .min(1, "Agrega al menos una ubicación.")
+    .max(8, "Puedes agregar máximo 8 ubicaciones.")
+    .optional(),
   imageUrl: imageUrlValue.optional().nullable(),
   imageUrls: z.array(imageUrlValue).max(12).optional(),
   stampImageUrl: imageUrlValue.optional().nullable(),

@@ -1,9 +1,10 @@
-import type { CSSProperties } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { Heart } from "lucide-react";
 import { ExperienceEditorialDossier, type ExperienceEditorialFact } from "./ExperienceEditorialDossier";
 import { ExperienceEditorialGallery } from "./ExperienceEditorialGallery";
 import { ExperienceEditorialNearby } from "./ExperienceEditorialNearby";
 import { ExperienceEditorialPlace } from "./ExperienceEditorialPlace";
+import { ExperiencePlaceTabs } from "./ExperiencePlaceTabs";
 import { formatDepartmentMunicipality } from "../../data/colombia-locations";
 import { formatPrice } from "../../utils/cn";
 import { experienceCategoryNames, formatExperienceCategories } from "../../utils/experience-categories";
@@ -13,7 +14,18 @@ import {
   formatDuration,
 } from "../../utils/experience-details";
 import { experienceImages, mediaUrl } from "../../utils/media";
+import { placeTabLabel, placesFromExperience, projectExperience } from "../../utils/experience-places";
 import type { Experience, ExperienceStatus } from "../../types";
+
+const PLACE_FACT_LABELS = new Set([
+  "Ubicación",
+  "Disponibilidad",
+  "Días disponibles",
+  "Fechas",
+  "Horario",
+  "Horarios",
+  "Cómo llegar",
+]);
 
 const STATUS_LABEL: Record<ExperienceStatus, string> = {
   DRAFT: "Borrador",
@@ -149,13 +161,24 @@ export function ExperienceEditorialView({
   onConsultAi,
 }: ExperienceEditorialViewProps) {
   const isFavorite = favoriteOn;
-  const locationByline = formatDepartmentMunicipality(experience.location);
-  const lat = experience.latitude ? Number(experience.latitude) : null;
-  const lng = experience.longitude ? Number(experience.longitude) : null;
+  const places = useMemo(() => placesFromExperience(experience), [experience]);
+  const [placeIndex, setPlaceIndex] = useState(0);
+  useEffect(() => {
+    setPlaceIndex(0);
+  }, [experience.id]);
+  const activePlace = Math.min(placeIndex, Math.max(places.length - 1, 0));
+  const selectedPlace = places[activePlace] ?? places[0];
+  const view = selectedPlace ? projectExperience(experience, selectedPlace) : experience;
+  const locationByline = formatDepartmentMunicipality(view.location);
+  const lat = view.latitude ? Number(view.latitude) : null;
+  const lng = view.longitude ? Number(view.longitude) : null;
   const hasPoint = Number.isFinite(lat) && Number.isFinite(lng);
   const photos = experienceImages(experience);
   const mainPhoto = photos[0] ? mediaUrl(photos[0], 1200) : null;
-  const { noteFacts, detailFacts } = buildExperienceEditorialFacts(experience, mode);
+  const { noteFacts, detailFacts } = buildExperienceEditorialFacts(view, mode);
+  const showPlaceTabs = places.length > 1;
+  const generalFacts = showPlaceTabs ? detailFacts.filter((fact) => !PLACE_FACT_LABELS.has(fact.label)) : detailFacts;
+  const placeFacts = showPlaceTabs ? detailFacts.filter((fact) => PLACE_FACT_LABELS.has(fact.label)) : [];
   const showTouristActions = mode === "tourist" && (onConsultAi || onFavoriteToggle);
 
   return (
@@ -215,18 +238,29 @@ export function ExperienceEditorialView({
         photoUrl={mainPhoto}
         photoLabel={experience.title}
         noteFacts={noteFacts}
-        facts={detailFacts}
+        facts={generalFacts}
+        placeFacts={placeFacts}
+        places={
+          showPlaceTabs ? (
+            <ExperiencePlaceTabs
+              label="Disponible en"
+              tabs={places.map((place, index) => placeTabLabel(place, index, places))}
+              active={activePlace}
+              onSelect={setPlaceIndex}
+            />
+          ) : null
+        }
       />
 
       <ExperienceEditorialPlace
-        experience={experience}
+        experience={view}
         latitude={lat}
         longitude={lng}
         hasPoint={hasPoint}
       />
 
       <ExperienceEditorialNearby
-        experience={experience}
+        experience={view}
         hrefFor={nearbyHref}
         fetchPublished={fetchNearby}
       />

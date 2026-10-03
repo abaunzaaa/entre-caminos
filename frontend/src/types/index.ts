@@ -90,6 +90,17 @@ export type Experience = {
   availability?: unknown;
   howToGetThere?: string | null;
   companyContact?: string | null;
+  locations?: Array<{
+    id?: string;
+    position?: number;
+    department?: string | null;
+    municipality?: string | null;
+    address?: string | null;
+    latitude?: string | number | null;
+    longitude?: string | number | null;
+    howToGetThere?: string | null;
+    availability?: unknown;
+  }>;
   imageUrl: string | null;
   imageUrls?: string[];
   stampImageUrl?: string | null;

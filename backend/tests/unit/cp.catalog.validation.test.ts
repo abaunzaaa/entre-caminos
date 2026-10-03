@@ -165,6 +165,42 @@ describe("Sprint 1 — Categorías y experiencias (sin DB)", () => {
     });
     expect(datesWithDays.success).toBe(false);
 
+    const medellin = {
+      department: "Antioquia",
+      municipality: "Medellín",
+      address: "Calle 10",
+      availability: { type: "DATES", dates: ["2026-10-12"], times: ["07:00"] },
+    };
+    const bogota = {
+      department: "Cundinamarca",
+      municipality: "Bogotá",
+      address: "Carrera 7",
+      availability: { type: "COMING_SOON" },
+    };
+    const several = experienceSchema.safeParse(validExperience({ locations: [medellin, bogota] }));
+    expect(several.success).toBe(true);
+    if (several.success) {
+      expect(several.data.locations?.[0]?.availability).toEqual({
+        type: "DATES",
+        dates: ["2026-10-12"],
+        times: ["07:00"],
+      });
+      expect(several.data.locations?.[1]?.availability).toEqual({ type: "COMING_SOON" });
+    }
+    expect(
+      experienceSchema.safeParse(
+        validExperience({
+          locations: [{ ...bogota, availability: { type: "COMING_SOON", dates: ["2026-10-12"] } }],
+        }),
+      ).success,
+    ).toBe(false);
+    expect(experienceSchema.safeParse(validExperience()).success).toBe(true);
+    expect(
+      experienceSchema.safeParse(
+        validExperience({ locations: [{ department: "", municipality: "", address: "" }] }),
+      ).success,
+    ).toBe(false);
+
     expect(
       experienceSchema.safeParse(
         validExperience({

@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import avionIcon from "../../assets/avion-icon.png";
 import frameVerde from "../../assets/frame-verde.png";
 import { mediaUrl } from "../../utils/media";
@@ -43,16 +44,31 @@ function FactValue({
   );
 }
 
+function FactRows({ facts }: { facts: ExperienceEditorialFact[] }) {
+  return facts.map((fact) => (
+    <div className="dash-exps-dossier__row" key={fact.label}>
+      <div className="dash-exps-dossier__copy">
+        <span className="dash-exps-dossier__label">{fact.label}</span>
+        <FactValue fact={fact} className="dash-exps-dossier__value" />
+      </div>
+    </div>
+  ));
+}
+
 export function ExperienceEditorialDossier({
   photoUrl,
   photoLabel,
   noteFacts,
   facts,
+  places,
+  placeFacts = [],
 }: {
   photoUrl: string | null;
   photoLabel: string;
   noteFacts: ExperienceEditorialFact[];
   facts: ExperienceEditorialFact[];
+  places?: ReactNode;
+  placeFacts?: ExperienceEditorialFact[];
 }) {
   return (
     <section className="dash-exps-dossier" aria-label="Información de la experiencia">
@@ -83,15 +99,14 @@ export function ExperienceEditorialDossier({
       <div className="dash-exps-dossier__info">
         <h2 className="dash-exps-dossier__kicker">Información de la experiencia</h2>
         <div className="dash-exps-dossier__facts">
-          {facts.map((fact) => (
-            <div className="dash-exps-dossier__row" key={fact.label}>
-              <div className="dash-exps-dossier__copy">
-                <span className="dash-exps-dossier__label">{fact.label}</span>
-                <FactValue fact={fact} className="dash-exps-dossier__value" />
-              </div>
-            </div>
-          ))}
+          <FactRows facts={facts} />
         </div>
+        {places ? <div className="dash-exps-dossier__places">{places}</div> : null}
+        {placeFacts.length ? (
+          <div className="dash-exps-dossier__facts dash-exps-dossier__facts--place">
+            <FactRows facts={placeFacts} />
+          </div>
+        ) : null}
       </div>
     </section>
   );

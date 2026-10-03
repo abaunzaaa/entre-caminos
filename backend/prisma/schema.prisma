@@ -207,6 +207,7 @@ model Experience {
   /// La fuente principal de categorías es experienceCategories.
   category                 Category                  @relation(fields: [categoryId], references: [id])
   experienceCategories     ExperienceCategory[]
+  locations                ExperienceLocation[]
   creator                  User                      @relation(fields: [createdBy], references: [id])
   reviewedBy               User?                     @relation("ExperienceReviewedBy", fields: [reviewedById], references: [id])
   reviews                  ExperienceReview[]
@@ -223,6 +224,28 @@ model Experience {
   @@index([submittedAt])
   @@index([isFeatured, featuredOrder])
   @@map("experiences")
+}
+
+/// Sedes de una experiencia. La primera también se refleja en location, coordenadas, availability y howToGetThere.
+model ExperienceLocation {
+  id            String   @id @default(uuid())
+  experienceId  String   @map("experience_id")
+  position      Int
+  department    String
+  municipality  String
+  address       String   @default("")
+  latitude      Decimal? @db.Decimal(10, 7)
+  longitude     Decimal? @db.Decimal(10, 7)
+  howToGetThere String?  @map("how_to_get_there")
+  availability  Json?
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  experience Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+
+  @@unique([experienceId, position])
+  @@index([experienceId])
+  @@map("experience_locations")
 }
 
 /// Categorías de una experiencia, en el orden en que se registraron. Máximo 3.
