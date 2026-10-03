@@ -185,6 +185,20 @@
   white-space: pre-wrap;
 }
 
+.dash-exps-dossier__link {
+  color: #294942;
+  text-decoration: underline;
+  text-decoration-color: rgba(41, 73, 66, 0.35);
+  text-underline-offset: 3px;
+}
+
+.dash-exps-dossier__link:hover,
+.dash-exps-dossier__link:focus-visible {
+  color: #1c332e;
+  text-decoration-color: rgba(41, 73, 66, 0.7);
+  outline: none;
+}
+
 .dash-exps-dossier__value--publisher {
   display: inline-flex;
   align-items: center;

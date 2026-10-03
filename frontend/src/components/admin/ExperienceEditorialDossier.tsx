@@ -5,6 +5,8 @@ import { mediaUrl } from "../../utils/media";
 export type ExperienceEditorialFact = {
   label: string;
   value: string;
+  href?: string;
+  external?: boolean;
   avatarUrl?: string | null;
 };
 
@@ -16,8 +18,19 @@ function FactValue({
   className: string;
 }) {
   const avatar = fact.avatarUrl?.trim() ? mediaUrl(fact.avatarUrl, 96) : null;
+  const content = fact.href ? (
+    <a
+      className="dash-exps-dossier__link"
+      href={fact.href}
+      {...(fact.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+    >
+      {fact.value}
+    </a>
+  ) : (
+    fact.value
+  );
   if (!avatar) {
-    return <span className={className}>{fact.value}</span>;
+    return <span className={className}>{content}</span>;
   }
 
   return (
@@ -25,7 +38,7 @@ function FactValue({
       <span className="dash-exps-dossier__publisher-avatar" aria-hidden="true">
         <img src={avatar} alt="" />
       </span>
-      <span>{fact.value}</span>
+      <span>{content}</span>
     </span>
   );
 }

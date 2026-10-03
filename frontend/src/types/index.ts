@@ -89,6 +89,7 @@ export type Experience = {
   durationUnit?: "MINUTES" | "HOURS" | "DAYS" | null;
   availability?: unknown;
   howToGetThere?: string | null;
+  companyContact?: string | null;
   imageUrl: string | null;
   imageUrls?: string[];
   stampImageUrl?: string | null;

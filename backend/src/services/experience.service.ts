@@ -56,6 +56,7 @@ const experienceListSelect = {
   durationUnit: true,
   availability: true,
   howToGetThere: true,
+  companyContact: true,
   imageUrl: true,
   imageUrls: true,
   stampImageUrl: true,
@@ -263,6 +264,7 @@ export async function createExperience(
     durationUnit?: DurationUnit | null;
     availability?: Prisma.InputJsonValue | null;
     howToGetThere?: string | null;
+    companyContact: string;
     imageUrl?: string | null;
     imageUrls?: string[];
     stampImageUrl?: string | null;
@@ -301,8 +303,9 @@ export async function createExperience(
       duration: durationFields.duration,
       durationValue: durationFields.durationValue,
       durationUnit: durationFields.durationUnit,
-      availability: input.availability === undefined || input.availability === null ? undefined : input.availability,
+      availability: input.availability === undefined || input.availability === null ? undefined : structuredClone(input.availability),
       howToGetThere: input.howToGetThere ?? null,
+      companyContact: input.companyContact,
       imageUrl: gallery.imageUrl,
       imageUrls: gallery.imageUrls,
       stampImageUrl: input.stampImageUrl ?? null,
@@ -351,6 +354,7 @@ function pickExperienceUpdate(input: Prisma.ExperienceUncheckedUpdateInput) {
     "durationUnit",
     "availability",
     "howToGetThere",
+    "companyContact",
     "imageUrl",
     "imageUrls",
     "stampImageUrl",
@@ -359,6 +363,8 @@ function pickExperienceUpdate(input: Prisma.ExperienceUncheckedUpdateInput) {
     if (input[key] !== undefined) {
       if (key === "availability" && input[key] === null) {
         data.availability = Prisma.DbNull;
+      } else if (key === "availability") {
+        data.availability = structuredClone(input[key]) as Prisma.InputJsonValue;
       } else {
         data[key] = input[key] as never;
       }

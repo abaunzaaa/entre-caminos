@@ -8,9 +8,8 @@ import { formatDepartmentMunicipality } from "../../data/colombia-locations";
 import { formatPrice } from "../../utils/cn";
 import { experienceCategoryNames, formatExperienceCategories } from "../../utils/experience-categories";
 import {
-  displayExternalUrl,
+  availabilityDetailFacts,
   durationParts,
-  formatAvailability,
   formatDuration,
 } from "../../utils/experience-details";
 import { experienceImages, mediaUrl } from "../../utils/media";
@@ -23,6 +22,26 @@ const STATUS_LABEL: Record<ExperienceStatus, string> = {
   ARCHIVED: "Inactiva",
   REJECTED: "Rechazada",
 };
+
+function experienceLink(url: string) {
+  const trimmed = url.trim();
+  if (!trimmed) {
+    return "";
+  }
+  return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+}
+
+function phoneHref(value: string) {
+  const trimmed = value.trim();
+  if (!/^\+?[\d\s().-]{7,24}$/.test(trimmed)) {
+    return "";
+  }
+  const digits = trimmed.replace(/\D/g, "");
+  if (digits.length < 7 || digits.length > 15) {
+    return "";
+  }
+  return `tel:${trimmed.replace(/[^\d+]/g, "")}`;
+}
 
 function formatPublishedDate(value?: string | null) {
   if (!value) {
@@ -74,7 +93,7 @@ export function buildExperienceEditorialFacts(
           ...(experience.creator?.email ? [{ label: "Contacto interno", value: experience.creator.email }] : []),
           ...(published ? [{ label: "Fecha de publicación", value: published }] : []),
         ]
-      : [...(published ? [{ label: "Fecha de publicación", value: published }] : [])];
+      : [];
 
   const detailFacts: ExperienceEditorialFact[] = [
     ...(experience.description.trim() ? [{ label: "Descripción", value: experience.description }] : []),
@@ -86,14 +105,30 @@ export function buildExperienceEditorialFacts(
     ...(mode === "admin" ? [{ label: "Estado", value: STATUS_LABEL[experience.status] }] : []),
     { label: "Ubicación", value: experience.location || "—" },
     ...(durationText ? [{ label: "Duración", value: durationText }] : []),
-    ...(formatAvailability(experience.availability)
-      ? [{ label: "Disponibilidad", value: formatAvailability(experience.availability) }]
-      : []),
+    ...availabilityDetailFacts(experience.availability),
     ...(experience.howToGetThere?.trim()
       ? [{ label: "Cómo llegar", value: experience.howToGetThere.trim() }]
       : []),
-    ...(experience.externalUrl
-      ? [{ label: "Enlace", value: displayExternalUrl(experience.externalUrl) }]
+    ...(experience.companyContact?.trim()
+      ? [
+          {
+            label: "Contacto",
+            value: experience.companyContact.trim(),
+            ...(phoneHref(experience.companyContact)
+              ? { href: phoneHref(experience.companyContact) }
+              : {}),
+          },
+        ]
+      : []),
+    ...(experience.externalUrl?.trim()
+      ? [
+          {
+            label: "Enlace",
+            value: "Visitar página oficial",
+            href: experienceLink(experience.externalUrl),
+            external: true,
+          },
+        ]
       : []),
     ...(mode === "admin" && experience.rejectionReason
       ? [{ label: "Motivo del rechazo", value: experience.rejectionReason }]
