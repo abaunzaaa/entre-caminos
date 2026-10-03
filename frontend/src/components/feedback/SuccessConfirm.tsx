@@ -18,6 +18,7 @@ export function SuccessConfirm({
   image,
   showIcon = true,
   actionLabel = "Continuar",
+  actionClassName,
   onClose,
 }: {
   open: boolean;
@@ -27,6 +28,7 @@ export function SuccessConfirm({
   image?: string;
   showIcon?: boolean;
   actionLabel?: string;
+  actionClassName?: string;
   onClose: () => void;
 }) {
   const titleId = useId();
@@ -113,7 +115,11 @@ export function SuccessConfirm({
         <p id={`${titleId}-copy`} className="contact-success__text">
           {text}
         </p>
-        <button type="button" className="contact-success__action admin-cta" onClick={onClose}>
+        <button
+          type="button"
+          className={actionClassName ? `contact-success__action ${actionClassName}` : "contact-success__action admin-cta"}
+          onClick={onClose}
+        >
           {actionLabel}
         </button>
       </div>

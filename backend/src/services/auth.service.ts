@@ -13,11 +13,11 @@ import { ACCOUNT_REMOVED_MESSAGE, isAccountRemoved } from "../utils/account.js";
 import { ApiError } from "../utils/api-error.js";
 import { hashPassword, verifyPassword } from "../utils/password.js";
 import { publicUser } from "../utils/serializers.js";
-import { clearAuthUserCache, getCachedProfile } from "../utils/auth-cache.js";
+import { clearAuthUserCache, getCachedProfile, revokeAuthUser } from "../utils/auth-cache.js";
 import { getOnboardingProfile } from "./onboarding.service.js";
 import { recordAudit } from "./audit.service.js";
 import { sendPasswordResetEmail, sendVerificationEmail } from "./email.service.js";
-import { persistUserAvatar, removeUserAvatarFiles } from "./upload.service.js";
+import { destroyStoredImage, persistUserAvatar, removeUserAvatarFiles } from "./upload.service.js";
 import { createRawToken, hashToken } from "./token.service.js";
 import { Prisma } from "@prisma/client";
 import { logger } from "../utils/logger.js";
@@ -497,6 +497,84 @@ export async function resendVerificationCode(email: string) {
     accepted: true as const,
     ...(env.NODE_ENV === "test" ? { devCode: code } : {}),
   };
+}
+
+export async function deleteMyAccount(userId: string) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: userInclude,
+  });
+
+  if (!user || isAccountRemoved(user)) {
+    throw ApiError.unauthorized("Sesión inválida");
+  }
+
+  if (user.role.name !== ROLES.USER) {
+    throw ApiError.forbidden("Solo una cuenta de turista puede eliminarse desde el perfil.");
+  }
+
+  const profile = await prisma.userProfile.findUnique({
+    where: { userId },
+    select: { profileImagePublicId: true },
+  });
+  const passwordHash = await hashPassword(crypto.randomBytes(32).toString("hex"));
+
+  await prisma.$transaction([
+    prisma.experienceFavorite.deleteMany({ where: { userId } }),
+    prisma.favoriteCollection.deleteMany({ where: { userId } }),
+    prisma.experienceVisitorReview.deleteMany({ where: { userId } }),
+    prisma.notification.deleteMany({ where: { userId } }),
+    prisma.conversation.deleteMany({ where: { userId } }),
+    prisma.folder.deleteMany({ where: { userId } }),
+    prisma.oAuthAccount.deleteMany({ where: { userId } }),
+    prisma.passwordResetToken.deleteMany({ where: { userId } }),
+    prisma.emailVerificationToken.deleteMany({ where: { userId } }),
+    prisma.userProfile.deleteMany({ where: { userId } }),
+    prisma.organizationProfile.deleteMany({ where: { userId } }),
+    prisma.user.update({
+      where: { id: userId },
+      data: {
+        deletedAt: new Date(),
+        name: "Cuenta eliminada",
+        passwordHash,
+        phone: null,
+        country: null,
+        department: null,
+        city: null,
+        address: null,
+        avatarUrl: null,
+        verificationCode: null,
+        verificationCodeExpires: null,
+      },
+    }),
+  ]);
+
+  revokeAuthUser(userId);
+  clearAuthUserCache(userId);
+
+  try {
+    await destroyStoredImage(profile?.profileImagePublicId);
+    await removeUserAvatarFiles(userId);
+  } catch (error) {
+    logger.error("No se pudieron retirar los archivos de la cuenta eliminada", {
+      userId,
+      message: error instanceof Error ? error.message : "unknown",
+    });
+  }
+
+  try {
+    await recordAudit({
+      userId,
+      action: "ACCOUNT_DELETE",
+      entity: "User",
+      entityId: userId,
+    });
+  } catch (error) {
+    logger.error("No se pudo guardar la bitácora de eliminación", {
+      userId,
+      message: error instanceof Error ? error.message : "unknown",
+    });
+  }
 }
 
 function createVerificationCode() {

@@ -25,7 +25,7 @@ import { getPreferenceLabel } from "../data/onboarding";
 import { AvatarPreview } from "../components/onboarding/AvatarPreview";
 import { UnderConstruction } from "../components/explorer/UnderConstruction";
 import { ChangePasswordModal } from "../components/auth/ChangePasswordModal";
-import { KeyConfirmDialog } from "../components/ui/KeyConfirmDialog";
+import { DeleteAccountModal } from "../components/auth/DeleteAccountModal";
 import { useAuth } from "../hooks/useAuth";
 import { listFavoriteExperiences } from "../services/favorites.service";
 import { onFavoritesChanged } from "../services/favorites-sync";
@@ -391,15 +391,7 @@ export function ProfilePage() {
         </div>
       </section>
       <ChangePasswordModal open={passwordOpen} onClose={() => setPasswordOpen(false)} />
-      <KeyConfirmDialog
-        open={deleteOpen}
-        title="¿Eliminar cuenta?"
-        description="Confirma si quieres eliminar tu cuenta. Esta acción todavía no se puede completar."
-        confirmLabel="Eliminar cuenta"
-        cancelLabel="Cancelar"
-        onCancel={() => setDeleteOpen(false)}
-        onConfirm={() => setDeleteOpen(false)}
-      />
+      <DeleteAccountModal open={deleteOpen} onClose={() => setDeleteOpen(false)} />
     </div>
   );
 }

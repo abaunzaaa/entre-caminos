@@ -166,6 +166,7 @@ export function ChangePasswordForm({
         title="¡Contraseña actualizada!"
         text="Tu contraseña se ha cambiado correctamente."
         actionLabel="Aceptar"
+        actionClassName={layout === "modal" ? "tourist-hero__cta" : undefined}
         onClose={onComplete}
       />
     </>
