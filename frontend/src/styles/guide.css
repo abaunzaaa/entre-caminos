@@ -377,7 +377,20 @@
 }
 
 .guide-panel__id {
+  display: flex;
   min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.guide-panel__key {
+  display: block;
+  width: 12px;
+  height: 16px;
+  flex-shrink: 0;
+  background-color: #214e3b;
+  -webkit-mask: url("../assets/key-silhouette.png") center / contain no-repeat;
+  mask: url("../assets/key-silhouette.png") center / contain no-repeat;
 }
 
 .guide-panel__brand strong {
@@ -425,31 +438,58 @@
   padding-right: 2px;
 }
 
-.guide-new-chat {
-  display: inline-flex;
+.guide-win__controls {
+  display: flex;
   flex-shrink: 0;
   align-items: center;
-  gap: 4px;
-  height: 22px;
-  margin-right: 2px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: #4b5563;
-  font-size: 0.72rem;
-  font-weight: 600;
-  line-height: 1;
+  gap: 2px;
+}
+
+.guide-panel:not(.is-expanded) .guide-panel__top {
+  flex-wrap: nowrap;
+  gap: 14px;
+}
+
+.guide-panel:not(.is-expanded) .guide-panel__id strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
-  cursor: pointer;
 }
 
-.guide-new-chat:hover,
-.guide-new-chat:focus-visible {
+.guide-panel:not(.is-expanded) .guide-win {
+  gap: 0;
+  margin-left: 8px;
+}
+
+.guide-panel:not(.is-expanded) .guide-win__split {
+  width: 1px;
+  height: 12px;
+  margin: 0 8px;
+  background: rgba(17, 24, 39, 0.12);
+  flex-shrink: 0;
+}
+
+.guide-panel:not(.is-expanded) .guide-icon-btn--new:hover,
+.guide-panel:not(.is-expanded) .guide-icon-btn--new:focus-visible {
+  border-radius: 6px;
+  background: rgba(33, 78, 59, 0.08);
+  color: #214e3b;
+}
+
+.guide-panel:not(.is-expanded) .guide-win__controls .guide-icon-btn:hover,
+.guide-panel:not(.is-expanded) .guide-win__controls .guide-icon-btn:focus-visible {
+  border-radius: 6px;
+  background: rgba(17, 24, 39, 0.05);
   color: #1f2933;
-  outline: none;
 }
 
-.guide-new-chat:disabled {
+.guide-panel:not(.is-expanded) .guide-win__controls .guide-icon-btn--close:hover,
+.guide-panel:not(.is-expanded) .guide-win__controls .guide-icon-btn--close:focus-visible {
+  background: rgba(168, 58, 48, 0.08);
+  color: #8d3b34;
+}
+
+.guide-icon-btn:disabled {
   opacity: 0.45;
   cursor: default;
 }
@@ -3052,6 +3092,16 @@ button.guide-rail__folder-row {
   margin: 5px 0 0;
   color: #6a7b73;
   font-size: 0.68rem;
+}
+
+.guide-xp p.guide-xp__place span {
+  min-width: 0;
+  margin-left: 0;
+  overflow: hidden;
+  color: inherit;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .guide-xp p span {

@@ -2,10 +2,11 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { useLocation } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { getApiErrorMessage } from "../../utils/api-error";
+import { listFavoriteExperiences, removeFavorite } from "../../services/favorites.service";
+import { notifyFavoriteStatus, notifyFavoritesChanged, onFavoriteStatus, openFavoriteSaveModal } from "../../services/favorites-sync";
 import {
   chronologicalMessages,
   loadActiveConversationId,
-  loadFavoriteIds,
   loadSavedPlans,
   loadThreads,
   saveActiveConversationId,
@@ -14,7 +15,6 @@ import {
   isPersistedConversationId,
   isPlaceholderTitle,
   titleFromText,
-  toggleFavoriteId,
   type GuideFolder,
   type GuideStoredMessage,
   type GuideThread,
@@ -37,6 +37,15 @@ import {
 } from "../../services/guide.service";
 import type { Experience } from "../../types";
 import { GuideContext, type GuideContextValue, type GuideView } from "./GuideContext";
+
+function guideChatError(err: unknown, fallback: string) {
+  const raw = getApiErrorMessage(err, fallback);
+  if (/array must contain|at most \d+ element/i.test(raw)) {
+    console.error(raw);
+    return "Hubo un problema al procesar tu mensaje. Inténtalo nuevamente.";
+  }
+  return raw;
+}
 
 function folderFromApi(folder: GuideFolderPayload): GuideFolder {
   return {
@@ -171,6 +180,7 @@ export function GuideProvider({ children }: { children: ReactNode }) {
   const creatingRef = useRef(false);
   const openingRef = useRef(false);
   const actionRef = useRef(0);
+  const threadIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -182,7 +192,6 @@ export function GuideProvider({ children }: { children: ReactNode }) {
       return;
     }
     try {
-      setFavorites(loadFavoriteIds(user.id));
       setSavedPlans(loadSavedPlans(user.id).filter(Boolean) as NonNullable<GuideStoredMessage["plan"]>[]);
       const cached = loadThreads(user.id);
       if (cached.length) {
@@ -265,6 +274,7 @@ export function GuideProvider({ children }: { children: ReactNode }) {
         return;
       }
       const clean = { ...next, messages: chronologicalMessages(next.messages) };
+      threadIdRef.current = clean.id;
       setThread(clean);
       if (clean.id.startsWith("local_thread_")) {
         return;
@@ -317,6 +327,36 @@ export function GuideProvider({ children }: { children: ReactNode }) {
       cancelled = true;
     };
   }, [applyConversation, experienceId, open, thread, threads, user]);
+
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+    let cancelled = false;
+    listFavoriteExperiences()
+      .then((rows) => {
+        if (!cancelled) {
+          setFavorites(rows.map((item) => item.id));
+        }
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  useEffect(() => onFavoriteStatus((id, favorited) => {
+    setFavorites((current) => {
+      const has = current.includes(id);
+      if (favorited && !has) {
+        return [...current, id];
+      }
+      if (!favorited && has) {
+        return current.filter((item) => item !== id);
+      }
+      return current;
+    });
+  }), []);
 
   const closeGuide = useCallback(() => {
     setOpen(false);
@@ -469,9 +509,10 @@ export function GuideProvider({ children }: { children: ReactNode }) {
         messages: chronologicalMessages([...base.messages, userMessage]),
       });
       try {
+        const sentId = base.id;
         const reply: GuideReply = await sendGuideMessage({
           message: content,
-          conversationId: base.id,
+          conversationId: sentId,
           history: (base.messages ?? []).map((item) => ({ role: item.role, content: item.content })),
           ...guideTurn(experienceId, routeExperience, routeExperience?.name),
           location: user.profile
@@ -484,9 +525,18 @@ export function GuideProvider({ children }: { children: ReactNode }) {
               ? { city: user.city }
               : undefined,
         });
-        applyConversation(reply.conversation);
+        if (threadIdRef.current && threadIdRef.current !== sentId) {
+          const next = conversationToThread(reply.conversation);
+          setThreads((current) => {
+            const list = [next, ...current.filter((item) => item.id !== next.id)];
+            saveThreads(user.id, list);
+            return list;
+          });
+        } else {
+          applyConversation(reply.conversation);
+        }
       } catch (err) {
-        setError(getApiErrorMessage(err, "No pude conectar con el guía. Intenta de nuevo."));
+        setError(guideChatError(err, "No pude conectar con el guía. Intenta de nuevo."));
       } finally {
         sendingRef.current = false;
         setSending(false);
@@ -727,23 +777,35 @@ export function GuideProvider({ children }: { children: ReactNode }) {
       setError("No pude regenerar esta respuesta.");
       return;
     }
+    const sentId = thread.id;
     sendingRef.current = true;
     setSending(true);
     setError("");
     try {
       const reply = await sendGuideMessage({
-        conversationId: thread.id,
+        conversationId: sentId,
         regenerate: true,
         ...guideTurn(experienceId, routeExperience, routeExperience?.name),
       });
-      applyConversation(reply.conversation);
+      if (threadIdRef.current && threadIdRef.current !== sentId) {
+        const next = conversationToThread(reply.conversation);
+        if (user) {
+          setThreads((current) => {
+            const list = [next, ...current.filter((item) => item.id !== next.id)];
+            saveThreads(user.id, list);
+            return list;
+          });
+        }
+      } else {
+        applyConversation(reply.conversation);
+      }
     } catch (err) {
-      setError(getApiErrorMessage(err, "No pude regenerar la respuesta."));
+      setError(guideChatError(err, "No pude regenerar la respuesta."));
     } finally {
       sendingRef.current = false;
       setSending(false);
     }
-  }, [applyConversation, experienceId, routeExperience, thread]);
+  }, [applyConversation, experienceId, routeExperience, thread, user]);
 
   const value = useMemo<GuideContextValue>(
     () => ({
@@ -779,6 +841,9 @@ export function GuideProvider({ children }: { children: ReactNode }) {
       send,
       regenerate,
       openThread: (id) => {
+        const token = ++actionRef.current;
+        openingRef.current = true;
+        threadIdRef.current = id;
         const local = threads.find((item) => item.id === id);
         if (local) {
           setThread(local);
@@ -791,12 +856,19 @@ export function GuideProvider({ children }: { children: ReactNode }) {
         void (async () => {
           try {
             const conversation = await getGuideConversation(id);
+            if (token !== actionRef.current) {
+              return;
+            }
             applyConversation(conversation);
             setView("chat");
             setOpen(true);
           } catch (err) {
-            if (!local) {
+            if (token === actionRef.current && !local) {
               setError(getApiErrorMessage(err, "No pude abrir la conversación."));
+            }
+          } finally {
+            if (token === actionRef.current) {
+              openingRef.current = false;
             }
           }
         })();
@@ -825,7 +897,20 @@ export function GuideProvider({ children }: { children: ReactNode }) {
         if (!user) {
           return;
         }
-        setFavorites(toggleFavoriteId(user.id, id));
+        if (favorites.includes(id)) {
+          setFavorites((current) => current.filter((item) => item !== id));
+          void removeFavorite(id)
+            .then(() => {
+              notifyFavoriteStatus(id, false);
+              notifyFavoritesChanged();
+            })
+            .catch(() => {
+              setFavorites((current) => (current.includes(id) ? current : [...current, id]));
+              setError("No pude actualizar tus favoritos.");
+            });
+          return;
+        }
+        openFavoriteSaveModal(id);
       },
       toggleConversationFavorite,
       toggleConversationPinned,

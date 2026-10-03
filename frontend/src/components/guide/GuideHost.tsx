@@ -53,7 +53,7 @@ import { chronologicalMessages, type GuideThread, userChoiceChips } from "../../
 import "../../styles/guide.css";
 
 const CAPABILITIES = [
-  { icon: CalendarRange, label: "Crear un plan", hint: "Ruta personalizada", flow: "plan" as const },
+  { icon: CalendarRange, label: "Ayúdame a elegir", hint: "Según tus gustos", flow: "plan" as const },
   { icon: Search, label: "Buscar experiencias", hint: "Según tus gustos", flow: "search" as const },
   { icon: MapPin, label: "Explorar cerca", hint: "Cerca de ti", flow: "nearby" as const },
   { icon: Heart, label: "Mis intereses", hint: "A tu medida", flow: "interests" as const },
@@ -663,7 +663,7 @@ export function GuideHost() {
             </button>
             <button type="button" role="menuitem" onClick={() => guide.startFlow("plan")}>
               <CalendarRange size={15} strokeWidth={1.8} />
-              Crear un plan
+              Ayúdame a elegir
             </button>
             <button type="button" role="menuitem" onClick={() => guide.startFlow("search")}>
               <Search size={15} strokeWidth={1.8} />
@@ -1307,6 +1307,7 @@ export function GuideHost() {
             <header className="guide-panel__top">
               <div className="guide-panel__brand">
                 <div className="guide-panel__id">
+                  <span className="guide-panel__key" aria-hidden="true" />
                   <strong>Tu guía IA</strong>
                 </div>
               </div>
@@ -1314,29 +1315,32 @@ export function GuideHost() {
                 {!guide.expanded ? (
                   <button
                     type="button"
-                    className="guide-new-chat"
+                    className="guide-icon-btn guide-icon-btn--new"
                     aria-label="Nuevo chat"
+                    title="Nuevo chat"
                     disabled={guide.sending}
                     onClick={() => guide.newConversation(activeFolderId)}
                   >
-                    <SquarePen size={13} strokeWidth={1.8} aria-hidden="true" />
-                    <span>Nuevo chat</span>
+                    <SquarePen size={14} strokeWidth={1.8} aria-hidden="true" />
                   </button>
                 ) : null}
-                <button type="button" className="guide-icon-btn" aria-label="Minimizar" onClick={guide.minimizeGuide}>
-                  <Minus size={14} strokeWidth={2} />
-                </button>
-                <button
-                  type="button"
-                  className="guide-icon-btn"
-                  aria-label={guide.expanded ? "Reducir" : "Expandir"}
-                  onClick={guide.toggleExpand}
-                >
-                  {guide.expanded ? <Minimize2 size={13} strokeWidth={2} /> : <ArrowUpRight size={14} strokeWidth={2} />}
-                </button>
-                <button type="button" className="guide-icon-btn guide-icon-btn--close" aria-label="Cerrar" onClick={guide.closeGuide}>
-                  <X size={14} strokeWidth={2} />
-                </button>
+                {!guide.expanded ? <span className="guide-win__split" aria-hidden="true" /> : null}
+                <div className="guide-win__controls">
+                  <button type="button" className="guide-icon-btn" aria-label="Minimizar" onClick={guide.minimizeGuide}>
+                    <Minus size={14} strokeWidth={2} />
+                  </button>
+                  <button
+                    type="button"
+                    className="guide-icon-btn"
+                    aria-label={guide.expanded ? "Reducir" : "Expandir"}
+                    onClick={guide.toggleExpand}
+                  >
+                    {guide.expanded ? <Minimize2 size={13} strokeWidth={2} /> : <ArrowUpRight size={14} strokeWidth={2} />}
+                  </button>
+                  <button type="button" className="guide-icon-btn guide-icon-btn--close" aria-label="Cerrar" onClick={guide.closeGuide}>
+                    <X size={14} strokeWidth={2} />
+                  </button>
+                </div>
               </div>
             </header>
 
@@ -1508,6 +1512,12 @@ export function GuideHost() {
                                 </div>
                                 <div className="guide-xp__body">
                                   <strong>{experience.title}</strong>
+                                  {experience.address ? (
+                                    <p className="guide-xp__place" title={experience.address}>
+                                      <MapPin size={11} />
+                                      <span>{experience.address}</span>
+                                    </p>
+                                  ) : null}
                                   <p>
                                     <MapPin size={11} />
                                     {experience.location}
@@ -1529,7 +1539,7 @@ export function GuideHost() {
                                         void guide.send(`Armame un plan alrededor de ${experience.title}`)
                                       }
                                     >
-                                      Crear un plan con esto
+                                      Quiero algo parecido
                                     </button>
                                   </div>
                                 </div>

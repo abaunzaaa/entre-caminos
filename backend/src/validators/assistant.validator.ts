@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { logger } from "../utils/logger.js";
+import { recentGuideHistory } from "../utils/guide-history.js";
 
 const clip = (max: number) => (value: unknown) => {
   if (value == null || value === "") {
@@ -34,9 +36,18 @@ export const assistantChatSchema = z
           content: z.string().trim().max(4000),
         }),
       )
-      .max(20)
       .optional()
-      .default([]),
+      .default([])
+      .transform((items) => {
+        const recent = recentGuideHistory(items);
+        if (items.length > recent.length) {
+          logger.info("Historial de chat recortado para el modelo", {
+            received: items.length,
+            kept: recent.length,
+          });
+        }
+        return recent;
+      }),
     experienceId: z.string().trim().min(8).max(80).optional(),
     context: z
       .object({

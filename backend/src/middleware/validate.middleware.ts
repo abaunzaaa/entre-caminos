@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import { ZodSchema, type ZodIssue } from "zod";
 import { ApiError } from "../utils/api-error.js";
+import { logger } from "../utils/logger.js";
 
 const TECHNICAL_VALIDATION = /invalid|expected|required|received|unrecognized|discriminator/i;
 
@@ -27,6 +28,9 @@ function publicValidationMessage(field: string, message: string) {
   if (field.startsWith("externalUrl")) {
     return "Ingresa un enlace válido.";
   }
+  if (field === "history" || /must contain at most|too big/i.test(message)) {
+    return "Hubo un problema al procesar tu mensaje. Inténtalo nuevamente.";
+  }
   return "Revisa los datos del formulario.";
 }
 
@@ -36,6 +40,13 @@ export const validate =
     const result = schema.safeParse(req[source]);
 
     if (!result.success) {
+      logger.warn("Validación rechazada", {
+        source,
+        issues: result.error.issues.map((issue) => ({
+          path: issue.path.join("."),
+          message: issue.message,
+        })),
+      });
       const details = toPublicValidationDetails(result.error.issues, source);
       const message = details[0]?.message ?? "Revisa los datos del formulario.";
 
