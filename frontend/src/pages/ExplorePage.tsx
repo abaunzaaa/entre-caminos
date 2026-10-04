@@ -98,6 +98,7 @@ export function ExplorePage() {
   const [experiences, setExperiences] = useState<Experience[]>([]);
   const [coverFeatured, setCoverFeatured] = useState<Experience[]>([]);
   const [recommended, setRecommended] = useState<Experience[]>([]);
+  const [recommendedLoading, setRecommendedLoading] = useState(true);
   const [mapPreview, setMapPreview] = useState<Experience[]>([]);
   const [cities, setCities] = useState<string[]>([]);
   const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
@@ -141,6 +142,7 @@ export function ExplorePage() {
 
   useEffect(() => {
     let cancelled = false;
+    setRecommendedLoading(true);
     getRecommendedExperiences()
       .then((result) => {
         if (cancelled) {
@@ -153,6 +155,11 @@ export function ExplorePage() {
         if (!cancelled) {
           setRecommended([]);
           setSelectedId(null);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setRecommendedLoading(false);
         }
       });
     return () => {
@@ -234,6 +241,7 @@ export function ExplorePage() {
   }, [page, filters, activeSearch]);
 
   const heroExperiences = recommended;
+  const hasInterests = (user?.profile?.interests ?? []).some((interest) => interest.trim());
 
   const selected = useMemo(
     () => heroExperiences.find((item) => item.id === selectedId) ?? heroExperiences[0] ?? null,
@@ -252,6 +260,9 @@ export function ExplorePage() {
       <TouristHomeHero
         experiences={heroExperiences}
         selected={selected}
+        recommendationsLoading={recommendedLoading}
+        hasInterests={hasInterests}
+        interestsHref={user ? "/perfil/editar" : undefined}
         onSelect={(experience) => {
           setSelectedId(experience.id);
           guide.setCatalogFocus(experience);

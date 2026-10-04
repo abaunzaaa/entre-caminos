@@ -10,6 +10,7 @@ export type GuideStoredMessage = {
     id: string;
     title: string;
     location: string;
+    address?: string | null;
     price: string | number;
     duration: string | null;
     category: string | null;
@@ -309,14 +310,14 @@ function normalizeChipText(value: string) {
   return value.replace(/\s+/g, " ").trim().toLowerCase().replace(/[¿?¡!.,;:]+/g, "");
 }
 
-const CATEGORY_CHIPS = ["Cultura", "Naturaleza", "Aventura", "Gastronomía"];
 const DAY_CHIPS = ["Hoy", "Mañana", "Este fin de semana"];
 const WHO_CHIPS = ["Solo", "En pareja", "Con amigos", "En familia"];
 const BUDGET_CHIPS = ["Económico", "Medio", "Sin límite"];
 const TIME_CHIPS = ["Unas horas", "Medio día", "Un día"];
 
-function isCategoryChip(value: string) {
-  return /^(cultura|naturaleza|gastronomia|aventura|relax|otra)$/i.test(normalizeChipText(value));
+function matchesChip(value: string, options: string[]) {
+  const key = normalizeChipText(value);
+  return options.some((option) => normalizeChipText(option) === key);
 }
 
 export function userChoiceChips(reply: string, suggestions?: string[] | null) {
@@ -345,23 +346,23 @@ export function userChoiceChips(reply: string, suggestions?: string[] | null) {
   const asksTime = /cu[aá]nto tiempo|tiempo disponible|cu[aá]ntas horas/i.test(reply);
 
   if (asksDay) {
-    const days = chips.filter((item) => !isCategoryChip(item));
+    const days = chips.filter((item) => matchesChip(item, DAY_CHIPS));
     return days.length ? days : DAY_CHIPS;
   }
   if (asksWho) {
-    const people = chips.filter((item) => !isCategoryChip(item));
+    const people = chips.filter((item) => matchesChip(item, WHO_CHIPS));
     return people.length ? people : WHO_CHIPS;
   }
   if (asksBudget) {
-    const budget = chips.filter((item) => !isCategoryChip(item));
+    const budget = chips.filter((item) => matchesChip(item, BUDGET_CHIPS));
     return budget.length ? budget : BUDGET_CHIPS;
   }
   if (asksTime) {
-    const times = chips.filter((item) => !isCategoryChip(item));
+    const times = chips.filter((item) => matchesChip(item, TIME_CHIPS));
     return times.length ? times : TIME_CHIPS;
   }
   if (asksType) {
-    return chips.length ? chips : CATEGORY_CHIPS;
+    return chips;
   }
   return chips;
 }

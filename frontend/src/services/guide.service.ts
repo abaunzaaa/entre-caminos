@@ -16,6 +16,7 @@ export type GuideExperienceCard = {
   id: string;
   title: string;
   location: string;
+  address?: string | null;
   price: string | number;
   duration: string | null;
   category: string | null;
@@ -179,6 +180,8 @@ export async function deleteGuideFolder(id: string) {
   await api.delete(`/assistant/folders/${id}`);
 }
 
+const GUIDE_PRIOR_MESSAGE_LIMIT = 18;
+
 export async function sendGuideMessage(payload: {
   message?: string;
   conversationId?: string;
@@ -191,6 +194,12 @@ export async function sendGuideMessage(payload: {
   };
   location?: { latitude?: number; longitude?: number; city?: string };
 }) {
-  const { data } = await api.post<{ success: boolean; data: GuideReply }>("/assistant/chat", payload);
+  const history = payload.history
+    ?.filter((item) => item.content.trim())
+    .slice(-GUIDE_PRIOR_MESSAGE_LIMIT);
+  const { data } = await api.post<{ success: boolean; data: GuideReply }>("/assistant/chat", {
+    ...payload,
+    ...(payload.history ? { history } : {}),
+  });
   return data.data;
 }

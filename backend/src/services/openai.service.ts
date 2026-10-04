@@ -1,5 +1,6 @@
 import { env } from "../config/env.js";
 import { ApiError } from "../utils/api-error.js";
+import { fitGuideModelMessages } from "../utils/guide-history.js";
 import { logger } from "../utils/logger.js";
 
 const RETIRED_GROQ_MODELS: Record<string, string> = {
@@ -130,16 +131,18 @@ Nunca respondas con texto suelto, preguntas sueltas ni listas fuera del JSON.`,
   for (let attempt = 0; attempt < 2; attempt += 1) {
     try {
       response = await requestGroqCompletion(
-        attempt === 0
-          ? baseMessages
-          : [
-              ...baseMessages,
-              {
-                role: "user",
-                content:
-                  'Responde SOLO un objeto JSON con las claves reply, intent, status, questions, suggestions, plan, planProgress y experienceIds. Sin texto fuera del JSON.',
-              },
-            ],
+        fitGuideModelMessages(
+          attempt === 0
+            ? baseMessages
+            : [
+                ...baseMessages,
+                {
+                  role: "user",
+                  content:
+                    'Responde SOLO un objeto JSON con las claves reply, intent, status, questions, suggestions, plan, planProgress y experienceIds. Sin texto fuera del JSON.',
+                },
+              ],
+        ),
       );
       break;
     } catch (error) {

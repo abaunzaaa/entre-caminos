@@ -187,6 +187,10 @@ model Experience {
   availability    Json?
   howToGetThere   String?          @map("how_to_get_there")
   companyContact  String?          @map("company_contact")
+  /// Mismos valores que UserProfile.places. Vacío si la experiencia no tiene ambiente.
+  environments    String[]         @default([])
+  /// Mismos valores que UserProfile.companions. Vacío si no hay compañía ideal.
+  idealFor        String[]         @default([]) @map("ideal_for")
   imageUrl        String?          @map("image_url")
   imageUrls       String[]         @default([]) @map("image_urls")
   stampImageUrl   String?          @map("stamp_image_url")
@@ -207,6 +211,7 @@ model Experience {
   /// La fuente principal de categorías es experienceCategories.
   category                 Category                  @relation(fields: [categoryId], references: [id])
   experienceCategories     ExperienceCategory[]
+  experienceInterests      ExperienceInterest[]
   locations                ExperienceLocation[]
   creator                  User                      @relation(fields: [createdBy], references: [id])
   reviewedBy               User?                     @relation("ExperienceReviewedBy", fields: [reviewedById], references: [id])
@@ -262,6 +267,33 @@ model ExperienceCategory {
   @@unique([experienceId, position])
   @@index([categoryId])
   @@map("experience_categories")
+}
+
+/// Catálogo fijo de intereses de “Mis preferencias”. No son categorías.
+model Interest {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+
+  experienceLinks ExperienceInterest[]
+
+  @@map("interests")
+}
+
+/// Intereses relacionados de una experiencia. Máximo 5. Vacío solo durante la transición.
+model ExperienceInterest {
+  experienceId String   @map("experience_id")
+  interestId   String   @map("interest_id")
+  position     Int
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  experience Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+  interest   Interest   @relation(fields: [interestId], references: [id], onDelete: Restrict)
+
+  @@id([experienceId, interestId])
+  @@unique([experienceId, position])
+  @@index([interestId])
+  @@map("experience_interests")
 }
 
 model ExperienceReview {

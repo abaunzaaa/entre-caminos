@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Outlet, Navigate, useLocation } from "react-router-dom";
 import { Menu } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
+import { peekSessionExpired } from "../services/api";
 import {
   ADMIN_NAV_ITEMS,
   AdminSidebar,
@@ -81,6 +82,9 @@ export function AdminLayout() {
   }
 
   if (!isAdmin) {
+    if (peekSessionExpired()) {
+      return null;
+    }
     return <Navigate to="/login" replace />;
   }
 

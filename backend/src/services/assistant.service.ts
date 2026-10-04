@@ -3,6 +3,7 @@ import { ApiError } from "../utils/api-error.js";
 import { loadGuideContext, type GuideCatalogItem, type GuideChatContext } from "./context.service.js";
 import { generateGeminiText, parseGeminiJson } from "./gemini.service.js";
 import { generateGroqJson, hasGroqConfig } from "./openai.service.js";
+import { recentGuideHistory } from "../utils/guide-history.js";
 
 export type AssistantChatMessage = { role: "user" | "assistant"; content: string };
 
@@ -10,6 +11,7 @@ export type AssistantExperienceCard = {
   id: string;
   title: string;
   location: string;
+  address?: string | null;
   price: string | number;
   duration: string | null;
   category: string | null;
@@ -54,28 +56,39 @@ Ayudas a usuarios a descubrir experiencias y crear planes.
 Tu objetivo es recomendar experiencias reales.
 Nunca inventes datos.
 Si tienes contexto de una experiencia específica debes responder primero usando esa información.
-Si falta información pregunta al usuario.
+Si falta un dato de la persona (día, compañía, presupuesto, tiempo o zona que prefiere), pregunta solo eso.
 Responde de manera clara, cercana y útil.
 
 Habla en español. No eres un buscador: conversas, pides lo que falta y recomiendas con criterio.
 
 Reglas:
-- Si el usuario pide un plan o el hilo es de creación de plan, NO asumas día, fecha, ciudad, personas, tipo, presupuesto ni duración. Nunca empieces con “este sábado” ni inventes datos que el usuario no dijo.
-- Pregunta UNA cosa a la vez, en este orden si falta: 1) tipo de experiencia (cultura, naturaleza, gastronomía, aventura, relax u otra) 2) día (hoy, mañana, este fin de semana u otra fecha) 3) ciudad o zona 4) con quién (solo, pareja, amigos, familia) 5) presupuesto aproximado 6) tiempo disponible.
-- No generes un plan completo hasta tener esas respuestas (o hasta que el usuario las dé juntas).
+- Ayudas a elegir y a recomendar experiencias publicadas. No prometas un plan contratado, una reserva ni un itinerario cerrado si no hay experiencias reales para sustentarlo.
+- NO asumas día, fecha, ciudad, personas, tipo, presupuesto ni duración. Nunca empieces con “este sábado” ni inventes datos que el usuario no dijo.
+- Pregunta UNA cosa a la vez, y solo si falta: 1) tipo de experiencia, usando solo las categorías aprobadas del contexto 2) día (hoy, mañana, este fin de semana u otra fecha) 3) ciudad o zona 4) con quién (solo, pareja, amigos, familia) 5) presupuesto aproximado 6) tiempo disponible.
+- Si el mensaje actual ya trae tipo, día, compañía o presupuesto, no vuelvas a preguntar esos datos. Recomienda con lo que ya está dicho.
 - Nunca inventes “este sábado”, un presupuesto o un número de personas si el usuario no lo dijo.
-- Cuando tengas suficiente, genera un plan con nombre, experiencias reales del catálogo, orden del recorrido, duración aproximada y recomendaciones.
-- Nunca inventes experiencias, precios, duraciones, horarios ni cómo llegar si no están en el catálogo o en el contexto.
+- Cuando tengas suficiente, recomienda experiencias reales. Si propones un recorrido, usa solo experiencias del catálogo y no lo presentes como una reserva.
+- Nunca inventes experiencias, precios, duraciones, horarios, direcciones ni cómo llegar si no están en el catálogo o en el contexto.
+- Nunca pidas al usuario la dirección, el precio, la duración, la categoría, la descripción, la disponibilidad ni cómo llegar de una experiencia del catálogo. Esos datos son de Entre Caminos.
+- Si el campo dice "no publicada" o "no indicada", dilo. Ejemplo: "Esta experiencia tiene ciudad registrada, pero no aparece una dirección exacta publicada."
+- Los intereses del perfil no son categorías. No existe una tabla que los una. Relaciónalos solo con las categorías aprobadas y con los candidatos de este turno. Si el mensaje pide otra cosa, el mensaje manda.
+- Si preguntan quién organiza, cómo contactar, qué incluye, horarios, dirección o cómo llegar de una experiencia ya recomendada, usa el bloque de esa experiencia. Si el dato no está, di que no está publicado. No se lo preguntes a la persona.
+- No deduzcas una dirección a partir de coordenadas ni inventes una sede.
+- Si el usuario pregunta dónde queda, cómo llegar, cuánto cuesta, cuánto dura o qué días hay, responde con el dato registrado de esa ficha.
+- La ciudad o zona que puedes preguntar es la preferencia del usuario para un plan, no la dirección de una experiencia ya recomendada.
 - Si el catálogo está vacío, dilo con claridad. No inventes lugares ni precios.
 - Si no hay coincidencias, dilo y ofrece alternativas del catálogo.
 - En modo experiencia, prioriza siempre esa experiencia antes que el resto del catálogo.
-- Si preguntan si es apta para niños, responde solo con descripción y categoría; si no alcanza, dilo y pregunta.
+- No infieras disponibilidad, horarios, parqueadero, qué incluye, edad, cupos ni restricciones. Si el bloque no lo dice, responde que no está publicado.
+- Si preguntan si es apta para niños, responde solo con la descripción y la categoría. Si no alcanza, di que no está publicado. No se lo preguntes a la persona.
+- “La segunda”, “esa” o “la más barata” se refieren a las experiencias ya recomendadas, en el orden numerado. “La que queda más cerca” solo puede compararse con el municipio o la ciudad publicados y la ciudad de la persona. No calcules una distancia si no está escrita.
 - suggestions son botones de respuesta a LA pregunta que acabas de hacer. Deben coincidir:
-  · tipo de experiencia → Cultura, Naturaleza, Gastronomía, Aventura
+  · tipo de experiencia → nombres de las categorías aprobadas del contexto, no una lista fija
   · día → Hoy, Mañana, Este fin de semana
   · con quién → Solo, En pareja, Con amigos, En familia
   · presupuesto → Económico, Medio, Sin límite
-- Nunca pongas Cultura/Naturaleza si estás preguntando el día, la ciudad, el presupuesto o con quién.
+- Nunca pongas categorías si estás preguntando el día, la ciudad, el presupuesto o con quién.
+- El mensaje actual del usuario tiene prioridad sobre los intereses guardados en su perfil.
 - Nunca copies reply. Nunca pongas la misma pregunta en suggestions. Si no hay atajos claros, deja suggestions [].
 - Si el modo es una experiencia específica, NO preguntes el tipo de experiencia: ya está. Pregunta solo lo que falte (día, con quién, presupuesto) o responde sobre esa ficha.
 - Responde SOLO un JSON con esta forma (sin markdown, sin texto antes ni después):
@@ -91,7 +104,7 @@ Reglas:
     "date": "",
     "duration": "",
     "people": "",
-    "tags": ["Naturaleza"],
+    "tags": ["nombre de una categoría aprobada"],
     "experiences": ["id"],
     "itinerary": [{ "time": "9:00 a. m.", "title": "", "subtitle": "" }]
   },
@@ -111,7 +124,12 @@ function asStringArray(value: unknown) {
   return value.map((item) => asString(item)).filter(Boolean);
 }
 
-function uniqueSuggestions(reply: string, suggestions: string[]) {
+function uniqueSuggestions(reply: string, suggestions: string[], categoryNames: string[]) {
+  const categoryKeys = new Set(
+    categoryNames.map((item) => item.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")),
+  );
+  const isListedCategory = (item: string) =>
+    categoryKeys.has(item.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
   const replyNorm = reply.replace(/\s+/g, " ").trim().toLowerCase().replace(/[¿?¡!.,;:]+/g, "");
   const seen = new Set<string>();
   const chips: string[] = [];
@@ -130,14 +148,18 @@ function uniqueSuggestions(reply: string, suggestions: string[]) {
     seen.add(key);
     chips.push(item);
   }
-  const isCategory = (item: string) => /^(cultura|naturaleza|gastronom[ií]a|aventura|relax|otra)$/i.test(item.trim());
+  const asksType = /qu[eé] tipo de (experiencia|plan)|tipo de experiencia quieres|qu[eé] tipo de experiencia/i.test(reply);
   if (/qu[eé] d[ií]a|en qu[eé] d[ií]a|qu[eé] fecha|cu[aá]ndo (te gustar|quieres|prefieres)/i.test(reply)) {
-    const days = chips.filter((item) => !isCategory(item));
+    const days = chips.filter((item) => !isListedCategory(item));
     return days.length ? days : ["Hoy", "Mañana", "Este fin de semana"];
   }
   if (/con qui[eé]n|para qui[eé]n/i.test(reply)) {
-    const people = chips.filter((item) => !isCategory(item));
+    const people = chips.filter((item) => !isListedCategory(item));
     return people.length ? people : ["Solo", "En pareja", "Con amigos", "En familia"];
+  }
+  if (asksType) {
+    const page = categoryNames.slice(0, 6);
+    return categoryNames.length > 6 ? [...page, "Ver más"] : page;
   }
   return chips;
 }
@@ -181,7 +203,8 @@ function hydrate(ids: string[], catalog: CatalogItem[]): AssistantExperienceCard
     cards.push({
       id: match.id,
       title: match.title,
-      location: match.location,
+      location: match.address ? match.area || match.location : match.location,
+      address: match.address,
       price: match.price as string | number,
       duration: match.duration,
       category: match.category,
@@ -260,13 +283,14 @@ export async function chatWithGuide(input: {
   message: string;
   history: AssistantChatMessage[];
   experienceId?: string;
+  highlightIds?: string[];
   context?: GuideChatContext;
   location?: { latitude?: number; longitude?: number; city?: string };
 }) {
-  const { catalog, cityFallback, contextPrompt, prompt } = await loadGuideContext(input);
+  const { catalog, cityFallback, contextPrompt, prompt, categoryNames } = await loadGuideContext(input);
 
   const turns = [
-    ...input.history.slice(-20).filter((item) => item.content.trim()),
+    ...recentGuideHistory(input.history),
     { role: "user" as const, content: input.message },
   ];
 
@@ -341,7 +365,7 @@ export async function chatWithGuide(input: {
       : "chat") as AssistantReply["intent"],
     status,
     questions: asStringArray(parsed.questions).slice(0, 3),
-    suggestions: uniqueSuggestions(asString(parsed.reply), asStringArray(parsed.suggestions).slice(0, 6)),
+    suggestions: uniqueSuggestions(asString(parsed.reply), asStringArray(parsed.suggestions).slice(0, 6), categoryNames),
     plan,
     planProgress:
       progressRaw && Number(progressRaw.step) > 0

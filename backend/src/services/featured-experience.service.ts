@@ -1,6 +1,7 @@
 import type { ExperienceStatus } from "@prisma/client";
 import { FEATURED_PUBLIC_LIMIT, FEATURED_RECENT_ACTIVITY_DAYS } from "../config/featured-score.js";
 import { COVER_RECOMMENDATION_LIMIT, selectExperiencesForInterests } from "../config/interest-carousel.js";
+import { ONBOARDING_INTEREST_ALIASES } from "../config/onboarding.js";
 import {
   calculateFeaturedScore,
   compareFeaturedRanking,
@@ -154,9 +155,13 @@ function recommendationTie(seed: string, id: string) {
 
 /** Carrusel de portada. Con intereses, solo sus categorías. Sin intereses, puntaje general y no la selección editorial. */
 export async function listRecommendedExperiences(userId?: string) {
-  const interests = userId
-    ? ((await prisma.userProfile.findUnique({ where: { userId }, select: { interests: true } }))?.interests ?? [])
-    : [];
+  const profile = userId
+    ? await prisma.userProfile.findUnique({
+        where: { userId },
+        select: { interests: true, places: true, companions: true },
+      })
+    : null;
+  const interests = profile?.interests ?? [];
   const experiences = await prisma.experience.findMany({
     where: { status: "PUBLISHED" },
     include: {
@@ -165,9 +170,15 @@ export async function listRecommendedExperiences(userId?: string) {
         orderBy: { position: "asc" },
         include: { category: { select: { name: true } } },
       },
+      experienceInterests: {
+        orderBy: { position: "asc" },
+        include: { interest: { select: { name: true } } },
+      },
     },
   });
-  const activeInterests = interests.map((interest) => interest.trim()).filter(Boolean);
+  const activeInterests = interests
+    .map((interest) => ONBOARDING_INTEREST_ALIASES[interest.trim()] ?? interest.trim())
+    .filter(Boolean);
   if (activeInterests.length > 0) {
     const personalized = experiences.map((experience) => ({
       ...experience,
@@ -176,10 +187,16 @@ export async function listRecommendedExperiences(userId?: string) {
         : experience.category
           ? [{ name: experience.category.name }]
           : [],
+      relatedInterests: experience.experienceInterests.map((link) => link.interest.name),
+      environments: experience.environments,
+      idealFor: experience.idealFor,
     }));
     return {
       source: "interests" as const,
-      experiences: selectExperiencesForInterests(personalized, activeInterests, COVER_RECOMMENDATION_LIMIT),
+      experiences: selectExperiencesForInterests(personalized, activeInterests, COVER_RECOMMENDATION_LIMIT, {
+        places: profile?.places ?? [],
+        companions: profile?.companions ?? [],
+      }),
     };
   }
 

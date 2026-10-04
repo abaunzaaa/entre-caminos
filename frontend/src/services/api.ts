@@ -133,6 +133,9 @@ export function subscribeSessionLoss(listener: SessionListener) {
 }
 
 export function markSessionExpired() {
+  if (peekSessionExpired()) {
+    return;
+  }
   writeStorage(window.sessionStorage, SESSION_FLAG, "1");
   for (const listener of sessionListeners) {
     listener();
@@ -180,7 +183,10 @@ function isUnauthorized(error: AxiosError) {
   return error.response?.status === 401;
 }
 
-export async function refreshAccessToken(options?: { silent?: boolean }) {
+export async function refreshAccessToken(_options?: { silent?: boolean }) {
+  if (peekSessionExpired()) {
+    return null;
+  }
   if (!refreshInFlight) {
     const hadToken = Boolean(getAccessToken());
     refreshInFlight = api
@@ -203,8 +209,7 @@ export async function refreshAccessToken(options?: { silent?: boolean }) {
         if (!unauthorized) {
           return null;
         }
-        clearSession();
-        if (!options?.silent && hadToken) {
+        if (hadToken) {
           markSessionExpired();
         }
         return null;
@@ -233,7 +238,8 @@ api.interceptors.response.use(
       original.skipAuthRefresh ||
       original._retry ||
       isAuthExempt(original.url) ||
-      !isUnauthorized(error)
+      !isUnauthorized(error) ||
+      peekSessionExpired()
     ) {
       return Promise.reject(error);
     }

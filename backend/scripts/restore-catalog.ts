@@ -28,8 +28,8 @@ function range(base: string, from: number, to: number) {
 }
 
 const CATEGORIES = [
-  { name: "Cultural", description: "Arte, oficios y tradiciones." },
-  { name: "Deportivo", description: "Movimiento, rutas y bienestar." },
+  { name: "Cultura e historia", description: "Memoria, patrimonio y expresiones culturales." },
+  { name: "Bienestar y deporte", description: "Movimiento, rutas y bienestar." },
   { name: "Recreativo", description: "Planes para compartir y desconectar." },
   { name: "Turístico", description: "Recorridos y destinos para descubrir." },
 ] as const;
@@ -76,7 +76,7 @@ const CATALOG: CatalogItem[] = [
   },
   {
     title: "Candlelight: Concierto bajo la luz de las velas",
-    category: "Cultural",
+    category: "Cultura e historia",
     description:
       "Concierto íntimo con piano o cuerdas entre cientos de velas. Un plan nocturno para escuchar música clásica o contemporánea en un salón iluminado solo con cera.",
     price: 120000,
@@ -113,7 +113,7 @@ const CATALOG: CatalogItem[] = [
   },
   {
     title: "Ruta en bicicleta: Entre cerros y cerámica",
-    category: "Deportivo",
+    category: "Bienestar y deporte",
     description:
       "Salida en bici entre cerros antioqueños con parada en un taller de cerámica: casco, ruta y una visita al oficio artesanal del oriente cercano.",
     price: 110000,
@@ -128,7 +128,7 @@ const CATALOG: CatalogItem[] = [
   },
   {
     title: "Taller de cerámica",
-    category: "Cultural",
+    category: "Cultura e historia",
     description:
       "Clase práctica de cerámica: pintar, torno y piezas hechas a mano en taller (El Dorado / Herencia). Te llevas lo que creas o dejas secar según el proceso.",
     price: 70000,
@@ -153,7 +153,7 @@ const CATALOG: CatalogItem[] = [
   },
   {
     title: "Cerámicas Esmaltarte",
-    category: "Cultural",
+    category: "Cultura e historia",
     description:
       "Visita al taller de producción: moldes, esmaltado y piezas terminadas de Cerámicas Esmaltarte (y el entorno de Cerámicas El Dorado). Para ver el oficio de cerca.",
     price: 35000,
@@ -179,7 +179,7 @@ const CATALOG: CatalogItem[] = [
   },
   {
     title: "Taller de velas artesanales",
-    category: "Cultural",
+    category: "Cultura e historia",
     description:
       "Taller de velas en Candle Bar / Cadmiel: aromas, cera y un café del mismo lugar. Sales con tus velas y un rato pausado en el local.",
     price: 65000,
@@ -200,7 +200,7 @@ const CATALOG: CatalogItem[] = [
   },
   {
     title: "Clase de Pilates",
-    category: "Deportivo",
+    category: "Bienestar y deporte",
     description:
       "Clase de Pilates en estudio con luz natural y vista al jardín. Mat, respiración y un grupo reducido para moverte sin prisa.",
     price: 50000,

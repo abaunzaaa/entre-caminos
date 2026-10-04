@@ -1,5 +1,6 @@
 import { Prisma, type DurationUnit, type ExperienceStatus } from "@prisma/client";
 import { MIN_EXPERIENCE_IMAGES, MIN_EXPERIENCE_IMAGES_MESSAGE } from "../config/constants.js";
+import { ONBOARDING_INTERESTS, ONBOARDING_INTEREST_ALIASES } from "../config/onboarding.js";
 import { prisma } from "../database/prisma.js";
 import type { AuthUser } from "../models/auth-user.js";
 import { ApiError } from "../utils/api-error.js";
@@ -17,6 +18,7 @@ import {
 } from "./notification.service.js";
 import {
   assertAdminCanSubmitExperiences,
+  toExperienceDetailOrganization,
   toPublicOrganizationProfile,
 } from "./organization-profile.service.js";
 
@@ -33,9 +35,15 @@ const creatorSelect = {
   organizationProfile: true,
 } as const;
 
+const experienceInterestInclude = {
+  orderBy: { position: "asc" as const },
+  include: { interest: true },
+} as const;
+
 const experienceInclude = {
   category: true,
   experienceCategories: experienceCategoryInclude,
+  experienceInterests: experienceInterestInclude,
   locations: { orderBy: { position: "asc" as const } },
   creator: { select: creatorSelect },
   reviewedBy: { select: { id: true, name: true, email: true } },
@@ -94,8 +102,11 @@ export function toPublicExperiencePayload<T>(
       organizationProfile?: Parameters<typeof toPublicOrganizationProfile>[0];
     } | null;
   },
+  options?: { detailOrganization?: boolean },
 ) {
-  const organization = toPublicOrganizationProfile(experience.creator?.organizationProfile);
+  const organization = options?.detailOrganization
+    ? toExperienceDetailOrganization(experience.creator?.organizationProfile)
+    : toPublicOrganizationProfile(experience.creator?.organizationProfile);
   const { creator, ...rest } = experience;
   return {
     ...rest,
@@ -106,7 +117,28 @@ export function toPublicExperiencePayload<T>(
           avatarUrl: organization?.logoUrl ?? creator.avatarUrl ?? null,
           organization,
         }
-      : undefined,
+        : undefined,
+  };
+}
+
+export async function withOrganizationPublishedCount<
+  T extends {
+    createdBy: string;
+    creator?: { organization?: object | null } | null;
+  },
+>(experience: T) {
+  if (!experience.creator?.organization) {
+    return experience;
+  }
+  const publishedCount = await prisma.experience.count({
+    where: { createdBy: experience.createdBy, status: "PUBLISHED" },
+  });
+  return {
+    ...experience,
+    creator: {
+      ...experience.creator,
+      organization: { ...experience.creator.organization, publishedCount },
+    },
   };
 }
 
@@ -277,6 +309,49 @@ function mirrorFirstLocation(places: ExperienceLocationInput[]) {
   };
 }
 
+const RELATED_INTEREST_MAX = 5;
+
+function canonicalRelatedInterests(names: string[], allowEmpty = false) {
+  if (names.length === 0 && allowEmpty) {
+    return [];
+  }
+  const next: string[] = [];
+  for (const raw of names) {
+    const trimmed = raw.trim();
+    const mapped = ONBOARDING_INTEREST_ALIASES[trimmed] ?? trimmed;
+    if (!mapped || next.includes(mapped)) {
+      continue;
+    }
+    if (!(ONBOARDING_INTERESTS as readonly string[]).includes(mapped)) {
+      throw ApiError.badRequest("Selecciona intereses de la lista de preferencias.");
+    }
+    next.push(mapped);
+  }
+  if (next.length < 1 || next.length > RELATED_INTEREST_MAX) {
+    throw ApiError.badRequest("Selecciona entre 1 y 5 intereses relacionados.");
+  }
+  return next;
+}
+
+async function relatedInterestLinks(names: string[], allowEmpty = false) {
+  const canonical = canonicalRelatedInterests(names, allowEmpty);
+  if (!canonical.length) {
+    return [];
+  }
+  const rows = await prisma.interest.findMany({
+    where: { name: { in: canonical } },
+    select: { id: true, name: true },
+  });
+  const byName = new Map(rows.map((row) => [row.name, row.id]));
+  if (canonical.some((name) => !byName.has(name))) {
+    throw ApiError.badRequest("Hay intereses relacionados que todavía no están en el catálogo.");
+  }
+  return canonical.map((name, index) => ({
+    interestId: byName.get(name)!,
+    position: index + 1,
+  }));
+}
+
 function locationCreateRows(places: ExperienceLocationInput[]) {
   return places.map((place, index) => ({
     position: index + 1,
@@ -314,9 +389,13 @@ export async function createExperience(
     imageUrls?: string[];
     stampImageUrl?: string | null;
     status?: ExperienceStatus;
+    relatedInterests?: string[];
+    environments?: string[];
+    idealFor?: string[];
   },
 ) {
   const categoryIds = await approvedCategoryIds(input.categoryIds?.length ? input.categoryIds : [input.categoryId]);
+  const interestRows = Array.isArray(input.relatedInterests) ? await relatedInterestLinks(input.relatedInterests) : null;
 
   const gallery = normalizeExperienceImages(input);
   requirePublishFields(gallery, input.location);
@@ -341,6 +420,7 @@ export async function createExperience(
       description: input.description,
       categoryId: categoryIds[0],
       experienceCategories: { create: categoryLinks(categoryIds) },
+      ...(interestRows ? { experienceInterests: { create: interestRows } } : {}),
       price: input.price,
       currency: input.currency ?? "COP",
       location: primary?.location ?? input.location,
@@ -359,6 +439,8 @@ export async function createExperience(
           : structuredClone(input.availability),
       howToGetThere: primary ? primary.howToGetThere : (input.howToGetThere ?? null),
       companyContact: input.companyContact,
+      ...(input.environments ? { environments: input.environments } : {}),
+      ...(input.idealFor ? { idealFor: input.idealFor } : {}),
       ...(places ? { locations: { create: locationCreateRows(places) } } : {}),
       imageUrl: gallery.imageUrl,
       imageUrls: gallery.imageUrls,
@@ -409,6 +491,8 @@ function pickExperienceUpdate(input: Prisma.ExperienceUncheckedUpdateInput) {
     "availability",
     "howToGetThere",
     "companyContact",
+    "environments",
+    "idealFor",
     "imageUrl",
     "imageUrls",
     "stampImageUrl",
@@ -430,7 +514,13 @@ function pickExperienceUpdate(input: Prisma.ExperienceUncheckedUpdateInput) {
 export async function updateExperience(
   actor: AuthUser,
   id: string,
-  input: Prisma.ExperienceUncheckedUpdateInput & { categoryIds?: string[]; locations?: ExperienceLocationInput[] },
+  input: Prisma.ExperienceUncheckedUpdateInput & {
+    categoryIds?: string[];
+    locations?: ExperienceLocationInput[];
+    relatedInterests?: string[];
+    environments?: string[];
+    idealFor?: string[];
+  },
 ) {
   const current = await getExperience(id, { actor });
   const reviewer = canReviewExperiences(actor);
@@ -449,6 +539,9 @@ export async function updateExperience(
     : input.categoryId && typeof input.categoryId === "string"
       ? await approvedCategoryIds([input.categoryId])
       : null;
+  const nextInterestLinks = Array.isArray(input.relatedInterests)
+    ? await relatedInterestLinks(input.relatedInterests, true)
+    : null;
 
   const data = pickExperienceUpdate(input);
   const places = Array.isArray(input.locations) ? input.locations : null;
@@ -478,12 +571,20 @@ export async function updateExperience(
   requireMinExperienceImages(gallery);
 
   const experienceData = hasGalleryUpdate ? { ...data, imageUrl: gallery.imageUrl, imageUrls: gallery.imageUrls } : data;
-  const experience = await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx) => {
     if (nextCategoryIds) {
       await tx.experienceCategory.deleteMany({ where: { experienceId: id } });
       await tx.experienceCategory.createMany({
         data: categoryLinks(nextCategoryIds).map((link) => ({ experienceId: id, ...link })),
       });
+    }
+    if (nextInterestLinks) {
+      await tx.experienceInterest.deleteMany({ where: { experienceId: id } });
+      if (nextInterestLinks.length) {
+        await tx.experienceInterest.createMany({
+          data: nextInterestLinks.map((link) => ({ experienceId: id, ...link })),
+        });
+      }
     }
     if (places?.length) {
       await tx.experienceLocation.deleteMany({ where: { experienceId: id } });
@@ -491,11 +592,15 @@ export async function updateExperience(
         data: locationCreateRows(places).map((row) => ({ experienceId: id, ...row })),
       });
     }
-    return tx.experience.update({
+    await tx.experience.update({
       where: { id },
       data: experienceData,
-      include: experienceInclude,
     });
+  }, { maxWait: 10_000, timeout: 20_000 });
+
+  const experience = await prisma.experience.findUniqueOrThrow({
+    where: { id },
+    include: experienceInclude,
   });
 
   await recordAudit({

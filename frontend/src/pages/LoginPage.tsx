@@ -1,13 +1,11 @@
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useState } from "react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { AuthFormBrand } from "../components/auth/AuthFormBrand";
-import { AuthKeyIcon } from "../components/auth/AuthKeyIcon";
 import { AuthTextField } from "../components/auth/AuthTextField";
 import { SocialButtons } from "../components/auth/SocialButtons";
 import { ContactModal } from "../components/contact/ContactModal";
-import { SuccessConfirmDialog } from "../components/ui/SuccessConfirmDialog";
 import { useAuth } from "../hooks/useAuth";
-import { clearSessionExpiredFlag, peekSessionExpired, subscribeSessionLoss } from "../services/api";
+import { peekSessionExpired } from "../services/api";
 import { resendVerificationCode } from "../services/auth.service";
 import { getApiErrorMessage, SESSION_ENDED_MESSAGE } from "../utils/api-error";
 import { INACTIVE_ACCOUNT_CONTACT_REASON, isInactiveAccountMessage } from "../utils/auth-messages";
@@ -25,7 +23,6 @@ export function LoginForm() {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const [remember, setRemember] = useState(false);
-  const [sessionEndedOpen, setSessionEndedOpen] = useState(() => peekSessionExpired());
   const [error, setError] = useState(
     () => searchParams.get("oauthError") || (location.state as { oauthError?: string } | null)?.oauthError || "",
   );
@@ -35,20 +32,6 @@ export function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const registered = Boolean((location.state as { registered?: boolean } | null)?.registered);
-
-  useEffect(() => {
-    if (peekSessionExpired()) {
-      setSessionEndedOpen(true);
-    }
-    return subscribeSessionLoss(() => {
-      setSessionEndedOpen(true);
-    });
-  }, []);
-
-  function closeSessionEnded() {
-    clearSessionExpiredFlag();
-    setSessionEndedOpen(false);
-  }
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -66,9 +49,11 @@ export function LoginForm() {
       const user = await login(email, String(form.get("password")), remember);
       navigate(user.role !== "USER" ? "/admin" : needsOnboarding(user) ? "/onboarding" : "/explorar", { replace: true });
     } catch (err) {
+      if (peekSessionExpired()) {
+        return;
+      }
       const message = getApiErrorMessage(err, "Credenciales incorrectas");
       if (message === SESSION_ENDED_MESSAGE) {
-        setSessionEndedOpen(true);
         return;
       }
       setError(message);
@@ -180,16 +165,6 @@ export function LoginForm() {
         onClose={() => setContactOpen(false)}
         defaultEmail={attemptedEmail}
         defaultReason={INACTIVE_ACCOUNT_CONTACT_REASON}
-      />
-      <SuccessConfirmDialog
-        open={sessionEndedOpen}
-        onClose={closeSessionEnded}
-        className="contact-success--subtle"
-        icon={<AuthKeyIcon className="auth-reset-success__mark" />}
-        title="Sesión finalizada"
-        description={SESSION_ENDED_MESSAGE}
-        actionLabel="Entendido"
-        initialFocus="action"
       />
     </div>
   );

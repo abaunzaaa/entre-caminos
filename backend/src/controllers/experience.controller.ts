@@ -13,6 +13,10 @@ function queryText(value: unknown, max = 80) {
   return raw.trim().slice(0, max);
 }
 
+function preventStaleRead(res: Response) {
+  res.set("Cache-Control", "no-store");
+}
+
 function queryPage(value: unknown) {
   const raw = Array.isArray(value) ? value[0] : value;
   const parsed = Number(raw);
@@ -23,6 +27,7 @@ function queryPage(value: unknown) {
 }
 
 export async function listPublic(req: Request, res: Response) {
+  preventStaleRead(res);
   const pageRequested = req.query.page != null && String(req.query.page).trim() !== "";
   if (pageRequested) {
     const limit = parseLimitQuery(req.query.limit, 100) ?? 8;
@@ -64,6 +69,7 @@ export async function listPublic(req: Request, res: Response) {
 }
 
 export async function featured(_req: Request, res: Response) {
+  preventStaleRead(res);
   const experiences = await listCoverFeaturedExperiences();
   return res.json({
     success: true,
@@ -72,10 +78,14 @@ export async function featured(_req: Request, res: Response) {
 }
 
 export async function getPublic(req: Request, res: Response) {
+  preventStaleRead(res);
   const experience = await experienceService.getExperience(req.params.id, { publishedOnly: true });
+  const payload = await experienceService.withOrganizationPublishedCount(
+    experienceService.toPublicExperiencePayload(experience, { detailOrganization: true }),
+  );
   return res.json({
     success: true,
-    data: { experience: experienceService.toPublicExperiencePayload(experience) },
+    data: { experience: payload },
   });
 }
 
@@ -86,6 +96,7 @@ export async function recordView(req: Request, res: Response) {
 }
 
 export async function listAdmin(req: Request, res: Response) {
+  preventStaleRead(res);
   const status = req.query.status as ExperienceStatus | undefined;
   const categoryId = req.query.categoryId as string | undefined;
   const take = parseLimitQuery(req.query.limit);
@@ -98,6 +109,7 @@ export async function listAdmin(req: Request, res: Response) {
 }
 
 export async function getAdmin(req: Request, res: Response) {
+  preventStaleRead(res);
   const experience = await experienceService.getExperience(req.params.id, { actor: req.user });
   return res.json({ success: true, data: { experience } });
 }
