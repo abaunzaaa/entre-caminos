@@ -1,7 +1,9 @@
 import type { ReactNode } from "react";
 import avionIcon from "../../assets/avion-icon.png";
 import frameVerde from "../../assets/frame-verde.png";
+import { ExperienceOrganizationCard } from "../experiences/ExperienceOrganizationCard";
 import { mediaUrl } from "../../utils/media";
+import type { PublicOrganizationProfile } from "../../types";
 
 export type ExperienceEditorialFact = {
   label: string;
@@ -70,9 +72,12 @@ export function ExperienceEditorialDossier({
   places?: ReactNode;
   placeFacts?: ExperienceEditorialFact[];
 }) {
+  const hasOrganization = Boolean(organization?.tradeName?.trim());
+
   return (
     <section className="dash-exps-dossier" aria-label="Información de la experiencia">
-      <div className="dash-exps-dossier__visual">
+      <div className="dash-exps-dossier__column">
+      <div className={`dash-exps-dossier__visual${hasOrganization ? " is-clear" : ""}`}>
         <div className="dash-exps-dossier__stamp">
           <div className="dash-exps-dossier__photo">
             {photoUrl ? (
@@ -84,7 +89,7 @@ export function ExperienceEditorialDossier({
           <img className="dash-exps-dossier__frame" src={frameVerde} alt="" />
         </div>
         <img className="dash-exps-dossier__plane" src={avionIcon} alt="" />
-        {noteFacts.length ? (
+        {!hasOrganization && noteFacts.length ? (
           <aside className="dash-exps-dossier__note">
             {noteFacts.map((fact) => (
               <div className="dash-exps-dossier__note-item" key={fact.label}>
@@ -94,6 +99,8 @@ export function ExperienceEditorialDossier({
             ))}
           </aside>
         ) : null}
+      </div>
+      {hasOrganization && organization ? <ExperienceOrganizationCard organization={organization} /> : null}
       </div>
 
       <div className="dash-exps-dossier__info">

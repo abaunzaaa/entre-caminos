@@ -78,23 +78,40 @@ export function isOrganizationProfileComplete(profile: Partial<OrganizationProfi
   return getOrganizationProfileCompleteness(profile).complete;
 }
 
+function publicOrganizationFields(
+  profile: OrganizationProfile,
+  tradeName: string,
+): PublicOrganizationProfile {
+  return {
+    tradeName,
+    description: profile.description?.trim() || "",
+    logoUrl: profile.logoUrl?.trim() || null,
+    department: profile.department?.trim() || "",
+    city: profile.city?.trim() || "",
+    contactPhone: profile.contactPhone?.trim() || null,
+    contactEmail: profile.contactEmail?.trim() || null,
+    website: profile.website?.trim() || null,
+    address: profile.address?.trim() || null,
+  };
+}
+
 export function toPublicOrganizationProfile(
   profile: OrganizationProfile | null | undefined,
 ): PublicOrganizationProfile | null {
   if (!profile || !isOrganizationProfileComplete(profile)) {
     return null;
   }
-  return {
-    tradeName: profile.tradeName!.trim(),
-    description: profile.description!.trim(),
-    logoUrl: profile.logoUrl ?? null,
-    department: profile.department!.trim(),
-    city: profile.city!.trim(),
-    contactPhone: profile.contactPhone?.trim() || null,
-    contactEmail: profile.contactEmail?.trim() || null,
-    website: profile.website?.trim() || null,
-    address: profile.address?.trim() || null,
-  };
+  return publicOrganizationFields(profile, profile.tradeName!.trim());
+}
+
+export function toExperienceDetailOrganization(
+  profile: OrganizationProfile | null | undefined,
+): PublicOrganizationProfile | null {
+  const tradeName = profile?.tradeName?.trim() || "";
+  if (!profile || !tradeName) {
+    return null;
+  }
+  return publicOrganizationFields(profile, tradeName);
 }
 
 export function serializeOrganizationProfile(profile: OrganizationProfile | null) {

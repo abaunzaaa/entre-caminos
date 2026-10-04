@@ -136,6 +136,7 @@ export type PublicOrganizationProfile = {
   contactEmail: string | null;
   website: string | null;
   address: string | null;
+  publishedCount?: number;
 };
 
 export type AdminNotification = {
