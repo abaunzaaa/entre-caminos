@@ -1,5 +1,14 @@
 import axios from "axios";
-import { api, clearSession, getAccessToken, refreshAccessToken, setAccessToken, setRememberSession, setStoredUser } from "./api";
+import {
+  api,
+  clearSession,
+  getAccessToken,
+  peekSessionExpired,
+  refreshAccessToken,
+  setAccessToken,
+  setRememberSession,
+  setStoredUser,
+} from "./api";
 import type { ApiResponse, PublicUser } from "../types";
 
 export async function registerAccount(payload: {
@@ -98,7 +107,9 @@ export async function restoreSession() {
     return profile;
   } catch (error) {
     if (axios.isAxiosError(error) && error.response?.status === 401) {
-      clearSession();
+      if (!peekSessionExpired()) {
+        clearSession();
+      }
       return null;
     }
     throw error;
