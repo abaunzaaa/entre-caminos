@@ -244,12 +244,12 @@
   background: transparent;
   color: inherit;
   font: inherit;
-  cursor: pointer;
+  cursor: default;
 }
 
 .profile-stat__button:hover,
 .profile-stat__button:focus-visible {
-  background: var(--profile-soft);
+  background: transparent;
 }
 
 .profile-stat__button:focus-visible {
