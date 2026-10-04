@@ -10,9 +10,56 @@ type TouristHomeHeroProps = {
   experiences: Experience[];
   selected: Experience | null;
   onSelect: (experience: Experience) => void;
+  recommendationsLoading?: boolean;
+  hasInterests?: boolean;
+  interestsHref?: string;
 };
 
-export function TouristHomeHero({ experiences, selected, onSelect }: TouristHomeHeroProps) {
+function HeroShowcaseStatus({
+  loading,
+  hasInterests,
+  interestsHref,
+}: {
+  loading: boolean;
+  hasInterests: boolean;
+  interestsHref?: string;
+}) {
+  let kicker = "Nuevos caminos";
+  let title = "Aún no encontramos experiencias relacionadas con tus intereses";
+  let note = "Pronto habrá más por descubrir";
+
+  if (loading) {
+    kicker = "Preparando tu camino";
+    title = "Estamos buscando experiencias pensadas para ti";
+    note = "";
+  } else if (!hasInterests) {
+    kicker = "Personaliza tu camino";
+    title = "Cuéntanos qué te gusta para elegir experiencias para ti";
+    note = "";
+  }
+
+  return (
+    <div className="tourist-hero__showcase-card" role="status">
+      <p className="tourist-hero__kicker">{kicker}</p>
+      <p className="tourist-hero__title">{title}</p>
+      {note ? <p className="tourist-hero__place">{note}</p> : null}
+      {!loading && !hasInterests && interestsHref ? (
+        <Link to={interestsHref} className="tourist-hero__cta">
+          Elegir intereses
+        </Link>
+      ) : null}
+    </div>
+  );
+}
+
+export function TouristHomeHero({
+  experiences,
+  selected,
+  onSelect,
+  recommendationsLoading = false,
+  hasInterests = false,
+  interestsHref,
+}: TouristHomeHeroProps) {
   const place = selected ? municipalityLabel(selected.location) : "";
   const category = selected ? formatExperienceCategories(selected, "Experiencia") : "Experiencia";
 
@@ -61,11 +108,19 @@ export function TouristHomeHero({ experiences, selected, onSelect }: TouristHome
       </div>
 
       <div className="tourist-hero__showcase">
-        <ExperienceGallery
-          experiences={experiences}
-          selectedId={selected?.id ?? null}
-          onSelect={onSelect}
-        />
+        {experiences.length > 0 ? (
+          <ExperienceGallery
+            experiences={experiences}
+            selectedId={selected?.id ?? null}
+            onSelect={onSelect}
+          />
+        ) : (
+          <HeroShowcaseStatus
+            loading={recommendationsLoading}
+            hasInterests={hasInterests}
+            interestsHref={interestsHref}
+          />
+        )}
       </div>
     </section>
   );

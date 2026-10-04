@@ -49,10 +49,42 @@ export function errorHandler(err: unknown, _req: Request, res: Response, _next: 
         error: { code: "NOT_FOUND", message: "Recurso no encontrado" },
       });
     }
+    if (err.code === "P2028") {
+      logger.error("Unhandled error", { code: err.code });
+      return res.status(503).json({
+        success: false,
+        error: {
+          code: "SERVICE_UNAVAILABLE",
+          message: "No pudimos guardar los cambios a tiempo. Inténtalo de nuevo.",
+        },
+      });
+    }
+    if (err.code === "P2000" || err.code === "P2003" || err.code === "P2011" || err.code === "P2021" || err.code === "P2022") {
+      logger.error("Unhandled error", { code: err.code });
+      return res.status(422).json({
+        success: false,
+        error: {
+          code: "UNPROCESSABLE_ENTITY",
+          message: "Revisa los datos de la experiencia.",
+        },
+      });
+    }
+    logger.error("Unhandled error", { code: err.code });
+  }
+
+  if (err instanceof Prisma.PrismaClientValidationError) {
+    logger.error("Unhandled error", { name: err.name });
+    return res.status(422).json({
+      success: false,
+      error: {
+        code: "UNPROCESSABLE_ENTITY",
+        message: "Revisa los datos de la experiencia.",
+      },
+    });
   }
 
   logger.error("Unhandled error", {
-    message: err instanceof Error ? err.message : "unknown",
+    name: err instanceof Error ? err.name : "unknown",
   });
 
   return res.status(500).json({

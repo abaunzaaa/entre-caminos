@@ -59,6 +59,7 @@ export async function unfeature(req: Request, res: Response) {
 }
 
 export async function recommendations(req: Request, res: Response) {
+  res.set("Cache-Control", "no-store");
   const result = await featuredService.listRecommendedExperiences(req.user?.id);
   return res.json({ success: true, data: result });
 }

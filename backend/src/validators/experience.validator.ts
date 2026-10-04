@@ -1,4 +1,10 @@
 import { z } from "zod";
+import {
+  ONBOARDING_COMPANION_ALIASES,
+  ONBOARDING_COMPANIONS,
+  ONBOARDING_PLACE_ALIASES,
+  ONBOARDING_PLACES,
+} from "../config/onboarding.js";
 import { MIN_EXPERIENCE_IMAGES, MIN_EXPERIENCE_IMAGES_MESSAGE } from "../config/constants.js";
 
 const experienceStatus = z.enum(["DRAFT", "PENDING", "PUBLISHED", "ARCHIVED", "REJECTED"]);
@@ -161,6 +167,39 @@ const experienceLocationSchema = z.object({
 
 export const EXPERIENCE_CURRENCIES = ["COP", "USD", "EUR"] as const;
 
+function optionalClosedList(
+  allowed: readonly string[],
+  aliases: Record<string, string>,
+  message: string,
+) {
+  return z.preprocess(
+    (value) => (value === null || value === "" ? [] : value),
+    z
+    .array(z.string().trim().min(1))
+    .max(allowed.length)
+    .superRefine((values, ctx) => {
+      for (const raw of values) {
+        const mapped = aliases[raw] ?? raw;
+        if (!allowed.includes(mapped)) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, message });
+          return;
+        }
+      }
+    })
+    .transform((values) => {
+      const next: string[] = [];
+      for (const raw of values) {
+        const mapped = aliases[raw] ?? raw;
+        if (allowed.includes(mapped) && !next.includes(mapped)) {
+          next.push(mapped);
+        }
+      }
+      return next;
+    })
+    .optional(),
+  );
+}
+
 const experienceFields = z.object({
   title: z.string().trim().min(3, "El título es obligatorio").max(140),
   description: z.string().trim().min(20, "La descripción debe tener al menos 20 caracteres"),
@@ -170,6 +209,13 @@ const experienceFields = z.object({
     .min(1, "Selecciona una categoría.")
     .max(3, "Puedes seleccionar máximo 3 categorías por experiencia.")
     .optional(),
+  relatedInterests: z
+    .array(z.string().trim().min(1).max(40))
+    .min(1, "Selecciona al menos un interés relacionado.")
+    .max(5, "Puedes seleccionar máximo 5 intereses relacionados.")
+    .optional(),
+  environments: optionalClosedList(ONBOARDING_PLACES, ONBOARDING_PLACE_ALIASES, "Ambiente no permitido"),
+  idealFor: optionalClosedList(ONBOARDING_COMPANIONS, ONBOARDING_COMPANION_ALIASES, "Compañía no permitida"),
   price: z.coerce.number().min(0, "El precio no puede ser negativo"),
   currency: z.enum(EXPERIENCE_CURRENCIES).optional(),
   location: z.string().trim().min(2, "La ubicación es obligatoria").max(160),
@@ -210,11 +256,14 @@ const experienceFields = z.object({
     emptyToNull,
     z.string().trim().max(2000, "Las indicaciones son demasiado largas").nullable().optional(),
   ),
-  locations: z
-    .array(experienceLocationSchema)
-    .min(1, "Agrega al menos una ubicación.")
-    .max(8, "Puedes agregar máximo 8 ubicaciones.")
-    .optional(),
+  locations: z.preprocess(
+    (value) => (value == null || value === "" ? undefined : value),
+    z
+      .array(experienceLocationSchema)
+      .min(1, "Agrega al menos una ubicación.")
+      .max(8, "Puedes agregar máximo 8 ubicaciones.")
+      .optional(),
+  ),
   imageUrl: imageUrlValue.optional().nullable(),
   imageUrls: z.array(imageUrlValue).max(12).optional(),
   stampImageUrl: imageUrlValue.optional().nullable(),
@@ -239,8 +288,18 @@ export const experienceSchema = experienceFields.superRefine((data, ctx) => {
   }
 });
 
+const optionalRelatedInterests = z.preprocess(
+  (value) => (value == null || value === "" ? [] : value),
+  z
+    .array(z.string().trim().min(1).max(40))
+    .max(5, "Puedes seleccionar máximo 5 intereses relacionados.")
+    .optional(),
+);
+
 export const experienceUpdateSchema = experienceFields
+  .omit({ relatedInterests: true })
   .partial()
+  .extend({ relatedInterests: optionalRelatedInterests })
   .refine((data) => Object.keys(data).length > 0, {
     message: "Debes enviar al menos un campo para actualizar",
   })
