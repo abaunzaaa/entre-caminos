@@ -72,6 +72,11 @@ export async function updateMyProfile(payload: UpdateProfileInput) {
   return data.data.user;
 }
 
+export async function deleteMyAccount() {
+  const { data } = await api.delete<ApiResponse<null>>("/auth/me");
+  return data;
+}
+
 export async function changeMyPassword(payload: {
   currentPassword?: string;
   password: string;

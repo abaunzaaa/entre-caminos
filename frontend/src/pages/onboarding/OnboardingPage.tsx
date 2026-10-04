@@ -2,6 +2,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import logoEntreCaminos from "../../assets/logo.png";
 import { CompanyStep } from "../../components/onboarding/CompanyStep";
+import {
+  EditAccountFields,
+  compactPhone,
+  formatPhoneDisplay,
+  validateAccountName,
+  validateAccountPhone,
+} from "../../components/onboarding/EditAccountFields";
 import { LocationStep, type LocationStatus } from "../../components/onboarding/LocationStep";
 import { OnboardingActions } from "../../components/onboarding/OnboardingActions";
 import { OnboardingOptionCard } from "../../components/onboarding/OnboardingOptionCard";
@@ -12,13 +19,9 @@ import { SummaryStep } from "../../components/onboarding/SummaryStep";
 import { KeyConfirmDialog } from "../../components/ui/KeyConfirmDialog";
 import { INTEREST_OPTIONS } from "../../data/onboarding";
 import { useAuth } from "../../hooks/useAuth";
-import {
-  deleteOnboardingPhoto,
-  saveOnboardingProfile,
-  uploadOnboardingPhoto,
-} from "../../services/onboarding.service";
+import { useOnboardingPhoto } from "../../hooks/useOnboardingPhoto";
+import { saveOnboardingProfile } from "../../services/onboarding.service";
 import { getApiErrorMessage } from "../../utils/api-error";
-import { prepareOnboardingPhoto } from "../../utils/onboarding-photo";
 import {
   ONBOARDING_STEPS,
   PRIMARY_INTEREST_MAX,
@@ -34,7 +37,6 @@ import {
   toggleMulti,
   toggleSingle,
   type OnboardingForm,
-  validateOnboardingPhoto,
 } from "../../utils/onboarding";
 import { reverseGeocodeColombia } from "../../utils/geocode";
 import { formatPersonName } from "../../utils/person-name";
@@ -58,13 +60,11 @@ const EDIT_COPY = [
 ] as const;
 
 export function OnboardingPage() {
-  const { user, refresh } = useAuth();
+  const { user, refresh, updateProfile } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const isProfileEdit = location.pathname.startsWith("/perfil/editar");
   const exitTarget = isProfileEdit ? "/perfil" : "/explorar";
-  const fileInput = useRef<HTMLInputElement>(null);
-  const pendingFile = useRef<File | null>(null);
   const savingLock = useRef(false);
   const skipDraftSave = useRef(true);
   const [form, setForm] = useState<OnboardingForm>(emptyOnboardingForm);
@@ -75,17 +75,18 @@ export function OnboardingPage() {
   const [hydrated, setHydrated] = useState(false);
   const [avatarTab, setAvatarTab] = useState<"face" | "hair" | "outfit" | "accessories">("face");
   const [prefTab, setPrefTab] = useState<"ambientes" | "musica" | "presupuesto" | "clima">("ambientes");
-  const [photoLoading, setPhotoLoading] = useState(false);
-  const [photoError, setPhotoError] = useState("");
   const [formError, setFormError] = useState("");
   const [limitMessage, setLimitMessage] = useState("");
   const [locating, setLocating] = useState(false);
   const [locationStatus, setLocationStatus] = useState<LocationStatus>("idle");
   const [locationError, setLocationError] = useState("");
-  const [photoProgress, setPhotoProgress] = useState(0);
   const [saving, setSaving] = useState(false);
+  const photo = useOnboardingPhoto(setForm);
   const [draftSaving, setDraftSaving] = useState(false);
   const [exitOpen, setExitOpen] = useState(false);
+  const [accountName, setAccountName] = useState("");
+  const [accountPhone, setAccountPhone] = useState("");
+  const [accountErrors, setAccountErrors] = useState<{ name?: string; phone?: string }>({});
 
   useEffect(() => {
     if (!isProfileEdit && user?.profile?.onboardingCompleted) {
@@ -104,6 +105,11 @@ export function OnboardingPage() {
     setForm((current) => ({ ...next, localPhotoUrl: current.localPhotoUrl }));
     setHydrated(true);
   }, [user?.id, user?.profile?.updatedAt]);
+
+  useEffect(() => {
+    setAccountName(user?.name ?? "");
+    setAccountPhone(formatPhoneDisplay(user?.phone ?? ""));
+  }, [user?.id]);
 
   useEffect(() => {
     const next = profileToForm(user?.profile);
@@ -153,49 +159,6 @@ export function OnboardingPage() {
     window.addEventListener("pagehide", flushDraft);
     return () => window.removeEventListener("pagehide", flushDraft);
   }, [isProfileEdit]);
-
-  async function onPickFile(file: File | undefined) {
-    if (!file) {
-      return;
-    }
-    const invalid = validateOnboardingPhoto(file);
-    if (invalid) {
-      setPhotoError(invalid);
-      return;
-    }
-    pendingFile.current = file;
-    const localUrl = URL.createObjectURL(file);
-    setForm((current) => {
-      if (current.localPhotoUrl) {
-        URL.revokeObjectURL(current.localPhotoUrl);
-      }
-      return { ...current, profileImageType: "PHOTO", localPhotoUrl: localUrl };
-    });
-    const optimized = await prepareOnboardingPhoto(file);
-    pendingFile.current = optimized;
-    await uploadSelectedPhoto(optimized);
-    if (fileInput.current) {
-      fileInput.current.value = "";
-    }
-  }
-
-  async function uploadSelectedPhoto(file: File) {
-    try {
-      setPhotoLoading(true);
-      setPhotoProgress(8);
-      setPhotoError("");
-      const profile = await uploadOnboardingPhoto(file, setPhotoProgress);
-      setForm((current) => ({
-        ...current,
-        profileImageType: "PHOTO",
-        profileImageUrl: profile.profileImageUrl,
-      }));
-    } catch (error) {
-      setPhotoError(getApiErrorMessage(error, "No se pudo subir la foto. Puedes reintentar."));
-    } finally {
-      setPhotoLoading(false);
-    }
-  }
 
   async function onUseLocation() {
     if (!navigator.geolocation) {
@@ -255,6 +218,15 @@ export function OnboardingPage() {
     await saveOnboardingProfile(nextForm, false);
   }
 
+  function accountFieldErrors() {
+    const name = validateAccountName(accountName);
+    const phone = validateAccountPhone(accountPhone);
+    return {
+      name: name || undefined,
+      phone: phone || undefined,
+    };
+  }
+
   async function onContinue() {
     if (!canContinue || draftSaving) {
       return;
@@ -279,7 +251,11 @@ export function OnboardingPage() {
     const saved = profileToForm(user?.profile);
     const current = { ...formRef.current, localPhotoUrl: null };
     const baseline = { ...saved, localPhotoUrl: null };
-    return JSON.stringify(current) !== JSON.stringify(baseline);
+    const accountChanged =
+      isProfileEdit &&
+      (accountName.trim() !== (user?.name ?? "").trim() ||
+        compactPhone(accountPhone) !== compactPhone(user?.phone ?? ""));
+    return accountChanged || JSON.stringify(current) !== JSON.stringify(baseline);
   }
 
   function requestLeave() {
@@ -313,6 +289,20 @@ export function OnboardingPage() {
     setSaving(true);
     setFormError("");
     try {
+      if (isProfileEdit) {
+        const nextErrors = accountFieldErrors();
+        setAccountErrors(nextErrors);
+        if (nextErrors.name || nextErrors.phone) {
+          savingLock.current = false;
+          setSaving(false);
+          goTo(6);
+          return;
+        }
+        await updateProfile({
+          name: accountName.trim(),
+          phone: compactPhone(accountPhone) || null,
+        });
+      }
       await saveOnboardingProfile(form, true);
       await refresh();
       navigate(isProfileEdit ? "/perfil" : "/explorar", { replace: true });
@@ -329,11 +319,11 @@ export function OnboardingPage() {
     if (step === 1) {
       return (
         <LocationStep
-          form={form}
-          locating={locating}
-          locationStatus={locationStatus}
-          locationError={locationError}
-          onChange={setForm}
+            form={form}
+            locating={locating}
+            locationStatus={locationStatus}
+            locationError={locationError}
+            onChange={setForm}
           onUseLocation={() => void onUseLocation()}
         />
       );
@@ -343,26 +333,19 @@ export function OnboardingPage() {
         <ProfileStep
           form={form}
           tab={avatarTab}
-          photoLoading={photoLoading}
-          photoProgress={photoProgress}
-          photoError={photoError}
-          fileInput={fileInput}
+          photoLoading={photo.photoLoading}
+          photoProgress={photo.photoProgress}
+          photoError={photo.photoError}
+          fileInput={photo.fileInput}
           onMode={(profileImageType) => setForm((current) => ({ ...current, profileImageType }))}
           onForm={setForm}
-          onPick={(file) => void onPickFile(file)}
-          onRetry={() => pendingFile.current && void uploadSelectedPhoto(pendingFile.current)}
+          onPick={(file) => void photo.onPick(file)}
+          onRetry={() => void photo.onRetry()}
           onRemovePhoto={() => {
-            void deleteOnboardingPhoto()
-              .then(() => {
-                setForm((current) => {
-                  if (current.localPhotoUrl) {
-                    URL.revokeObjectURL(current.localPhotoUrl);
-                  }
-                  return { ...current, profileImageUrl: null, localPhotoUrl: null, profileImageType: "AVATAR" };
-                });
-                return refresh();
-              })
-              .catch((error) => setPhotoError(getApiErrorMessage(error, "No se pudo eliminar la foto.")));
+            void photo
+              .onRemove()
+              .then(() => refresh())
+              .catch((error) => photo.setPhotoError(getApiErrorMessage(error, "No se pudo eliminar la foto.")));
           }}
           onTab={setAvatarTab}
         />
@@ -408,27 +391,74 @@ export function OnboardingPage() {
         />
       );
     }
-    const displayName = formatPersonName(user?.name ?? "") || user?.name?.trim() || "";
+    const sourceName = isProfileEdit ? accountName : (user?.name ?? "");
+    const displayName = formatPersonName(sourceName) || sourceName.trim() || "";
     return (
-      <SummaryStep
-        form={form}
-        userName={displayName}
-        onChangeImage={() => goTo(2)}
-        onEdit={(section) => {
-          if (section === "interests") {
-            goTo(3);
-            return;
-          }
-          if (section === "company") {
-            goTo(4);
-            return;
-          }
-          setPrefTab(section);
-          goTo(5);
-        }}
-      />
+      <>
+        {isProfileEdit ? (
+          <EditAccountFields
+            name={accountName}
+            phone={accountPhone}
+            email={user?.email ?? ""}
+            errors={accountErrors}
+            onName={(value) => {
+              setAccountName(value);
+              if (accountErrors.name) {
+                setAccountErrors((current) => ({
+                  ...current,
+                  name: validateAccountName(value) || undefined,
+                }));
+              }
+            }}
+            onPhone={(value) => {
+              setAccountPhone(value);
+              if (accountErrors.phone) {
+                setAccountErrors((current) => ({
+                  ...current,
+                  phone: validateAccountPhone(value) || undefined,
+                }));
+              }
+            }}
+          />
+        ) : null}
+        <SummaryStep
+          form={form}
+          userName={displayName}
+          onChangeImage={() => goTo(2)}
+          onEdit={(section) => {
+            if (section === "interests") {
+              goTo(3);
+              return;
+            }
+            if (section === "company") {
+              goTo(4);
+              return;
+            }
+            setPrefTab(section);
+            goTo(5);
+          }}
+        />
+      </>
     );
-  }, [avatarTab, form, locating, locationError, locationStatus, photoError, photoLoading, photoProgress, prefTab, step, user?.name]);
+  }, [
+    accountErrors.name,
+    accountErrors.phone,
+    accountName,
+    accountPhone,
+    avatarTab,
+    form,
+    isProfileEdit,
+    locating,
+    locationError,
+    locationStatus,
+    photo.photoError,
+    photo.photoLoading,
+    photo.photoProgress,
+    prefTab,
+    step,
+    user?.email,
+    user?.name,
+  ]);
 
   if (!hydrated) {
     return <div className="onboarding-page" />;
@@ -485,7 +515,11 @@ export function OnboardingPage() {
                 </p>
               ) : null}
             </div>
-            <div className={`onboarding-body${step === 2 || step === 6 ? " onboarding-body--fit" : ""}`}>{body}</div>
+            <div
+            className={`onboarding-body${step === 2 || (step === 6 && !isProfileEdit) ? " onboarding-body--fit" : ""}`}
+          >
+            {body}
+          </div>
           </div>
           </div>
         </div>

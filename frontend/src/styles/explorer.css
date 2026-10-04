@@ -18,6 +18,42 @@
   padding-top: 0;
 }
 
+.explorer-page--closing {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100svh;
+}
+
+.explorer-page__fill {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  padding-bottom: calc(clamp(2.85rem, 6.5vw, 4.25rem) + clamp(0.85rem, 2.5vw, 1.6rem) + 0.35rem);
+}
+
+.explorer-page--closing .explorer-blank,
+.explorer-page--closing .favorites-library {
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: auto;
+  padding-bottom: 1.5rem;
+}
+
+@media (max-width: 480px) {
+  .explorer-page__fill {
+    padding-bottom: 1.75rem;
+  }
+
+  .explorer-page--closing .explorer-blank,
+  .explorer-page--closing .favorites-library {
+    padding-bottom: 0.5rem;
+  }
+}
+
 .explorer-blank {
   box-sizing: border-box;
   display: flex;
@@ -48,6 +84,21 @@
 .explorer-under-construction .explorer-discover-lead {
   margin-top: 1.85rem;
   max-width: 26rem;
+}
+
+.explorer-blank .explorer-under-construction__icon {
+  width: min(11.5rem, 44vw);
+  margin-bottom: 1rem;
+}
+
+.explorer-blank .explorer-discover-title {
+  font-size: clamp(1.02rem, 1.65vw, 1.32rem);
+}
+
+.explorer-blank .explorer-discover-lead {
+  margin-top: 0.7rem;
+  max-width: 22rem;
+  font-size: 0.64rem;
 }
 
 /* ——— Navbar ——— */
@@ -1082,7 +1133,8 @@
   background: #ffffff;
 }
 
-#mapa .explorer-map__dove {
+#mapa .explorer-map__dove,
+.explorer-page__fill > .explorer-map__dove {
   position: absolute;
   z-index: 1;
   display: block;
@@ -1098,16 +1150,19 @@
   opacity: 0.55;
 }
 
-#mapa .explorer-map__dove--left {
+#mapa .explorer-map__dove--left,
+.explorer-page__fill > .explorer-map__dove--left {
   left: clamp(1rem, 4.5vw, 3rem);
 }
 
-#mapa .explorer-map__dove--right {
+#mapa .explorer-map__dove--right,
+.explorer-page__fill > .explorer-map__dove--right {
   right: clamp(1rem, 4.5vw, 3rem);
 }
 
 @media (max-width: 480px) {
-  #mapa .explorer-map__dove {
+  #mapa .explorer-map__dove,
+  .explorer-page__fill > .explorer-map__dove {
     display: none;
   }
 }
@@ -1144,6 +1199,37 @@
 
 #mapa .explorer-section__lead {
   margin-top: 1.55rem;
+}
+
+#mapa .explorer-soft-grid {
+  align-self: center;
+  width: min(100%, 76rem);
+  margin-inline: auto;
+  gap: 0.85rem;
+}
+
+#mapa .explorer-soft-card {
+  grid-template-columns: 3.5rem minmax(0, 1fr);
+  gap: 0.65rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: 0.95rem;
+}
+
+#mapa .explorer-soft-card img {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 0.7rem;
+}
+
+#mapa .explorer-soft-card h3 {
+  font-size: 0.86rem;
+  line-height: 1.28;
+}
+
+#mapa .explorer-soft-card p {
+  margin-top: 0.18rem;
+  font-size: 0.72rem;
+  line-height: 1.35;
 }
 
 .explorer-section__lead {
@@ -1644,7 +1730,7 @@
   position: fixed;
   right: 1.35rem;
   bottom: 6.1rem;
-  z-index: 10050;
+  z-index: 10110;
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
@@ -3179,21 +3265,27 @@ a.fav-folder {
 
 .favorites-grid {
   --favorites-grid-overhang: 2.75rem;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  column-gap: clamp(1rem, 1.8vw, 1.4rem);
+  --favorites-grid-columns: 4;
+  --favorites-grid-gap: clamp(1rem, 1.8vw, 1.4rem);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: stretch;
+  column-gap: var(--favorites-grid-gap);
   row-gap: clamp(1.85rem, 2.6vw, 2.4rem);
   padding: 0.15rem 0.15rem 0.35rem;
-  align-items: stretch;
   overflow: visible;
 }
 
 .favorites-strip__card--grid {
   position: relative;
-  width: 100%;
-  max-width: none;
-  height: 100%;
-  flex: unset;
+  box-sizing: border-box;
+  flex: 0 0 calc((100% - (var(--favorites-grid-columns) - 1) * var(--favorites-grid-gap)) / var(--favorites-grid-columns));
+  width: calc((100% - (var(--favorites-grid-columns) - 1) * var(--favorites-grid-gap)) / var(--favorites-grid-columns));
+  max-width: calc((100% - (var(--favorites-grid-columns) - 1) * var(--favorites-grid-gap)) / var(--favorites-grid-columns));
+  min-width: 0;
+  height: auto;
+  align-self: stretch;
   scroll-snap-align: unset;
   /* Keep circular media inside the grid cell while still overlapping the white surface. */
   padding: var(--favorites-grid-overhang) 0.95rem 1.15rem;
@@ -4006,8 +4098,8 @@ a.fav-folder {
 @media (max-width: 980px) {
   .favorites-grid {
     --favorites-grid-overhang: 2.55rem;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    column-gap: 1.1rem;
+    --favorites-grid-columns: 2;
+    --favorites-grid-gap: 1.1rem;
     row-gap: 1.85rem;
   }
 
@@ -4077,8 +4169,8 @@ a.fav-folder {
 
   .favorites-grid {
     --favorites-grid-overhang: 2.4rem;
-    grid-template-columns: minmax(0, 1fr);
-    column-gap: 0;
+    --favorites-grid-columns: 1;
+    --favorites-grid-gap: 0px;
     row-gap: 1.65rem;
     padding-inline: 0.35rem;
   }
@@ -5029,7 +5121,7 @@ button.fav-folder:focus-visible {
   box-sizing: border-box;
   width: 100%;
   max-width: none;
-  min-height: clamp(360px, 46vw, 520px);
+  min-height: 232px;
   margin: 0;
   padding: 0;
   overflow: hidden;
@@ -5040,14 +5132,17 @@ button.fav-folder:focus-visible {
 .explorer-user-footer__image {
   display: block;
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  top: 0;
+  left: 50%;
+  width: max(100%, 880px);
+  height: auto;
+  max-width: none;
   margin: 0;
   padding: 0;
   border: 0;
-  object-fit: cover;
-  object-position: center 8%;
+  object-fit: fill;
+  object-position: center top;
+  transform: translate(-50%, -21%);
   user-select: none;
   pointer-events: none;
 }
@@ -5060,10 +5155,7 @@ button.fav-folder:focus-visible {
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  padding:
-    clamp(7.5rem, 18vw, 11rem)
-    1.25rem
-    clamp(2.75rem, 7vw, 4.25rem);
+  padding: 5.7rem 1.25rem 1.05rem;
   text-align: center;
 }
 
@@ -5081,9 +5173,9 @@ button.fav-folder:focus-visible {
 
 .explorer-user-footer__logo {
   display: block;
-  width: clamp(4.5rem, 7.5vw, 5.5rem);
+  width: 2.45rem;
   height: auto;
-  margin: 0 auto 1.15rem;
+  margin: 0 auto 0.75rem;
   object-fit: contain;
   object-position: center;
   user-select: none;
@@ -5095,27 +5187,30 @@ button.fav-folder:focus-visible {
   max-width: 36rem;
   margin: 0 auto;
   color: #ffffff;
-  font-size: clamp(1.08rem, 1.8vw, 1.36rem);
+  font-size: 0.82rem;
+  line-height: 1.25;
 }
 
 .explorer-user-footer__cluster .explorer-section__lead {
   max-width: 34rem;
-  margin: 0.85rem auto 0;
+  margin: 0.38rem auto 0;
   color: rgba(255, 255, 255, 0.8);
+  font-size: 0.78rem;
+  line-height: 1.4;
 }
 
 @media (max-width: 720px) {
   .explorer-user-footer {
-    min-height: clamp(300px, 72vw, 420px);
+    min-height: 236px;
   }
 
   .explorer-user-footer__content {
-    padding: 5.5rem 1.1rem 2.35rem;
+    padding: 4.35rem 1rem 1.05rem;
   }
 
   .explorer-user-footer__logo {
-    width: 4.15rem;
-    margin-bottom: 0.95rem;
+    width: 2.15rem;
+    margin-bottom: 0.7rem;
   }
 
   .explorer-user-footer__cluster {

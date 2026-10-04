@@ -13,6 +13,13 @@ type LocationStepProps = {
   locationError: string;
   onChange: (form: OnboardingForm) => void;
   onUseLocation: () => void;
+  labels?: {
+    department?: string;
+    neighborhood?: string;
+    neighborhoodPlaceholder?: string;
+    address?: string;
+    addressPlaceholder?: string;
+  };
 };
 
 function FieldIcon({ icon: Icon }: { icon: LucideIcon }) {
@@ -36,7 +43,14 @@ export function LocationStep({
   locationError,
   onChange,
   onUseLocation,
+  labels,
 }: LocationStepProps) {
+  const departmentLabel = labels?.department ?? "Departamento o estado";
+  const neighborhoodLabel = labels?.neighborhood ?? "Barrio o sector";
+  const neighborhoodPlaceholder = labels?.neighborhoodPlaceholder ?? "Escribe tu barrio o sector";
+  const addressLabel = labels?.address ?? "Dirección de referencia";
+  const addressOptional = labels?.address == null;
+  const addressPlaceholder = labels?.addressPlaceholder ?? "Ej. Cerca al parque, edificio, punto de referencia...";
   const [openField, setOpenField] = useState<"country" | "department" | "city" | null>(null);
   const cities = citiesForDepartment(form.department);
   const departments = toOptions(departmentsList());
@@ -83,7 +97,7 @@ export function LocationStep({
           onChange={setCountry}
         />
         <OnboardingSelect
-          label="Departamento o estado"
+          label={departmentLabel}
           icon={MapPin}
           value={form.department}
           placeholder="Selecciona un departamento"
@@ -111,14 +125,14 @@ export function LocationStep({
         <label className="onboarding-field">
           <FieldIcon icon={House} />
           <span className="onboarding-field__copy">
-            <span className="onboarding-field__label">Barrio o sector</span>
+            <span className="onboarding-field__label">{neighborhoodLabel}</span>
             <span className="onboarding-control">
               <input
                 id="onboarding-neighborhood"
                 name="ec-neighborhood"
                 value={form.neighborhood}
                 onChange={(event) => onChange({ ...form, neighborhood: event.target.value })}
-                placeholder="Escribe tu barrio o sector"
+                placeholder={neighborhoodPlaceholder}
                 autoComplete="off"
                 autoCorrect="off"
                 autoCapitalize="off"
@@ -133,7 +147,8 @@ export function LocationStep({
               <FieldIcon icon={Compass} />
               <span className="onboarding-field__copy">
                 <span className="onboarding-field__label">
-                  Dirección de referencia <span className="onboarding-optional">(opcional)</span>
+                  {addressLabel}
+                  {addressOptional ? <span className="onboarding-optional"> (opcional)</span> : null}
                 </span>
                 <span className="onboarding-control">
                   <input
@@ -141,7 +156,7 @@ export function LocationStep({
                     name="ec-address-ref"
                     value={form.addressReference}
                     onChange={(event) => onChange({ ...form, addressReference: event.target.value })}
-                    placeholder="Ej. Cerca al parque, edificio, punto de referencia..."
+                    placeholder={addressPlaceholder}
                     autoComplete="off"
                     autoCorrect="off"
                     autoCapitalize="off"

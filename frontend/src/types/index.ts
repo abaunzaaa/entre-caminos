@@ -35,6 +35,8 @@ export type UserOnboardingProfile = {
   music: string[];
   budget: string[];
   climate: string[];
+  age: number | null;
+  gender: string | null;
   onboardingCompleted: boolean;
   onboardingCompletedAt: string | null;
   updatedAt: string;
@@ -89,6 +91,18 @@ export type Experience = {
   durationUnit?: "MINUTES" | "HOURS" | "DAYS" | null;
   availability?: unknown;
   howToGetThere?: string | null;
+  companyContact?: string | null;
+  locations?: Array<{
+    id?: string;
+    position?: number;
+    department?: string | null;
+    municipality?: string | null;
+    address?: string | null;
+    latitude?: string | number | null;
+    longitude?: string | number | null;
+    howToGetThere?: string | null;
+    availability?: unknown;
+  }>;
   imageUrl: string | null;
   imageUrls?: string[];
   stampImageUrl?: string | null;

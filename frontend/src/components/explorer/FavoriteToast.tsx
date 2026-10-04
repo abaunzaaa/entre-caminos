@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Check, Heart } from "lucide-react";
 import { onFavoriteToast } from "../../services/favorites-sync";
 
@@ -30,12 +31,13 @@ export function FavoriteToast() {
 
   const removed = toast.message.toLowerCase().includes("eliminado");
 
-  return (
+  return createPortal(
     <div className="favorite-toast" role="status" aria-live="polite" key={toast.id}>
       <span className="favorite-toast__icon" aria-hidden="true">
         {removed ? <Check size={14} strokeWidth={2.2} /> : <Heart size={14} strokeWidth={2} fill="currentColor" />}
       </span>
       <span>{toast.message}</span>
-    </div>
+    </div>,
+    document.body,
   );
 }

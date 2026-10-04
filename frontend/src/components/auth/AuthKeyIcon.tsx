@@ -1,4 +1,5 @@
 import keyClear from "../../assets/key-icon-green-clear.png";
+import "../../styles/auth-recovery-modal.css";
 
 type AuthKeyIconProps = {
   className?: string;

@@ -5,7 +5,7 @@ import type { AuthProvider } from "@prisma/client";
 import { env } from "../config/env.js";
 import { EMAIL_INACTIVE_LOGIN_MESSAGE, ROLES } from "../config/constants.js";
 import { prisma } from "../database/prisma.js";
-import { ACCOUNT_REMOVED_MESSAGE, isAccountRemoved } from "../utils/account.js";
+import { archivedAccountEmail, isAccountRemoved } from "../utils/account.js";
 import { ApiError } from "../utils/api-error.js";
 import { hashPassword } from "../utils/password.js";
 import { publicUser } from "../utils/serializers.js";
@@ -145,13 +145,14 @@ export async function loginOrRegisterOAuth(profile: OAuthProfile) {
     include: { user: { include: { role: true } } },
   });
 
-  if (existingLink) {
-    if (isAccountRemoved(existingLink.user) || existingLink.user.status !== "ACTIVE") {
-      throw ApiError.forbidden(
-        existingLink.user.status !== "ACTIVE"
-          ? EMAIL_INACTIVE_LOGIN_MESSAGE
-          : ACCOUNT_REMOVED_MESSAGE,
-      );
+  if (existingLink && isAccountRemoved(existingLink.user)) {
+    if (existingLink.user.role.name !== ROLES.USER) {
+      throw ApiError.forbidden(EMAIL_INACTIVE_LOGIN_MESSAGE);
+    }
+    await prisma.oAuthAccount.delete({ where: { id: existingLink.id } });
+  } else if (existingLink) {
+    if (existingLink.user.status !== "ACTIVE") {
+      throw ApiError.forbidden(EMAIL_INACTIVE_LOGIN_MESSAGE);
     }
     if (!existingLink.user.emailVerified) {
       await prisma.user.update({
@@ -178,13 +179,17 @@ export async function loginOrRegisterOAuth(profile: OAuthProfile) {
     include: { role: true },
   });
 
-  if (existingUser) {
-    if (isAccountRemoved(existingUser) || existingUser.status !== "ACTIVE") {
-      throw ApiError.forbidden(
-        existingUser.status !== "ACTIVE"
-          ? EMAIL_INACTIVE_LOGIN_MESSAGE
-          : ACCOUNT_REMOVED_MESSAGE,
-      );
+  if (existingUser && isAccountRemoved(existingUser)) {
+    if (existingUser.role.name !== ROLES.USER) {
+      throw ApiError.forbidden(EMAIL_INACTIVE_LOGIN_MESSAGE);
+    }
+    await prisma.user.update({
+      where: { id: existingUser.id },
+      data: { email: archivedAccountEmail(existingUser.id) },
+    });
+  } else if (existingUser) {
+    if (existingUser.status !== "ACTIVE") {
+      throw ApiError.forbidden(EMAIL_INACTIVE_LOGIN_MESSAGE);
     }
     await prisma.oAuthAccount.create({
       data: {

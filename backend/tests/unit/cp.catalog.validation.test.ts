@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { toPublicValidationDetails } from "../../src/middleware/validate.middleware.js";
 import { categorySchema, categoryUpdateSchema } from "../../src/validators/category.validator.js";
-import { experienceSchema } from "../../src/validators/experience.validator.js";
+import { experienceSchema, experienceUpdateSchema } from "../../src/validators/experience.validator.js";
 import { MIN_EXPERIENCE_IMAGES, MIN_EXPERIENCE_IMAGES_MESSAGE } from "../../src/config/constants.js";
 
 const categoryId = "11111111-1111-4111-8111-111111111111";
@@ -16,6 +17,7 @@ function validExperience(overrides?: Record<string, unknown>) {
     categoryId,
     price: 50000,
     location: "Envigado, Antioquia",
+    companyContact: "WhatsApp 300 111 2233",
     imageUrl: images[0],
     imageUrls: images,
     ...overrides,
@@ -32,6 +34,12 @@ describe("Sprint 1 — Categorías y experiencias (sin DB)", () => {
   it("CP-S1-018: actualización de categoría exige al menos un campo", () => {
     expect(categoryUpdateSchema.safeParse({ name: "Nueva" }).success).toBe(true);
     expect(categoryUpdateSchema.safeParse({}).success).toBe(false);
+  });
+
+  it("exige el contacto de la empresa al crear y lo permite ausente en una actualización parcial", () => {
+    expect(experienceSchema.safeParse(validExperience({ companyContact: "   " })).success).toBe(false);
+    expect(experienceSchema.safeParse(validExperience({ companyContact: "ab" })).success).toBe(false);
+    expect(experienceUpdateSchema.safeParse({ title: "Taller de cerámica local actualizado" }).success).toBe(true);
   });
 
   it("CP-S1-021: experiencia válida con datos obligatorios pasa", () => {
@@ -65,6 +73,153 @@ describe("Sprint 1 — Categorías y experiencias (sin DB)", () => {
       false,
     );
     expect(experienceSchema.safeParse(validExperience({ categoryIds: [] })).success).toBe(false);
+  });
+
+  it("disponibilidad acepta un horario, varios horarios y registros sin times", () => {
+    const one = experienceSchema.safeParse(
+      validExperience({
+        availability: { type: "WEEKDAYS", days: ["Martes", "Jueves"], times: ["14:45"] },
+      }),
+    );
+    expect(one.success).toBe(true);
+    if (one.success) {
+      expect(one.data.availability).toEqual({
+        type: "WEEKDAYS",
+        days: ["Martes", "Jueves"],
+        times: ["14:45"],
+      });
+    }
+
+    const many = experienceSchema.safeParse(
+      validExperience({
+        availability: { type: "EVERY_DAY", times: ["19:00", "14:00", "07:25"] },
+      }),
+    );
+    expect(many.success).toBe(true);
+    if (many.success) {
+      expect(many.data.availability).toEqual({
+        type: "EVERY_DAY",
+        times: ["19:00", "14:00", "07:25"],
+      });
+    }
+
+    const legacy = experienceSchema.safeParse(
+      validExperience({
+        availability: { type: "DATES", dates: ["2026-10-12", "2026-10-19"] },
+      }),
+    );
+    expect(legacy.success).toBe(true);
+    if (legacy.success) {
+      expect(legacy.data.availability).toEqual({
+        type: "DATES",
+        dates: ["2026-10-12", "2026-10-19"],
+      });
+    }
+
+    const comingSoon = experienceSchema.safeParse(
+      validExperience({
+        availability: { type: "COMING_SOON" },
+      }),
+    );
+    expect(comingSoon.success).toBe(true);
+    if (comingSoon.success) {
+      expect(comingSoon.data.availability).toEqual({ type: "COMING_SOON" });
+      expect(comingSoon.data.availability).not.toHaveProperty("dates");
+      expect(comingSoon.data.availability).not.toHaveProperty("days");
+      expect(comingSoon.data.availability).not.toHaveProperty("times");
+    }
+
+    const staleDates = experienceUpdateSchema.safeParse({
+      availability: { type: "COMING_SOON", dates: ["2026-10-10", "2026-10-15"], times: ["14:45"] },
+    });
+    expect(staleDates.success).toBe(false);
+
+    const cleared = experienceUpdateSchema.safeParse({
+      availability: { type: "COMING_SOON", dates: [], days: [], times: [] },
+    });
+    expect(cleared.success).toBe(true);
+    if (cleared.success) {
+      expect(cleared.data.availability).toEqual({ type: "COMING_SOON" });
+    }
+
+    const datesToWeekdays = experienceUpdateSchema.safeParse({
+      availability: { type: "WEEKDAYS", days: ["Lunes"], times: ["09:00"] },
+    });
+    expect(datesToWeekdays.success).toBe(true);
+    if (datesToWeekdays.success) {
+      expect(datesToWeekdays.data.availability).toEqual({
+        type: "WEEKDAYS",
+        days: ["Lunes"],
+        times: ["09:00"],
+      });
+      expect(datesToWeekdays.data.availability).not.toHaveProperty("dates");
+    }
+
+    const weekdaysWithDates = experienceUpdateSchema.safeParse({
+      availability: { type: "WEEKDAYS", days: ["Lunes"], dates: ["2026-10-10"] },
+    });
+    expect(weekdaysWithDates.success).toBe(false);
+
+    const datesWithDays = experienceUpdateSchema.safeParse({
+      availability: { type: "DATES", dates: ["2026-10-10"], days: ["Lunes"] },
+    });
+    expect(datesWithDays.success).toBe(false);
+
+    const medellin = {
+      department: "Antioquia",
+      municipality: "Medellín",
+      address: "Calle 10",
+      availability: { type: "DATES", dates: ["2026-10-12"], times: ["07:00"] },
+    };
+    const bogota = {
+      department: "Cundinamarca",
+      municipality: "Bogotá",
+      address: "Carrera 7",
+      availability: { type: "COMING_SOON" },
+    };
+    const several = experienceSchema.safeParse(validExperience({ locations: [medellin, bogota] }));
+    expect(several.success).toBe(true);
+    if (several.success) {
+      expect(several.data.locations?.[0]?.availability).toEqual({
+        type: "DATES",
+        dates: ["2026-10-12"],
+        times: ["07:00"],
+      });
+      expect(several.data.locations?.[1]?.availability).toEqual({ type: "COMING_SOON" });
+    }
+    expect(
+      experienceSchema.safeParse(
+        validExperience({
+          locations: [{ ...bogota, availability: { type: "COMING_SOON", dates: ["2026-10-12"] } }],
+        }),
+      ).success,
+    ).toBe(false);
+    expect(experienceSchema.safeParse(validExperience()).success).toBe(true);
+    expect(
+      experienceSchema.safeParse(
+        validExperience({ locations: [{ department: "", municipality: "", address: "" }] }),
+      ).success,
+    ).toBe(false);
+
+    expect(
+      experienceSchema.safeParse(
+        validExperience({
+          availability: { type: "WEEKDAYS", days: ["Lunes"], times: ["14:00", "14:00"] },
+        }),
+      ).success,
+    ).toBe(false);
+
+    const invalidType = experienceSchema.safeParse(
+      validExperience({
+        availability: { type: "OTRO" },
+      }),
+    );
+    expect(invalidType.success).toBe(false);
+    if (!invalidType.success) {
+      expect(toPublicValidationDetails(invalidType.error.issues)[0]?.message).toBe(
+        "Revisa la disponibilidad seleccionada.",
+      );
+    }
   });
 
   it("CP-S1-023: enlace inválido se rechaza; enlace relativo se normaliza", () => {

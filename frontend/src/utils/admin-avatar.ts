@@ -30,7 +30,7 @@ export function resolveAvatarUrl(
   const stored = user?.avatarUrl?.trim() || "";
   const profileUrl = user?.profile?.profileImageUrl?.trim() || "";
   const preferPhoto = user?.profile?.profileImageType !== "AVATAR";
-  const url = stored || (preferPhoto ? profileUrl : "") || "";
+  const url = preferPhoto ? stored || profileUrl : "";
   if (url) {
     if (url.startsWith("data:") || url.startsWith("blob:") || /^https?:\/\//i.test(url)) {
       return url;

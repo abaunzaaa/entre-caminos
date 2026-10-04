@@ -15,6 +15,7 @@ import {
   registerAccount,
   restoreSession,
   changeMyPassword,
+  deleteMyAccount,
   updateMyProfile,
   verifyEmailAccount,
   type UpdateProfileInput,
@@ -41,6 +42,7 @@ type AuthContextValue = {
     password: string;
     confirmPassword: string;
   }) => Promise<PublicUser>;
+  deleteAccount: () => Promise<void>;
   refresh: () => Promise<PublicUser | null>;
   hasPermission: (permission: string) => boolean;
   isAdmin: boolean;
@@ -139,6 +141,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  const deleteAccount = useCallback(async () => {
+    await deleteMyAccount();
+  }, []);
+
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
@@ -146,6 +152,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       refreshUser,
       updateProfile,
       changePassword,
+      deleteAccount,
       async login(email, password, remember = false) {
         const result = await loginAccount({ email, password, remember });
         setUser(result.user);
@@ -197,7 +204,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       isAdmin: user?.role === "ADMIN" || user?.role === "SUPER_ADMIN",
     }),
-    [user, loading, refreshUser, updateProfile, changePassword],
+    [user, loading, refreshUser, updateProfile, changePassword, deleteAccount],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

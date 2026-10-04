@@ -44,6 +44,7 @@ authRouter.patch(
   validate(updateProfileSchema),
   asyncHandler(authController.updateMe),
 );
+authRouter.delete("/me", authMiddleware, asyncHandler(authController.deleteMe));
 
 const onboardingUpload = multer({
   storage: multer.memoryStorage(),

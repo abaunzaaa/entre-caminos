@@ -417,6 +417,50 @@
   overflow: visible;
 }
 
+.onboarding-account {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 20px;
+  width: min(100%, 860px);
+  margin: 0 auto 18px;
+}
+
+.onboarding-account__hint,
+.onboarding-account .onboarding-error {
+  grid-column: 1 / -1;
+  margin: -6px 0 0;
+  text-align: left;
+}
+
+.onboarding-account__hint {
+  color: var(--ob-muted);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.onboarding-account input[readonly] {
+  color: var(--ob-muted);
+}
+
+.onboarding-account__missing {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 78px;
+  padding: 14px 18px;
+  border: 1px solid var(--ob-line);
+  border-radius: 20px;
+  background: #f7f8f7;
+  color: var(--ob-muted);
+  font-size: 0.84rem;
+}
+
+.onboarding-account__missing strong {
+  color: #8b9893;
+  font-weight: 500;
+}
+
 .onboarding-field {
   position: relative;
   display: flex;
@@ -1755,6 +1799,7 @@ html.onboarding-menu-open .onboarding-footer {
 }
 
 @media (max-width: 560px) {
+  .onboarding-account,
   .location-grid,
   .onboarding-choices,
   .onboarding-company-grid,

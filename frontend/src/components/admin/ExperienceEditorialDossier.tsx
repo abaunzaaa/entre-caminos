@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import avionIcon from "../../assets/avion-icon.png";
 import frameVerde from "../../assets/frame-verde.png";
 import { ExperienceOrganizationCard } from "../experiences/ExperienceOrganizationCard";
@@ -7,6 +8,8 @@ import type { PublicOrganizationProfile } from "../../types";
 export type ExperienceEditorialFact = {
   label: string;
   value: string;
+  href?: string;
+  external?: boolean;
   avatarUrl?: string | null;
 };
 
@@ -18,8 +21,19 @@ function FactValue({
   className: string;
 }) {
   const avatar = fact.avatarUrl?.trim() ? mediaUrl(fact.avatarUrl, 96) : null;
+  const content = fact.href ? (
+    <a
+      className="dash-exps-dossier__link"
+      href={fact.href}
+      {...(fact.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+    >
+      {fact.value}
+    </a>
+  ) : (
+    fact.value
+  );
   if (!avatar) {
-    return <span className={className}>{fact.value}</span>;
+    return <span className={className}>{content}</span>;
   }
 
   return (
@@ -27,9 +41,20 @@ function FactValue({
       <span className="dash-exps-dossier__publisher-avatar" aria-hidden="true">
         <img src={avatar} alt="" />
       </span>
-      <span>{fact.value}</span>
+      <span>{content}</span>
     </span>
   );
+}
+
+function FactRows({ facts }: { facts: ExperienceEditorialFact[] }) {
+  return facts.map((fact) => (
+    <div className="dash-exps-dossier__row" key={fact.label}>
+      <div className="dash-exps-dossier__copy">
+        <span className="dash-exps-dossier__label">{fact.label}</span>
+        <FactValue fact={fact} className="dash-exps-dossier__value" />
+      </div>
+    </div>
+  ));
 }
 
 export function ExperienceEditorialDossier({
@@ -37,13 +62,15 @@ export function ExperienceEditorialDossier({
   photoLabel,
   noteFacts,
   facts,
-  organization = null,
+  places,
+  placeFacts = [],
 }: {
   photoUrl: string | null;
   photoLabel: string;
   noteFacts: ExperienceEditorialFact[];
   facts: ExperienceEditorialFact[];
-  organization?: PublicOrganizationProfile | null;
+  places?: ReactNode;
+  placeFacts?: ExperienceEditorialFact[];
 }) {
   const hasOrganization = Boolean(organization?.tradeName?.trim());
 
@@ -79,15 +106,14 @@ export function ExperienceEditorialDossier({
       <div className="dash-exps-dossier__info">
         <h2 className="dash-exps-dossier__kicker">Información de la experiencia</h2>
         <div className="dash-exps-dossier__facts">
-          {facts.map((fact) => (
-            <div className="dash-exps-dossier__row" key={fact.label}>
-              <div className="dash-exps-dossier__copy">
-                <span className="dash-exps-dossier__label">{fact.label}</span>
-                <FactValue fact={fact} className="dash-exps-dossier__value" />
-              </div>
-            </div>
-          ))}
+          <FactRows facts={facts} />
         </div>
+        {places ? <div className="dash-exps-dossier__places">{places}</div> : null}
+        {placeFacts.length ? (
+          <div className="dash-exps-dossier__facts dash-exps-dossier__facts--place">
+            <FactRows facts={placeFacts} />
+          </div>
+        ) : null}
       </div>
     </section>
   );

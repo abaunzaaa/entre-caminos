@@ -71,6 +71,8 @@ export const INTEREST_OPTIONS: OnboardingOption[] = [
   { value: "Fiesta / Vida nocturna", label: "Vida nocturna", icon: PartyPopper },
 ];
 
+export const PROFILE_GENDERS = ["Mujer", "Hombre", "No binario", "Otro", "Prefiero no decir"] as const;
+
 export const COMPANY_OPTIONS: OnboardingOption[] = [
   { value: "Solo", label: "Solo", hint: "A tu propio ritmo", icon: User },
   { value: "En pareja", label: "En pareja", hint: "Momentos para dos", icon: Heart },

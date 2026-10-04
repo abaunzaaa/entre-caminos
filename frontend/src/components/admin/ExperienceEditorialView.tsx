@@ -1,20 +1,31 @@
-import type { CSSProperties } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { Heart } from "lucide-react";
 import { ExperienceEditorialDossier, type ExperienceEditorialFact } from "./ExperienceEditorialDossier";
 import { ExperienceEditorialGallery } from "./ExperienceEditorialGallery";
 import { ExperienceEditorialNearby } from "./ExperienceEditorialNearby";
 import { ExperienceEditorialPlace } from "./ExperienceEditorialPlace";
+import { ExperiencePlaceTabs } from "./ExperiencePlaceTabs";
 import { formatDepartmentMunicipality } from "../../data/colombia-locations";
 import { formatPrice } from "../../utils/cn";
 import { experienceCategoryNames, formatExperienceCategories } from "../../utils/experience-categories";
 import {
-  displayExternalUrl,
+  availabilityDetailFacts,
   durationParts,
-  formatAvailability,
   formatDuration,
 } from "../../utils/experience-details";
 import { experienceImages, mediaUrl } from "../../utils/media";
+import { placeTabLabel, placesFromExperience, projectExperience } from "../../utils/experience-places";
 import type { Experience, ExperienceStatus } from "../../types";
+
+const PLACE_FACT_LABELS = new Set([
+  "Ubicación",
+  "Disponibilidad",
+  "Días disponibles",
+  "Fechas",
+  "Horario",
+  "Horarios",
+  "Cómo llegar",
+]);
 
 const STATUS_LABEL: Record<ExperienceStatus, string> = {
   DRAFT: "Borrador",
@@ -23,6 +34,26 @@ const STATUS_LABEL: Record<ExperienceStatus, string> = {
   ARCHIVED: "Inactiva",
   REJECTED: "Rechazada",
 };
+
+function experienceLink(url: string) {
+  const trimmed = url.trim();
+  if (!trimmed) {
+    return "";
+  }
+  return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+}
+
+function phoneHref(value: string) {
+  const trimmed = value.trim();
+  if (!/^\+?[\d\s().-]{7,24}$/.test(trimmed)) {
+    return "";
+  }
+  const digits = trimmed.replace(/\D/g, "");
+  if (digits.length < 7 || digits.length > 15) {
+    return "";
+  }
+  return `tel:${trimmed.replace(/[^\d+]/g, "")}`;
+}
 
 function formatPublishedDate(value?: string | null) {
   if (!value) {
@@ -74,7 +105,7 @@ export function buildExperienceEditorialFacts(
           ...(experience.creator?.email ? [{ label: "Contacto interno", value: experience.creator.email }] : []),
           ...(published ? [{ label: "Fecha de publicación", value: published }] : []),
         ]
-      : [...(published ? [{ label: "Fecha de publicación", value: published }] : [])];
+      : [];
 
   const detailFacts: ExperienceEditorialFact[] = [
     ...(experience.description.trim() ? [{ label: "Descripción", value: experience.description }] : []),
@@ -86,14 +117,30 @@ export function buildExperienceEditorialFacts(
     ...(mode === "admin" ? [{ label: "Estado", value: STATUS_LABEL[experience.status] }] : []),
     { label: "Ubicación", value: experience.location || "—" },
     ...(durationText ? [{ label: "Duración", value: durationText }] : []),
-    ...(formatAvailability(experience.availability)
-      ? [{ label: "Disponibilidad", value: formatAvailability(experience.availability) }]
-      : []),
+    ...availabilityDetailFacts(experience.availability),
     ...(experience.howToGetThere?.trim()
       ? [{ label: "Cómo llegar", value: experience.howToGetThere.trim() }]
       : []),
-    ...(experience.externalUrl
-      ? [{ label: "Enlace", value: displayExternalUrl(experience.externalUrl) }]
+    ...(experience.companyContact?.trim()
+      ? [
+          {
+            label: "Contacto",
+            value: experience.companyContact.trim(),
+            ...(phoneHref(experience.companyContact)
+              ? { href: phoneHref(experience.companyContact) }
+              : {}),
+          },
+        ]
+      : []),
+    ...(experience.externalUrl?.trim()
+      ? [
+          {
+            label: "Enlace",
+            value: "Visitar página oficial",
+            href: experienceLink(experience.externalUrl),
+            external: true,
+          },
+        ]
       : []),
     ...(mode === "admin" && experience.rejectionReason
       ? [{ label: "Motivo del rechazo", value: experience.rejectionReason }]
@@ -114,13 +161,24 @@ export function ExperienceEditorialView({
   onConsultAi,
 }: ExperienceEditorialViewProps) {
   const isFavorite = favoriteOn;
-  const locationByline = formatDepartmentMunicipality(experience.location);
-  const lat = experience.latitude ? Number(experience.latitude) : null;
-  const lng = experience.longitude ? Number(experience.longitude) : null;
+  const places = useMemo(() => placesFromExperience(experience), [experience]);
+  const [placeIndex, setPlaceIndex] = useState(0);
+  useEffect(() => {
+    setPlaceIndex(0);
+  }, [experience.id]);
+  const activePlace = Math.min(placeIndex, Math.max(places.length - 1, 0));
+  const selectedPlace = places[activePlace] ?? places[0];
+  const view = selectedPlace ? projectExperience(experience, selectedPlace) : experience;
+  const locationByline = formatDepartmentMunicipality(view.location);
+  const lat = view.latitude ? Number(view.latitude) : null;
+  const lng = view.longitude ? Number(view.longitude) : null;
   const hasPoint = Number.isFinite(lat) && Number.isFinite(lng);
   const photos = experienceImages(experience);
   const mainPhoto = photos[0] ? mediaUrl(photos[0], 1200) : null;
-  const { noteFacts, detailFacts } = buildExperienceEditorialFacts(experience, mode);
+  const { noteFacts, detailFacts } = buildExperienceEditorialFacts(view, mode);
+  const showPlaceTabs = places.length > 1;
+  const generalFacts = showPlaceTabs ? detailFacts.filter((fact) => !PLACE_FACT_LABELS.has(fact.label)) : detailFacts;
+  const placeFacts = showPlaceTabs ? detailFacts.filter((fact) => PLACE_FACT_LABELS.has(fact.label)) : [];
   const showTouristActions = mode === "tourist" && (onConsultAi || onFavoriteToggle);
 
   return (
@@ -180,19 +238,29 @@ export function ExperienceEditorialView({
         photoUrl={mainPhoto}
         photoLabel={experience.title}
         noteFacts={noteFacts}
-        facts={detailFacts}
-        organization={mode === "tourist" ? experience.creator?.organization : null}
+        facts={generalFacts}
+        placeFacts={placeFacts}
+        places={
+          showPlaceTabs ? (
+            <ExperiencePlaceTabs
+              label="Disponible en"
+              tabs={places.map((place, index) => placeTabLabel(place, index, places))}
+              active={activePlace}
+              onSelect={setPlaceIndex}
+            />
+          ) : null
+        }
       />
 
       <ExperienceEditorialPlace
-        experience={experience}
+        experience={view}
         latitude={lat}
         longitude={lng}
         hasPoint={hasPoint}
       />
 
       <ExperienceEditorialNearby
-        experience={experience}
+        experience={view}
         hrefFor={nearbyHref}
         fetchPublished={fetchNearby}
       />

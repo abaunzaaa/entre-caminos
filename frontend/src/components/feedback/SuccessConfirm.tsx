@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
+import { AuthKeyIcon } from "../auth/AuthKeyIcon";
 import bannerCategoria from "../../assets/banner_categoria.png";
 import bannerExperiencia from "../../assets/banner_experiencia.png";
 import "../../styles/contact-modal.css";
@@ -18,6 +19,7 @@ export function SuccessConfirm({
   image,
   showIcon = true,
   actionLabel = "Continuar",
+  actionClassName,
   onClose,
 }: {
   open: boolean;
@@ -27,6 +29,7 @@ export function SuccessConfirm({
   image?: string;
   showIcon?: boolean;
   actionLabel?: string;
+  actionClassName?: string;
   onClose: () => void;
 }) {
   const titleId = useId();
@@ -106,14 +109,22 @@ export function SuccessConfirm({
             className={`contact-success__icon contact-success__icon--${image ? "password" : variant}`}
             aria-hidden="true"
           />
-        ) : null}
+        ) : (
+          <div className="contact-success__media">
+            <AuthKeyIcon className="auth-reset-success__mark" />
+          </div>
+        )}
         <h2 id={titleId} className="contact-success__title">
           {title}
         </h2>
         <p id={`${titleId}-copy`} className="contact-success__text">
           {text}
         </p>
-        <button type="button" className="contact-success__action admin-cta" onClick={onClose}>
+        <button
+          type="button"
+          className={actionClassName ? `contact-success__action ${actionClassName}` : "contact-success__action admin-cta"}
+          onClick={onClose}
+        >
           {actionLabel}
         </button>
       </div>

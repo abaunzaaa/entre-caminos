@@ -256,8 +256,8 @@ describe("HU-21 Administración", () => {
     expect(persisted?.deletedAt).toBeTruthy();
 
     const loginAgain = await loginAs(email, password);
-    expect(loginAgain.status).toBe(403);
-    expect(loginAgain.body.error.message).toBe(ACCOUNT_REMOVED_MESSAGE);
+    expect(loginAgain.status).toBe(401);
+    expect(loginAgain.body.error.message).toBe("Credenciales incorrectas");
 
     const staleSession = await api()
       .get("/api/admin/dashboard")

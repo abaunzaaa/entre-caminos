@@ -3,6 +3,7 @@ import { ZodError } from "zod";
 import { Prisma } from "@prisma/client";
 import { ApiError } from "../utils/api-error.js";
 import { logger } from "../utils/logger.js";
+import { toPublicValidationDetails } from "./validate.middleware.js";
 
 export function notFoundHandler(req: Request, _res: Response, next: NextFunction) {
   next(ApiError.notFound(`Ruta no encontrada: ${req.method} ${req.originalUrl}`));
@@ -21,12 +22,13 @@ export function errorHandler(err: unknown, _req: Request, res: Response, _next: 
   }
 
   if (err instanceof ZodError) {
+    const details = toPublicValidationDetails(err.issues);
     return res.status(422).json({
       success: false,
       error: {
         code: "UNPROCESSABLE_ENTITY",
-        message: "Datos inválidos",
-        details: err.issues,
+        message: details[0]?.message ?? "Revisa los datos del formulario.",
+        details,
       },
     });
   }

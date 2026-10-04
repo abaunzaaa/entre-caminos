@@ -1,5 +1,6 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { FolderPlus, Plus, X } from "lucide-react";
+import { AuthKeyIcon } from "../auth/AuthKeyIcon";
 import heartIcon from "../../assets/heart-icon.png";
 import {
   createFavoriteCollection,
@@ -144,7 +145,9 @@ export function FavoriteSaveModal() {
               role="img"
               aria-hidden="true"
             />
-          ) : null}
+          ) : (
+            <AuthKeyIcon className="auth-recovery-icon" />
+          )}
           <h2 id="favorite-save-title" className="favorite-save-modal__title">
             {mode === "create" ? "Crear nueva colección" : "Guardar en favoritos"}
           </h2>
