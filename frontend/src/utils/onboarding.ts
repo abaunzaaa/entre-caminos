@@ -39,6 +39,8 @@ export type OnboardingForm = {
   music: string[];
   budget: string[];
   climate: string[];
+  age: string;
+  gender: string;
 };
 
 export const emptyOnboardingForm = (): OnboardingForm => ({
@@ -59,6 +61,8 @@ export const emptyOnboardingForm = (): OnboardingForm => ({
   music: [],
   budget: [],
   climate: [],
+  age: "",
+  gender: "",
 });
 
 export function profileToForm(profile?: UserOnboardingProfile | null): OnboardingForm {
@@ -86,6 +90,8 @@ export function profileToForm(profile?: UserOnboardingProfile | null): Onboardin
     music: [...new Set(profile.music)],
     budget: [...new Set(profile.budget)],
     climate: [...new Set(profile.climate)],
+    age: profile.age != null ? String(profile.age) : "",
+    gender: profile.gender ?? "",
   };
 }
 
@@ -230,6 +236,8 @@ export function toOnboardingPayload(form: OnboardingForm, completed = false) {
     music: [...new Set(form.music)],
     budget: [...new Set(form.budget)],
     climate: [...new Set(form.climate)],
+    age: form.age.trim() ? Number(form.age) : null,
+    gender: form.gender.trim() || null,
     completed,
   };
 }

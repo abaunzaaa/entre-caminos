@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { assignRolePermissions, getPermissions, getRoles } from "../../services/catalog.service";
 import type { Permission, Role } from "../../types";
+import { AuthKeyIcon } from "../../components/auth/AuthKeyIcon";
 import { Button } from "../../components/ui/Button";
 import { AccessPermissionCard } from "../../components/admin/AccessPermissionCard";
 import { AccessRoleCard } from "../../components/admin/AccessRoleCard";
@@ -237,6 +238,7 @@ export function RolesPage() {
             aria-describedby="access-off-copy"
             onClick={(event) => event.stopPropagation()}
           >
+            <AuthKeyIcon className="auth-recovery-icon" />
             <h2 id="access-off-title" className="dash-access-confirm__title">
               ¿Desactivar este permiso?
             </h2>

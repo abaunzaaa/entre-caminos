@@ -142,6 +142,16 @@ export async function resetPassword(req: Request, res: Response) {
   });
 }
 
+export async function deleteMe(req: Request, res: Response) {
+  await authService.deleteMyAccount(req.user!.id);
+  clearAuthCookies(res);
+  return res.json({
+    success: true,
+    message: "Cuenta eliminada correctamente.",
+    data: null,
+  });
+}
+
 export async function changePassword(req: Request, res: Response) {
   const user = await authService.changePassword(req.user!.id, {
     currentPassword: req.body.currentPassword,

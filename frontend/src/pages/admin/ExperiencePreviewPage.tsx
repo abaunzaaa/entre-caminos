@@ -226,6 +226,7 @@ export function ExperiencePreviewPage() {
             aria-labelledby="exp-reject-title"
             onClick={(event) => event.stopPropagation()}
           >
+            <AuthKeyIcon className="auth-recovery-icon" />
             <h2 id="exp-reject-title" className="dash-team-confirm__title">
               Rechazar experiencia
             </h2>

@@ -505,6 +505,12 @@
   margin-top: 22px;
 }
 
+.contact-success__action.tourist-hero__cta {
+  margin-top: 22px;
+  border: 0;
+  cursor: pointer;
+}
+
 .contact-success__actions {
   display: flex;
   flex-wrap: wrap;

@@ -7,27 +7,89 @@ import {
   type DiscoverFiltersState,
 } from "../components/explorer/ExplorerDiscoverFilters";
 import { ExplorerRecommendedSection } from "../components/explorer/ExplorerRecommendedSection";
+import { ExplorerUserFooter } from "../components/explorer/ExplorerUserFooter";
 import { TouristHomeHero } from "../components/explorer/TouristHomeHero";
 import { experienceCoverUrl } from "../components/explorer/explorer-media";
 import { useGuide } from "../components/guide/GuideContext";
 import { useAuth } from "../hooks/useAuth";
 import { useInViewReveal } from "../hooks/useInViewReveal";
-import footerUser from "../assets/footer-user.png";
 import descubreIcon from "../assets/icon-descubre.png";
-import brandLogo from "../assets/logo.png";
 import mapaIcon from "../assets/mapa-icon.png";
 import paloma1 from "../assets/paloma1.png";
 import paloma2 from "../assets/paloma 2.png";
 import { getCoverFeaturedExperiences, getPublicExperiences, getRecommendedExperiences } from "../services/catalog.service";
 import { listFavoriteExperiences } from "../services/favorites.service";
 import { onFavoritesChanged } from "../services/favorites-sync";
-import { formatDepartmentMunicipality } from "../data/colombia-locations";
+import {
+  COLOMBIA_DEPARTMENTS,
+  findDepartment,
+  findMunicipality,
+  formatDepartmentMunicipality,
+} from "../data/colombia-locations";
 import type { Experience } from "../types";
 import "../styles/admin-ui.css";
 import "../styles/admin-access.css";
 import "../styles/explorer.css";
 
 const PAGE_SIZE = 8;
+const STREET_PLACE = /(?:calle|carrera|cra\.?|cll?\.?|avenida|av\.?|transversal|tv\.?|diagonal|dg\.?|vereda|km\b|#)/i;
+
+function joinPlace(department?: string | null, municipality?: string | null) {
+  const dept = department?.trim() || "";
+  const city = municipality?.trim() || "";
+  if (dept && city) {
+    return `${dept} · ${city}`;
+  }
+  return dept || city;
+}
+
+function mapCardPlace(experience: Experience) {
+  const stored = experience.locations?.find((item) => item.department?.trim() || item.municipality?.trim());
+  if (stored) {
+    return joinPlace(stored.department, stored.municipality);
+  }
+
+  const location = (experience.location ?? "").replace(/\([^)]*\)/g, " ").replace(/\s+,/g, ",").replace(/\s+/g, " ").trim();
+  const formatted = formatDepartmentMunicipality(location);
+  if (formatted) {
+    return formatted;
+  }
+
+  const parts = location
+    .split(",")
+    .map((part) => part.trim())
+    .filter((part) => part && !STREET_PLACE.test(part));
+  let department = "";
+  const cityParts: string[] = [];
+  for (const part of parts) {
+    const match = findDepartment(part);
+    if (match) {
+      department = match.name;
+    } else {
+      cityParts.push(part);
+    }
+  }
+
+  if (department) {
+    const city = cityParts.map((part) => findMunicipality(department, part)).find(Boolean) ?? "";
+    return joinPlace(department, city);
+  }
+
+  for (const part of cityParts) {
+    const matches = COLOMBIA_DEPARTMENTS.flatMap((item) => {
+      const city = findMunicipality(item.name, part);
+      return city ? [{ department: item.name, city }] : [];
+    });
+    if (matches.length === 1) {
+      return joinPlace(matches[0].department, matches[0].city);
+    }
+    if (matches.length > 1) {
+      return matches[0].city;
+    }
+  }
+
+  return "";
+}
 
 export function ExplorePage() {
   const { user } = useAuth();
@@ -184,7 +246,6 @@ export function ExplorePage() {
 
   const { ref: discoverRef, inView: discoverRevealed } = useInViewReveal<HTMLElement>();
   const { ref: mapRef, inView: mapRevealed } = useInViewReveal<HTMLElement>();
-  const { ref: storiesRef, inView: storiesRevealed } = useInViewReveal<HTMLElement>();
 
   return (
     <div className="explorer-page">
@@ -363,8 +424,7 @@ export function ExplorePage() {
         ) : (
           <div className="explorer-soft-grid">
             {mapPreview.map((experience, index) => {
-              const place =
-                formatDepartmentMunicipality(experience.location) || experience.location || "Colombia";
+              const place = mapCardPlace(experience);
               return (
                 <Link
                   key={experience.id}
@@ -375,7 +435,7 @@ export function ExplorePage() {
                   <img src={experienceCoverUrl(experience, 320)} alt="" />
                   <div>
                     <h3>{experience.title}</h3>
-                    <p>{place}</p>
+                    {place ? <p>{place}</p> : null}
                   </div>
                 </Link>
               );
@@ -400,43 +460,7 @@ export function ExplorePage() {
         />
       </section>
 
-      <footer
-        ref={storiesRef}
-        className={`explorer-user-footer explorer-reveal-scope${storiesRevealed ? " is-revealed" : ""}`}
-        aria-labelledby="explorer-stories-title"
-      >
-        <img
-          className="explorer-user-footer__image"
-          src={footerUser}
-          alt=""
-          decoding="async"
-        />
-        <div className="explorer-user-footer__content">
-          <div className="explorer-user-footer__cluster">
-            <img
-              className="explorer-user-footer__logo explorer-reveal explorer-reveal--soft"
-              src={brandLogo}
-              alt="Entre caminos"
-              width={80}
-              decoding="async"
-              style={{ "--reveal-delay": "40ms" } as CSSProperties}
-            />
-            <h2
-              className="explorer-discover-title explorer-reveal explorer-reveal--title"
-              id="explorer-stories-title"
-              style={{ "--reveal-delay": "100ms" } as CSSProperties}
-            >
-              Entre caminos, nacen historias
-            </h2>
-            <p
-              className="explorer-section__lead explorer-reveal explorer-reveal--soft"
-              style={{ "--reveal-delay": "170ms" } as CSSProperties}
-            >
-              A veces, solo hace falta elegir un lugar, salir de la rutina y dejar que una nueva experiencia te encuentre.
-            </p>
-          </div>
-        </div>
-      </footer>
+      <ExplorerUserFooter />
     </div>
   );
 }

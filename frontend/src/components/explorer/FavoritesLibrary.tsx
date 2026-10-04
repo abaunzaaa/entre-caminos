@@ -12,6 +12,7 @@ import {
   X,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { AuthKeyIcon } from "../auth/AuthKeyIcon";
 import favVacia from "../../assets/fav-vacia.png";
 import heartIcon from "../../assets/heart-icon.png";
 import { useFavoriteToggle } from "../../hooks/useFavoriteToggle";
@@ -414,6 +415,7 @@ function AddExperiencesToCollectionModal({
           <X size={16} strokeWidth={1.9} aria-hidden="true" />
         </button>
         <header className="favorite-save-modal__head">
+          <AuthKeyIcon className="auth-recovery-icon" />
           <h2 id="add-to-collection-title" className="favorite-save-modal__title">
             Agregar experiencias a “{collection.name}”
           </h2>
@@ -542,6 +544,7 @@ function MoveCollectionModal({
       <button type="button" className="favorite-save-modal__backdrop" aria-label="Cerrar" onClick={onClose} />
       <div className="favorite-save-modal__panel">
         <header className="favorite-save-modal__head">
+          <AuthKeyIcon className="auth-recovery-icon" />
           <h2 className="favorite-save-modal__title">Mover a colección</h2>
           <button type="button" className="favorite-save-modal__close" onClick={onClose} aria-label="Cerrar">
             ×
@@ -1022,6 +1025,7 @@ export function FavoritesLibrary({ experiences }: FavoritesLibraryProps) {
           />
           <div className="favorite-save-modal__panel">
             <header className="favorite-save-modal__head">
+              <AuthKeyIcon className="auth-recovery-icon" />
               <h2 className="favorite-save-modal__title">Crear nueva colección</h2>
             </header>
             <label className="favorite-save-modal__field">

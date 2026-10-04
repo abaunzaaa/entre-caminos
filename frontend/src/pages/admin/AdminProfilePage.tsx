@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { ArrowLeft, Camera, Lock, Trash2, UserRound, X } from "lucide-react";
+import { AuthKeyIcon } from "../../components/auth/AuthKeyIcon";
 import { Button } from "../../components/ui/Button";
 import { Spinner } from "../../components/ui/Spinner";
 import { SuccessConfirmDialog } from "../../components/ui/SuccessConfirmDialog";
@@ -866,6 +867,7 @@ export function AdminProfilePage() {
             aria-describedby="admin-profile-discard-copy"
             onClick={(event) => event.stopPropagation()}
           >
+            <AuthKeyIcon className="auth-recovery-icon" />
             <h2 id="admin-profile-discard-title" className="dash-team-confirm__title">
               ¿Descartar los cambios?
             </h2>

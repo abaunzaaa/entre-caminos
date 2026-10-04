@@ -25,7 +25,7 @@
 
 .auth-recovery-layer.is-fixed {
   position: fixed;
-  z-index: 70;
+  z-index: 10100;
 }
 
 .auth-recovery-layer {
@@ -63,6 +63,94 @@
   box-shadow:
     0 18px 50px rgba(24, 36, 32, 0.16),
     0 2px 8px rgba(24, 36, 32, 0.06);
+}
+
+.auth-recovery-modal .profile-password-modal__form {
+  width: 100%;
+  margin-left: 0;
+}
+
+.auth-recovery-modal .profile-password-modal__form .dash-profile__identity {
+  align-items: center;
+  width: 100%;
+  text-align: center;
+}
+
+.auth-recovery-modal .profile-password-modal__form .dash-profile__name,
+.auth-recovery-modal .profile-password-modal__form .dash-section__lead {
+  width: 100%;
+  max-width: none;
+  text-align: center;
+}
+
+.auth-recovery-modal .profile-account-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.auth-recovery-modal .profile-account-actions > button {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 8.75rem;
+  width: 8.75rem;
+  height: 38px;
+  min-height: 38px;
+  margin: 0;
+  padding: 0 1.15rem;
+  border-radius: 999px;
+  font-family: Poppins, Nunito, system-ui, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.auth-recovery-modal .profile-delete-modal {
+  display: grid;
+  gap: 16px;
+  text-align: center;
+}
+
+.auth-recovery-modal .profile-delete-modal .dash-profile__identity {
+  align-items: center;
+  width: 100%;
+  text-align: center;
+}
+
+.auth-recovery-modal .profile-delete-modal .dash-profile__name,
+.auth-recovery-modal .profile-delete-modal .dash-section__lead {
+  width: 100%;
+  max-width: none;
+  text-align: center;
+}
+
+
+.auth-recovery-modal .profile-password-modal__error {
+  position: static;
+  width: 100%;
+  margin: 0;
+  transform: none;
+  animation: none;
+}
+
+.auth-recovery-modal .tourist-hero__cta {
+  margin-top: 0;
+  border: 0;
+  cursor: pointer;
+}
+
+.auth-recovery-modal .tourist-hero__cta:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  transform: none;
+  box-shadow: none;
 }
 
 .auth-key-icon {

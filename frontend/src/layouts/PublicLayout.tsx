@@ -1,22 +1,34 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { MapHeartLogo } from "../components/brand/MapHeartLogo";
 import { ExplorerNavbar, isExplorerShellPath } from "../components/explorer/ExplorerNavbar";
+import { ExplorerPageClosing } from "../components/explorer/ExplorerPageClosing";
 import { FavoriteSaveModal } from "../components/explorer/FavoriteSaveModal";
 import { FavoriteToast } from "../components/explorer/FavoriteToast";
 import { useAuth } from "../hooks/useAuth";
 import { formatPersonName } from "../utils/person-name";
 import "../styles/explorer.css";
 
+const EXPLORER_CLOSING_PATHS = new Set(["/favoritos", "/mapa", "/plan-con-amigos", "/visitados"]);
+
 export function PublicLayout() {
   const { user, isAdmin, logout } = useAuth();
   const { pathname } = useLocation();
   const isExplorer = isExplorerShellPath(pathname);
+  const showClosing = EXPLORER_CLOSING_PATHS.has(pathname);
 
   if (isExplorer) {
     return (
-      <div className="explorer-page explorer-page--shell min-h-screen text-ink">
+      <div
+        className={`explorer-page explorer-page--shell min-h-screen text-ink${showClosing ? " explorer-page--closing" : ""}`}
+      >
         <ExplorerNavbar />
-        <Outlet />
+        {showClosing ? (
+          <ExplorerPageClosing>
+            <Outlet />
+          </ExplorerPageClosing>
+        ) : (
+          <Outlet />
+        )}
         <FavoriteToast />
         <FavoriteSaveModal />
       </div>

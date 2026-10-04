@@ -17,6 +17,8 @@ type ProfileStepProps = {
   onRetry: () => void;
   onRemovePhoto: () => void;
   onTab: (tab: "face" | "hair" | "outfit" | "accessories") => void;
+  primaryActionClassName?: string;
+  secondaryActionClassName?: string;
 };
 
 export function ProfileStep({
@@ -32,6 +34,8 @@ export function ProfileStep({
   onRetry,
   onRemovePhoto,
   onTab,
+  primaryActionClassName = "onboarding-nav__btn onboarding-nav__btn--primary",
+  secondaryActionClassName = "onboarding-text-btn",
 }: ProfileStepProps) {
   const preview = form.localPhotoUrl || (form.profileImageUrl ? mediaUrl(form.profileImageUrl) : "");
 
@@ -93,16 +97,16 @@ export function ProfileStep({
             <p>JPG, PNG o WebP</p>
             <p>Máximo 5 MB. La imagen se recorta en círculo sin deformarse.</p>
             <div className="onboarding-photo-preview__actions">
-              <button type="button" className="onboarding-nav__btn onboarding-nav__btn--primary" onClick={() => fileInput.current?.click()}>
+              <button type="button" className={primaryActionClassName} onClick={() => fileInput.current?.click()}>
                 Seleccionar foto
               </button>
               {preview ? (
-                <button type="button" className="onboarding-text-btn" onClick={onRemovePhoto}>
+                <button type="button" className={secondaryActionClassName} onClick={onRemovePhoto}>
                   Eliminar
                 </button>
               ) : null}
               {photoError ? (
-                <button type="button" className="onboarding-text-btn" onClick={onRetry}>
+                <button type="button" className={secondaryActionClassName} onClick={onRetry}>
                   Reintentar
                 </button>
               ) : null}

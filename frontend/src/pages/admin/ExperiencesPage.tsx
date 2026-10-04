@@ -640,6 +640,7 @@ export function ExperiencesPage() {
             aria-describedby="exp-deactivate-copy"
             onClick={(event) => event.stopPropagation()}
           >
+            <AuthKeyIcon className="auth-recovery-icon" />
             <h2 id="exp-deactivate-title" className="dash-team-confirm__title">
               ¿Seguro que quieres desactivar esta experiencia?
             </h2>

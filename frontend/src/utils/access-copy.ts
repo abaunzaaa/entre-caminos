@@ -124,7 +124,7 @@ const ROLE_COPY: Record<string, RoleCopy> = {
     canLabel: "Puede gestionar",
   },
   USER: {
-    title: "Usuario explorador",
+    title: "Turista",
     description: "Usuario registrado de Entre Caminos.",
     icon: Compass,
     canLabel: "Puede",

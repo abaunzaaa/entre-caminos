@@ -2,8 +2,10 @@ import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { Camera, KeyRound, LogOut, Building2, UserRound } from "lucide-react";
+import { AuthKeyIcon } from "../auth/AuthKeyIcon";
 import { Button } from "../ui/Button";
 import { useAuth } from "../../hooks/useAuth";
+import { roleCopy } from "../../utils/access-copy";
 import { formatPersonName } from "../../utils/person-name";
 import type { PublicUser } from "../../types";
 import { UserAvatar } from "../user/UserAvatar";
@@ -21,16 +23,10 @@ import { cn } from "../../utils/cn";
 type PhotoDialog = "choose" | "preview" | "confirm-delete";
 
 function roleLabel(role: PublicUser["role"] | undefined) {
-  if (role === "SUPER_ADMIN") {
-    return "Super administrador";
+  if (!role) {
+    return "Administración";
   }
-  if (role === "ADMIN") {
-    return "Administrador";
-  }
-  if (role === "USER") {
-    return "Explorador";
-  }
-  return "Administración";
+  return roleCopy(role).title;
 }
 
 export function AdminUserMenu({
@@ -296,6 +292,7 @@ export function AdminUserMenu({
 
               {photoDialog === "confirm-delete" ? (
                 <>
+                  <AuthKeyIcon className="auth-recovery-icon" />
                   <h2 id="admin-photo-title" className="dash-team-confirm__title">
                     ¿Estás seguro de que deseas eliminar tu foto de perfil?
                   </h2>

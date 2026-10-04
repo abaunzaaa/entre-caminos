@@ -1,6 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState, type CSSProperties } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ArrowUpRight, MapPin } from "lucide-react";
+import favVacia from "../../assets/fav-vacia.png";
 import { experienceGalleryUrls, municipalityLabel } from "./explorer-media";
 import { FavoriteFoldersGrid } from "./FavoriteFoldersGrid";
 import { experiencesToFavoriteFolders } from "./favorite-folders";
@@ -302,9 +303,25 @@ export function ExplorerRecommendedSection({ experiences }: ExplorerRecommendedS
               ) : null}
             </div>
           ) : (
-            <p className="explorer-empty explorer-reveal" style={{ "--reveal-delay": "150ms" } as CSSProperties}>
-              Pronto verás aquí una selección de experiencias destacadas.
-            </p>
+            <div className="fav-folders__empty-state" aria-live="polite">
+              <span
+                className="fav-folders__empty-icon explorer-reveal explorer-reveal--soft"
+                style={
+                  {
+                    "--reveal-delay": "150ms",
+                    "--fav-empty-mask": `url(${favVacia})`,
+                  } as CSSProperties
+                }
+                role="img"
+                aria-hidden="true"
+              />
+              <p
+                className="fav-folders__empty explorer-reveal explorer-reveal--soft"
+                style={{ "--reveal-delay": "280ms" } as CSSProperties}
+              >
+                Pronto verás aquí una selección de experiencias destacadas.
+              </p>
+            </div>
           )}
         </div>
 
