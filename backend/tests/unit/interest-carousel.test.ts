@@ -77,6 +77,180 @@ describe("selectExperiencesForInterests", () => {
     expect(selectExperiencesForInterests(catalog, [])).toEqual([]);
   });
 
+  it("ordena por cantidad de intereses en común y no usa la categoría si ya hay intereses", () => {
+    const selected = selectExperiencesForInterests(
+      [
+        {
+          id: "pasta",
+          title: "Taller de pasta",
+          category: { name: "Gastronomía" },
+          relatedInterests: ["Gastronomía", "Talleres"],
+        },
+        {
+          id: "cafe",
+          title: "Tour de café",
+          category: { name: "Planes urbanos" },
+          relatedInterests: ["Café"],
+        },
+        {
+          id: "carrera",
+          title: "Carrera",
+          category: { name: "Bienestar y deporte" },
+          relatedInterests: ["Deportes"],
+        },
+        {
+          id: "ceramica",
+          title: "Taller de cerámica",
+          category: { name: "Arte y creatividad" },
+          relatedInterests: ["Arte y creatividad", "Talleres"],
+        },
+      ],
+      ["Talleres"],
+    );
+    expect(selected.map((item) => item.id)).toEqual(["ceramica", "pasta"]);
+  });
+
+  it("prioriza la experiencia con más coincidencias", () => {
+    const selected = selectExperiencesForInterests(
+      [
+        {
+          id: "una",
+          title: "Tour de café",
+          relatedInterests: ["Café"],
+        },
+        {
+          id: "dos",
+          title: "Taller de pasta",
+          relatedInterests: ["Talleres", "Gastronomía"],
+        },
+      ],
+      ["Talleres", "Gastronomía", "Café"],
+    );
+    expect(selected.map((item) => item.id)).toEqual(["dos", "una"]);
+  });
+
+  it("una experiencia con Fotografía coincide aunque su categoría sea otra", () => {
+    const selected = selectExperiencesForInterests(
+      [
+        {
+          id: "urbana",
+          title: "Ruta urbana",
+          category: { name: "Planes urbanos" },
+          relatedInterests: ["Fotografía", "Planes urbanos"],
+        },
+      ],
+      ["Fotografía"],
+    );
+    expect(selected.map((item) => item.id)).toEqual(["urbana"]);
+  });
+
+  it("una experiencia antigua sin intereses usa el fallback por categoría", () => {
+    const selected = selectExperiencesForInterests(
+      [
+        {
+          id: "antigua",
+          title: "Museo antiguo",
+          category: { name: "Cultural" },
+          relatedInterests: [],
+        },
+        {
+          id: "ajena",
+          title: "Pilates",
+          category: { name: "Deportivo" },
+          relatedInterests: [],
+        },
+      ],
+      ["Cultura"],
+    );
+    expect(selected.map((item) => item.id)).toEqual(["antigua"]);
+  });
+
+  it("entra con un interés aunque el ambiente y la compañía no coincidan", () => {
+    const selected = selectExperiencesForInterests(
+      [
+        {
+          id: "taller",
+          title: "Taller",
+          relatedInterests: ["Talleres"],
+          environments: ["Montaña"],
+          idealFor: ["Familia"],
+        },
+      ],
+      ["Talleres"],
+      10,
+      { places: ["Ciudad"], companions: ["Amigos"] },
+    );
+    expect(selected.map((item) => item.id)).toEqual(["taller"]);
+  });
+
+  it("con los mismos intereses, el ambiente coincidente queda primero", () => {
+    const selected = selectExperiencesForInterests(
+      [
+        {
+          id: "montana",
+          title: "Taller de montaña",
+          relatedInterests: ["Talleres"],
+          environments: ["Montaña"],
+          idealFor: ["Amigos"],
+        },
+        {
+          id: "ciudad",
+          title: "Taller urbano",
+          relatedInterests: ["Talleres"],
+          environments: ["Ciudad"],
+          idealFor: ["Familia"],
+        },
+      ],
+      ["Talleres"],
+      10,
+      { places: ["Ciudad"], companions: ["Solo"] },
+    );
+    expect(selected.map((item) => item.id)).toEqual(["ciudad", "montana"]);
+  });
+
+  it("con los mismos intereses y ambiente, la compañía coincidente queda primero", () => {
+    const selected = selectExperiencesForInterests(
+      [
+        {
+          id: "familia",
+          title: "Taller familiar",
+          relatedInterests: ["Talleres"],
+          environments: ["Ciudad"],
+          idealFor: ["Familia"],
+        },
+        {
+          id: "amigos",
+          title: "Taller con amigos",
+          relatedInterests: ["Talleres"],
+          environments: ["Ciudad"],
+          idealFor: ["Amigos"],
+        },
+      ],
+      ["Talleres"],
+      10,
+      { places: ["Ciudad"], companions: ["Amigos"] },
+    );
+    expect(selected.map((item) => item.id)).toEqual(["amigos", "familia"]);
+  });
+
+  it("no entra si solo coinciden ambiente y compañía", () => {
+    const selected = selectExperiencesForInterests(
+      [
+        {
+          id: "deporte",
+          title: "Carrera",
+          relatedInterests: ["Deportes"],
+          environments: ["Ciudad"],
+          idealFor: ["Amigos"],
+        },
+      ],
+      ["Talleres"],
+      10,
+      { places: ["Ciudad"], companions: ["Amigos"] },
+    );
+    expect(selected).toEqual([]);
+  });
+
   it("incluye la experiencia si al menos una de sus categorías coincide", () => {
     const selected = selectExperiencesForInterests(
       [

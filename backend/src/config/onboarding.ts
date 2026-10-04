@@ -5,8 +5,8 @@ export const ONBOARDING_INTERESTS = [
   "Gastronomía",
   "Cultura",
   "Aventura",
-  "Relajación",
-  "Fiesta / Vida nocturna",
+  "Bienestar",
+  "Vida nocturna",
   "Arte y creatividad",
   "Deportes",
   "Historia y patrimonio",
@@ -21,12 +21,17 @@ export const ONBOARDING_INTERESTS = [
 
 export const ONBOARDING_INTEREST_ALIASES: Record<string, (typeof ONBOARDING_INTERESTS)[number]> = {
   Comida: "Gastronomía",
-  Fiesta: "Fiesta / Vida nocturna",
-  "Vida nocturna": "Fiesta / Vida nocturna",
-  Bienestar: "Relajación",
+  Fiesta: "Vida nocturna",
+  "Fiesta / Vida nocturna": "Vida nocturna",
+  Relajación: "Bienestar",
 };
 
 export const ONBOARDING_COMPANIONS = ["Solo", "En pareja", "Amigos", "Familia"] as const;
+/** Etiquetas visibles de compañía. El valor guardado sigue siendo el de ONBOARDING_COMPANIONS. */
+export const ONBOARDING_COMPANION_ALIASES: Record<string, (typeof ONBOARDING_COMPANIONS)[number]> = {
+  "Con amigos": "Amigos",
+  "En familia": "Familia",
+};
 export const ONBOARDING_PLACES = [
   "Playa",
   "Montaña",
@@ -34,6 +39,11 @@ export const ONBOARDING_PLACES = [
   "Ciudad",
   "Pueblos mágicos",
 ] as const;
+/** Etiquetas visibles de ambiente. El valor guardado sigue siendo el de ONBOARDING_PLACES. */
+export const ONBOARDING_PLACE_ALIASES: Record<string, (typeof ONBOARDING_PLACES)[number]> = {
+  Bosque: "Bosque / Naturaleza",
+  Pueblos: "Pueblos mágicos",
+};
 export const ONBOARDING_MUSIC = ["Pop", "Reggaetón", "Rock", "Más"] as const;
 export const ONBOARDING_BUDGETS = ["Económico", "Moderado", "Alto", "Lujo"] as const;
 export const ONBOARDING_CLIMATES = ["Cálido", "Templado", "Frío", "No tengo preferencia"] as const;

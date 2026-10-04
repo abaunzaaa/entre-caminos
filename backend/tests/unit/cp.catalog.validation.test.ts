@@ -42,6 +42,27 @@ describe("Sprint 1 — Categorías y experiencias (sin DB)", () => {
     expect(experienceUpdateSchema.safeParse({ title: "Taller de cerámica local actualizado" }).success).toBe(true);
   });
 
+  it("ambientes e ideal para son opcionales y usan los valores del perfil", () => {
+    expect(experienceSchema.safeParse(validExperience()).success).toBe(true);
+    expect(experienceSchema.safeParse(validExperience({ environments: [], idealFor: [] })).success).toBe(true);
+    const parsed = experienceSchema.safeParse(
+      validExperience({
+        environments: ["Bosque", "Ciudad"],
+        idealFor: ["Con amigos", "En pareja"],
+      }),
+    );
+    expect(parsed.success).toBe(true);
+    if (parsed.success) {
+      expect(parsed.data.environments).toEqual(["Bosque / Naturaleza", "Ciudad"]);
+      expect(parsed.data.idealFor).toEqual(["Amigos", "En pareja"]);
+    }
+    expect(experienceSchema.safeParse(validExperience({ environments: ["mountain"] })).success).toBe(false);
+    expect(experienceSchema.safeParse(validExperience({ idealFor: ["Friends"] })).success).toBe(false);
+    expect(experienceUpdateSchema.safeParse({ environments: [], idealFor: [] }).success).toBe(true);
+    expect(experienceUpdateSchema.safeParse({ relatedInterests: [], environments: null, idealFor: "" }).success).toBe(true);
+    expect(experienceSchema.safeParse(validExperience({ relatedInterests: [] })).success).toBe(false);
+  });
+
   it("CP-S1-021: experiencia válida con datos obligatorios pasa", () => {
     const parsed = experienceSchema.safeParse(validExperience());
     expect(parsed.success).toBe(true);
