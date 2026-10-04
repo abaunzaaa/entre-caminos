@@ -1,8 +1,13 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { AuthKeyIcon } from "../components/auth/AuthKeyIcon";
+import { SuccessConfirmDialog } from "../components/ui/SuccessConfirmDialog";
 import {
+  clearSession,
+  clearSessionExpiredFlag,
   getAccessToken,
   getAccessTokenExpiry,
   getStoredUser,
+  peekSessionExpired,
   refreshAccessToken,
   setStoredUser,
   subscribeSessionLoss,
@@ -21,6 +26,7 @@ import {
   type UpdateProfileInput,
 } from "../services/auth.service";
 import type { PublicUser } from "../types";
+import { SESSION_ENDED_MESSAGE } from "../utils/api-error";
 
 type AuthContextValue = {
   user: PublicUser | null;
@@ -58,6 +64,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return stored?.emailVerified ? stored : null;
   });
   const [loading, setLoading] = useState(true);
+  const [sessionEndedOpen, setSessionEndedOpen] = useState(() => peekSessionExpired());
+  const endingSession = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -72,13 +80,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(profile);
           return;
         }
-        if (!getAccessToken()) {
+        if (!getAccessToken() && !peekSessionExpired()) {
           setStoredUser(null);
           setUser(null);
         }
       })
       .catch(() => {
-        if (!cancelled && !getAccessToken()) {
+        if (!cancelled && !getAccessToken() && !peekSessionExpired()) {
           setUser(null);
         }
       })
@@ -94,11 +102,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const unsubscribe = subscribeSessionLoss(() => {
-      setStoredUser(null);
-      setUser(null);
+    return subscribeSessionLoss(() => {
+      setSessionEndedOpen(true);
     });
-    return unsubscribe;
+  }, []);
+
+  const acknowledgeSessionEnded = useCallback(() => {
+    if (endingSession.current) {
+      return;
+    }
+    endingSession.current = true;
+    clearSession();
+    clearSessionExpiredFlag();
+    window.location.replace("/");
   }, []);
 
   useEffect(() => {
@@ -107,6 +123,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const timer = window.setInterval(() => {
+      if (peekSessionExpired()) {
+        return;
+      }
       const expiry = getAccessTokenExpiry();
       if (!expiry || expiry - Date.now() > REFRESH_SKEW_MS) {
         return;
@@ -187,6 +206,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return profile;
       },
       async logout() {
+        clearSessionExpiredFlag();
         await logoutAccount();
         window.location.replace("/");
       },
@@ -207,7 +227,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [user, loading, refreshUser, updateProfile, changePassword, deleteAccount],
   );
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+      <SuccessConfirmDialog
+        open={sessionEndedOpen}
+        onClose={acknowledgeSessionEnded}
+        className="contact-success--subtle"
+        icon={<AuthKeyIcon className="auth-reset-success__mark" />}
+        title="Sesión finalizada"
+        description={SESSION_ENDED_MESSAGE}
+        actionLabel="OK"
+        initialFocus="action"
+      />
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {
