@@ -17,6 +17,7 @@ import {
 } from "./notification.service.js";
 import {
   assertAdminCanSubmitExperiences,
+  toExperienceDetailOrganization,
   toPublicOrganizationProfile,
 } from "./organization-profile.service.js";
 
@@ -92,8 +93,11 @@ export function toPublicExperiencePayload<T>(
       organizationProfile?: Parameters<typeof toPublicOrganizationProfile>[0];
     } | null;
   },
+  options?: { detailOrganization?: boolean },
 ) {
-  const organization = toPublicOrganizationProfile(experience.creator?.organizationProfile);
+  const organization = options?.detailOrganization
+    ? toExperienceDetailOrganization(experience.creator?.organizationProfile)
+    : toPublicOrganizationProfile(experience.creator?.organizationProfile);
   const { creator, ...rest } = experience;
   return {
     ...rest,
@@ -104,7 +108,28 @@ export function toPublicExperiencePayload<T>(
           avatarUrl: organization?.logoUrl ?? creator.avatarUrl ?? null,
           organization,
         }
-      : undefined,
+        : undefined,
+  };
+}
+
+export async function withOrganizationPublishedCount<
+  T extends {
+    createdBy: string;
+    creator?: { organization?: object | null } | null;
+  },
+>(experience: T) {
+  if (!experience.creator?.organization) {
+    return experience;
+  }
+  const publishedCount = await prisma.experience.count({
+    where: { createdBy: experience.createdBy, status: "PUBLISHED" },
+  });
+  return {
+    ...experience,
+    creator: {
+      ...experience.creator,
+      organization: { ...experience.creator.organization, publishedCount },
+    },
   };
 }
 

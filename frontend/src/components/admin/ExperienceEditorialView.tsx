@@ -181,6 +181,7 @@ export function ExperienceEditorialView({
         photoLabel={experience.title}
         noteFacts={noteFacts}
         facts={detailFacts}
+        organization={mode === "tourist" ? experience.creator?.organization : null}
       />
 
       <ExperienceEditorialPlace

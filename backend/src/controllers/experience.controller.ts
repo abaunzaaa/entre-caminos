@@ -73,9 +73,12 @@ export async function featured(_req: Request, res: Response) {
 
 export async function getPublic(req: Request, res: Response) {
   const experience = await experienceService.getExperience(req.params.id, { publishedOnly: true });
+  const payload = await experienceService.withOrganizationPublishedCount(
+    experienceService.toPublicExperiencePayload(experience, { detailOrganization: true }),
+  );
   return res.json({
     success: true,
-    data: { experience: experienceService.toPublicExperiencePayload(experience) },
+    data: { experience: payload },
   });
 }
 
