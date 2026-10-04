@@ -1,8 +1,10 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "../database/prisma.js";
 import { ApiError } from "../utils/api-error.js";
+import { recentGuideHistory } from "../utils/guide-history.js";
 import { chatWithGuide, type AssistantChatMessage, type AssistantReply } from "./assistant.service.js";
 import type { GuideChatContext, GuideExperienceContext } from "./context.service.js";
+import { listApprovedCategoryNames } from "./category.service.js";
 import { assertOwnedFolder } from "./folder.service.js";
 
 const WELCOME_SUGGESTIONS = ["¿Qué incluye?", "¿Cuánto dura?", "¿Cómo llegar?", "¿Qué debo llevar?", "Armar un plan con esto"];
@@ -176,31 +178,84 @@ export function conversationTitleFromPlan(plan: {
   return clipTitle(titled.charAt(0).toUpperCase() + titled.slice(1));
 }
 
-export const FLOW_STARTERS = {
+const FLOW_COPY = {
   plan: {
-    title: "Creando un plan",
+    title: "Ayúdame a elegir",
     content:
-      "¡Claro! Te ayudo a crear un plan personalizado 😊\n\nPrimero cuéntame:\n¿Qué tipo de experiencia quieres realizar?",
-    suggestions: ["Cultura", "Naturaleza", "Gastronomía", "Aventura", "Relax", "Otra"],
+      "Claro. Te ayudo a elegir una experiencia según lo que te gusta.\n\n¿Qué tipo de experiencia quieres realizar?",
   },
   search: {
     title: "Buscar experiencias",
     content: "Claro. ¿Qué tipo de experiencia estás buscando?",
-    suggestions: ["Naturaleza", "Cultura", "Gastronomía", "Aventura"],
   },
   nearby: {
     title: "Explorar cerca",
-    content: "Puedo sugerirte planes cerca de ti. ¿Usamos tu ubicación guardada o prefieres decirme un barrio o ciudad?",
-    suggestions: ["Usa mi ubicación", "Medellín", "Otro lugar"],
+    content: "Puedo sugerirte experiencias cerca de ti. ¿Usamos tu ubicación guardada o prefieres decirme un barrio o ciudad?",
   },
   interests: {
     title: "Según mis intereses",
-    content: "Puedo recomendarte con base en tus intereses. ¿Quieres que te sugiera ahora o prefieres afinar el tipo de plan?",
-    suggestions: ["Recomiéndame ahora", "Naturaleza", "Gastronomía", "Cultura"],
+    content: "Puedo recomendarte con base en tus intereses. ¿Quieres que te sugiera ahora o prefieres afinar el tipo de experiencia?",
   },
 } as const;
 
-export type GuideFlowKind = keyof typeof FLOW_STARTERS;
+async function flowSuggestions(kind: GuideFlowKind, userId: string) {
+  if (kind === "nearby") {
+    const profile = await prisma.userProfile.findUnique({
+      where: { userId },
+      select: { city: true },
+    });
+    return ["Usa mi ubicación", profile?.city?.trim(), "Otro lugar"].filter((item): item is string => Boolean(item));
+  }
+  const categories = await listApprovedCategoryNames();
+  if (kind === "interests") {
+    const profile = await prisma.userProfile.findUnique({
+      where: { userId },
+      select: { interests: true },
+    });
+    const interests = (profile?.interests ?? []).map((item) => item.trim()).filter(Boolean);
+    const source = interests.length ? interests : categories;
+    const pageSize = interests.length ? 3 : 6;
+    return withMoreChip(["Recomiéndame ahora", ...source.slice(0, pageSize)], source.length > pageSize);
+  }
+  return withMoreChip(categories.slice(0, 6), categories.length > 6);
+}
+
+function foldLabel(value: string) {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+}
+
+function withMoreChip(page: string[], more: boolean) {
+  return more ? [...page, "Ver más"] : page;
+}
+
+function nextLabelPage(labels: string[], shown: string[]) {
+  const lastShown = [...shown].reverse().find((item) => labels.some((label) => foldLabel(label) === foldLabel(item)));
+  const start = lastShown ? labels.findIndex((label) => foldLabel(label) === foldLabel(lastShown)) + 1 : 0;
+  const sliceStart = start >= labels.length ? 0 : start;
+  return withMoreChip(labels.slice(sliceStart, sliceStart + 6), sliceStart + 6 < labels.length);
+}
+
+async function moreSuggestions(userId: string, previous: string[]) {
+  const chips = previous.filter((item) => {
+    const key = foldLabel(item);
+    return key !== "ver mas" && key !== "recomiendame ahora";
+  });
+  const [categories, profile] = await Promise.all([
+    listApprovedCategoryNames(),
+    prisma.userProfile.findUnique({ where: { userId }, select: { interests: true } }),
+  ]);
+  const interests = (profile?.interests ?? []).map((item) => item.trim()).filter(Boolean);
+  const matches = (source: string[]) =>
+    chips.length > 0 && chips.every((chip) => source.some((item) => foldLabel(item) === foldLabel(chip)));
+  const source = matches(interests) && !matches(categories) ? interests : categories;
+  return nextLabelPage(source, chips);
+}
+
+export type GuideFlowKind = keyof typeof FLOW_COPY;
 
 function metadataOf(message: { metadata: Prisma.JsonValue | null }) {
   if (!message.metadata || typeof message.metadata !== "object" || Array.isArray(message.metadata)) {
@@ -334,7 +389,12 @@ export async function createConversation(
   },
 ) {
   const contextType = input?.experienceId || input?.contextType === "experience" ? "experience" : "general";
-  const starter = input?.starter ? FLOW_STARTERS[input.starter] : null;
+  const starter = input?.starter
+    ? {
+        ...FLOW_COPY[input.starter],
+        suggestions: await flowSuggestions(input.starter, userId),
+      }
+    : null;
   const title = starter?.title || input?.experienceName?.trim() || "Nueva conversación";
   let experienceId = input?.experienceId;
   if (experienceId) {
@@ -417,10 +477,53 @@ export async function deleteConversation(userId: string, id: string) {
 }
 
 function historyFromMessages(messages: SerializedMessage[]): AssistantChatMessage[] {
-  return messages
-    .filter((item) => item.content.trim())
-    .slice(-20)
-    .map((item) => ({ role: item.role, content: item.content }));
+  return recentGuideHistory(messages).map((item) => ({ role: item.role, content: item.content }));
+}
+
+function resolveTurnContext(
+  input: { experienceId?: string; context?: GuideChatContext },
+  stored: SerializedConversation,
+): { context: GuideChatContext; experienceId?: string } {
+  if (input.context?.mode === "general") {
+    return { context: { mode: "general" } };
+  }
+
+  const storedExperience = stored.experienceData ?? undefined;
+  if (input.context?.mode === "experience") {
+    const fromClient = input.context.experience;
+    const id = input.experienceId || fromClient?.id || undefined;
+    const experience =
+      fromClient && (fromClient.id || fromClient.name)
+        ? { ...fromClient, id: fromClient.id ?? id }
+        : {
+            id: id ?? stored.experienceId ?? storedExperience?.id,
+            name: stored.experienceName ?? storedExperience?.name,
+            ...storedExperience,
+          };
+    return {
+      experienceId: experience.id || id || stored.experienceId || undefined,
+      context: { mode: "experience", experience },
+    };
+  }
+
+  if (stored.contextType === "experience") {
+    return {
+      experienceId: stored.experienceId ?? undefined,
+      context: {
+        mode: "experience",
+        experience: {
+          id: stored.experienceId ?? storedExperience?.id,
+          name: stored.experienceName ?? storedExperience?.name,
+          ...storedExperience,
+        },
+      },
+    };
+  }
+
+  return {
+    experienceId: input.experienceId || input.context?.experience?.id,
+    context: input.context ?? { mode: "general" },
+  };
 }
 
 export async function chatInConversation(input: {
@@ -433,8 +536,9 @@ export async function chatInConversation(input: {
   context?: GuideChatContext;
   location?: { latitude?: number; longitude?: number; city?: string };
 }) {
-  const contextExperience = input.context?.experience;
-  const experienceId = input.experienceId || contextExperience?.id;
+  const contextExperience = input.context?.mode === "general" ? undefined : input.context?.experience;
+  const experienceId =
+    input.context?.mode === "general" ? undefined : input.experienceId || contextExperience?.id;
   let conversation = input.conversationId
     ? await getOwned(input.userId, input.conversationId)
     : null;
@@ -450,18 +554,7 @@ export async function chatInConversation(input: {
   }
 
   const stored = serializeConversation(conversation);
-  const storedExperience = stored.experienceData ?? undefined;
-  const context: GuideChatContext =
-    stored.contextType === "experience"
-      ? {
-          mode: "experience",
-          experience: {
-            id: stored.experienceId ?? storedExperience?.id,
-            name: stored.experienceName ?? storedExperience?.name,
-            ...storedExperience,
-          },
-        }
-      : input.context ?? { mode: "general" };
+  const turn = resolveTurnContext(input, stored);
 
   let working = stored.messages;
 
@@ -511,13 +604,37 @@ export async function chatInConversation(input: {
   }
 
   const prior = historyFromMessages(working.slice(0, -1));
+  const cardMessage = [...working].reverse().find((item) => item.role === "assistant" && Array.isArray(item.experiences) && item.experiences.length > 0);
+  const highlightIds = (Array.isArray(cardMessage?.experiences) ? cardMessage.experiences : [])
+    .flatMap((experience) => {
+      if (!experience || typeof experience !== "object" || !("id" in experience)) {
+        return [];
+      }
+      const id = (experience as { id?: unknown }).id;
+      return typeof id === "string" && id.trim() ? [id] : [];
+    })
+    .slice(0, 6);
+  const previousSuggestions = [...working].reverse().find((item) => item.role === "assistant")?.suggestions ?? [];
+  const pagingCategories = foldLabel(content) === "ver mas" && previousSuggestions.some((item) => foldLabel(item) === "ver mas");
 
-  const reply: AssistantReply = await chatWithGuide({
+  const reply: AssistantReply = pagingCategories
+    ? {
+        reply: "Estas son otras opciones. También puedes escribir la que buscas.",
+        intent: "clarify",
+        status: "need_info",
+        questions: [],
+        suggestions: await moreSuggestions(input.userId, previousSuggestions),
+        plan: null,
+        planProgress: null,
+        experiences: [],
+      }
+    : await chatWithGuide({
     userId: input.userId,
     message: content,
     history: prior.length ? prior : input.history ?? [],
-    experienceId: stored.experienceId ?? experienceId,
-    context,
+    experienceId: turn.experienceId,
+    highlightIds,
+    context: turn.context,
     location: input.location,
   });
 
@@ -537,10 +654,7 @@ export async function chatInConversation(input: {
     },
   });
 
-  const applyPlanTitle =
-    Boolean(reply.plan) &&
-    (isPlaceholderTitle(currentTitle) ||
-      /^(cultura|naturaleza|gastronom[ií]a|aventura|relax|otra)$/i.test(currentTitle.trim()));
+  const applyPlanTitle = Boolean(reply.plan) && isPlaceholderTitle(currentTitle);
   await prisma.conversation.update({
     where: { id: conversation.id },
     data: {

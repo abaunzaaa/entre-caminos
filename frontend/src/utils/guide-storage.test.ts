@@ -33,12 +33,9 @@ describe("titleFromText", () => {
 describe("userChoiceChips", () => {
   it("no repite la pregunta de la IA", () => {
     const question = "¿Qué tipo de experiencia te gustaría explorar?";
-    expect(userChoiceChips(question, [question])).toEqual([
-      "Cultura",
-      "Naturaleza",
-      "Aventura",
-      "Gastronomía",
-    ]);
+    expect(userChoiceChips(question, [question])).toEqual([]);
+    expect(userChoiceChips(question, ["Deportivo", "Cultural"])).toEqual(["Deportivo", "Cultural"]);
+    expect(userChoiceChips(question, ["Bienestar", "Ver más"])).toEqual(["Bienestar", "Ver más"]);
   });
 
   it("deja atajos cortos del usuario", () => {

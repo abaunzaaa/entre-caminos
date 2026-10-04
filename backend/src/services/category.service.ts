@@ -295,3 +295,13 @@ export async function deleteCategory(actor: AuthUser, id: string) {
     entityId: id,
   });
 }
+
+export async function listApprovedCategoryNames(limit?: number) {
+  const rows = await prisma.category.findMany({
+    where: { status: "APPROVED" },
+    select: { name: true },
+    orderBy: { name: "asc" },
+    ...(limit ? { take: limit } : {}),
+  });
+  return rows.map((row) => row.name);
+}

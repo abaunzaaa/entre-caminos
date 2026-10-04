@@ -1,0 +1,101 @@
+{
+  "meta": {
+    "exportedAt": "2026-10-01T22:59:53.451Z",
+    "databaseHost": "aws-0-us-west-2.pooler.supabase.com:6543",
+    "supabase": true,
+    "experienceCount": 10,
+    "note": "Respaldo recuperable del catálogo. No contiene contraseñas ni tokens. Las imágenes de Cloudinary no se descargan; solo se guardan URL y public_id inferido."
+  },
+  "owners": [
+    {
+      "id": "2600275d-ba04-4da1-8d69-b905e5f8f2d4",
+      "name": "Angie Diaz",
+      "email": "angie.diaz@entrecaminos.com",
+      "role": "SUPER_ADMIN",
+      "count": 10
+    }
+  ],
+  "counts": {
+    "experiences": 10,
+    "byStatus": {
+      "PUBLISHED": 10
+    },
+    "experienceCategories": 10,
+    "reviews": 0,
+    "detailViews": 76,
+    "favorites": 12,
+    "visitorReviews": 0,
+    "collectionItems": 0,
+    "conversationsLinked": 6,
+    "auditLogs": 0,
+    "notifications": 0,
+    "cloudinaryImageRefs": 77,
+    "favoriteCollectionsKept": 0,
+    "categoriesKept": 5,
+    "usersKept": 11
+  },
+  "experienceIds": [
+    "112ea03b-ce29-4d48-a091-696339a305e4",
+    "97e31750-e342-4f29-b19d-e73b87b8b993",
+    "a27103f6-dc93-42b0-a0d5-6aa691e6c290",
+    "2d854110-fbac-4287-a736-022e902ad61d",
+    "05e90fa5-3db4-4d42-9654-6f3f05fdadd5",
+    "dd533f43-a4ae-43a3-9abe-4c421456341e",
+    "11d09f53-b79e-4bcd-9615-046a66298cec",
+    "012304df-ad19-4080-a07f-04bf0aa3e817",
+    "98b82665-1f16-4fd8-8556-900f5794aab0",
+    "99809f8b-6cea-404e-9f23-d6a43edafd76"
+  ],
+  "experienceTitles": [
+    {
+      "id": "112ea03b-ce29-4d48-a091-696339a305e4",
+      "title": "Jardines del Belvedere",
+      "status": "PUBLISHED"
+    },
+    {
+      "id": "97e31750-e342-4f29-b19d-e73b87b8b993",
+      "title": "Candlelight: Concierto bajo la luz de las velas",
+      "status": "PUBLISHED"
+    },
+    {
+      "id": "a27103f6-dc93-42b0-a0d5-6aa691e6c290",
+      "title": "Tour por la Comuna 13",
+      "status": "PUBLISHED"
+    },
+    {
+      "id": "2d854110-fbac-4287-a736-022e902ad61d",
+      "title": "Ruta en bicicleta: Entre cerros y cerámica",
+      "status": "PUBLISHED"
+    },
+    {
+      "id": "05e90fa5-3db4-4d42-9654-6f3f05fdadd5",
+      "title": "Taller de cerámica",
+      "status": "PUBLISHED"
+    },
+    {
+      "id": "dd533f43-a4ae-43a3-9abe-4c421456341e",
+      "title": "Cerámicas Esmaltarte",
+      "status": "PUBLISHED"
+    },
+    {
+      "id": "11d09f53-b79e-4bcd-9615-046a66298cec",
+      "title": "Taller de velas artesanales",
+      "status": "PUBLISHED"
+    },
+    {
+      "id": "012304df-ad19-4080-a07f-04bf0aa3e817",
+      "title": "Clase de Pilates",
+      "status": "PUBLISHED"
+    },
+    {
+      "id": "98b82665-1f16-4fd8-8556-900f5794aab0",
+      "title": "Clase de cocina",
+      "status": "PUBLISHED"
+    },
+    {
+      "id": "99809f8b-6cea-404e-9f23-d6a43edafd76",
+      "title": "Taller de flores",
+      "status": "PUBLISHED"
+    }
+  ]
+}
