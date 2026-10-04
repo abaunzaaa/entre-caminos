@@ -29,7 +29,7 @@ export function ExperienceOrganizationCard({ organization }: { organization: Pub
   const place = [organization.city, organization.department]
     .map((item) => item?.trim() || "")
     .filter(Boolean)
-    .join(", ");
+    .join(" · ");
   const phone = organization.contactPhone?.trim() || "";
   const dial = phone ? phoneHref(phone) : "";
   const website = organization.website?.trim() || "";
