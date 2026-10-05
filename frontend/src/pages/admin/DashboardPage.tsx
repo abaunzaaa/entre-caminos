@@ -27,6 +27,7 @@ import { KeyConfirmDialog } from "../../components/ui/KeyConfirmDialog";
 import { SuccessConfirmDialog } from "../../components/ui/SuccessConfirmDialog";
 import { AuthKeyIcon } from "../../components/auth/AuthKeyIcon";
 import { useAuth } from "../../hooks/useAuth";
+import { useOrganizationLogo } from "../../hooks/useOrganizationLogo";
 import { getApiErrorMessage } from "../../utils/api-error";
 import { canReviewExperiences } from "../../utils/admin-access";
 import { getCategoryIcon } from "../../utils/category-icons";
@@ -144,6 +145,8 @@ export function DashboardPage() {
   const [deletedOpen, setDeletedOpen] = useState(false);
   const [toast, setToast] = useState<{ text: string; tone: "success" | "error" } | null>(null);
   const [photo, setPhoto] = useState<string | null>(() => resolveAvatarUrl(user));
+  const orgLogo = useOrganizationLogo(user?.role === "ADMIN");
+  const greetingPhoto = orgLogo || photo;
 
   useEffect(() => {
     setPhoto(resolveAvatarUrl(user));
@@ -295,11 +298,11 @@ export function DashboardPage() {
         <div className="dash-profile__top">
           <UserAvatar
             user={user}
-            src={photo}
+            src={greetingPhoto}
             initial={initial}
             size={112}
-            className="dash-profile__photo"
-            alt=""
+            className={`dash-profile__photo${orgLogo ? " is-logo" : ""}`}
+            alt={orgLogo ? "Logo de la empresa" : ""}
           />
           <div className="dash-profile__identity">
             <h1 className="dash-profile__name">{greetingForName(fullName)}</h1>
