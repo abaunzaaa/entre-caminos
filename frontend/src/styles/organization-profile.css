@@ -52,31 +52,53 @@
   cursor: pointer;
 }
 
+.org-profile .admin-profile-edit__summary {
+  align-self: start;
+  background: #fff;
+}
+
 .org-profile__side-links {
-  display: grid;
-  gap: 8px;
-  margin-top: 14px;
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
 }
 
-.org-profile__side-links a,
 .org-profile__side-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0.42rem 1.15rem;
   border: 0;
-  padding: 0;
-  background: transparent;
-  color: #294942;
-  font-size: 0.88rem;
-  font-weight: 550;
-  text-align: left;
+  border-radius: 999px;
+  background: #1c332e;
+  color: #fff;
+  font-family: Poppins, Nunito, system-ui, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  text-align: center;
   text-decoration: none;
+  box-shadow: 0 8px 20px rgba(28, 51, 46, 0.12);
   cursor: pointer;
+  transition:
+    transform 220ms ease,
+    box-shadow 220ms ease;
 }
 
-.org-profile__side-links a:hover,
-.org-profile__side-links a:focus-visible,
 .org-profile__side-link:hover,
 .org-profile__side-link:focus-visible {
-  text-decoration: underline;
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(28, 51, 46, 0.16);
   outline: none;
+}
+
+.org-profile__side-link:disabled {
+  opacity: 0.55;
+  transform: none;
+  cursor: default;
+  box-shadow: none;
 }
 
 .org-profile__missing,
