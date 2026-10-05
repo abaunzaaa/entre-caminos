@@ -20,7 +20,14 @@
 html,
 body,
 #root {
+  height: auto;
   min-height: 100%;
+  max-height: none;
+}
+
+body,
+#root {
+  overflow: visible;
 }
 
 html.onboarding-lock,

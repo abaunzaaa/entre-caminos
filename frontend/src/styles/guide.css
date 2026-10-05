@@ -544,6 +544,7 @@
   background: transparent;
 }
 
+html:has(.guide-panel.is-expanded),
 body:has(.guide-panel.is-expanded) {
   overflow: hidden;
 }

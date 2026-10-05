@@ -9,7 +9,7 @@
   box-sizing: border-box;
   min-height: calc(100svh - var(--explorer-nav-height, 4.75rem));
   padding: 0 20px 56px;
-  overflow-x: clip;
+  overflow: visible;
   background: #fbfbf8;
   color: var(--profile-forest);
   font-family: var(--profile-font);
@@ -35,7 +35,7 @@
 .profile-account-outlet:has(.profile-view) {
   height: auto;
   min-height: 100svh;
-  overflow-x: clip;
+  overflow: visible;
   background: #fbfbf8;
 }
 
@@ -327,7 +327,7 @@
 .profile-panel {
   min-width: 0;
   padding-top: 22px;
-  overflow-x: clip;
+  overflow: visible;
 }
 
 .profile-info-card__title {

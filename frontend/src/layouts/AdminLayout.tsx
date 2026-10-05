@@ -99,11 +99,12 @@ export function AdminLayout() {
         setMobileOpen(false);
       }
     };
+    const previousOverflow = document.body.style.overflow;
     document.addEventListener("keydown", onKeyDown);
     document.body.style.overflow = "hidden";
     return () => {
       document.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = "";
+      document.body.style.overflow = previousOverflow;
     };
   }, [mobileOpen]);
 

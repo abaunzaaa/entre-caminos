@@ -9,6 +9,17 @@ export const passwordSchema = z
   .regex(/[0-9]/, "Debe incluir al menos un número")
   .regex(/[^A-Za-z0-9]/, "Debe incluir al menos un símbolo");
 
+/** Acepta letras del nombre (ñ, tildes) en la parte local. El dominio sigue en ASCII. */
+const ACCOUNT_EMAIL =
+  /^(?!\.)(?!.*\.\.)([\p{L}0-9_'+\-\.]*)[\p{L}0-9_+-]@([A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$/u;
+
+export const accountEmailSchema = z
+  .string({ required_error: "El correo es obligatorio" })
+  .trim()
+  .min(1, "El correo es obligatorio")
+  .transform((value) => value.toLowerCase())
+  .refine((value) => ACCOUNT_EMAIL.test(value), { message: "Correo electrónico inválido" });
+
 export const registerSchema = z
   .object({
     name: z
@@ -16,11 +27,7 @@ export const registerSchema = z
       .trim()
       .min(2, "El nombre debe tener al menos 2 caracteres")
       .max(80, "El nombre es demasiado largo"),
-    email: z
-      .string({ required_error: "El correo es obligatorio" })
-      .trim()
-      .email("Correo electrónico inválido")
-      .toLowerCase(),
+    email: accountEmailSchema,
     password: passwordSchema,
     confirmPassword: z.string({ required_error: "Confirma tu contraseña" }).min(1, "Confirma tu contraseña"),
     termsAccepted: z.literal(true, {
@@ -33,7 +40,7 @@ export const registerSchema = z
   });
 
 export const loginSchema = z.object({
-  email: z.string().trim().email("Correo electrónico inválido").toLowerCase(),
+  email: accountEmailSchema,
   password: z.string().min(1, "La contraseña es obligatoria"),
   remember: z
     .union([z.boolean(), z.literal("true"), z.literal("false"), z.literal("1"), z.literal("0")])
@@ -42,7 +49,7 @@ export const loginSchema = z.object({
 });
 
 export const forgotPasswordSchema = z.object({
-  email: z.string().trim().email("Correo electrónico inválido").toLowerCase(),
+  email: accountEmailSchema,
 });
 
 export const resetPasswordSchema = z
@@ -68,7 +75,7 @@ export const changePasswordSchema = z
   });
 
 export const verifyEmailSchema = z.object({
-  email: z.string().trim().email("Correo electrónico inválido").toLowerCase(),
+  email: accountEmailSchema,
   code: z
     .string({ required_error: "El código es obligatorio" })
     .trim()
@@ -76,7 +83,7 @@ export const verifyEmailSchema = z.object({
 });
 
 export const resendVerificationSchema = z.object({
-  email: z.string().trim().email("Correo electrónico inválido").toLowerCase(),
+  email: accountEmailSchema,
 });
 
 const optionalProfileText = (max: number, tooLong: string) =>
