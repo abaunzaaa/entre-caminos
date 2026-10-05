@@ -226,9 +226,8 @@ export function ExplorePage() {
       city: filters.city,
       categoryId: filters.categoryId,
       price: filters.price,
-      duration: filters.duration,
       plan: filters.plan,
-      sort: filters.sort,
+      sort: "newest",
     })
       .then((result) => {
         if (cancelled) {
@@ -259,6 +258,21 @@ export function ExplorePage() {
     };
   }, [page, filters, activeSearch]);
 
+  useEffect(() => {
+    const handle = window.setTimeout(() => {
+      const next = searchDraft.trim();
+      setActiveSearch((current) => (current === next ? current : next));
+      setPage((currentPage) => {
+        const committed = activeSearch.trim();
+        if (committed === next || currentPage === 1) {
+          return currentPage;
+        }
+        return 1;
+      });
+    }, 300);
+    return () => window.clearTimeout(handle);
+  }, [activeSearch, searchDraft]);
+
   const heroExperiences = recommended;
   const hasInterests = (user?.profile?.interests ?? []).some((interest) => interest.trim());
 
@@ -269,7 +283,7 @@ export function ExplorePage() {
 
   const filtersActive =
     Boolean(activeSearch.trim()) ||
-    Boolean(filters.city || filters.categoryId || filters.price || filters.duration || filters.plan);
+    Boolean(filters.city || filters.categoryId || filters.price || filters.plan);
 
   return (
     <div className="explorer-page">
@@ -324,13 +338,8 @@ export function ExplorePage() {
             setPage(1);
           }}
           searchDraft={searchDraft}
-          searchActive={Boolean(activeSearch.trim())}
+          searchActive={Boolean(searchDraft.trim())}
           onSearchDraftChange={setSearchDraft}
-          onSearchSubmit={() => {
-            setActiveSearch(searchDraft.trim());
-            setPage(1);
-            document.getElementById("descubrir")?.scrollIntoView({ behavior: "smooth", block: "start" });
-          }}
           onSearchClear={() => {
             setSearchDraft("");
             setActiveSearch("");

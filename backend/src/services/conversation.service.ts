@@ -473,7 +473,10 @@ export async function updateConversation(
 
 export async function deleteConversation(userId: string, id: string) {
   await getOwned(userId, id);
-  await prisma.conversation.delete({ where: { id } });
+  await prisma.$transaction([
+    prisma.conversationMessage.deleteMany({ where: { conversationId: id } }),
+    prisma.conversation.deleteMany({ where: { id, userId } }),
+  ]);
 }
 
 function historyFromMessages(messages: SerializedMessage[]): AssistantChatMessage[] {

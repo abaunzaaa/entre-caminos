@@ -225,6 +225,7 @@ export function GuideHost() {
   const [folderIcon, setFolderIcon] = useState("folder");
   const [iconPicker, setIconPicker] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [confirmClear, setConfirmClear] = useState(false);
   const [threadMenu, setThreadMenu] = useState<string | null>(null);
   const [menuAnchor, setMenuAnchor] = useState<DOMRect | null>(null);
   const [menuPos, setMenuPos] = useState<{ top: number; left: number; openUp?: boolean } | null>(null);
@@ -274,9 +275,11 @@ export function GuideHost() {
       const target = event.target as Node;
       if (settingsOpen && !settingsRef.current?.contains(target)) {
         setSettingsOpen(false);
+        setConfirmClear(false);
       }
-      if ((threadMenu || folderMenu) && !threadMenuRef.current?.contains(target)) {
-        const onMore = (event.target as HTMLElement | null)?.closest?.(".guide-rail__more");
+      const menuTarget = event.target as HTMLElement | null;
+      if ((threadMenu || folderMenu) && !threadMenuRef.current?.contains(target) && !menuTarget?.closest(".guide-rail__menu")) {
+        const onMore = menuTarget?.closest?.(".guide-rail__more");
         if (onMore) {
           return;
         }
@@ -295,6 +298,9 @@ export function GuideHost() {
 
   useLayoutEffect(() => {
     if ((!threadMenu && !folderMenu) || !menuAnchor || !threadMenuRef.current) {
+      return;
+    }
+    if (confirmDelete || confirmFolderDelete) {
       return;
     }
     const box = threadMenuRef.current.getBoundingClientRect();
@@ -345,6 +351,12 @@ export function GuideHost() {
     const id = window.setTimeout(() => setCopiedId(null), 1800);
     return () => window.clearTimeout(id);
   }, [copiedId]);
+
+  useEffect(() => {
+    if (!settingsOpen) {
+      setConfirmClear(false);
+    }
+  }, [settingsOpen]);
 
   useEffect(() => {
     if (!toast) {
@@ -502,139 +514,13 @@ export function GuideHost() {
             <MoreVertical size={14} strokeWidth={1.8} />
           </button>
         </div>
-        {threadMenu === item.id && menuPos
-          ? createPortal(
-              <div
-                ref={threadMenuRef}
-                className={`guide-rail__menu${menuPos.openUp ? " is-up" : ""}`}
-                role="menu"
-                style={{ top: menuPos.top, left: menuPos.left, transformOrigin: menuPos.openUp ? "bottom left" : "top left" }}
-              >
-                {confirmDelete === item.id ? (
-                  <>
-                    <p className="guide-rail__menu-confirm">¿Eliminar esta conversación?</p>
-                    <button type="button" role="menuitem" onClick={() => setConfirmDelete(null)}>
-                      Cancelar
-                    </button>
-                    <button
-                      type="button"
-                      role="menuitem"
-                      className="guide-rail__menu-danger"
-                      onClick={() => {
-                        closeThreadMenu();
-                        guide.deleteThread(item.id);
-                      }}
-                    >
-                      <Trash2 size={14} strokeWidth={1.8} />
-                      Eliminar
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      type="button"
-                      role="menuitem"
-                      onClick={() => {
-                        closeThreadMenu();
-                        setRenamingThread(item.id);
-                        setThreadRenameDraft(item.title);
-                      }}
-                    >
-                      <Pencil size={14} strokeWidth={1.8} />
-                      <span>Renombrar</span>
-                    </button>
-                    <button
-                      type="button"
-                      role="menuitem"
-                      onClick={() => {
-                        guide.toggleConversationFavorite(item.id);
-                        closeThreadMenu();
-                      }}
-                    >
-                      <Star size={14} strokeWidth={1.8} fill={item.favorite ? "currentColor" : "none"} />
-                      <span>{item.favorite ? "Quitar de favoritos" : "Agregar a favoritos"}</span>
-                    </button>
-                    <button
-                      type="button"
-                      role="menuitem"
-                      className="guide-rail__menu-danger"
-                      onClick={() => setConfirmDelete(item.id)}
-                    >
-                      <Trash2 size={14} strokeWidth={1.8} />
-                      <span>Eliminar</span>
-                    </button>
-                    <span className="guide-rail__menu-sep" />
-                    <div
-                      className="guide-rail__menu-move"
-                      onMouseEnter={() => setMoveMenu(item.id)}
-                    >
-                      <button
-                        type="button"
-                        role="menuitem"
-                        onClick={() => setMoveMenu((current) => (current === item.id ? null : item.id))}
-                      >
-                        <Folder size={14} strokeWidth={1.8} />
-                        <span>Mover a carpeta</span>
-                        <ChevronRight size={14} strokeWidth={1.8} />
-                      </button>
-                      {moveMenu === item.id ? (
-                        <div className="guide-rail__menu-flyout" role="menu">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              closeThreadMenu();
-                              setFoldersOpen(true);
-                              setCreatingFolder(true);
-                              setRailSection("home");
-                            }}
-                          >
-                            <Folder size={14} strokeWidth={1.8} />
-                            <span>Nueva carpeta</span>
-                          </button>
-                          {guide.folders.length ? (
-                            guide.folders.map((folder) => (
-                              <button
-                                key={folder.id}
-                                type="button"
-                                onClick={() => {
-                                  guide.assignThreadFolder(item.id, folder.id);
-                                  closeThreadMenu();
-                                  setToast(`Movido a ${folder.name}`);
-                                }}
-                              >
-                                <FolderMark name={folder.name} icon={folder.icon} />
-                                <span>{folder.name}</span>
-                              </button>
-                            ))
-                          ) : (
-                            <p className="guide-rail__menu-empty">Aún no hay carpetas</p>
-                          )}
-                        </div>
-                      ) : null}
-                    </div>
-                    {item.folderId ? (
-                      <button
-                        type="button"
-                        role="menuitem"
-                        onClick={() => {
-                          guide.assignThreadFolder(item.id, undefined);
-                          closeThreadMenu();
-                          setToast("Quitado de la carpeta");
-                        }}
-                      >
-                        <Folder size={14} strokeWidth={1.8} />
-                        <span>Quitar de la carpeta</span>
-                      </button>
-                    ) : null}
-                  </>
-                )}
-              </div>,
-              document.body,
-            )
-          : null}
       </div>
     );
   }
+
+  const menuThread =
+    (threadMenu ? guide.threads.find((item) => item.id === threadMenu) : undefined) ??
+    (threadMenu && guide.thread?.id === threadMenu ? guide.thread : undefined);
 
   const composer = (
     <form
@@ -804,7 +690,10 @@ export function GuideHost() {
                       className="guide-dock__btn"
                       aria-label="Opciones del chat"
                       aria-expanded={settingsOpen}
-                      onClick={() => setSettingsOpen((open) => !open)}
+                      onClick={() => {
+                        setConfirmClear(false);
+                        setSettingsOpen((open) => !open);
+                      }}
                     >
                       <Settings size={18} strokeWidth={1.8} />
                     </button>
@@ -863,6 +752,38 @@ export function GuideHost() {
                           <em>Chats que marcaste.</em>
                         </span>
                       </button>
+                      {confirmClear ? (
+                        <>
+                          <p className="guide-settings__title">¿Eliminar esta conversación?</p>
+                          <button
+                            type="button"
+                            className="guide-settings__row"
+                            onClick={() => setConfirmClear(false)}
+                          >
+                            <span>
+                              <strong>Cancelar</strong>
+                            </span>
+                          </button>
+                          <button
+                            type="button"
+                            className="guide-settings__row"
+                            onClick={() => {
+                              if (!guide.thread) {
+                                return;
+                              }
+                              const id = guide.thread.id;
+                              setConfirmClear(false);
+                              setSettingsOpen(false);
+                              guide.deleteThread(id);
+                            }}
+                          >
+                            <span>
+                              <strong>Eliminar</strong>
+                              <em>Se borrará este chat.</em>
+                            </span>
+                          </button>
+                        </>
+                      ) : (
                       <button
                         type="button"
                         className="guide-settings__row"
@@ -871,8 +792,7 @@ export function GuideHost() {
                           if (!guide.thread) {
                             return;
                           }
-                          setSettingsOpen(false);
-                          guide.deleteThread(guide.thread.id);
+                          setConfirmClear(true);
                         }}
                       >
                         <span className="guide-settings__icon">
@@ -883,6 +803,7 @@ export function GuideHost() {
                           <em>Elimina el chat actual.</em>
                         </span>
                       </button>
+                      )}
                       <button
                         type="button"
                         className="guide-settings__row"
@@ -1102,7 +1023,6 @@ export function GuideHost() {
                         }
                         guide.assignThreadFolder(threadId, folder.id);
                         guide.setFolderFilter(folder.id);
-                        setToast(`Movido a ${folder.name}`);
                       }}
                     >
                       <button
@@ -1227,6 +1147,7 @@ export function GuideHost() {
                                 left: menuPos.left,
                                 transformOrigin: menuPos.openUp ? "bottom left" : "top left",
                               }}
+                              onMouseDown={(event) => event.stopPropagation()}
                             >
                               {confirmFolderDelete === folder.id ? (
                                 <>
@@ -1671,8 +1592,11 @@ export function GuideHost() {
                         size={14}
                         aria-label="Eliminar"
                         onClick={(event) => {
+                          event.preventDefault();
                           event.stopPropagation();
-                          guide.deleteThread(item.id);
+                          if (window.confirm("¿Eliminar esta conversación?")) {
+                            guide.deleteThread(item.id);
+                          }
                         }}
                       />
                     </button>
@@ -1688,6 +1612,138 @@ export function GuideHost() {
             </div>
           </section>
       ) : null}
+      {menuThread && menuPos
+        ? createPortal(
+            <div
+              ref={threadMenuRef}
+              className={`guide-rail__menu${menuPos.openUp ? " is-up" : ""}${confirmDelete === menuThread.id ? " is-confirm" : ""}`}
+              role="menu"
+              style={{ top: menuPos.top, left: menuPos.left, transformOrigin: menuPos.openUp ? "bottom left" : "top left" }}
+              onMouseDown={(event) => event.stopPropagation()}
+            >
+              {confirmDelete === menuThread.id ? (
+                <>
+                  <p className="guide-rail__menu-confirm">¿Eliminar esta conversación?</p>
+                  <button type="button" role="menuitem" onClick={() => setConfirmDelete(null)}>
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="guide-rail__menu-danger"
+                    onClick={() => {
+                      closeThreadMenu();
+                      guide.deleteThread(menuThread.id);
+                    }}
+                  >
+                    <Trash2 size={14} strokeWidth={1.8} />
+                    Eliminar
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      closeThreadMenu();
+                      setRenamingThread(menuThread.id);
+                      setThreadRenameDraft(menuThread.title);
+                    }}
+                  >
+                    <Pencil size={14} strokeWidth={1.8} />
+                    <span>Renombrar</span>
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      guide.toggleConversationFavorite(menuThread.id);
+                      closeThreadMenu();
+                    }}
+                  >
+                    <Star size={14} strokeWidth={1.8} fill={menuThread.favorite ? "currentColor" : "none"} />
+                    <span>{menuThread.favorite ? "Quitar de favoritos" : "Agregar a favoritos"}</span>
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="guide-rail__menu-danger"
+                    onClick={() => setConfirmDelete(menuThread.id)}
+                  >
+                    <Trash2 size={14} strokeWidth={1.8} />
+                    <span>Eliminar</span>
+                  </button>
+                  <span className="guide-rail__menu-sep" />
+                  <div className="guide-rail__menu-move" onMouseEnter={() => setMoveMenu(menuThread.id)}>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => setMoveMenu((current) => (current === menuThread.id ? null : menuThread.id))}
+                    >
+                      <Folder size={14} strokeWidth={1.8} />
+                      <span>Mover a carpeta</span>
+                      <ChevronRight size={14} strokeWidth={1.8} />
+                    </button>
+                    {moveMenu === menuThread.id ? (
+                      <div
+                        className={`guide-rail__menu-flyout${menuPos.left > window.innerWidth - 460 ? " is-left" : ""}`}
+                        role="menu"
+                      >
+                        <button
+                          type="button"
+                          onClick={() => {
+                            closeThreadMenu();
+                            setFoldersOpen(true);
+                            setCreatingFolder(true);
+                            setRailSection("home");
+                            if (!guide.expanded) {
+                              guide.toggleExpand();
+                            }
+                          }}
+                        >
+                          <Folder size={14} strokeWidth={1.8} />
+                          <span>Nueva carpeta</span>
+                        </button>
+                        {guide.folders.length ? (
+                          guide.folders.map((folder) => (
+                            <button
+                              key={folder.id}
+                              type="button"
+                              onClick={() => {
+                                guide.assignThreadFolder(menuThread.id, folder.id);
+                                closeThreadMenu();
+                              }}
+                            >
+                              <FolderMark name={folder.name} icon={folder.icon} />
+                              <span>{folder.name}</span>
+                            </button>
+                          ))
+                        ) : (
+                          <p className="guide-rail__menu-empty">Aún no hay carpetas</p>
+                        )}
+                      </div>
+                    ) : null}
+                  </div>
+                  {menuThread.folderId ? (
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        guide.assignThreadFolder(menuThread.id, undefined);
+                        closeThreadMenu();
+                      }}
+                    >
+                      <Folder size={14} strokeWidth={1.8} />
+                      <span>Quitar de la carpeta</span>
+                    </button>
+                  ) : null}
+                </>
+              )}
+            </div>,
+            document.body,
+          )
+        : null}
       {renamingThread
         ? createPortal(
             <div

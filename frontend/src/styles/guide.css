@@ -1671,6 +1671,10 @@ button.guide-rail__folder-row {
   animation-name: guide-menu-in-up;
 }
 
+.guide-rail__menu.is-confirm {
+  min-height: 132px;
+}
+
 @keyframes guide-menu-in-up {
   from {
     opacity: 0;
@@ -1776,8 +1780,8 @@ button.guide-rail__folder-row {
 }
 
 .guide-rail__menu-flyout.is-left {
-  left: calc(100% + 8px);
-  right: auto;
+  left: auto;
+  right: calc(100% + 8px);
 }
 
 .guide-rail__menu-empty {
@@ -3685,6 +3689,13 @@ a.guide-plan__stop:focus-visible {
   align-self: center;
   margin-top: 0;
   gap: 2px;
+}
+
+.guide-panel.is-expanded .guide-rail__thread-acts .guide-rail__act,
+.guide-panel.is-expanded .guide-rail__thread .guide-rail__more {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 
 .guide-panel.is-expanded .guide-rail__thread:hover {

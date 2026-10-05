@@ -3,7 +3,7 @@ import { useLocation } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { getApiErrorMessage } from "../../utils/api-error";
 import { listFavoriteIds, removeFavorite } from "../../services/favorites.service";
-import { notifyFavoriteStatus, notifyFavoritesChanged, onFavoriteStatus, openFavoriteSaveModal } from "../../services/favorites-sync";
+import { notifyFavoriteStatus, notifyFavoritesChanged, onFavoriteStatus, openFavoriteSaveModal, showFavoriteToast } from "../../services/favorites-sync";
 import {
   chronologicalMessages,
   loadActiveConversationId,
@@ -181,6 +181,8 @@ export function GuideProvider({ children }: { children: ReactNode }) {
   const openingRef = useRef(false);
   const actionRef = useRef(0);
   const threadIdRef = useRef<string | null>(null);
+  const deletedIdsRef = useRef(new Set<string>());
+  const holdBlankRef = useRef(false);
 
   useEffect(() => {
     if (!user) {
@@ -216,23 +218,34 @@ export function GuideProvider({ children }: { children: ReactNode }) {
           setFolders(folderRows.map(folderFromApi));
         }
         if (rows) {
-          const mapped = rows.map(conversationToThread);
+          const mapped = rows
+            .map(conversationToThread)
+            .filter((item) => !deletedIdsRef.current.has(item.id));
           setThreads((current) => {
             const ids = new Set(mapped.map((item) => item.id));
-            const localOnly = current.filter((item) => isPersistedConversationId(item.id) && !ids.has(item.id));
+            const localOnly = current.filter(
+              (item) =>
+                isPersistedConversationId(item.id) &&
+                !ids.has(item.id) &&
+                !deletedIdsRef.current.has(item.id),
+            );
             const next = [...localOnly, ...mapped];
             saveThreads(user.id, next);
             return next;
           });
           const activeId = loadActiveConversationId(user.id);
           setThread((current) => {
-            if (creatingRef.current) {
-              return current;
+            if (creatingRef.current || holdBlankRef.current) {
+              return current && deletedIdsRef.current.has(current.id) ? null : current;
             }
             if (current) {
+              if (deletedIdsRef.current.has(current.id)) {
+                return null;
+              }
               return mapped.find((item) => item.id === current.id) ?? current;
             }
-            return mapped.find((item) => item.id === activeId) ?? mapped[0] ?? null;
+            const restored = mapped.find((item) => item.id === activeId) ?? mapped[0] ?? null;
+            return restored && deletedIdsRef.current.has(restored.id) ? null : restored;
           });
         }
       });
@@ -252,7 +265,7 @@ export function GuideProvider({ children }: { children: ReactNode }) {
 
   const persist = useCallback(
     (next: GuideThread) => {
-      if (!user) {
+      if (!user || deletedIdsRef.current.has(next.id)) {
         return;
       }
       const clean = { ...next, messages: chronologicalMessages(next.messages) };
@@ -284,7 +297,16 @@ export function GuideProvider({ children }: { children: ReactNode }) {
   );
 
   useEffect(() => {
-    if (!open || !user || thread || experienceId || !threads.length || creatingRef.current || openingRef.current) {
+    if (
+      !open ||
+      !user ||
+      thread ||
+      experienceId ||
+      !threads.length ||
+      creatingRef.current ||
+      openingRef.current ||
+      holdBlankRef.current
+    ) {
       return;
     }
     const activeId = loadActiveConversationId(user.id);
@@ -360,6 +382,7 @@ export function GuideProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const newConversation = useCallback((folderId?: string) => {
+    holdBlankRef.current = false;
     setPlusOpen(false);
     setError("");
     setDraft("");
@@ -558,6 +581,12 @@ export function GuideProvider({ children }: { children: ReactNode }) {
       }
       const action = ++actionRef.current;
       openingRef.current = true;
+      if (holdBlankRef.current && !consult) {
+        setThread(null);
+        setView(opts?.view ?? "home");
+        openingRef.current = false;
+        return;
+      }
       void (async () => {
         try {
           if (consult) {
@@ -644,6 +673,7 @@ export function GuideProvider({ children }: { children: ReactNode }) {
 
   const startThread = useCallback(
     (prompt?: string) => {
+      holdBlankRef.current = false;
       setError("");
       if (creatingRef.current || sendingRef.current) {
         return;
@@ -686,6 +716,7 @@ export function GuideProvider({ children }: { children: ReactNode }) {
       if (!user || creatingRef.current || sendingRef.current) {
         return;
       }
+      holdBlankRef.current = false;
       const action = ++actionRef.current;
       openingRef.current = false;
       creatingRef.current = true;
@@ -824,6 +855,10 @@ export function GuideProvider({ children }: { children: ReactNode }) {
       send,
       regenerate,
       openThread: (id) => {
+        if (deletedIdsRef.current.has(id)) {
+          return;
+        }
+        holdBlankRef.current = false;
         const token = ++actionRef.current;
         openingRef.current = true;
         threadIdRef.current = id;
@@ -857,19 +892,49 @@ export function GuideProvider({ children }: { children: ReactNode }) {
         })();
       },
       deleteThread: (id) => {
-        if (!user) {
+        if (!user || !id) {
+          return;
+        }
+        const wasOpen = thread?.id === id || threadIdRef.current === id;
+        if (!isPersistedConversationId(id)) {
+          deletedIdsRef.current.add(id);
+          setThreads((current) => {
+            const next = current.filter((item) => item.id !== id);
+            saveThreads(user.id, next);
+            return next;
+          });
+          if (wasOpen) {
+            holdBlankRef.current = true;
+            actionRef.current += 1;
+            threadIdRef.current = null;
+            setThread(null);
+            setView("home");
+            setDraft("");
+            setError("");
+            saveActiveConversationId(user.id, null);
+          }
+          showFavoriteToast("Conversación eliminada.");
           return;
         }
         void deleteGuideConversation(id)
           .then(() => {
-            const next = threads.filter((item) => item.id !== id);
-            setThreads(next);
-            saveThreads(user.id, next);
-            if (thread?.id === id) {
+            deletedIdsRef.current.add(id);
+            actionRef.current += 1;
+            setThreads((current) => {
+              const next = current.filter((item) => item.id !== id);
+              saveThreads(user.id, next);
+              return next;
+            });
+            if (wasOpen && (threadIdRef.current === id || threadIdRef.current == null)) {
+              holdBlankRef.current = true;
+              threadIdRef.current = null;
               setThread(null);
               setView("home");
-              saveActiveConversationId(user.id, next[0]?.id);
+              setDraft("");
+              setError("");
+              saveActiveConversationId(user.id, null);
             }
+            showFavoriteToast("Conversación eliminada.");
           })
           .catch((err) => {
             setError(getApiErrorMessage(err, "No pude eliminar la conversación."));
@@ -960,9 +1025,15 @@ export function GuideProvider({ children }: { children: ReactNode }) {
         if (thread?.id === threadId) {
           setThread((current) => (current ? { ...current, folderId } : current));
         }
-        void patchGuideConversation(threadId, { folderId: folderId ?? null }).catch((err) => {
-          setError(getApiErrorMessage(err, "No pude mover la conversación."));
-        });
+        void patchGuideConversation(threadId, { folderId: folderId ?? null })
+          .then(() => {
+            showFavoriteToast(
+              folderId ? "Conversación movida a la carpeta." : "Conversación quitada de la carpeta.",
+            );
+          })
+          .catch((err) => {
+            setError(getApiErrorMessage(err, "No pude mover la conversación."));
+          });
       },
       renameThread: (id, title) => {
         if (!user) {

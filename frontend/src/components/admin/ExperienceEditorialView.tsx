@@ -15,7 +15,7 @@ import {
 } from "../../utils/experience-details";
 import { experienceImages, mediaUrl } from "../../utils/media";
 import { placeTabLabel, placesFromExperience, projectExperience } from "../../utils/experience-places";
-import type { Experience, ExperienceStatus } from "../../types";
+import type { Experience, ExperienceStatus, PublicOrganizationProfile } from "../../types";
 
 const PLACE_FACT_LABELS = new Set([
   "Ubicación",
@@ -53,6 +53,35 @@ function phoneHref(value: string) {
     return "";
   }
   return `tel:${trimmed.replace(/[^\d+]/g, "")}`;
+}
+
+function detailOrganization(experience: Experience): PublicOrganizationProfile | null {
+  const creator = experience.creator as
+    | (NonNullable<Experience["creator"]> & {
+        organizationProfile?: PublicOrganizationProfile | null;
+      })
+    | null
+    | undefined;
+  if (creator?.organization?.tradeName?.trim()) {
+    return creator.organization;
+  }
+  const profile = creator?.organizationProfile;
+  const tradeName = profile?.tradeName?.trim() || "";
+  if (!profile || !tradeName) {
+    return null;
+  }
+  return {
+    tradeName,
+    description: profile.description?.trim() || "",
+    logoUrl: profile.logoUrl?.trim() || null,
+    department: profile.department?.trim() || "",
+    city: profile.city?.trim() || "",
+    contactPhone: profile.contactPhone?.trim() || null,
+    contactEmail: profile.contactEmail?.trim() || null,
+    website: profile.website?.trim() || null,
+    address: profile.address?.trim() || null,
+    publishedCount: profile.publishedCount,
+  };
 }
 
 function formatPublishedDate(value?: string | null) {
@@ -108,7 +137,7 @@ export function buildExperienceEditorialFacts(
       : [];
 
   const detailFacts: ExperienceEditorialFact[] = [
-    ...(experience.description.trim() ? [{ label: "Descripción", value: experience.description }] : []),
+    ...(experience.description?.trim() ? [{ label: "Descripción", value: experience.description }] : []),
     { label: "Precio", value: formatPrice(experience.price, experience.currency) },
     {
       label: experienceCategoryNames(experience).length > 1 ? "Categorías" : "Categoría",
@@ -176,6 +205,7 @@ export function ExperienceEditorialView({
   const photos = experienceImages(experience);
   const mainPhoto = photos[0] ? mediaUrl(photos[0], 1200) : null;
   const { noteFacts, detailFacts } = buildExperienceEditorialFacts(view, mode);
+  const organization = detailOrganization(experience);
   const showPlaceTabs = places.length > 1;
   const generalFacts = showPlaceTabs ? detailFacts.filter((fact) => !PLACE_FACT_LABELS.has(fact.label)) : detailFacts;
   const placeFacts = showPlaceTabs ? detailFacts.filter((fact) => PLACE_FACT_LABELS.has(fact.label)) : [];
@@ -239,6 +269,7 @@ export function ExperienceEditorialView({
         photoLabel={experience.title}
         noteFacts={noteFacts}
         facts={generalFacts}
+        organization={organization}
         placeFacts={placeFacts}
         places={
           showPlaceTabs ? (

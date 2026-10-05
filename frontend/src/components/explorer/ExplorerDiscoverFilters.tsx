@@ -10,31 +10,25 @@ import {
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
-import { ChevronDown, Search, X } from "lucide-react";
+import { ChevronDown, X } from "lucide-react";
 import { parseStoredLocation } from "../../data/colombia-locations";
-import { formatDuration } from "../../utils/experience-details";
 import type { Experience } from "../../types";
 import { experienceCategoryNames } from "../../utils/experience-categories";
 
 export type DiscoverPlan = "family" | "couple" | "solo" | "friends" | "";
-export type DiscoverSort = "newest" | "oldest";
 
 export type DiscoverFiltersState = {
   city: string;
   categoryId: string;
   price: string;
-  duration: string;
   plan: DiscoverPlan;
-  sort: DiscoverSort;
 };
 
 export const DEFAULT_DISCOVER_FILTERS: DiscoverFiltersState = {
   city: "",
   categoryId: "",
   price: "",
-  duration: "",
   plan: "",
-  sort: "newest",
 };
 
 const PRICE_OPTIONS = [
@@ -45,14 +39,6 @@ const PRICE_OPTIONS = [
   { value: "200000+", label: "Más de $200.000" },
 ] as const;
 
-const DURATION_OPTIONS = [
-  { value: "", label: "Cualquier duración" },
-  { value: "short", label: "Hasta 1 hora" },
-  { value: "medium", label: "1 a 3 horas" },
-  { value: "half", label: "3 a 6 horas" },
-  { value: "day", label: "1 día o más" },
-] as const;
-
 const PLAN_OPTIONS: Array<{ value: DiscoverPlan; label: string }> = [
   { value: "", label: "Cualquier plan" },
   { value: "family", label: "En familia" },
@@ -61,43 +47,9 @@ const PLAN_OPTIONS: Array<{ value: DiscoverPlan; label: string }> = [
   { value: "friends", label: "Con amigos" },
 ];
 
-const SORT_OPTIONS: Array<{ value: DiscoverSort; label: string }> = [
-  { value: "newest", label: "Más recientes" },
-  { value: "oldest", label: "Más antiguas" },
-];
-
 function priceNumber(value: string | number) {
   const n = typeof value === "number" ? value : Number(String(value).replace(/[^\d.]/g, ""));
   return Number.isFinite(n) ? n : 0;
-}
-
-function durationMinutes(experience: Experience) {
-  const value = experience.durationValue;
-  const unit = experience.durationUnit;
-  if (value && value > 0) {
-    if (unit === "MINUTES") {
-      return value;
-    }
-    if (unit === "HOURS") {
-      return value * 60;
-    }
-    if (unit === "DAYS") {
-      return value * 60 * 24;
-    }
-  }
-  const text = formatDuration(experience.durationValue, experience.durationUnit, experience.duration);
-  const match = text.toLowerCase().match(/(\d+)\s*(minuto|hora|día|dia)/);
-  if (!match) {
-    return null;
-  }
-  const amount = Number(match[1]);
-  if (match[2].startsWith("min")) {
-    return amount;
-  }
-  if (match[2].startsWith("hora")) {
-    return amount * 60;
-  }
-  return amount * 60 * 24;
 }
 
 function matchesPrice(experience: Experience, price: string) {
@@ -116,29 +68,6 @@ function matchesPrice(experience: Experience, price: string) {
   }
   if (price === "200000+") {
     return value > 200000;
-  }
-  return true;
-}
-
-function matchesDuration(experience: Experience, duration: string) {
-  if (!duration) {
-    return true;
-  }
-  const minutes = durationMinutes(experience);
-  if (minutes == null) {
-    return false;
-  }
-  if (duration === "short") {
-    return minutes <= 60;
-  }
-  if (duration === "medium") {
-    return minutes > 60 && minutes <= 180;
-  }
-  if (duration === "half") {
-    return minutes > 180 && minutes <= 360;
-  }
-  if (duration === "day") {
-    return minutes > 360;
   }
   return true;
 }
@@ -215,9 +144,6 @@ export function applyDiscoverFilters(
     if (!matchesPrice(experience, filters.price)) {
       return false;
     }
-    if (!matchesDuration(experience, filters.duration)) {
-      return false;
-    }
     if (!matchesPlan(experience, filters.plan)) {
       return false;
     }
@@ -230,7 +156,7 @@ export function applyDiscoverFilters(
   return [...filtered].sort((left, right) => {
     const leftTime = new Date(left.createdAt).getTime();
     const rightTime = new Date(right.createdAt).getTime();
-    return filters.sort === "oldest" ? leftTime - rightTime : rightTime - leftTime;
+    return rightTime - leftTime;
   });
 }
 
@@ -241,6 +167,7 @@ type FilterSegmentProps = {
   onToggle: () => void;
   children: ReactNode;
   wide?: boolean;
+  roomy?: boolean;
   alignEnd?: boolean;
 };
 
@@ -251,7 +178,7 @@ type MenuCoords = {
   maxHeight: number;
 };
 
-function FilterSegment({ label, valueLabel, open, onToggle, children, wide, alignEnd }: FilterSegmentProps) {
+function FilterSegment({ label, valueLabel, open, onToggle, children, wide, roomy, alignEnd }: FilterSegmentProps) {
   const menuId = useId();
   const triggerRef = useRef<HTMLButtonElement>(null);
   const [coords, setCoords] = useState<MenuCoords | null>(null);
@@ -317,7 +244,7 @@ function FilterSegment({ label, valueLabel, open, onToggle, children, wide, alig
 
   return (
     <div
-      className={`explorer-filter-seg${open ? " is-open" : ""}${wide ? " is-wide" : ""}${alignEnd ? " is-end" : ""}`}
+      className={`explorer-filter-seg${open ? " is-open" : ""}${wide ? " is-wide" : ""}${roomy ? " is-roomy" : ""}${alignEnd ? " is-end" : ""}`}
     >
       <button
         ref={triggerRef}
@@ -347,7 +274,6 @@ type ExplorerDiscoverFiltersProps = {
   onChange: (next: DiscoverFiltersState) => void;
   searchDraft: string;
   onSearchDraftChange: (value: string) => void;
-  onSearchSubmit: () => void;
   onSearchClear: () => void;
   searchActive: boolean;
 };
@@ -360,7 +286,6 @@ export function ExplorerDiscoverFilters({
   onChange,
   searchDraft,
   onSearchDraftChange,
-  onSearchSubmit,
   onSearchClear,
   searchActive,
 }: ExplorerDiscoverFiltersProps) {
@@ -432,19 +357,11 @@ export function ExplorerDiscoverFilters({
     setOpenKey((current) => (current === key ? null : key));
   }
 
-  function submitSearch() {
-    setOpenKey(null);
-    onSearchSubmit();
-  }
-
   const cityLabel = value.city || "Todas";
   const categoryLabel =
     categories.find((item) => item.id === value.categoryId)?.name || "Todas";
   const priceLabel = PRICE_OPTIONS.find((item) => item.value === value.price)?.label || "Cualquier precio";
-  const durationLabel =
-    DURATION_OPTIONS.find((item) => item.value === value.duration)?.label || "Cualquier duración";
   const planLabel = PLAN_OPTIONS.find((item) => item.value === value.plan)?.label || "Cualquier plan";
-  const sortLabel = SORT_OPTIONS.find((item) => item.value === value.sort)?.label || "Más recientes";
   const canClearSearch = searchActive || Boolean(searchDraft.trim());
 
   return (
@@ -529,31 +446,11 @@ export function ExplorerDiscoverFilters({
         <span className="explorer-filter-bar__divider" aria-hidden="true" />
 
         <FilterSegment
-          label="Duración"
-          valueLabel={durationLabel}
-          open={openKey === "duration"}
-          onToggle={() => toggle("duration")}
-        >
-          {DURATION_OPTIONS.map((option) => (
-            <button
-              key={option.value || "all"}
-              type="button"
-              role="option"
-              className={value.duration === option.value ? "is-active" : ""}
-              onClick={() => patch({ duration: option.value })}
-            >
-              {option.label}
-            </button>
-          ))}
-        </FilterSegment>
-
-        <span className="explorer-filter-bar__divider" aria-hidden="true" />
-
-        <FilterSegment
           label="Tipo de plan"
           valueLabel={planLabel}
           open={openKey === "plan"}
           onToggle={() => toggle("plan")}
+          roomy
           alignEnd
         >
           {PLAN_OPTIONS.map((option) => (
@@ -563,28 +460,6 @@ export function ExplorerDiscoverFilters({
               role="option"
               className={value.plan === option.value ? "is-active" : ""}
               onClick={() => patch({ plan: option.value })}
-            >
-              {option.label}
-            </button>
-          ))}
-        </FilterSegment>
-
-        <span className="explorer-filter-bar__divider" aria-hidden="true" />
-
-        <FilterSegment
-          label="Ordenar por"
-          valueLabel={sortLabel}
-          open={openKey === "sort"}
-          onToggle={() => toggle("sort")}
-          alignEnd
-        >
-          {SORT_OPTIONS.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              role="option"
-              className={value.sort === option.value ? "is-active" : ""}
-              onClick={() => patch({ sort: option.value })}
             >
               {option.label}
             </button>
@@ -605,12 +480,6 @@ export function ExplorerDiscoverFilters({
               autoComplete="off"
               spellCheck={false}
               onChange={(event) => onSearchDraftChange(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  event.preventDefault();
-                  submitSearch();
-                }
-              }}
             />
           </label>
           {canClearSearch ? (
@@ -624,15 +493,6 @@ export function ExplorerDiscoverFilters({
             </button>
           ) : null}
         </div>
-
-        <button
-          type="button"
-          className="explorer-filter-bar__search"
-          aria-label="Buscar experiencias"
-          onClick={submitSearch}
-        >
-          <Search size={18} strokeWidth={2.15} aria-hidden="true" />
-        </button>
       </div>
     </div>
   );
