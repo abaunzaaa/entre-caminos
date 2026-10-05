@@ -35,6 +35,19 @@ const STATUS_LABEL: Record<ExperienceStatus, string> = {
   REJECTED: "Rechazada",
 };
 
+function hasMapCoordinates(latitude: number | null, longitude: number | null) {
+  if (latitude == null || longitude == null) {
+    return false;
+  }
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+    return false;
+  }
+  if (Math.abs(latitude) < 0.000001 && Math.abs(longitude) < 0.000001) {
+    return false;
+  }
+  return latitude >= -90 && latitude <= 90 && longitude >= -180 && longitude <= 180;
+}
+
 function experienceLink(url: string) {
   const trimmed = url.trim();
   if (!trimmed) {
@@ -201,7 +214,7 @@ export function ExperienceEditorialView({
   const locationByline = formatDepartmentMunicipality(view.location);
   const lat = view.latitude ? Number(view.latitude) : null;
   const lng = view.longitude ? Number(view.longitude) : null;
-  const hasPoint = Number.isFinite(lat) && Number.isFinite(lng);
+  const hasPoint = hasMapCoordinates(lat, lng);
   const photos = experienceImages(experience);
   const mainPhoto = photos[0] ? mediaUrl(photos[0], 1200) : null;
   const { noteFacts, detailFacts } = buildExperienceEditorialFacts(view, mode);

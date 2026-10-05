@@ -72,6 +72,15 @@ function FilterMenu<T extends string>({
 }
 
 const SUMMARY_PREVIEW_LIMIT = 3;
+const CATALOG_PAGE_SIZE = 6;
+
+function catalogPageNumbers(current: number, total: number) {
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, index) => index + 1);
+  }
+  const pages = new Set([1, total, current - 1, current, current + 1]);
+  return [...pages].filter((page) => page >= 1 && page <= total).sort((left, right) => left - right);
+}
 
 function SummaryPreviewCard({ experience, meta }: { experience: Experience; meta: string }) {
   const photo = mediaUrl(experienceImages(experience)[0] ?? null);
@@ -108,6 +117,7 @@ export function ExperiencesPage() {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [dateSort, setDateSort] = useState<"newest" | "oldest">("newest");
   const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
   const [openMenu, setOpenMenu] = useState<"category" | "sort" | string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<Experience | null>(null);
   const [pendingDeactivate, setPendingDeactivate] = useState<Experience | null>(null);
@@ -302,6 +312,23 @@ export function ExperiencesPage() {
       return dateSort === "oldest" ? leftTime - rightTime : rightTime - leftTime;
     });
   }, [categoryFilter, dateSort, experiences, query, statusFilter]);
+
+  const pageCount = Math.max(1, Math.ceil(visibleExperiences.length / CATALOG_PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount);
+  const pageNumbers = catalogPageNumbers(currentPage, pageCount);
+  const pagedExperiences = visibleExperiences.slice(
+    (currentPage - 1) * CATALOG_PAGE_SIZE,
+    currentPage * CATALOG_PAGE_SIZE,
+  );
+
+  useEffect(() => {
+    setPage(1);
+  }, [categoryFilter, dateSort, query, statusFilter]);
+
+  function goToPage(next: number) {
+    setPage(Math.min(Math.max(next, 1), pageCount));
+    scrollToCatalog();
+  }
 
   const selectedCategoryName = categories.find((item) => item.id === categoryFilter)?.name;
 
@@ -598,13 +625,14 @@ export function ExperiencesPage() {
               </p>
             </Panel>
           ) : (
+            <>
             <div className="dash-exps-roster__viewport" role="region" aria-label="Listado de experiencias">
               <div className="dash-exps-catalog">
-              {visibleExperiences.map((experience) => {
+              {pagedExperiences.map((experience) => {
                 const statusMenu = `status-${experience.id}`;
                 return (
+                  <div key={experience.id}>
                   <ExperienceCatalogCard
-                    key={experience.id}
                     experience={experience}
                     statusOpen={openMenu === statusMenu}
                     statusBusy={statusBusyId === experience.id}
@@ -614,10 +642,37 @@ export function ExperiencesPage() {
                     onChangeStatus={(status) => void onChangeStatus(experience, status)}
                     onDelete={() => setPendingDelete(experience)}
                   />
+                  </div>
                 );
               })}
               </div>
             </div>
+              <nav className="dash-exps-pager" aria-label="Paginación de experiencias">
+                <button type="button" onClick={() => goToPage(currentPage - 1)} disabled={currentPage <= 1}>
+                  Anterior
+                </button>
+                {pageNumbers.map((number, index) => {
+                  const previous = pageNumbers[index - 1];
+                  const gap = previous != null && number - previous > 1;
+                  return (
+                    <span key={number} className="dash-exps-pager__group">
+                      {gap ? <span className="dash-exps-pager__gap">…</span> : null}
+                      <button
+                        type="button"
+                        aria-current={number === currentPage ? "page" : undefined}
+                        className={number === currentPage ? "is-current" : undefined}
+                        onClick={() => goToPage(number)}
+                      >
+                        {number}
+                      </button>
+                    </span>
+                  );
+                })}
+                <button type="button" onClick={() => goToPage(currentPage + 1)} disabled={currentPage >= pageCount}>
+                  Siguiente
+                </button>
+              </nav>
+            </>
           )}
         </section>
       </section>

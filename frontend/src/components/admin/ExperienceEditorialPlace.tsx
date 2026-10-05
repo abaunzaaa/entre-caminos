@@ -131,7 +131,7 @@ export function ExperienceEditorialPlace({
             </aside>
           </div>
         ) : (
-          <p className="dash-exps-place__empty">Esta experiencia aún no tiene un punto geográfico registrado.</p>
+          <p className="dash-exps-place__empty">Ubicación en mapa pendiente de confirmar.</p>
         )}
 
         {chips.length || note || experience.howToGetThere?.trim() ? (

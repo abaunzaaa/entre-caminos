@@ -10,7 +10,7 @@
   height: 100dvh;
   max-height: 100vh;
   max-height: 100dvh;
-  overflow: hidden;
+  overflow: clip;
   background: #1c332e;
   scroll-margin-top: 0;
 }

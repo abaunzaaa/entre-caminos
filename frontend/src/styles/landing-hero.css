@@ -4,7 +4,7 @@
   width: 100%;
   min-height: 100vh;
   height: 100dvh;
-  overflow: hidden;
+  overflow: clip;
   background-color: #1c2418;
   font-family: Poppins, Nunito, system-ui, sans-serif;
 }

@@ -11,7 +11,7 @@
   color: var(--explorer-ink);
   background: #ffffff;
   min-height: 100vh;
-  overflow-x: clip;
+  overflow: visible;
 }
 
 .explorer-page--shell {
@@ -519,7 +519,7 @@
   max-height: 100svh;
   padding-top: var(--explorer-nav-height);
   background: #ffffff;
-  overflow: hidden;
+  overflow: clip;
   isolation: isolate;
 }
 
@@ -788,7 +788,7 @@
   min-height: 0;
   flex: 0 0 auto;
   padding: 0.75rem clamp(0.75rem, 2vw, 1.75rem) 2.25rem 0.35rem;
-  overflow: hidden;
+  overflow: clip;
   background: transparent;
 }
 
@@ -849,7 +849,7 @@
   min-height: 0;
   /* Room for scaled active card (white frame + shadow) top/bottom */
   padding: 2.85rem 0.15rem 3.1rem;
-  overflow: hidden;
+  overflow: clip;
   touch-action: pan-y;
   cursor: grab;
 }
@@ -2377,7 +2377,7 @@ a.fav-folder {
   min-height: 100svh;
   margin: 0;
   padding: var(--favorites-page-top) var(--favorites-page-inline) 3.5rem;
-  overflow-x: clip;
+  overflow: visible;
   /* Lower Favorites content uses dossier gray; header keeps #f1f1ee via __top */
   background: #fbfbf8;
   color: var(--explorer-ink, #16211e);
@@ -5264,7 +5264,7 @@ button.fav-folder:focus-visible {
   margin: 0;
   /* Clear fixed explorer header; keep Super Admin section styles otherwise */
   padding: 4.5rem 0 3.5rem;
-  overflow-x: clip;
+  overflow: visible;
   background: #ffffff;
 }
 
