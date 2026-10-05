@@ -1343,16 +1343,13 @@
 }
 
 .explorer-filter-seg.is-wide {
-  flex: 1.2 1 0;
-  min-width: 8.5rem;
+  flex: 1.15 1 0;
+  min-width: 10.5rem;
 }
 
-/* Duración, Tipo de plan, Ordenar por — más aire para valores largos */
-.explorer-filter-seg:nth-child(7),
-.explorer-filter-seg:nth-child(9),
-.explorer-filter-seg:nth-child(11) {
-  flex: 1.35 1 0;
-  min-width: 9.75rem;
+.explorer-filter-seg.is-roomy {
+  flex: 0 0 11.25rem;
+  min-width: 11.25rem;
 }
 
 .explorer-filter-seg__trigger {
@@ -1430,15 +1427,14 @@
 
 .explorer-filter-bar__query {
   display: flex;
-  flex: 1.45 1 0;
+  flex: 1.7 1 14rem;
   align-items: center;
   gap: 0.35rem;
   box-sizing: border-box;
-  min-width: 10.5rem;
-  max-width: 16rem;
+  min-width: 14rem;
   height: 100%;
   min-height: 3rem;
-  padding: 0.35rem 0.55rem 0.35rem 1.05rem;
+  padding: 0.35rem 0.85rem 0.35rem 1.05rem;
   border-radius: 999px;
   cursor: text;
   transition: background 180ms ease;
@@ -1516,37 +1512,6 @@
 .explorer-filter-bar__query-clear:hover {
   background: rgba(41, 73, 66, 0.14);
   color: #1c332e;
-}
-
-.explorer-filter-bar__search {
-  display: inline-flex;
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: center;
-  align-self: center;
-  width: 2.65rem;
-  height: 2.65rem;
-  margin: 0 0.15rem 0 0.2rem;
-  border: 0;
-  border-radius: 50%;
-  background: var(--explorer-forest-mid, #294942);
-  color: #ffffff;
-  cursor: pointer;
-  box-shadow: 0 6px 14px rgba(28, 51, 46, 0.18);
-  transition:
-    background 180ms ease,
-    transform 180ms ease,
-    box-shadow 180ms ease;
-}
-
-.explorer-filter-bar__search:hover {
-  background: var(--explorer-forest, #1c332e);
-  transform: scale(1.03);
-  box-shadow: 0 8px 18px rgba(28, 51, 46, 0.22);
-}
-
-.explorer-filter-bar__search:active {
-  transform: scale(0.98);
 }
 
 .explorer-filter-seg__menu {
@@ -1635,15 +1600,8 @@
     padding: 0.4rem 0.8rem;
   }
 
-  .explorer-filter-seg:nth-child(7),
-  .explorer-filter-seg:nth-child(9),
-  .explorer-filter-seg:nth-child(11) {
-    min-width: 9.1rem;
-  }
-
   .explorer-filter-bar__query {
-    min-width: 9.5rem;
-    max-width: 13rem;
+    min-width: 12rem;
     padding: 0.4rem 0.7rem 0.4rem 0.85rem;
   }
 }
@@ -1675,19 +1633,17 @@
   }
 
   .explorer-filter-seg.is-wide {
-    min-width: 9rem;
+    min-width: 10.5rem;
   }
 
-  .explorer-filter-seg:nth-child(7),
-  .explorer-filter-seg:nth-child(9),
-  .explorer-filter-seg:nth-child(11) {
-    min-width: 10.25rem;
+  .explorer-filter-seg.is-roomy {
+    flex: 0 0 auto;
+    min-width: 11.25rem;
   }
 
   .explorer-filter-bar__query {
     flex: 0 0 auto;
-    min-width: 11.5rem;
-    max-width: none;
+    min-width: 14rem;
   }
 }
 

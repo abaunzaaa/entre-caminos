@@ -10,10 +10,13 @@ export function TeamInviteCarousel({
   slides = DEFAULT_SLIDES,
   label = "Galería Entre Caminos",
   className,
+  priority = true,
 }: {
   slides?: readonly string[];
   label?: string;
   className?: string;
+  /** La primera imagen compite por la descarga solo cuando la tarjeta es la principal. */
+  priority?: boolean;
 }) {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -56,9 +59,9 @@ export function TeamInviteCarousel({
             alt=""
             className={`dash-team-gallery__img${slideIndex === index ? " is-active" : ""}`}
             aria-hidden={slideIndex !== index}
-            loading={slideIndex === 0 ? "eager" : "lazy"}
+            loading={slideIndex === 0 && priority ? "eager" : "lazy"}
             decoding="async"
-            fetchPriority={slideIndex === 0 ? "high" : "low"}
+            fetchPriority={slideIndex === 0 && priority ? "high" : "low"}
           />
         ))}
         {total > 1 ? (

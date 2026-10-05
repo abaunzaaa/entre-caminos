@@ -139,7 +139,7 @@ export function ExperienceEditorialNearby({
               return (
                 <Link key={item.id} className="dash-exps-nearby__card" to={hrefFor(item.id)}>
                   <span className="dash-exps-nearby__photo">
-                    <img src={photo} alt="" />
+                    <img src={photo} alt="" loading="lazy" decoding="async" />
                     <span className="dash-exps-nearby__glass">Ver</span>
                   </span>
                   <span className="dash-exps-nearby__body">

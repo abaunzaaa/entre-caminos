@@ -1,7 +1,19 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Building2 } from "lucide-react";
-import { Button } from "../../components/ui/Button";
+import { useNavigate, useParams } from "react-router-dom";
+import {
+  ArrowLeft,
+  FileText,
+  Globe,
+  KeyRound,
+  Mail,
+  MapPin,
+  Phone,
+  Store,
+  Type,
+  UserRound,
+  type LucideIcon,
+} from "lucide-react";
+import encabezado from "../../assets/encabezado.png";
 import { Spinner } from "../../components/ui/Spinner";
 import { useAuth } from "../../hooks/useAuth";
 import {
@@ -11,34 +23,35 @@ import {
 } from "../../services/organization-profile.service";
 import { getApiErrorMessage } from "../../utils/api-error";
 import { mediaUrl } from "../../utils/media";
-import "../../styles/admin-profile-edit.css";
-import "../../styles/admin-profile-view.css";
+import { formatOrgPhoneDisplay } from "../../utils/organization-profile";
+import "../../styles/experience-editorial-dossier.css";
+import "../../styles/profile-view.css";
 import "../../styles/organization-profile.css";
 
-function displayOrFallback(value: string | null | undefined) {
-  const trimmed = value?.trim() ?? "";
-  return trimmed || "Sin especificar";
-}
-
-function ViewField({ label, value }: { label: string; value: string }) {
-  const empty = value === "Sin especificar";
-  return (
-    <div className="admin-profile-view__field">
-      <span className="admin-profile-view__label">{label}</span>
-      <span className={`admin-profile-view__value${empty ? " is-empty" : ""}`}>{value}</span>
-    </div>
-  );
-}
+type OrgRow = {
+  label: string;
+  icon: LucideIcon;
+  text: string;
+  href?: string;
+};
 
 function initialsFromName(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) {
-    return "EC";
+    return "E";
   }
   if (parts.length === 1) {
     return parts[0].slice(0, 2).toUpperCase();
   }
   return `${parts[0].charAt(0)}${parts[parts.length - 1].charAt(0)}`.toUpperCase();
+}
+
+function websiteHref(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return "";
+  }
+  return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
 }
 
 export function OrganizationProfileViewPage() {
@@ -50,17 +63,14 @@ export function OrganizationProfileViewPage() {
   const [error, setError] = useState("");
 
   const isSuperAdminTarget = Boolean(userId);
-  const editPath = isSuperAdminTarget
-    ? `/admin/empresas/${userId}/editar`
-    : "/admin/empresa/editar";
+  const editPath = isSuperAdminTarget ? `/admin/empresas/${userId}/editar` : "/admin/empresa/editar";
+  const backPath = isSuperAdminTarget ? "/admin/administradores" : "/admin";
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setError("");
-    const request = isSuperAdminTarget
-      ? getOrganizationProfileByUserId(userId!)
-      : getOwnOrganizationProfile();
+    const request = isSuperAdminTarget ? getOrganizationProfileByUserId(userId!) : getOwnOrganizationProfile();
     request
       .then((data) => {
         if (!cancelled) {
@@ -93,125 +103,211 @@ export function OrganizationProfileViewPage() {
 
   if (user.role === "SUPER_ADMIN" && !isSuperAdminTarget) {
     return (
-      <div className="admin-profile-edit admin-profile-view org-profile">
-        <header className="admin-profile-view__top">
-          <Button type="button" variant="secondary" className="admin-profile-view__back" onClick={() => navigate("/admin")}>
-            <ArrowLeft size={16} strokeWidth={1.8} aria-hidden="true" />
-            Volver
-          </Button>
-        </header>
-        <div className="admin-profile-view__heading">
-          <h1 className="admin-profile-view__title">Perfil de empresa</h1>
-          <p className="admin-profile-view__lead">
+      <div className="profile-view profile-view--empresa">
+        <section className="profile-view__shell profile-view__shell--note">
+          <h1 className="profile-hero__name">Perfil de empresa</h1>
+          <p className="org-profile__note">
             Las cuentas super administradoras no tienen perfil empresarial. Gestiona el de cada ADMIN desde el equipo.
           </p>
-        </div>
-        <Button type="button" onClick={() => navigate("/admin/administradores")}>
-          Ir al equipo
-        </Button>
+          <div className="profile-info-actions">
+            <button type="button" className="org-profile__back" onClick={() => navigate("/admin")}>
+              <ArrowLeft size={14} strokeWidth={1.8} aria-hidden="true" />
+              Volver
+            </button>
+            <button type="button" className="tourist-hero__cta" onClick={() => navigate("/admin/administradores")}>
+              Ir al equipo
+            </button>
+          </div>
+        </section>
       </div>
     );
   }
 
-  const tradeName = profile?.tradeName?.trim() || "Empresa sin nombre comercial";
-  const logo = profile?.logoUrl ? mediaUrl(profile.logoUrl, 200) : null;
+  const storedName = profile?.tradeName?.trim() ?? "";
+  const tradeName = storedName || "Tu empresa";
+  const logo = profile?.logoUrl ? mediaUrl(profile.logoUrl, 200) : "";
+  const complete = Boolean(profile?.complete);
   const missing = profile?.missingFields ?? [
     "Nombre comercial",
     "Descripción de la empresa",
-    "Teléfono público de contacto",
+    "Teléfono público de contacto o sitio web / canal oficial de atención",
     "Departamento",
     "Municipio",
   ];
+  const phone = formatOrgPhoneDisplay(profile?.contactPhone ?? "");
+  const website = profile?.website?.trim() ?? "";
+
+  const companyRows: OrgRow[] = [
+    { label: "Nombre comercial", icon: Store, text: storedName },
+    { label: "Razón social", icon: FileText, text: profile?.legalName?.trim() ?? "" },
+    { label: "Descripción", icon: Type, text: profile?.description?.trim() ?? "" },
+  ];
+  const contactRows: OrgRow[] = [
+    { label: "Teléfono público", icon: Phone, text: phone },
+    { label: "Correo público", icon: Mail, text: profile?.contactEmail?.trim() ?? "" },
+    { label: "Sitio web", icon: Globe, text: website, href: website ? websiteHref(website) : undefined },
+  ];
+  const locationRows: OrgRow[] = [
+    { label: "Departamento", icon: MapPin, text: profile?.department?.trim() ?? "" },
+    { label: "Municipio", icon: MapPin, text: profile?.city?.trim() ?? "" },
+    { label: "Dirección", icon: MapPin, text: profile?.address?.trim() ?? "" },
+  ];
+
+  const groups = [
+    { id: "org-company-title", title: "Información de la empresa", rows: companyRows },
+    { id: "org-contact-title", title: "Información de contacto", rows: contactRows },
+    { id: "org-location-title", title: "Ubicación", rows: locationRows },
+  ] as const;
 
   return (
-    <div className="admin-profile-edit admin-profile-view org-profile">
-      <header className="admin-profile-view__top">
-        <Button
-          type="button"
-          variant="secondary"
-          className="admin-profile-view__back"
-          onClick={() => navigate(isSuperAdminTarget ? "/admin/administradores" : "/admin")}
-        >
-          <ArrowLeft size={16} strokeWidth={1.8} aria-hidden="true" />
-          Volver
-        </Button>
-        <div className="org-profile__actions">
-          {!isSuperAdminTarget ? (
-            <Button type="button" variant="secondary" onClick={() => navigate("/cambiar-contrasena")}>
-              Cambiar contraseña
-            </Button>
-          ) : null}
-          <Button type="button" onClick={() => navigate(editPath)}>
-            Editar perfil
-          </Button>
+    <div className="profile-view profile-view--empresa">
+      <header className="profile-hero">
+        <div className="profile-hero__banner" style={{ backgroundImage: `url(${encabezado})` }} aria-hidden="true" />
+        <div className="profile-view__shell">
+          <div className="profile-hero__sheet">
+            <div className="profile-hero__photo-hit">
+              <span className="profile-hero__photo">
+                {logo ? (
+                  <img src={logo} alt={`Logo de ${tradeName}`} />
+                ) : (
+                  <span className="profile-hero__initials" aria-hidden="true">
+                    {initialsFromName(storedName)}
+                  </span>
+                )}
+              </span>
+            </div>
+            <div className="profile-hero__identity">
+              <div className="profile-hero__copy">
+                <h1 id="org-profile-title" className="profile-hero__name">
+                  {tradeName}
+                </h1>
+                <p className="profile-hero__role">Empresa</p>
+                <p className={`profile-hero__status${complete ? " is-active" : ""}`}>
+                  <span className="profile-hero__status-dot" aria-hidden="true" />
+                  {complete ? "Perfil completo" : "Perfil incompleto"}
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </header>
 
-      <div className="admin-profile-view__heading">
-        <h1 className="admin-profile-view__title">Perfil de empresa</h1>
-        <p className="admin-profile-view__lead">
-          {isSuperAdminTarget
-            ? "Consulta y actualiza el perfil empresarial de esta cuenta ADMIN."
-            : "Esta información aparece como proveedor en tus experiencias publicadas."}
-        </p>
-      </div>
-
-      {error ? (
-        <p className="admin-profile-edit__banner" role="alert">
-          {error}
-        </p>
-      ) : null}
-
-      {!profile?.complete ? (
-        <div className="org-profile__missing" role="status">
-          <p className="org-profile__missing-title">Perfil incompleto</p>
-          <p className="org-profile__missing-text">
-            Puedes guardarlo por partes, pero debes completar estos campos antes de enviar experiencias a revisión:
-          </p>
-          <ul>
-            {missing.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-          <Link className="org-profile__missing-link" to={editPath}>
-            Completar perfil
-          </Link>
+      <section className="profile-view__shell" aria-labelledby="org-profile-title">
+        <div className="profile-tabs" role="tablist" aria-label="Secciones del perfil empresarial">
+          <button
+            type="button"
+            role="tab"
+            id="org-profile-tab-informacion"
+            className="profile-tab is-active"
+            aria-selected="true"
+            aria-controls="org-profile-panel-informacion"
+          >
+            <UserRound size={16} strokeWidth={1.8} aria-hidden="true" />
+            <span>Información</span>
+          </button>
         </div>
-      ) : (
-        <p className="org-profile__complete" role="status">
-          Perfil completo. Ya puedes enviar experiencias a revisión.
-        </p>
-      )}
 
-      <div className="admin-profile-view__shell">
-        <aside className="admin-profile-view__identity org-profile__identity">
-          {logo ? (
-            <img className="org-profile__logo" src={logo} alt={`Logo de ${tradeName}`} />
-          ) : (
-            <span className="org-profile__logo-fallback" aria-hidden="true">
-              <Building2 size={28} strokeWidth={1.6} />
-              <span>{initialsFromName(tradeName)}</span>
-            </span>
-          )}
-          <p className="admin-profile-view__badge">Empresa</p>
-          <h2 className="admin-profile-view__name">{tradeName}</h2>
-          <p className="admin-profile-view__role">
-            {profile?.complete ? "Listo para publicar" : "Pendiente de completar"}
-          </p>
-        </aside>
+        <div
+          className="profile-panel"
+          role="tabpanel"
+          id="org-profile-panel-informacion"
+          aria-labelledby="org-profile-tab-informacion"
+        >
+          <div className="profile-info-layout">
+            <div className="profile-info-actions">
+              <button type="button" className="org-profile__back" onClick={() => navigate(backPath)}>
+                <ArrowLeft size={14} strokeWidth={1.8} aria-hidden="true" />
+                Volver
+              </button>
+              <button type="button" className="tourist-hero__cta" onClick={() => navigate(editPath)}>
+                Editar perfil
+              </button>
+            </div>
 
-        <section className="admin-profile-view__details" aria-label="Datos de la empresa">
-          <ViewField label="Nombre comercial" value={displayOrFallback(profile?.tradeName)} />
-          <ViewField label="Razón social" value={displayOrFallback(profile?.legalName)} />
-          <ViewField label="Descripción" value={displayOrFallback(profile?.description)} />
-          <ViewField label="Teléfono público" value={displayOrFallback(profile?.contactPhone)} />
-          <ViewField label="Correo público" value={displayOrFallback(profile?.contactEmail)} />
-          <ViewField label="Sitio web" value={displayOrFallback(profile?.website)} />
-          <ViewField label="Departamento" value={displayOrFallback(profile?.department)} />
-          <ViewField label="Municipio" value={displayOrFallback(profile?.city)} />
-          <ViewField label="Dirección" value={displayOrFallback(profile?.address)} />
-        </section>
-      </div>
+            {error ? (
+              <p className="org-profile__error" role="alert">
+                {error}
+              </p>
+            ) : null}
+
+            {!complete ? (
+              <section className="org-profile__notice" role="status" aria-label="Perfil incompleto">
+                <div className="org-profile__notice-copy">
+                  <h2>Perfil incompleto</h2>
+                  <p>
+                    Completa los siguientes datos para poder enviar experiencias a revisión: {missing.join(" · ")}
+                  </p>
+                </div>
+                <button type="button" className="tourist-hero__cta" onClick={() => navigate(editPath)}>
+                  Completar perfil
+                </button>
+              </section>
+            ) : null}
+
+            <div className="profile-info-groups">
+              {groups.map((group) => (
+                <section key={group.id} className="profile-info-card" aria-labelledby={group.id}>
+                  <h2 id={group.id} className="dash-exps-dossier__kicker">
+                    {group.title}
+                  </h2>
+                  <dl className="dash-exps-dossier__facts">
+                    {group.rows.map((row) => {
+                      const Icon = row.icon;
+                      const empty = !row.text;
+                      return (
+                        <div key={row.label} className="dash-exps-dossier__row">
+                          <div className="dash-exps-dossier__copy">
+                            <dt className="dash-exps-dossier__label">
+                              <Icon size={14} strokeWidth={1.75} aria-hidden="true" />
+                              {row.label}
+                            </dt>
+                            <dd className={`dash-exps-dossier__value${empty ? " is-empty" : ""}`}>
+                              {empty ? (
+                                "Sin completar"
+                              ) : row.href ? (
+                                <a className="dash-exps-dossier__link" href={row.href} target="_blank" rel="noreferrer">
+                                  {row.text}
+                                </a>
+                              ) : (
+                                row.text
+                              )}
+                            </dd>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </dl>
+                </section>
+              ))}
+            </div>
+
+            {!isSuperAdminTarget ? (
+              <section className="profile-info-card" aria-labelledby="org-security-title">
+                <h2 id="org-security-title" className="dash-exps-dossier__kicker">
+                  Seguridad
+                </h2>
+                <dl className="dash-exps-dossier__facts">
+                  <div className="dash-exps-dossier__row">
+                    <div className="dash-exps-dossier__copy">
+                      <dt className="dash-exps-dossier__label">Contraseña</dt>
+                      <dd className="dash-exps-dossier__value">
+                        <button
+                          type="button"
+                          className="dash-exps-editorial__favorite"
+                          onClick={() => navigate("/cambiar-contrasena")}
+                        >
+                          <KeyRound size={14} strokeWidth={1.8} aria-hidden="true" />
+                          <span>Cambiar contraseña</span>
+                        </button>
+                      </dd>
+                    </div>
+                  </div>
+                </dl>
+              </section>
+            ) : null}
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

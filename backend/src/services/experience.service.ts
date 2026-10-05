@@ -152,16 +152,45 @@ function canManageAvailability(actor: AuthUser, experience: { createdBy: string 
   return canReviewExperiences(actor) || experience.createdBy === actor.id;
 }
 
+const publicCardCategorySelect = { id: true, name: true, icon: true } as const;
+
+const publicListInclude = {
+  category: { select: publicCardCategorySelect },
+  experienceCategories: {
+    orderBy: { position: "asc" as const },
+    select: {
+      position: true,
+      categoryId: true,
+      category: { select: publicCardCategorySelect },
+    },
+  },
+  creator: { select: creatorSelect },
+} as const;
+
+const publicPlaceSelect = {
+  id: true,
+  title: true,
+  description: true,
+  categoryId: true,
+  price: true,
+  currency: true,
+  location: true,
+  latitude: true,
+  longitude: true,
+  imageUrl: true,
+  imageUrls: true,
+  status: true,
+  createdBy: true,
+  createdAt: true,
+} as const;
+
 export async function listPublicExperiences(opts?: { take?: number; skip?: number }) {
   const where = publicCatalogWhere;
   const [experiences, total] = await prisma.$transaction([
     prisma.experience.findMany({
+      relationLoadStrategy: "join",
       where,
-      include: {
-        category: true,
-        experienceCategories: experienceCategoryInclude,
-        creator: { select: creatorSelect },
-      },
+      include: publicListInclude,
       orderBy: { createdAt: "desc" },
       ...(opts?.take != null ? { take: opts.take } : {}),
       ...(opts?.skip != null ? { skip: opts.skip } : {}),
@@ -169,6 +198,25 @@ export async function listPublicExperiences(opts?: { take?: number; skip?: numbe
     prisma.experience.count({ where }),
   ]);
   return { experiences, total };
+}
+
+/** Tarjetas del mapa: mismas 6 más recientes, sin perfil de organización ni categorías. */
+export async function listPublicMapCards(take: number) {
+  return prisma.experience.findMany({
+    where: publicCatalogWhere,
+    select: publicPlaceSelect,
+    orderBy: { createdAt: "desc" },
+    take,
+  });
+}
+
+/** Candidatos de “cercanas”: una fila por experiencia publicada, sin relaciones. */
+export async function listPublicNearbySources() {
+  return prisma.experience.findMany({
+    where: publicCatalogWhere,
+    select: publicPlaceSelect,
+    orderBy: { createdAt: "desc" },
+  });
 }
 
 export async function listAdminExperiences(
@@ -191,6 +239,60 @@ export async function listAdminExperiences(
           : [{ submittedAt: "desc" }, { createdAt: "desc" }],
     take: filters?.take,
   });
+}
+
+const publicDetailInclude = {
+  category: true,
+  experienceCategories: experienceCategoryInclude,
+  experienceInterests: experienceInterestInclude,
+  locations: { orderBy: { position: "asc" as const } },
+  creator: {
+    select: {
+      id: true,
+      name: true,
+      avatarUrl: true,
+      organizationProfile: true,
+      _count: {
+        select: {
+          experiences: { where: { status: "PUBLISHED" as const } },
+        },
+      },
+    },
+  },
+} as const;
+
+export async function getPublishedExperience(id: string) {
+  const experience = await prisma.experience.findUnique({
+    relationLoadStrategy: "join",
+    where: { id },
+    include: publicDetailInclude,
+  });
+  if (!experience || experience.status !== "PUBLISHED") {
+    throw ApiError.notFound("Experiencia no encontrada");
+  }
+  const payload = toPublicExperiencePayload(experience, { detailOrganization: true });
+  const publishedCount = experience.creator?._count.experiences;
+  if (!payload.creator?.organization || publishedCount == null) {
+    return payload;
+  }
+  return {
+    ...payload,
+    creator: {
+      ...payload.creator,
+      organization: { ...payload.creator.organization, publishedCount },
+    },
+  };
+}
+
+export async function requirePublishedExperienceId(id: string) {
+  const experience = await prisma.experience.findUnique({
+    where: { id },
+    select: { id: true, status: true },
+  });
+  if (!experience || experience.status !== "PUBLISHED") {
+    throw ApiError.notFound("Experiencia no encontrada");
+  }
+  return experience.id;
 }
 
 export async function getExperience(id: string, opts?: { publishedOnly?: boolean; actor?: AuthUser }) {

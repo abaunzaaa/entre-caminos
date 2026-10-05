@@ -5,6 +5,7 @@ import { Camera, KeyRound, LogOut, Building2, UserRound } from "lucide-react";
 import { AuthKeyIcon } from "../auth/AuthKeyIcon";
 import { Button } from "../ui/Button";
 import { useAuth } from "../../hooks/useAuth";
+import { useOrganizationLogo } from "../../hooks/useOrganizationLogo";
 import { roleCopy } from "../../utils/access-copy";
 import { formatPersonName } from "../../utils/person-name";
 import type { PublicUser } from "../../types";
@@ -54,6 +55,8 @@ export function AdminUserMenu({
   const initial = nameInitial(firstName, "A");
   const isExplorerUser = user?.role === "USER";
   const isOrgAdmin = user?.role === "ADMIN";
+  const orgLogo = useOrganizationLogo(isOrgAdmin);
+  const menuPhoto = orgLogo || photo;
   const profilePath = isExplorerUser ? "/perfil" : isOrgAdmin ? "/admin/empresa" : "/admin/perfil";
   const profileLabel = isOrgAdmin ? "Perfil de empresa" : "Perfil";
 
@@ -325,7 +328,14 @@ export function AdminUserMenu({
         aria-label={`Menú de ${fullName}`}
         onClick={() => setOpen((value) => !value)}
       >
-        <UserAvatar user={user} src={photo} initial={initial} size={40} className="admin-topbar__avatar" />
+        <UserAvatar
+          user={user}
+          src={menuPhoto}
+          initial={initial}
+          size={40}
+          className={`admin-topbar__avatar${orgLogo ? " is-logo" : ""}`}
+          alt={orgLogo ? "Logo de la empresa" : ""}
+        />
         {showName ? (
           <p className="admin-topbar__hello">
             <span>{fullName}</span>

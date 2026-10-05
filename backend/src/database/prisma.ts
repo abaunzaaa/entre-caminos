@@ -3,25 +3,34 @@ import { env } from "../config/env.js";
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
-const MIN_POOL = 10;
+const SESSION_POOL = 5;
 
-function appDatabaseUrl(raw: string) {
-  const url = new URL(raw);
-  const current = Number(url.searchParams.get("connection_limit") ?? "0");
-  if (!Number.isFinite(current) || current < MIN_POOL) {
-    url.searchParams.set("connection_limit", String(MIN_POOL));
+function appDatabaseUrl(rawDatabase: string, rawDirect?: string) {
+  const pooled = new URL(rawDatabase);
+  const transactionPool = pooled.searchParams.get("pgbouncer") === "true" || pooled.port === "6543";
+  const source = transactionPool && rawDirect ? new URL(rawDirect) : pooled;
+  if (!source.searchParams.get("pool_timeout")) {
+    source.searchParams.set("pool_timeout", "20");
   }
-  if (!url.searchParams.get("pool_timeout")) {
-    url.searchParams.set("pool_timeout", "20");
+  const usesTransactionPool = source.searchParams.get("pgbouncer") === "true" || source.port === "6543";
+  if (usesTransactionPool) {
+    if (!source.searchParams.get("connection_limit")) {
+      source.searchParams.set("connection_limit", "1");
+    }
+    return source.toString();
   }
-  return url.toString();
+  const current = Number(source.searchParams.get("connection_limit") ?? "0");
+  if (!Number.isFinite(current) || current < 1) {
+    source.searchParams.set("connection_limit", String(SESSION_POOL));
+  }
+  return source.toString();
 }
 
 export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
     log: env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
-    datasourceUrl: appDatabaseUrl(env.DATABASE_URL),
+    datasourceUrl: appDatabaseUrl(env.DATABASE_URL, env.DIRECT_URL),
   });
 
 if (env.NODE_ENV !== "production") {

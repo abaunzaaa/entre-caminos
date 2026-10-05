@@ -64,6 +64,7 @@ export function ExperienceEditorialDossier({
   facts,
   places,
   placeFacts = [],
+  organization = null,
 }: {
   photoUrl: string | null;
   photoLabel: string;
@@ -71,6 +72,7 @@ export function ExperienceEditorialDossier({
   facts: ExperienceEditorialFact[];
   places?: ReactNode;
   placeFacts?: ExperienceEditorialFact[];
+  organization?: PublicOrganizationProfile | null;
 }) {
   const hasOrganization = Boolean(organization?.tradeName?.trim());
 

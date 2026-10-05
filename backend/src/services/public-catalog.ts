@@ -274,14 +274,21 @@ export function paginateCatalog<T>(items: T[], page: number, limit: number) {
   };
 }
 
+const catalogCategorySelect = { id: true, name: true, icon: true } as const;
+
 export async function listPublicCatalogPage(input: PublicCatalogFilters & { page: number; limit: number }) {
   const rows = await prisma.experience.findMany({
+    relationLoadStrategy: "join",
     where: { status: "PUBLISHED" },
     include: {
-      category: true,
+      category: { select: catalogCategorySelect },
       experienceCategories: {
         orderBy: { position: "asc" },
-        include: { category: true },
+        select: {
+          position: true,
+          categoryId: true,
+          category: { select: catalogCategorySelect },
+        },
       },
     },
   });

@@ -131,6 +131,20 @@ export async function getPublicExperiences(options?: {
   };
 }
 
+export async function getMapPreviewExperiences() {
+  const { data } = await api.get<ApiResponse<{ experiences: Experience[] }>>("/experiences", {
+    params: { view: "map", limit: 6 },
+  });
+  return data.data.experiences;
+}
+
+export async function getNearbyExperiences() {
+  const { data } = await api.get<ApiResponse<{ experiences: Experience[] }>>("/experiences", {
+    params: { view: "nearby" },
+  });
+  return data.data.experiences;
+}
+
 export async function getPublicExperience(id: string) {
   const { data } = await api.get<ApiResponse<{ experience: Experience }>>(`/experiences/${id}`);
   return data.data.experience;

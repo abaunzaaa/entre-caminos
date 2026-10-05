@@ -290,6 +290,17 @@
   object-fit: cover;
 }
 
+.dash-profile__photo.is-logo {
+  background: #fff;
+}
+
+.dash-profile__photo.is-logo img {
+  object-fit: contain;
+  padding: 10px;
+  box-sizing: border-box;
+  background: #fff;
+}
+
 .dash-profile__identity {
   display: flex;
   flex-direction: column;

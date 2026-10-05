@@ -10,8 +10,10 @@ export function ExperienceCard({ experience }: { experience: Experience }) {
       <article className="group">
         <div className="relative aspect-[4/5] overflow-hidden">
           <img
-            src={mediaUrl(experience.imageUrl)}
+            src={mediaUrl(experience.imageUrl, 720)}
             alt={experience.title}
+            loading="lazy"
+            decoding="async"
             className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
           />
         </div>

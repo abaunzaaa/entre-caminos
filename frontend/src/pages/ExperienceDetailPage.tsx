@@ -4,7 +4,7 @@ import { ExperienceEditorialView } from "../components/admin/ExperienceEditorial
 import { useGuide } from "../components/guide/GuideContext";
 import { useAuth } from "../hooks/useAuth";
 import { useFavoriteToggle } from "../hooks/useFavoriteToggle";
-import { getPublicExperience, getPublicExperiences, recordExperienceView } from "../services/catalog.service";
+import { getNearbyExperiences, getPublicExperience, recordExperienceView } from "../services/catalog.service";
 import type { Experience } from "../types";
 import "../styles/admin-ui.css";
 import "../styles/admin-access.css";
@@ -27,10 +27,13 @@ export function ExperienceDetailPage() {
     experienceTitle: experience?.title,
   });
 
-  const fetchNearby = useCallback(async () => {
-    const { experiences } = await getPublicExperiences();
-    return experiences;
-  }, []);
+  const fetchNearby = useCallback(async () => getNearbyExperiences(), []);
+
+  useEffect(() => {
+    if (experience) {
+      guide.setCatalogFocus(experience);
+    }
+  }, [experience, guide]);
 
   useEffect(() => {
     if (!id) {
