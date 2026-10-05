@@ -251,6 +251,7 @@ export function GuideHost() {
       : undefined;
   const [foldersOpen, setFoldersOpen] = useState(true);
   const [creatingFolder, setCreatingFolder] = useState(false);
+  const dragThreadRef = useRef<string | null>(null);
   const settingsRef = useRef<HTMLDivElement>(null);
   const threadMenuRef = useRef<HTMLDivElement>(null);
   const iconPickerRef = useRef<HTMLDivElement>(null);
@@ -338,10 +339,11 @@ export function GuideHost() {
   }
 
   useEffect(() => {
-    if (!guide.expanded) {
+    if (guide.expanded) {
       setRailOpen(true);
-      setSearchOpen(false);
+      return;
     }
+    setSearchOpen(false);
   }, [guide.expanded]);
 
   useEffect(() => {
@@ -446,20 +448,24 @@ export function GuideHost() {
       <div
         key={item.id}
         className={`guide-rail__thread${item.id === guide.thread?.id ? " is-on" : ""}${draggingThread === item.id ? " is-dragging" : ""}${threadMenu === item.id ? " is-menu" : ""}`}
-        draggable={renamingThread !== item.id}
         onClick={() => guide.openThread(item.id)}
-        onDragStart={(event) => {
-          event.dataTransfer.setData("text/plain", item.id);
-          event.dataTransfer.effectAllowed = "move";
-          setDraggingThread(item.id);
-          closeThreadMenu();
-        }}
-        onDragEnd={() => {
-          setDraggingThread(null);
-          setDropFolderId(null);
-        }}
       >
-        <div className="guide-rail__thread-open">
+        <div
+          className="guide-rail__thread-open"
+          draggable={renamingThread !== item.id}
+          onDragStart={(event) => {
+            dragThreadRef.current = item.id;
+            event.dataTransfer.setData("text/plain", item.id);
+            event.dataTransfer.effectAllowed = "move";
+            setDraggingThread(item.id);
+            closeThreadMenu();
+          }}
+          onDragEnd={() => {
+            dragThreadRef.current = null;
+            setDraggingThread(null);
+            setDropFolderId(null);
+          }}
+        >
           <strong className="guide-rail__thread-title">{item.title}</strong>
           <em className="guide-rail__thread-date">{threadStamp(item.updatedAt)}</em>
         </div>
@@ -1015,7 +1021,8 @@ export function GuideHost() {
                       }}
                       onDrop={(event) => {
                         event.preventDefault();
-                        const threadId = event.dataTransfer.getData("text/plain");
+                        const threadId = event.dataTransfer.getData("text/plain") || dragThreadRef.current || "";
+                        dragThreadRef.current = null;
                         setDropFolderId(null);
                         setDraggingThread(null);
                         if (!threadId || guide.threads.find((row) => row.id === threadId)?.folderId === folder.id) {
