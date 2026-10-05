@@ -82,7 +82,7 @@ function RecsExperienceGallery({ urls }: { urls: string[] }) {
     return (
       <div className="explorer-recs__gallery is-single">
         <div className="explorer-recs__photo explorer-recs__photo--primary">
-          <img src={urls[0]} alt="" draggable={false} />
+          <img src={urls[0]} alt="" draggable={false} loading="lazy" decoding="async" />
         </div>
       </div>
     );
@@ -134,7 +134,7 @@ function RecsExperienceGallery({ urls }: { urls: string[] }) {
               settleMotion();
             }}
           >
-            <img src={urls[slide.imageIndex]} alt="" draggable={false} />
+            <img src={urls[slide.imageIndex]} alt="" draggable={false} loading="lazy" decoding="async" />
           </button>
         );
       })}

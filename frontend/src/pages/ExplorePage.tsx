@@ -17,8 +17,8 @@ import descubreIcon from "../assets/icon-descubre.png";
 import mapaIcon from "../assets/mapa-icon.png";
 import paloma1 from "../assets/paloma1.png";
 import paloma2 from "../assets/paloma 2.png";
-import { getCoverFeaturedExperiences, getPublicExperiences, getRecommendedExperiences } from "../services/catalog.service";
-import { listFavoriteExperiences } from "../services/favorites.service";
+import { getCoverFeaturedExperiences, getMapPreviewExperiences, getPublicExperiences, getRecommendedExperiences } from "../services/catalog.service";
+import { listFavoriteIds } from "../services/favorites.service";
 import { onFavoritesChanged } from "../services/favorites-sync";
 import {
   COLOMBIA_DEPARTMENTS,
@@ -100,6 +100,7 @@ export function ExplorePage() {
   const [recommended, setRecommended] = useState<Experience[]>([]);
   const [recommendedLoading, setRecommendedLoading] = useState(true);
   const [mapPreview, setMapPreview] = useState<Experience[]>([]);
+  const [mapLoaded, setMapLoaded] = useState(false);
   const [cities, setCities] = useState<string[]>([]);
   const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
   const [total, setTotal] = useState(0);
@@ -120,10 +121,10 @@ export function ExplorePage() {
     }
     let cancelled = false;
     function loadFavorites() {
-      listFavoriteExperiences()
-        .then((items) => {
+      listFavoriteIds()
+        .then((ids) => {
           if (!cancelled) {
-            setFavoriteIds(new Set(items.map((item) => item.id)));
+            setFavoriteIds(new Set(ids));
           }
         })
         .catch(() => {
@@ -180,21 +181,39 @@ export function ExplorePage() {
           setCoverFeatured([]);
         }
       });
-    getPublicExperiences({ limit: 6, offset: 0 })
-      .then((result) => {
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const { ref: discoverRef, inView: discoverRevealed } = useInViewReveal<HTMLElement>();
+  const { ref: mapRef, inView: mapRevealed } = useInViewReveal<HTMLElement>();
+
+  useEffect(() => {
+    if (!mapRevealed || mapLoaded) {
+      return;
+    }
+    let cancelled = false;
+    getMapPreviewExperiences()
+      .then((items) => {
         if (!cancelled) {
-          setMapPreview(result.experiences);
+          setMapPreview(items);
         }
       })
       .catch(() => {
         if (!cancelled) {
           setMapPreview([]);
         }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setMapLoaded(true);
+        }
       });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [mapLoaded, mapRevealed]);
 
   useEffect(() => {
     let cancelled = false;
@@ -251,9 +270,6 @@ export function ExplorePage() {
   const filtersActive =
     Boolean(activeSearch.trim()) ||
     Boolean(filters.city || filters.categoryId || filters.price || filters.duration || filters.plan);
-
-  const { ref: discoverRef, inView: discoverRevealed } = useInViewReveal<HTMLElement>();
-  const { ref: mapRef, inView: mapRevealed } = useInViewReveal<HTMLElement>();
 
   return (
     <div className="explorer-page">
@@ -367,6 +383,7 @@ export function ExplorePage() {
                     showManage={false}
                     viewHref={`/explorar/${experience.id}`}
                     favorited={favoriteIds.has(experience.id)}
+                    imagePriority={index === 0}
                   />
                 </div>
               ))}
@@ -428,7 +445,13 @@ export function ExplorePage() {
             </p>
           </div>
         </div>
-        {mapPreview.length === 0 ? (
+        {!mapLoaded ? (
+          mapRevealed ? (
+            <p className="explorer-empty explorer-reveal" style={{ "--reveal-delay": "220ms" } as CSSProperties}>
+              Buscando ubicaciones…
+            </p>
+          ) : null
+        ) : mapPreview.length === 0 ? (
           <p className="explorer-empty explorer-reveal" style={{ "--reveal-delay": "220ms" } as CSSProperties}>
             Cuando haya experiencias publicadas, podrás ubicarlas aquí.
           </p>
@@ -443,7 +466,7 @@ export function ExplorePage() {
                   className="explorer-soft-card explorer-reveal explorer-reveal--card"
                   style={{ "--reveal-delay": `${220 + index * 80}ms` } as CSSProperties}
                 >
-                  <img src={experienceCoverUrl(experience, 320)} alt="" />
+                  <img src={experienceCoverUrl(experience, 320)} alt="" loading="lazy" decoding="async" />
                   <div>
                     <h3>{experience.title}</h3>
                     {place ? <p>{place}</p> : null}

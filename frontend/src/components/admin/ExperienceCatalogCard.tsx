@@ -101,6 +101,7 @@ export function ExperienceCatalogCard({
   showManage = true,
   viewHref,
   variant = "admin",
+  imagePriority = true,
   favorited,
   onToggleStatus,
   onChangeStatus,
@@ -115,6 +116,8 @@ export function ExperienceCatalogCard({
   /** Override detail link (defaults to admin preview). */
   viewHref?: string;
   variant?: "admin" | "tourist";
+  /** Solo la primera tarjeta del catálogo pide su portada con prioridad alta. */
+  imagePriority?: boolean;
   /** Optional shared favorite state from a page-level batch load. */
   favorited?: boolean;
   onToggleStatus?: () => void;
@@ -155,7 +158,12 @@ export function ExperienceCatalogCard({
       <Link to={detailPath} className="dash-exps-tile__link" aria-label={`${viewLabel} ${experience.title}`} />
       <div className="dash-exps-tile__media">
         <div className="dash-exps-tile__photo">
-          <TeamInviteCarousel className="dash-exps-tile__gallery" slides={gallery} label={experience.title} />
+          <TeamInviteCarousel
+            className="dash-exps-tile__gallery"
+            slides={gallery}
+            label={experience.title}
+            priority={imagePriority}
+          />
         </div>
         {isTourist ? (
           <div className="dash-exps-tile__actions">

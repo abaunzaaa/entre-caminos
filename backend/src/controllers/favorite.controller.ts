@@ -4,6 +4,11 @@ import * as collectionService from "../services/favorite-collection.service.js";
 import { parseLimitQuery } from "../utils/query.js";
 
 export async function list(req: Request, res: Response) {
+  const idsOnly = req.query.ids === "1" || req.query.ids === "true";
+  if (idsOnly) {
+    const ids = await favoriteService.listFavoriteExperienceIds(req.user!.id);
+    return res.json({ success: true, data: { ids } });
+  }
   const take = parseLimitQuery(req.query.limit, 100);
   const experiences = await favoriteService.listFavoriteExperiences(req.user!.id, { take });
   return res.json({ success: true, data: { experiences } });

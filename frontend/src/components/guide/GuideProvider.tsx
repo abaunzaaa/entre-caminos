@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { useLocation } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { getApiErrorMessage } from "../../utils/api-error";
-import { listFavoriteExperiences, removeFavorite } from "../../services/favorites.service";
+import { listFavoriteIds, removeFavorite } from "../../services/favorites.service";
 import { notifyFavoriteStatus, notifyFavoritesChanged, onFavoriteStatus, openFavoriteSaveModal } from "../../services/favorites-sync";
 import {
   chronologicalMessages,
@@ -243,29 +243,11 @@ export function GuideProvider({ children }: { children: ReactNode }) {
   }, [user?.id]);
 
   useEffect(() => {
-    let cancelled = false;
     if (!experienceId) {
       setExperienceContext(undefined);
       return;
     }
     setExperienceContext((current) => (current?.id === experienceId ? current : undefined));
-    void import("../../services/catalog.service").then(({ getPublicExperience }) =>
-      getPublicExperience(experienceId)
-        .then((item) => {
-          if (cancelled) {
-            return;
-          }
-          setExperienceContext(asActiveExperience(snapshotExperience(item)));
-        })
-        .catch(() => {
-          if (!cancelled) {
-            setExperienceContext((current) => (current?.id === experienceId ? current : undefined));
-          }
-        }),
-    );
-    return () => {
-      cancelled = true;
-    };
   }, [experienceId]);
 
   const persist = useCallback(
@@ -333,10 +315,10 @@ export function GuideProvider({ children }: { children: ReactNode }) {
       return;
     }
     let cancelled = false;
-    listFavoriteExperiences()
-      .then((rows) => {
+    listFavoriteIds()
+      .then((ids) => {
         if (!cancelled) {
-          setFavorites(rows.map((item) => item.id));
+          setFavorites(ids);
         }
       })
       .catch(() => undefined);
@@ -450,7 +432,8 @@ export function GuideProvider({ children }: { children: ReactNode }) {
     if (!experience || !experienceId || experience.id !== experienceId) {
       return;
     }
-    setExperienceContext(asActiveExperience(snapshotExperience(experience)));
+    const next = asActiveExperience(snapshotExperience(experience));
+    setExperienceContext((current) => (current?.id === next.id ? current : next));
   }, [experienceId]);
 
   const send = useCallback(

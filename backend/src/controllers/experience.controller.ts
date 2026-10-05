@@ -51,6 +51,23 @@ export async function listPublic(req: Request, res: Response) {
     });
   }
 
+  const view = queryText(req.query.view, 16);
+  if (view === "map") {
+    const take = parseLimitQuery(req.query.limit, 6) ?? 6;
+    const experiences = await experienceService.listPublicMapCards(take);
+    return res.json({
+      success: true,
+      data: { experiences, total: experiences.length, hasMore: false },
+    });
+  }
+  if (view === "nearby") {
+    const experiences = await experienceService.listPublicNearbySources();
+    return res.json({
+      success: true,
+      data: { experiences, total: experiences.length, hasMore: false },
+    });
+  }
+
   const take = parseLimitQuery(req.query.limit, 100);
   const skip = take != null ? parseOffsetQuery(req.query.offset) : undefined;
   const { experiences, total } = await experienceService.listPublicExperiences({
@@ -79,19 +96,16 @@ export async function featured(_req: Request, res: Response) {
 
 export async function getPublic(req: Request, res: Response) {
   preventStaleRead(res);
-  const experience = await experienceService.getExperience(req.params.id, { publishedOnly: true });
-  const payload = await experienceService.withOrganizationPublishedCount(
-    experienceService.toPublicExperiencePayload(experience, { detailOrganization: true }),
-  );
+  const experience = await experienceService.getPublishedExperience(req.params.id);
   return res.json({
     success: true,
-    data: { experience: payload },
+    data: { experience },
   });
 }
 
 export async function recordView(req: Request, res: Response) {
-  const experience = await experienceService.getExperience(req.params.id, { publishedOnly: true });
-  await recordDetailView(experience.id);
+  const experienceId = await experienceService.requirePublishedExperienceId(req.params.id);
+  await recordDetailView(experienceId);
   return res.status(201).json({ success: true });
 }
 
