@@ -78,6 +78,8 @@ function preferenceLabels(options: OnboardingOption[], values?: string[] | null)
     }
   }
   return labels;
+}
+
 function detailOrganization(experience: Experience): PublicOrganizationProfile | null {
   const creator = experience.creator as
     | (NonNullable<Experience["creator"]> & {
@@ -302,7 +304,6 @@ export function ExperienceEditorialView({
         facts={generalFacts}
         organization={organization}
         placeFacts={placeFacts}
-        organization={experience.creator?.organization ?? null}
         places={
           showPlaceTabs ? (
             <ExperiencePlaceTabs
