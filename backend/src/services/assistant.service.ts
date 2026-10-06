@@ -1,5 +1,7 @@
+import { Prisma } from "@prisma/client";
 import { env } from "../config/env.js";
 import { ApiError } from "../utils/api-error.js";
+import { logger } from "../utils/logger.js";
 import { loadGuideContext, type GuideCatalogItem, type GuideChatContext } from "./context.service.js";
 import { generateGeminiText, parseGeminiJson } from "./gemini.service.js";
 import { generateGroqJson, hasGroqConfig } from "./openai.service.js";
@@ -76,8 +78,10 @@ Reglas:
 - No deduzcas una dirección a partir de coordenadas ni inventes una sede.
 - Si el usuario pregunta dónde queda, cómo llegar, cuánto cuesta, cuánto dura o qué días hay, responde con el dato registrado de esa ficha.
 - La ciudad o zona que puedes preguntar es la preferencia del usuario para un plan, no la dirección de una experiencia ya recomendada.
-- Si el catálogo está vacío, dilo con claridad. No inventes lugares ni precios.
-- Si no hay coincidencias, dilo y ofrece alternativas del catálogo.
+- El número de experiencias publicadas y los candidatos de este turno vienen del backend. No decidas tú si el catálogo existe.
+- Si el contexto dice que hay experiencias publicadas, nunca digas que no hay experiencias publicadas ni que el catálogo está vacío.
+- Si los candidatos de este turno están vacíos pero hay experiencias publicadas, di que no encontraste coincidencias con esos criterios.
+- Si no hay coincidencias, dilo y ofrece probar otra categoría, ubicación o presupuesto. No inventes lugares ni precios.
 - En modo experiencia, prioriza siempre esa experiencia antes que el resto del catálogo.
 - No infieras disponibilidad, horarios, parqueadero, qué incluye, edad, cupos ni restricciones. Si el bloque no lo dice, responde que no está publicado.
 - Si preguntan si es apta para niños, responde solo con la descripción y la categoría. Si no alcanza, di que no está publicado. No se lo preguntes a la persona.
@@ -278,6 +282,13 @@ function fallbackSearch(query: string, catalog: CatalogItem[]) {
   return scored.length ? scored : catalog.slice(0, 4).map((item) => item.id);
 }
 
+const NO_PUBLISHED =
+  "Aún no hay experiencias publicadas en Entre Caminos, así que no puedo mostrarte tarjetas ahora. Cuando el equipo publique el catálogo, aquí aparecerán recomendaciones reales.";
+const NO_MATCH =
+  "No encontré experiencias que coincidan exactamente con esos criterios. Puedes probar otra categoría, ubicación o presupuesto.";
+const deniesPublished =
+  /a[uú]n no hay experiencias publicadas|no hay experiencias publicadas|cat[aá]logo[^.]{0,40}(vac[ií]o|sin publicar)/i;
+
 export async function chatWithGuide(input: {
   userId: string;
   message: string;
@@ -287,7 +298,44 @@ export async function chatWithGuide(input: {
   context?: GuideChatContext;
   location?: { latitude?: number; longitude?: number; city?: string };
 }) {
-  const { catalog, cityFallback, contextPrompt, prompt, categoryNames } = await loadGuideContext(input);
+  let loaded: Awaited<ReturnType<typeof loadGuideContext>>;
+  try {
+    loaded = await loadGuideContext(input);
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    logger.error("Assistant", {
+      reason: "error_bd",
+      code: error instanceof Prisma.PrismaClientKnownRequestError ? error.code : error instanceof Error ? error.name : "unknown",
+    });
+    throw ApiError.unavailable("No pude consultar las experiencias en este momento.");
+  }
+  const {
+    catalog,
+    cityFallback,
+    contextPrompt,
+    prompt,
+    categoryNames,
+    publishedCount,
+    askedCategories,
+    askedInterests,
+    detectedCity,
+    detectedPrice,
+    detectedDuration,
+    everyDay,
+  } = loaded;
+  logger.info("Assistant", {
+    publishedCount,
+    matchedCount: catalog.length,
+    detectedCategory: askedCategories.join(" | ") || null,
+    detectedInterest: askedInterests.join(" | ") || null,
+    detectedCity,
+    detectedPrice,
+    detectedDuration,
+    everyDay,
+    experienceContext: input.context?.mode === "experience",
+  });
 
   const turns = [
     ...recentGuideHistory(input.history),
@@ -301,6 +349,10 @@ export async function chatWithGuide(input: {
       : env.GEMINI_API_KEY
         ? await generateGeminiText(SYSTEM, prompt)
         : (() => {
+            logger.error("Guía sin proveedor", {
+              reason: "key_ausente",
+              missing: ["GROQ_API_KEY o OPENAI_API_KEY", "GEMINI_API_KEY"],
+            });
             throw ApiError.unavailable("El guía no está configurado en este momento.");
           })();
     parsed = parseGeminiJson(raw);
@@ -339,7 +391,12 @@ export async function chatWithGuide(input: {
     asString(parsed.intent) === "recommend" ||
     asString(parsed.intent) === "plan" ||
     asString(parsed.intent) === "experience" ||
-    /experiencia|recomiend|buscar|gustos|cerca|plan|lugar/i.test(input.message);
+    askedCategories.length > 0 ||
+    askedInterests.length > 0 ||
+    Boolean(detectedCity) ||
+    detectedPrice != null ||
+    everyDay ||
+    /experiencia|recomiend|buscar|gustos|cerca|plan|lugar|econom|barat/i.test(input.message);
   if (!cards.length && wantsCatalog && catalog.length) {
     cards = hydrate(fallbackSearch(input.message, catalog), catalog);
   }
@@ -347,19 +404,26 @@ export async function chatWithGuide(input: {
     status = "empty";
   }
 
-  const emptyCatalog = catalog.length === 0;
-  if (emptyCatalog) {
+  const emptyCatalog = publishedCount === 0;
+  const noMatches = !emptyCatalog && catalog.length === 0;
+  if (emptyCatalog || noMatches) {
     status = "empty";
   }
-  const plan = emptyCatalog || !planRaw ? null : buildPlan(planRaw, cards, cityFallback);
+  const plan = emptyCatalog || noMatches || !planRaw ? null : buildPlan(planRaw, cards, cityFallback);
+  let reply = asString(parsed.reply);
+  if (emptyCatalog) {
+    reply = NO_PUBLISHED;
+  } else if (noMatches) {
+    reply = NO_MATCH;
+  } else if (!reply || deniesPublished.test(reply)) {
+    const names = cards.map((item) => item.title).filter(Boolean).slice(0, 4);
+    reply = names.length
+      ? `Encontré estas experiencias publicadas: ${names.join(", ")}.`
+      : "Encontré experiencias publicadas que encajan con lo que pediste.";
+  }
 
   return {
-    reply: emptyCatalog
-      ? "Aún no hay experiencias publicadas en Entre Caminos, así que no puedo mostrarte tarjetas ahora. Cuando el equipo publique el catálogo, aquí aparecerán recomendaciones reales."
-      : asString(parsed.reply) ||
-        (status === "empty"
-          ? "No encontré experiencias exactas en el catálogo publicado. ¿Quieres que busque con otra ciudad, interés o presupuesto?"
-          : "Cuéntame un poco más para afinarte el plan."),
+    reply: reply || (status === "empty" ? NO_MATCH : "Cuéntame un poco más para afinarte el plan."),
     intent: (["chat", "clarify", "recommend", "plan", "experience"].includes(asString(parsed.intent))
       ? asString(parsed.intent)
       : "chat") as AssistantReply["intent"],

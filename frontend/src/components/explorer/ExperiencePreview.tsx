@@ -16,7 +16,13 @@ export function ExperiencePreview({ experience, selected, onSelect }: Experience
       aria-pressed={selected}
       aria-label={`Ver experiencia ${experience.title}`}
     >
-      <img src={experienceCoverUrl(experience, 720)} alt="" loading="lazy" />
+      <img
+        src={experienceCoverUrl(experience, 720)}
+        alt=""
+        loading={selected ? "eager" : "lazy"}
+        decoding="async"
+        fetchPriority={selected ? "high" : "low"}
+      />
     </button>
   );
 }

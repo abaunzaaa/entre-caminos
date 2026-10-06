@@ -4,7 +4,9 @@ services:
     runtime: node
     plan: starter
     rootDir: backend
-    buildCommand: npm install && npx prisma generate && npm run build
+    # typescript, prisma y @types/* van en dependencies: con NODE_ENV=production
+    # npm no instala devDependencies y tsc falla con TS2688 (Cannot find type definition file for 'node').
+    buildCommand: npm install --include=dev && npx prisma generate && npm run build
     startCommand: npx prisma migrate deploy && npm run start
     healthCheckPath: /api/health
     envVars:
@@ -14,4 +16,6 @@ services:
         value: production
       # Definir en el dashboard de Render (no en el repo):
       # DATABASE_URL, DIRECT_URL, JWT_ACCESS_SECRET, JWT_REFRESH_SECRET,
-      # FRONTEND_URL, COOKIE_SECURE, SENDGRID_*, CLOUDINARY_*, CONTACT_TO_EMAIL
+      # FRONTEND_URL, BACKEND_URL, COOKIE_SECURE, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET,
+      # SENDGRID_*, CLOUDINARY_*, CONTACT_TO_EMAIL,
+      # OPENAI_API_KEY, OPENAI_BASE_URL, OPENAI_MODEL (Tu guía / Groq)

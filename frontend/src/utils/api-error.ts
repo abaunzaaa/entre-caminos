@@ -32,6 +32,9 @@ export function getApiErrorMessage(err: unknown, fallback = "Ocurrió un error")
   const body = err as ApiErrorBody;
   const error = body.response?.data?.error;
   if (isExpiredSessionMessage(error?.message)) {
+    if (sessionNoticeVisible()) {
+      return fallback;
+    }
     return SESSION_ENDED_MESSAGE;
   }
   if (error?.code === "INTERNAL_ERROR") {
@@ -48,6 +51,14 @@ export function getApiErrorMessage(err: unknown, fallback = "Ocurrió un error")
     return error.message;
   }
   return fallback;
+}
+
+function sessionNoticeVisible() {
+  try {
+    return window.sessionStorage.getItem("ec_session_expired") === "1";
+  } catch {
+    return false;
+  }
 }
 
 function isExpiredSessionMessage(message?: string) {

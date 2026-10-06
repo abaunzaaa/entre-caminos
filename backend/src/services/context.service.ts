@@ -174,6 +174,29 @@ const TEXT_STOPWORDS = new Set([
   "barato",
   "barata",
   "baratos",
+  "economico",
+  "economica",
+  "economicos",
+  "economicas",
+  "muestrame",
+  "muestra",
+  "mostrar",
+  "dime",
+  "busco",
+  "buscar",
+  "cuales",
+  "alguna",
+  "algunas",
+  "algun",
+  "algunos",
+  "hola",
+  "buenas",
+  "gracias",
+  "disponible",
+  "disponibles",
+  "disponibilidad",
+  "todos",
+  "dias",
   "tranquilo",
   "tranquila",
   "bueno",
@@ -212,23 +235,44 @@ function parseDurationMaxMinutes(message: string) {
   return undefined;
 }
 
-function searchTokens(message: string, reserved: string[]) {
-  const reservedKeys = new Set(reserved.map((item) => foldText(item)));
-  return [
-    ...new Set(
-      foldText(message)
-        .split(/[^a-z0-9]+/)
-        .filter((token) => token.length >= 4 && !TEXT_STOPWORDS.has(token) && !reservedKeys.has(token)),
-    ),
-  ].slice(0, 4);
+function meaningfulWords(value: string) {
+  return foldText(value)
+    .split(/[^a-z0-9]+/)
+    .filter((token) => token.length >= 4 && !TEXT_STOPWORDS.has(token));
 }
 
-function namedCategories(message: string, categoryNames: string[]) {
+function sameWord(left: string, right: string) {
+  if (left === right) {
+    return true;
+  }
+  const short = left.length <= right.length ? left : right;
+  const long = left.length <= right.length ? right : left;
+  if (short.length < 5 || long.length - short.length > 2 || !long.startsWith(short)) {
+    return false;
+  }
+  const suffix = long.slice(short.length);
+  return suffix === "s" || suffix === "es";
+}
+
+function searchTokens(message: string, reserved: string[]) {
+  const reservedKeys = new Set(reserved.flatMap((item) => meaningfulWords(item)));
+  return [...new Set(meaningfulWords(message).filter((token) => !reservedKeys.has(token)))].slice(0, 4);
+}
+
+function namedLabels(message: string, labels: string[]) {
   const text = foldText(message);
-  return categoryNames.filter((name) => {
+  const messageTokens = meaningfulWords(message);
+  return labels.filter((name) => {
     const key = foldText(name);
-    return key.length > 2 && text.includes(key);
+    if (key.length >= 6 && text.includes(key)) {
+      return true;
+    }
+    return meaningfulWords(name).some((word) => messageTokens.some((token) => sameWord(token, word)));
   });
+}
+
+function wantsEveryDay(message: string) {
+  return /todos los d[ií]as|cualquier d[ií]a|every_day|all_days/i.test(message);
 }
 
 function prefersCheap(message: string) {
@@ -289,7 +333,20 @@ function textWhere(tokens: string[]): Prisma.ExperienceWhereInput {
     OR: tokens.flatMap((token) => [
       { title: { contains: token, mode: "insensitive" as const } },
       { description: { contains: token, mode: "insensitive" as const } },
+      { location: { contains: token, mode: "insensitive" as const } },
+      { category: { name: { contains: token, mode: "insensitive" as const } } },
+      { experienceCategories: { some: { category: { name: { contains: token, mode: "insensitive" as const } } } } },
+      { experienceInterests: { some: { interest: { name: { contains: token, mode: "insensitive" as const } } } } },
+      { locations: { some: { municipality: { contains: token, mode: "insensitive" as const } } } },
+      { locations: { some: { department: { contains: token, mode: "insensitive" as const } } } },
     ]),
+  };
+}
+
+function everyDayWhere(): Prisma.ExperienceWhereInput {
+  const type = { path: ["type"], equals: "EVERY_DAY" };
+  return {
+    OR: [{ availability: type }, { locations: { some: { availability: type } } }],
   };
 }
 
@@ -540,8 +597,9 @@ export async function loadGuideContext(input: {
 }) {
   const generalMode = input.context?.mode === "general";
   const experienceId = generalMode ? undefined : input.experienceId || input.context?.experience?.id;
-  const [categoryNames, user, profile] = await Promise.all([
+  const [categoryNames, interestRows, user, profile] = await Promise.all([
     listApprovedCategoryNames(),
+    prisma.interest.findMany({ select: { name: true }, orderBy: { name: "asc" } }),
     prisma.user.findUnique({
       where: { id: input.userId },
       select: { name: true },
@@ -559,9 +617,12 @@ export async function loadGuideContext(input: {
       },
     }),
   ]);
-  const askedCategories = namedCategories(input.message, categoryNames);
+  const interestNames = interestRows.map((row) => row.name);
+  const askedCategories = namedLabels(input.message, categoryNames);
+  const askedInterests = namedLabels(input.message, interestNames);
   const priceMax = parsePriceMax(input.message);
   const maxMinutes = parseDurationMaxMinutes(input.message);
+  const everyDay = wantsEveryDay(input.message);
   const wantsFavorites = /favorit|guardad|tengo guardado|mis guardad/i.test(input.message);
   const wantsSimilar = wantsFavorites && /parecid|similar|como (mis|los|lo)/i.test(input.message);
   const cheap = prefersCheap(input.message);
@@ -569,25 +630,34 @@ export async function loadGuideContext(input: {
     where: { status: "PUBLISHED" },
     select: { location: true, locations: { select: { municipality: true, department: true } } },
   });
+  const publishedCount = placePool.length;
   const place = mentionedPlace(input.message, placeLabels(placePool));
-  const tokens = searchTokens(input.message, [...askedCategories, place ?? ""]);
+  const tokens = searchTokens(input.message, [...askedCategories, ...askedInterests, place ?? ""]);
   const filters: Prisma.ExperienceWhereInput[] = [{ status: "PUBLISHED" }];
   if (priceMax) {
     filters.push({ price: { lte: priceMax } });
   }
+  const topic: Prisma.ExperienceWhereInput[] = [];
   if (askedCategories.length) {
-    filters.push({
-      OR: [
-        { category: { name: { in: askedCategories } } },
-        { experienceCategories: { some: { category: { name: { in: askedCategories } } } } },
-      ],
-    });
+    topic.push(
+      { category: { name: { in: askedCategories } } },
+      { experienceCategories: { some: { category: { name: { in: askedCategories } } } } },
+    );
+  }
+  if (askedInterests.length) {
+    topic.push({ experienceInterests: { some: { interest: { name: { in: askedInterests } } } } });
+  }
+  if (topic.length) {
+    filters.push({ OR: topic });
   }
   if (place) {
     filters.push(placeWhere(place));
   }
   if (maxMinutes) {
     filters.push(durationWhere(maxMinutes));
+  }
+  if (everyDay) {
+    filters.push(everyDayWhere());
   }
   const structured = filters.length > 1;
   const whereBase: Prisma.ExperienceWhereInput = { AND: filters };
@@ -665,12 +735,18 @@ export async function loadGuideContext(input: {
     candidateIds = await orderCandidateIds(rows, cheap);
     const parts = [
       askedCategories.length ? `categorías ${askedCategories.join(", ")}` : "",
+      askedInterests.length ? `intereses ${askedInterests.join(", ")}` : "",
       place ? `lugar ${place}` : "",
       priceMax ? `precio hasta ${priceMax}` : "",
       maxMinutes ? `duración de hasta ${maxMinutes} minutos` : "",
+      everyDay ? "disponibilidad todos los días" : "",
       tokens.length ? `texto ${tokens.join(", ")}` : "",
     ].filter(Boolean);
     retrievalNote = `Candidatos filtrados en la base de datos y después limitados a ${GUIDE_CANDIDATE_LIMIT}: ${parts.join("; ")}.`;
+  } else if (cheap) {
+    const rows = await prisma.experience.findMany({ where: { status: "PUBLISHED" }, select: rankSelect });
+    candidateIds = await orderCandidateIds(rows, true);
+    retrievalNote = `Pidió algo económico sin otra restricción. Se ordenan las ${publishedCount} experiencias publicadas por precio.`;
   } else {
     const rows = await prisma.experience.findMany({ where: { status: "PUBLISHED" }, select: rankSelect });
     candidateIds = await generalCandidateIds(rows, profile?.city?.trim() || input.location?.city || "");
@@ -754,6 +830,12 @@ export async function loadGuideContext(input: {
       : "Perfil: aún no hay preferencias guardadas.",
     input.location?.city ? `Ciudad declarada por la persona: ${input.location.city}.` : "",
     `Categorías aprobadas: ${categoryNames.join(", ") || "ninguna"}. Cuando preguntes el tipo de experiencia, usa estos nombres. Si hay más de seis, el botón Ver más muestra el siguiente grupo y la persona también puede escribir cualquiera.`,
+    `Experiencias publicadas en el catálogo: ${publishedCount}. Candidatos de esta búsqueda: ${candidateItems.length}.`,
+    publishedCount === 0
+      ? "El catálogo publicado está vacío. Puedes decir que aún no hay experiencias publicadas."
+      : candidateItems.length === 0
+        ? "Hay experiencias publicadas, pero esta búsqueda no tuvo coincidencias. No digas que no hay experiencias publicadas ni que el catálogo está vacío."
+        : "Hay coincidencias reales en los candidatos. Recomienda solo esas experiencias. No digas que no hay experiencias publicadas.",
     retrievalNote,
     experienceBlock,
     mentionedBlock,
@@ -774,6 +856,13 @@ export async function loadGuideContext(input: {
   return {
     catalog,
     categoryNames,
+    publishedCount,
+    askedCategories,
+    askedInterests,
+    detectedCity: place ?? null,
+    detectedPrice: priceMax ?? null,
+    detectedDuration: maxMinutes ?? null,
+    everyDay,
     cityFallback: profile?.city || input.location?.city || "",
     contextPrompt,
     prompt,

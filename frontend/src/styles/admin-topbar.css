@@ -77,6 +77,17 @@
   object-fit: cover;
 }
 
+.admin-topbar__avatar.is-logo {
+  background: #fff;
+}
+
+.admin-topbar__avatar.is-logo img {
+  object-fit: contain;
+  padding: 4px;
+  box-sizing: border-box;
+  background: #fff;
+}
+
 .admin-notify {
   position: relative;
 }

@@ -292,6 +292,17 @@
   object-fit: cover;
 }
 
+.dash-profile__photo.is-logo {
+  background: #fff;
+}
+
+.dash-profile__photo.is-logo img {
+  object-fit: contain;
+  padding: 10px;
+  box-sizing: border-box;
+  background: #fff;
+}
+
 .dash-profile__identity {
   display: flex;
   flex-direction: column;
@@ -409,7 +420,7 @@
 }
 
 .dash--exps .dash-team-board {
-  overflow-x: clip;
+  overflow: visible;
 }
 
 .dash--exps .dash-team-board__people .dash-team-card__info {
@@ -832,35 +843,7 @@
 
 .dash-team-roster__viewport.is-scrollable,
 .dash-cats-roster__viewport.is-scrollable,
-.dash-exps-roster__viewport.is-scrollable {
-  overflow-x: hidden;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  padding-right: 6px;
-  border-radius: 0 0 8px 8px;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(41, 73, 66, 0.22) transparent;
-}
-
-.dash-team-roster__viewport.is-scrollable,
-.dash-cats-roster__viewport.is-scrollable {
-  max-height: var(
-    --team-list-max,
-    calc(
-      (var(--team-list-visible) * var(--team-row-height)) + ((var(--team-list-visible) - 1) * var(--team-row-gap))
-    )
-  );
-}
-
-.dash-exps-roster__viewport.is-scrollable {
-  max-height: var(
-    --exps-list-max,
-    calc(
-      (var(--exps-list-rows) * var(--exps-row-height)) + ((var(--exps-list-rows) - 1) * var(--exps-row-gap))
-    )
-  );
-}
-
+.dash-exps-roster__viewport.is-scrollable,
 .dash--exps .dash-exps-roster,
 .dash--exps .dash-exps-roster__viewport,
 .dash--exps .dash-exps-roster__viewport.is-scrollable,
@@ -876,6 +859,48 @@
 
 .dash--cats .dash-cats-roster__viewport.is-scrollable::after {
   content: none;
+.dash-exps-pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 22px;
+}
+
+.dash-exps-pager__group {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dash-exps-pager__gap {
+  color: var(--admin-muted, #6b746f);
+  font-size: 13px;
+}
+
+.dash-exps-pager button {
+  min-width: 34px;
+  height: 34px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--admin-muted, #6b746f);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.dash-exps-pager button.is-current {
+  background: var(--admin-forest, #294942);
+  color: #ffffff;
+}
+
+.dash-exps-pager button:disabled {
+  cursor: default;
+  opacity: 0.4;
 }
 
 .dash-team-roster__viewport.is-scrollable:focus-visible,

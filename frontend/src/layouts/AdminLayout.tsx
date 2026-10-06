@@ -1,13 +1,16 @@
-import { useEffect, useState } from "react";
-import { Outlet, Navigate, useLocation } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Outlet, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { Menu } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
+import { peekSessionExpired } from "../services/api";
 import {
   ADMIN_NAV_ITEMS,
   AdminSidebar,
 } from "../components/admin/AdminSidebar";
 import { AdminTopbar } from "../components/admin/AdminTopbar";
 import { AdminFirstPasswordDialog } from "../components/admin/AdminFirstPasswordDialog";
+import { KeyConfirmDialog } from "../components/ui/KeyConfirmDialog";
+import { getOwnOrganizationProfile } from "../services/organization-profile.service";
 import "../styles/admin-sidebar.css";
 import "../styles/admin-ui.css";
 import "../styles/admin-access.css";
@@ -38,9 +41,12 @@ function readCollapsed() {
 export function AdminLayout() {
   const { user, loading, isAdmin, hasPermission } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+  const orgPromptChecked = useRef(false);
   const [collapsed, setCollapsed] = useState(readCollapsed);
   const [hoverExpanded, setHoverExpanded] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [orgProfilePrompt, setOrgProfilePrompt] = useState(false);
   const sidebarCollapsed = collapsed && !hoverExpanded;
 
   useEffect(() => {
@@ -56,6 +62,35 @@ export function AdminLayout() {
   }, [location.pathname]);
 
   useEffect(() => {
+    if (!user || user.role !== "ADMIN" || user.mustChangePassword || orgPromptChecked.current) {
+      return;
+    }
+    if (location.pathname === "/admin/empresa/editar") {
+      orgPromptChecked.current = true;
+      return;
+    }
+    let cancelled = false;
+    getOwnOrganizationProfile()
+      .then((profile) => {
+        if (cancelled) {
+          return;
+        }
+        orgPromptChecked.current = true;
+        if (!profile?.complete) {
+          setOrgProfilePrompt(true);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          orgPromptChecked.current = true;
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id, user?.role, user?.mustChangePassword, location.pathname]);
+
+  useEffect(() => {
     if (!mobileOpen) {
       return;
     }
@@ -64,11 +99,12 @@ export function AdminLayout() {
         setMobileOpen(false);
       }
     };
+    const previousOverflow = document.body.style.overflow;
     document.addEventListener("keydown", onKeyDown);
     document.body.style.overflow = "hidden";
     return () => {
       document.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = "";
+      document.body.style.overflow = previousOverflow;
     };
   }, [mobileOpen]);
 
@@ -81,6 +117,9 @@ export function AdminLayout() {
   }
 
   if (!isAdmin) {
+    if (peekSessionExpired()) {
+      return null;
+    }
     return <Navigate to="/login" replace />;
   }
 
@@ -220,6 +259,18 @@ export function AdminLayout() {
       </div>
 
       <AdminFirstPasswordDialog open={Boolean(user?.mustChangePassword)} />
+      <KeyConfirmDialog
+        open={orgProfilePrompt && !user?.mustChangePassword}
+        title="Perfil incompleto"
+        description="Completa los datos de tu empresa para poder enviar experiencias a revisión."
+        confirmLabel="Completar perfil"
+        cancelLabel="Ahora no"
+        onCancel={() => setOrgProfilePrompt(false)}
+        onConfirm={() => {
+          setOrgProfilePrompt(false);
+          navigate("/admin/empresa/editar");
+        }}
+      />
     </div>
   );
 }

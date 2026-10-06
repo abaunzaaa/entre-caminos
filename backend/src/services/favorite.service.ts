@@ -27,6 +27,7 @@ async function assertPublishedExperience(experienceId: string) {
 
 export async function listFavoriteExperiences(userId: string, opts?: { take?: number }) {
   const rows = await prisma.experienceFavorite.findMany({
+    relationLoadStrategy: "join",
     where: {
       userId,
       experience: { status: "PUBLISHED" },
@@ -39,6 +40,18 @@ export async function listFavoriteExperiences(userId: string, opts?: { take?: nu
   });
 
   return rows.map((row) => row.experience);
+}
+
+export async function listFavoriteExperienceIds(userId: string) {
+  const rows = await prisma.experienceFavorite.findMany({
+    where: {
+      userId,
+      experience: { status: "PUBLISHED" },
+    },
+    orderBy: { createdAt: "desc" },
+    select: { experienceId: true },
+  });
+  return rows.map((row) => row.experienceId);
 }
 
 export async function isExperienceFavorited(userId: string, experienceId: string) {

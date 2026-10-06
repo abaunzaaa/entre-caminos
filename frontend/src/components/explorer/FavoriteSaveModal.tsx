@@ -175,7 +175,7 @@ export function FavoriteSaveModal() {
                     >
                       <span className="favorite-save-modal__thumb">
                         {preview ? (
-                          <img src={experienceCoverUrl(preview, 240)} alt="" draggable={false} />
+                          <img src={experienceCoverUrl(preview, 240)} alt="" draggable={false} loading="lazy" decoding="async" />
                         ) : (
                           <FolderPlus size={16} strokeWidth={1.7} aria-hidden="true" />
                         )}

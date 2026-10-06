@@ -16,7 +16,7 @@ import {
 } from "../../utils/experience-details";
 import { experienceImages, mediaUrl } from "../../utils/media";
 import { placeTabLabel, placesFromExperience, projectExperience } from "../../utils/experience-places";
-import type { Experience, ExperienceStatus } from "../../types";
+import type { Experience, ExperienceStatus, PublicOrganizationProfile } from "../../types";
 
 const PLACE_FACT_LABELS = new Set([
   "Ubicación",
@@ -35,6 +35,19 @@ const STATUS_LABEL: Record<ExperienceStatus, string> = {
   ARCHIVED: "Inactiva",
   REJECTED: "Rechazada",
 };
+
+function hasMapCoordinates(latitude: number | null, longitude: number | null) {
+  if (latitude == null || longitude == null) {
+    return false;
+  }
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+    return false;
+  }
+  if (Math.abs(latitude) < 0.000001 && Math.abs(longitude) < 0.000001) {
+    return false;
+  }
+  return latitude >= -90 && latitude <= 90 && longitude >= -180 && longitude <= 180;
+}
 
 function experienceLink(url: string) {
   const trimmed = url.trim();
@@ -65,6 +78,33 @@ function preferenceLabels(options: OnboardingOption[], values?: string[] | null)
     }
   }
   return labels;
+function detailOrganization(experience: Experience): PublicOrganizationProfile | null {
+  const creator = experience.creator as
+    | (NonNullable<Experience["creator"]> & {
+        organizationProfile?: PublicOrganizationProfile | null;
+      })
+    | null
+    | undefined;
+  if (creator?.organization?.tradeName?.trim()) {
+    return creator.organization;
+  }
+  const profile = creator?.organizationProfile;
+  const tradeName = profile?.tradeName?.trim() || "";
+  if (!profile || !tradeName) {
+    return null;
+  }
+  return {
+    tradeName,
+    description: profile.description?.trim() || "",
+    logoUrl: profile.logoUrl?.trim() || null,
+    department: profile.department?.trim() || "",
+    city: profile.city?.trim() || "",
+    contactPhone: profile.contactPhone?.trim() || null,
+    contactEmail: profile.contactEmail?.trim() || null,
+    website: profile.website?.trim() || null,
+    address: profile.address?.trim() || null,
+    publishedCount: profile.publishedCount,
+  };
 }
 
 function formatPublishedDate(value?: string | null) {
@@ -120,7 +160,7 @@ export function buildExperienceEditorialFacts(
       : [];
 
   const detailFacts: ExperienceEditorialFact[] = [
-    ...(experience.description.trim() ? [{ label: "Descripción", value: experience.description }] : []),
+    ...(experience.description?.trim() ? [{ label: "Descripción", value: experience.description }] : []),
     { label: "Precio", value: formatPrice(experience.price, experience.currency) },
     {
       label: experienceCategoryNames(experience).length > 1 ? "Categorías" : "Categoría",
@@ -192,10 +232,11 @@ export function ExperienceEditorialView({
   const locationByline = formatDepartmentMunicipality(view.location);
   const lat = view.latitude ? Number(view.latitude) : null;
   const lng = view.longitude ? Number(view.longitude) : null;
-  const hasPoint = Number.isFinite(lat) && Number.isFinite(lng);
+  const hasPoint = hasMapCoordinates(lat, lng);
   const photos = experienceImages(experience);
   const mainPhoto = photos[0] ? mediaUrl(photos[0], 1200) : null;
   const { noteFacts, detailFacts } = buildExperienceEditorialFacts(view, mode);
+  const organization = detailOrganization(experience);
   const showPlaceTabs = places.length > 1;
   const generalFacts = showPlaceTabs ? detailFacts.filter((fact) => !PLACE_FACT_LABELS.has(fact.label)) : detailFacts;
   const placeFacts = showPlaceTabs ? detailFacts.filter((fact) => PLACE_FACT_LABELS.has(fact.label)) : [];
@@ -259,6 +300,7 @@ export function ExperienceEditorialView({
         photoLabel={experience.title}
         noteFacts={noteFacts}
         facts={generalFacts}
+        organization={organization}
         placeFacts={placeFacts}
         organization={experience.creator?.organization ?? null}
         places={

@@ -160,7 +160,7 @@ function ExperienceCard({
       role="listitem"
     >
       <Link to={href} className="favorites-strip__media" aria-label={`Ver ${experience.title}`}>
-        <img src={experienceCoverUrl(experience, 640)} alt="" draggable={false} decoding="async" />
+        <img src={experienceCoverUrl(experience, 640)} alt="" draggable={false} loading="lazy" decoding="async" />
       </Link>
       <div className="favorites-strip__body">
         <h3 className="favorites-strip__title">
@@ -233,17 +233,17 @@ function CategoryCarousel({
           <span className="favorites-cat__stack" aria-hidden="true">
             {recentCount >= 3 ? (
               <span className="favorites-cat__shot favorites-cat__shot--back-2">
-                <img src={recentStack[2]} alt="" draggable={false} decoding="async" />
+                <img src={recentStack[2]} alt="" draggable={false} loading="lazy" decoding="async" />
               </span>
             ) : null}
             {recentCount >= 2 ? (
               <span className="favorites-cat__shot favorites-cat__shot--back-1">
-                <img src={recentStack[1]} alt="" draggable={false} decoding="async" />
+                <img src={recentStack[1]} alt="" draggable={false} loading="lazy" decoding="async" />
               </span>
             ) : null}
             {recentCount >= 1 ? (
               <span className="favorites-cat__shot favorites-cat__shot--main">
-                <img src={recentStack[0]} alt="" draggable={false} decoding="async" />
+                <img src={recentStack[0]} alt="" draggable={false} loading="lazy" decoding="async" />
               </span>
             ) : (
               <span className="favorites-cat__shot favorites-cat__shot--main favorites-cat__shot--glyph">
@@ -279,16 +279,16 @@ function CategoryCarousel({
               <span className="favorites-cat__stack" aria-hidden="true">
                 {stackCount >= 3 ? (
                   <span className="favorites-cat__shot favorites-cat__shot--back-2">
-                    <img src={stack[2]} alt="" draggable={false} decoding="async" />
+                    <img src={stack[2]} alt="" draggable={false} loading="lazy" decoding="async" />
                   </span>
                 ) : null}
                 {stackCount >= 2 ? (
                   <span className="favorites-cat__shot favorites-cat__shot--back-1">
-                    <img src={stack[1]} alt="" draggable={false} decoding="async" />
+                    <img src={stack[1]} alt="" draggable={false} loading="lazy" decoding="async" />
                   </span>
                 ) : null}
                 <span className="favorites-cat__shot favorites-cat__shot--main">
-                  <img src={stack[0]} alt="" draggable={false} decoding="async" />
+                  <img src={stack[0]} alt="" draggable={false} loading="lazy" decoding="async" />
                 </span>
               </span>
               <span className="favorites-cat__folder">
@@ -461,7 +461,7 @@ function AddExperiencesToCollectionModal({
                       }
                     >
                       <span className="favorite-save-modal__thumb">
-                        <img src={experienceCoverUrl(experience, 240)} alt="" draggable={false} />
+                        <img src={experienceCoverUrl(experience, 240)} alt="" draggable={false} loading="lazy" decoding="async" />
                       </span>
                       <span className="favorite-save-modal__meta">
                         <strong>{experience.title}</strong>
@@ -573,6 +573,8 @@ function MoveCollectionModal({
                         src={experienceCoverUrl(collection.previewExperiences[0], 240)}
                         alt=""
                         draggable={false}
+                        loading="lazy"
+                        decoding="async"
                       />
                     ) : (
                       <FolderPlus size={16} strokeWidth={1.7} />
@@ -965,6 +967,8 @@ export function FavoritesLibrary({ experiences }: FavoritesLibraryProps) {
                           alt=""
                           className="favorites-collection-card__shot"
                           draggable={false}
+                          loading="lazy"
+                          decoding="async"
                         />
                       ))}
                       {!previews.length ? (

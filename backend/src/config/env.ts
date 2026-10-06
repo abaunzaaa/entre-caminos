@@ -70,6 +70,7 @@ const envSchema = z.object({
   GOOGLE_CLIENT_ID: z.preprocess(emptyToUndefined, z.string().optional()),
   GOOGLE_CLIENT_SECRET: z.preprocess(emptyToUndefined, z.string().optional()),
   OAUTH_REDIRECT_BASE: z.preprocess(emptyToUndefined, z.string().url().optional()),
+  BACKEND_URL: z.preprocess(emptyToUndefined, z.string().url().optional()),
 });
 
 const parsed = envSchema.safeParse(process.env);

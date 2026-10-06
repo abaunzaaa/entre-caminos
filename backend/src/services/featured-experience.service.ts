@@ -1,4 +1,4 @@
-import type { ExperienceStatus } from "@prisma/client";
+import { Prisma, type ExperienceStatus } from "@prisma/client";
 import { FEATURED_PUBLIC_LIMIT, FEATURED_RECENT_ACTIVITY_DAYS } from "../config/featured-score.js";
 import { COVER_RECOMMENDATION_LIMIT, selectExperiencesForInterests } from "../config/interest-carousel.js";
 import { ONBOARDING_INTEREST_ALIASES } from "../config/onboarding.js";
@@ -17,60 +17,79 @@ import type { AuthUser } from "../models/auth-user.js";
 
 const RECENT_MS = FEATURED_RECENT_ACTIVITY_DAYS * 24 * 60 * 60 * 1000;
 
-type CountRow = { experienceId: string; _count: { _all: number } };
 type RatingRow = { experienceId: string; _count: { _all: number }; _avg: { rating: number | null } };
 
-function countMap(rows: CountRow[]) {
-  return new Map(rows.map((row) => [row.experienceId, row._count._all]));
+type MetricRow = {
+  kind: string;
+  experience_id: string;
+  total: number;
+  recent: number;
+  rating_avg: number | null;
+};
+
+function emptyMetricMaps() {
+  return {
+    views: new Map<string, number>(),
+    favorites: new Map<string, number>(),
+    reviews: new Map<string, RatingRow>(),
+    recentViews: new Map<string, number>(),
+    recentFavorites: new Map<string, number>(),
+    recentReviews: new Map<string, number>(),
+  };
 }
 
+/** Una sola lectura para visitas, favoritos y reseñas, con el mismo conteo que los seis groupBy. */
 async function loadMetricMaps(experienceIds?: string[]) {
-  const idFilter = experienceIds ? { experienceId: { in: experienceIds } } : undefined;
+  if (experienceIds && experienceIds.length === 0) {
+    return emptyMetricMaps();
+  }
   const since = new Date(Date.now() - RECENT_MS);
-  const recentWhere = { ...idFilter, createdAt: { gte: since } };
+  const idClause = experienceIds
+    ? Prisma.sql`AND experience_id IN (${Prisma.join(experienceIds)})`
+    : Prisma.empty;
+  const rows = await prisma.$queryRaw<MetricRow[]>(Prisma.sql`
+    SELECT 'view' AS kind, experience_id, COUNT(*)::int AS total,
+           COUNT(*) FILTER (WHERE created_at >= ${since})::int AS recent,
+           NULL::float8 AS rating_avg
+    FROM experience_detail_views
+    WHERE TRUE ${idClause}
+    GROUP BY experience_id
+    UNION ALL
+    SELECT 'favorite', experience_id, COUNT(*)::int,
+           COUNT(*) FILTER (WHERE created_at >= ${since})::int,
+           NULL::float8
+    FROM experience_favorites
+    WHERE TRUE ${idClause}
+    GROUP BY experience_id
+    UNION ALL
+    SELECT 'review', experience_id, COUNT(*)::int,
+           COUNT(*) FILTER (WHERE created_at >= ${since})::int,
+           AVG(rating)::float8
+    FROM experience_visitor_reviews
+    WHERE TRUE ${idClause}
+    GROUP BY experience_id
+  `);
 
-  const [views, favorites, reviews, recentViews, recentFavorites, recentReviews] = await Promise.all([
-    prisma.experienceDetailView.groupBy({
-      by: ["experienceId"],
-      where: idFilter,
-      _count: { _all: true },
-    }),
-    prisma.experienceFavorite.groupBy({
-      by: ["experienceId"],
-      where: idFilter,
-      _count: { _all: true },
-    }),
-    prisma.experienceVisitorReview.groupBy({
-      by: ["experienceId"],
-      where: idFilter,
-      _count: { _all: true },
-      _avg: { rating: true },
-    }),
-    prisma.experienceDetailView.groupBy({
-      by: ["experienceId"],
-      where: recentWhere,
-      _count: { _all: true },
-    }),
-    prisma.experienceFavorite.groupBy({
-      by: ["experienceId"],
-      where: recentWhere,
-      _count: { _all: true },
-    }),
-    prisma.experienceVisitorReview.groupBy({
-      by: ["experienceId"],
-      where: recentWhere,
-      _count: { _all: true },
-    }),
-  ]);
-
-  return {
-    views: countMap(views),
-    favorites: countMap(favorites),
-    reviews: new Map(reviews.map((row) => [row.experienceId, row])),
-    recentViews: countMap(recentViews),
-    recentFavorites: countMap(recentFavorites),
-    recentReviews: countMap(recentReviews),
-  };
+  const maps = emptyMetricMaps();
+  for (const row of rows) {
+    const total = Number(row.total);
+    const recent = Number(row.recent);
+    if (row.kind === "view") {
+      maps.views.set(row.experience_id, total);
+      maps.recentViews.set(row.experience_id, recent);
+    } else if (row.kind === "favorite") {
+      maps.favorites.set(row.experience_id, total);
+      maps.recentFavorites.set(row.experience_id, recent);
+    } else {
+      maps.reviews.set(row.experience_id, {
+        experienceId: row.experience_id,
+        _count: { _all: total },
+        _avg: { rating: row.rating_avg == null ? null : Number(row.rating_avg) },
+      });
+      maps.recentReviews.set(row.experience_id, recent);
+    }
+  }
+  return maps;
 }
 
 function metricsFor(
@@ -111,18 +130,16 @@ const featuredCategoriesInclude = {
   },
 } as const;
 
+const coverCategorySelect = { id: true, name: true, icon: true } as const;
+
 const coverInclude = {
-  category: true,
+  category: { select: coverCategorySelect },
   experienceCategories: {
     orderBy: { position: "asc" as const },
-    include: { category: true },
-  },
-  creator: {
     select: {
-      id: true,
-      name: true,
-      avatarUrl: true,
-      organizationProfile: true,
+      position: true,
+      categoryId: true,
+      category: { select: coverCategorySelect },
     },
   },
 } as const;
@@ -137,6 +154,7 @@ const savedFeaturedOrder = [{ featuredOrder: "asc" as const }, { updatedAt: "des
 /** Destacadas guardadas por generar o por selección editorial, en su orden. */
 export async function listCoverFeaturedExperiences() {
   return prisma.experience.findMany({
+    relationLoadStrategy: "join",
     where: savedFeaturedWhere,
     include: coverInclude,
     orderBy: savedFeaturedOrder,
@@ -153,32 +171,77 @@ function recommendationTie(seed: string, id: string) {
   return hash;
 }
 
+const recommendationInclude = {
+  category: { select: { id: true, name: true, icon: true } },
+  experienceCategories: {
+    orderBy: { position: "asc" as const },
+    select: {
+      position: true,
+      categoryId: true,
+      category: { select: { id: true, name: true, icon: true } },
+    },
+  },
+  experienceInterests: {
+    orderBy: { position: "asc" as const },
+    select: {
+      position: true,
+      interest: { select: { name: true } },
+    },
+  },
+} as const;
+
+function loadPublishedForRecommendations() {
+  return prisma.experience.findMany({
+    relationLoadStrategy: "join",
+    where: { status: "PUBLISHED" },
+    include: recommendationInclude,
+  });
+}
+
+function rankByPopularity<T extends { id: string }>(
+  experiences: T[],
+  maps: Awaited<ReturnType<typeof loadMetricMaps>>,
+  seedOwner: string,
+) {
+  const day = new Date().toISOString().slice(0, 10);
+  const seed = `${seedOwner}:${day}`;
+  return [...experiences].sort((left, right) => {
+    const byScore = calculateFeaturedScore(metricsFor(right.id, maps)) - calculateFeaturedScore(metricsFor(left.id, maps));
+    if (byScore !== 0) {
+      return byScore;
+    }
+    return recommendationTie(seed, left.id) - recommendationTie(seed, right.id);
+  });
+}
+
+function activeInterestNames(interests: string[]) {
+  return interests
+    .map((interest) => ONBOARDING_INTEREST_ALIASES[interest.trim()] ?? interest.trim())
+    .filter(Boolean);
+}
+
 /** Carrusel de portada. Con intereses, solo sus categorías. Sin intereses, puntaje general y no la selección editorial. */
 export async function listRecommendedExperiences(userId?: string) {
-  const profile = userId
-    ? await prisma.userProfile.findUnique({
+  const profilePromise = userId
+    ? prisma.userProfile.findUnique({
         where: { userId },
         select: { interests: true, places: true, companions: true },
       })
-    : null;
-  const interests = profile?.interests ?? [];
-  const experiences = await prisma.experience.findMany({
-    where: { status: "PUBLISHED" },
-    include: {
-      category: true,
-      experienceCategories: {
-        orderBy: { position: "asc" },
-        include: { category: { select: { name: true } } },
-      },
-      experienceInterests: {
-        orderBy: { position: "asc" },
-        include: { interest: { select: { name: true } } },
-      },
-    },
-  });
-  const activeInterests = interests
-    .map((interest) => ONBOARDING_INTEREST_ALIASES[interest.trim()] ?? interest.trim())
-    .filter(Boolean);
+    : Promise.resolve(null);
+
+  if (!userId) {
+    const [experiences, maps] = await Promise.all([
+      loadPublishedForRecommendations(),
+      loadMetricMaps(),
+    ]);
+    return {
+      source: "popular" as const,
+      experiences: rankByPopularity(experiences, maps, "anon").slice(0, COVER_RECOMMENDATION_LIMIT),
+    };
+  }
+
+  const [profile, experiences] = await Promise.all([profilePromise, loadPublishedForRecommendations()]);
+  const activeInterests = activeInterestNames(profile?.interests ?? []);
   if (activeInterests.length > 0) {
     const personalized = experiences.map((experience) => ({
       ...experience,
@@ -201,18 +264,9 @@ export async function listRecommendedExperiences(userId?: string) {
   }
 
   const maps = await loadMetricMaps(experiences.map((item) => item.id));
-  const day = new Date().toISOString().slice(0, 10);
-  const seed = `${userId ?? "anon"}:${day}`;
-  const ranked = [...experiences].sort((left, right) => {
-    const byScore = calculateFeaturedScore(metricsFor(right.id, maps)) - calculateFeaturedScore(metricsFor(left.id, maps));
-    if (byScore !== 0) {
-      return byScore;
-    }
-    return recommendationTie(seed, left.id) - recommendationTie(seed, right.id);
-  });
   return {
     source: "popular" as const,
-    experiences: ranked.slice(0, COVER_RECOMMENDATION_LIMIT),
+    experiences: rankByPopularity(experiences, maps, userId).slice(0, COVER_RECOMMENDATION_LIMIT),
   };
 }
 

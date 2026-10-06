@@ -1,6 +1,7 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { Spinner } from "../components/ui/Spinner";
+import { peekSessionExpired } from "../services/api";
 
 export function ProtectedRoute({ admin = false }: { admin?: boolean }) {
   const { user, loading, isAdmin } = useAuth();
@@ -10,6 +11,9 @@ export function ProtectedRoute({ admin = false }: { admin?: boolean }) {
   }
 
   if (!user) {
+    if (peekSessionExpired()) {
+      return null;
+    }
     return <Navigate to="/login" replace />;
   }
 

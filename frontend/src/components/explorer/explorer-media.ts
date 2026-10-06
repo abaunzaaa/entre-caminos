@@ -17,7 +17,7 @@ export function experienceGalleryUrls(
   if (!images.length) {
     return [scenicFallback];
   }
-  return images.map((url) => mediaUrl(url, 960));
+  return images.map((url) => mediaUrl(url, 720));
 }
 
 export function municipalityLabel(location?: string | null) {

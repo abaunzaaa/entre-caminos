@@ -18,9 +18,29 @@ function extractText(payload: GeminiResponse) {
   return payload.candidates?.map((item) => item.content?.parts?.map((part) => part.text ?? "").join("") ?? "").join("\n") ?? "";
 }
 
+function guideHttpReason(status: number) {
+  if (status === 401 || status === 403) {
+    return "key_invalida";
+  }
+  if (status === 404) {
+    return "modelo_invalido";
+  }
+  if (status === 408) {
+    return "timeout";
+  }
+  if (status === 429) {
+    return "cuota_agotada";
+  }
+  if (status >= 500) {
+    return "error_5xx";
+  }
+  return "error_proveedor";
+}
+
 export async function generateGeminiText(system: string, user: string) {
   const key = env.GEMINI_API_KEY;
   if (!key) {
+    logger.error("Guía sin proveedor", { reason: "key_ausente", provider: "gemini", missing: "GEMINI_API_KEY" });
     throw ApiError.unavailable("El guía no está configurado en este momento.");
   }
 
@@ -45,7 +65,7 @@ export async function generateGeminiText(system: string, user: string) {
       continue;
     }
     if (!response.ok) {
-      logger.error("Gemini no respondió", { status: response.status, model });
+      logger.error("Gemini no respondió", { reason: guideHttpReason(response.status), status: response.status, model });
       throw ApiError.unavailable("No pude encontrar información en este momento.");
     }
     const payload = (await response.json()) as GeminiResponse;
@@ -56,7 +76,7 @@ export async function generateGeminiText(system: string, user: string) {
     return text;
   }
 
-  logger.error("Gemini modelo no disponible", { status: lastStatus });
+  logger.error("Gemini modelo no disponible", { reason: "modelo_invalido", status: lastStatus, model: env.GEMINI_MODEL });
   throw ApiError.unavailable("No pude encontrar información en este momento.");
 }
 

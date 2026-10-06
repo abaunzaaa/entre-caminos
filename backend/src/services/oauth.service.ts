@@ -43,8 +43,16 @@ export function resolveOauthRedirectBase(_req: Request) {
   return (env.OAUTH_REDIRECT_BASE || env.FRONTEND_URL).replace(/\/$/, "");
 }
 
-export function oauthCallbackUrl(redirectBase: string, provider: OAuthProviderSlug = "google") {
-  return `${redirectBase.replace(/\/$/, "")}/api/auth/${provider}/callback`;
+function backendPublicUrl() {
+  const configured = env.BACKEND_URL || process.env.RENDER_EXTERNAL_URL;
+  if (configured) {
+    return configured.replace(/\/$/, "");
+  }
+  return `http://127.0.0.1:${env.PORT}`;
+}
+
+export function oauthCallbackUrl(provider: OAuthProviderSlug = "google") {
+  return `${backendPublicUrl()}/api/auth/${provider}/callback`;
 }
 
 export function isOAuthConfigured(provider: OAuthProviderSlug = "google") {
@@ -80,14 +88,10 @@ export function readOAuthState(state: string | undefined) {
   }
 }
 
-export function buildAuthorizationUrl(
-  _provider: OAuthProviderSlug,
-  state: string,
-  redirectBase: string,
-) {
+export function buildAuthorizationUrl(_provider: OAuthProviderSlug, state: string) {
   const url = new URL("https://accounts.google.com/o/oauth2/v2/auth");
   url.searchParams.set("client_id", env.GOOGLE_CLIENT_ID!);
-  url.searchParams.set("redirect_uri", oauthCallbackUrl(redirectBase, "google"));
+  url.searchParams.set("redirect_uri", oauthCallbackUrl("google"));
   url.searchParams.set("response_type", "code");
   url.searchParams.set("scope", "openid email profile");
   url.searchParams.set("state", state);

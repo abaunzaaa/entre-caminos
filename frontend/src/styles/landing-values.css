@@ -11,7 +11,7 @@
   max-height: 100vh;
   max-height: 100dvh;
   padding: 0 2.25rem;
-  overflow: hidden;
+  overflow: clip;
   background: #ffffff;
   scroll-margin-top: 0;
 }

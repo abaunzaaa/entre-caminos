@@ -75,7 +75,9 @@ export async function updateMe(req: Request, res: Response) {
 }
 
 export async function refresh(req: Request, res: Response) {
-  const token = req.cookies?.[COOKIE_NAMES.REFRESH] as string | undefined;
+  const cookieToken = req.cookies?.[COOKIE_NAMES.REFRESH] as string | undefined;
+  const bodyToken = typeof req.body?.refreshToken === "string" ? req.body.refreshToken : "";
+  const token = cookieToken || bodyToken;
   if (!token) {
     throw ApiError.unauthorized("Refresh token requerido");
   }
@@ -121,7 +123,7 @@ export async function refresh(req: Request, res: Response) {
 
   return res.json({
     success: true,
-    data: { user: serialized, accessToken: tokens.accessToken },
+    data: { user: serialized, accessToken: tokens.accessToken, refreshToken: tokens.refreshToken },
   });
 }
 
@@ -217,7 +219,7 @@ export async function oauthStart(req: Request, res: Response) {
   }
   const remember = req.query.remember === "1" || req.query.remember === "true";
   const state = signOAuthState(remember, redirectBase);
-  return res.redirect(buildAuthorizationUrl(provider, state, redirectBase));
+  return res.redirect(buildAuthorizationUrl(provider, state));
 }
 
 export async function oauthCallback(req: Request, res: Response) {
@@ -239,9 +241,9 @@ export async function oauthCallback(req: Request, res: Response) {
 
   try {
     const { remember, redirectBase } = readOAuthState(state);
-    const profile = await exchangeOAuthCode(provider, code, oauthCallbackUrl(redirectBase, provider));
+    const profile = await exchangeOAuthCode(provider, code, oauthCallbackUrl(provider));
     const result = await loginOrRegisterOAuth(profile);
-    setAuthCookies(
+    const tokens = setAuthCookies(
       res,
       {
         id: result.user.id,
@@ -250,7 +252,7 @@ export async function oauthCallback(req: Request, res: Response) {
       },
       { remember },
     );
-    return res.redirect(
+    const landing = new URL(
       oauthFrontendRedirect(
         "/auth/callback",
         {
@@ -260,6 +262,12 @@ export async function oauthCallback(req: Request, res: Response) {
         redirectBase,
       ),
     );
+    const handoff = new URLSearchParams({
+      access_token: tokens.accessToken,
+      refresh_token: tokens.refreshToken,
+    });
+    landing.hash = handoff.toString();
+    return res.redirect(landing.toString());
   } catch (error) {
     const message =
       error instanceof ApiError ? error.message : "No pudimos completar el inicio de sesión.";

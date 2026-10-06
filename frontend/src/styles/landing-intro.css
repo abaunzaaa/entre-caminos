@@ -29,7 +29,7 @@
   max-height: 100dvh;
   background: #ffffff;
   padding: 0;
-  overflow: hidden;
+  overflow: clip;
   scroll-margin-top: 0;
 }
 

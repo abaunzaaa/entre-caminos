@@ -270,7 +270,12 @@ export function OrganizationProfileEditPage() {
           </div>
           {!isSuperAdminTarget ? (
             <div className="org-profile__side-links">
-              <button type="button" className="org-profile__side-link" onClick={() => setPasswordOpen(true)}>
+              <button
+                type="button"
+                className="org-profile__side-link"
+                disabled={saving || uploading}
+                onClick={() => setPasswordOpen(true)}
+              >
                 Cambiar contraseña
               </button>
             </div>
@@ -492,11 +497,6 @@ export function OrganizationProfileEditPage() {
             </div>
 
             <div className="admin-profile-edit__actions org-profile__form-actions">
-              {!isSuperAdminTarget ? (
-                <Button type="button" variant="secondary" disabled={saving || uploading} onClick={() => setPasswordOpen(true)}>
-                  Cambiar contraseña
-                </Button>
-              ) : null}
               <Button type="button" variant="secondary" disabled={saving || uploading} onClick={() => navigate(viewPath)}>
                 Cancelar
               </Button>
