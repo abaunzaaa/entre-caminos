@@ -859,6 +859,8 @@
 
 .dash--cats .dash-cats-roster__viewport.is-scrollable::after {
   content: none;
+}
+
 .dash-exps-pager {
   display: flex;
   flex-wrap: wrap;
