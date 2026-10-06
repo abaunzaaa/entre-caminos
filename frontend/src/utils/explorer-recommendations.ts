@@ -16,6 +16,7 @@ const INTEREST_CATEGORY_HINTS: Record<string, string[]> = {
   cultura: ["cultura", "patrimonio", "museo"],
   aventura: ["aventura", "extremo", "outdoor"],
   relajacion: ["relajacion", "bienestar", "spa", "mindfulness"],
+  bienestar: ["bienestar", "relajacion", "spa", "mindfulness"],
   "arte y creatividad": ["arte", "creatividad", "creativo", "taller artistico"],
   deportes: ["deporte", "deportes", "fitness"],
   "historia y patrimonio": ["historia", "patrimonio", "museo"],
@@ -27,6 +28,7 @@ const INTEREST_CATEGORY_HINTS: Record<string, string[]> = {
   danza: ["danza", "baile"],
   literatura: ["literatura", "lectura", "libro"],
   "fiesta / vida nocturna": ["fiesta", "nocturna", "nightlife"],
+  "vida nocturna": ["fiesta", "nocturna", "nightlife"],
 };
 
 const SHORT_TAB_LABELS: Record<string, string> = {
@@ -35,6 +37,7 @@ const SHORT_TAB_LABELS: Record<string, string> = {
   cultura: "Cultura",
   aventura: "Aventura",
   relajacion: "Bienestar",
+  bienestar: "Bienestar",
   "arte y creatividad": "Arte",
   deportes: "Deportes",
   "historia y patrimonio": "Historia",
@@ -46,6 +49,7 @@ const SHORT_TAB_LABELS: Record<string, string> = {
   danza: "Danza",
   literatura: "Lectura",
   "fiesta / vida nocturna": "Noche",
+  "vida nocturna": "Noche",
 };
 
 function interestKey(interest: string) {

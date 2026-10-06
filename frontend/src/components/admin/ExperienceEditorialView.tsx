@@ -5,6 +5,7 @@ import { ExperienceEditorialGallery } from "./ExperienceEditorialGallery";
 import { ExperienceEditorialNearby } from "./ExperienceEditorialNearby";
 import { ExperienceEditorialPlace } from "./ExperienceEditorialPlace";
 import { ExperiencePlaceTabs } from "./ExperiencePlaceTabs";
+import { COMPANY_OPTIONS, PLACE_OPTIONS, type OnboardingOption } from "../../data/onboarding";
 import { formatDepartmentMunicipality } from "../../data/colombia-locations";
 import { formatPrice } from "../../utils/cn";
 import { experienceCategoryNames, formatExperienceCategories } from "../../utils/experience-categories";
@@ -68,6 +69,15 @@ function phoneHref(value: string) {
   return `tel:${trimmed.replace(/[^\d+]/g, "")}`;
 }
 
+function preferenceLabels(options: OnboardingOption[], values?: string[] | null) {
+  const labels: string[] = [];
+  for (const value of values ?? []) {
+    const label = options.find((option) => option.value === value)?.label;
+    if (label && !labels.includes(label)) {
+      labels.push(label);
+    }
+  }
+  return labels;
 function detailOrganization(experience: Experience): PublicOrganizationProfile | null {
   const creator = experience.creator as
     | (NonNullable<Experience["creator"]> & {
@@ -159,6 +169,14 @@ export function buildExperienceEditorialFacts(
     ...(mode === "admin" ? [{ label: "Estado", value: STATUS_LABEL[experience.status] }] : []),
     { label: "Ubicación", value: experience.location || "—" },
     ...(durationText ? [{ label: "Duración", value: durationText }] : []),
+    ...(() => {
+      const chips = preferenceLabels(PLACE_OPTIONS, experience.environments);
+      return chips.length ? [{ label: "Ambiente", value: chips.join(", "), chips }] : [];
+    })(),
+    ...(() => {
+      const chips = preferenceLabels(COMPANY_OPTIONS, experience.idealFor);
+      return chips.length ? [{ label: "Ideal para", value: chips.join(", "), chips }] : [];
+    })(),
     ...availabilityDetailFacts(experience.availability),
     ...(experience.howToGetThere?.trim()
       ? [{ label: "Cómo llegar", value: experience.howToGetThere.trim() }]
@@ -284,6 +302,7 @@ export function ExperienceEditorialView({
         facts={generalFacts}
         organization={organization}
         placeFacts={placeFacts}
+        organization={experience.creator?.organization ?? null}
         places={
           showPlaceTabs ? (
             <ExperiencePlaceTabs

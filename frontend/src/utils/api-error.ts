@@ -40,6 +40,9 @@ export function getApiErrorMessage(err: unknown, fallback = "Ocurrió un error")
   if (error?.code === "INTERNAL_ERROR") {
     return "No pudimos completar la solicitud. Inténtalo de nuevo.";
   }
+  if (error?.code === "UNPROCESSABLE_ENTITY" && (!error.message || isTechnicalMessage(error.message))) {
+    return "Revisa los datos de la experiencia.";
+  }
   const details = error?.details?.map((item) => item.message).filter((message) => message && !isTechnicalMessage(message)) ?? [];
   if (details.length > 0) {
     return details.join(". ");

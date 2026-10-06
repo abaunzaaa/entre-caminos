@@ -332,6 +332,8 @@
   flex: 1 1 auto;
   align-self: flex-start;
   flex-direction: column;
+  align-self: stretch;
+  width: auto;
   min-width: 0;
   max-width: 100%;
   height: auto;
