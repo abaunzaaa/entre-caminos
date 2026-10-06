@@ -4,7 +4,9 @@ services:
     runtime: node
     plan: starter
     rootDir: backend
-    buildCommand: npm install && npx prisma generate && npm run build
+    # --include=dev: con NODE_ENV=production npm omite typescript, prisma y @types, y el build falla.
+    # Si el build falla, Render deja el despliegue anterior (el que hoy responde 404).
+    buildCommand: npm install --include=dev && npx prisma generate && npm run build
     startCommand: npx prisma migrate deploy && npm run start
     healthCheckPath: /api/health
     envVars:
@@ -14,4 +16,5 @@ services:
         value: production
       # Definir en el dashboard de Render (no en el repo):
       # DATABASE_URL, DIRECT_URL, JWT_ACCESS_SECRET, JWT_REFRESH_SECRET,
-      # FRONTEND_URL, COOKIE_SECURE, SENDGRID_*, CLOUDINARY_*, CONTACT_TO_EMAIL
+      # FRONTEND_URL, BACKEND_URL, COOKIE_SECURE, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET,
+      # SENDGRID_*, CLOUDINARY_*, CONTACT_TO_EMAIL, GEMINI_API_KEY
