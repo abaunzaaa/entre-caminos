@@ -5,7 +5,7 @@ import cookieParser from "cookie-parser";
 import morgan from "morgan";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { env } from "./config/env.js";
+import { env, isProduction } from "./config/env.js";
 import { corsOptions } from "./config/cors.js";
 import { apiRateLimiter } from "./middleware/rate-limit.middleware.js";
 import { errorHandler, notFoundHandler } from "./middleware/error.middleware.js";
@@ -18,6 +18,9 @@ export function createApp() {
   const app = express();
 
   app.disable("x-powered-by");
+  if (isProduction || process.env.RENDER === "true") {
+    app.set("trust proxy", 1);
+  }
   app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
   app.use(cors(corsOptions));
   app.use(cookieParser());
