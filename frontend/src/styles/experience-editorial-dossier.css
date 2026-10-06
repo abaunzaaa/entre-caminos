@@ -322,6 +322,25 @@
   text-transform: uppercase;
 }
 
+.dash-exps-dossier__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.dash-exps-dossier__chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.28rem 0.7rem;
+  border-radius: 999px;
+  background: #eef3ef;
+  color: #294942;
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1.3;
+}
+
 .dash-exps-dossier__value {
   color: #1c332e;
   font-size: 0.98rem;

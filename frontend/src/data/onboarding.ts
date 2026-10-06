@@ -47,9 +47,9 @@ export const ONBOARDING_COUNTRIES = ["Colombia"] as const;
 
 export const INTEREST_ALIASES: Record<string, string> = {
   Comida: "Gastronomía",
-  Fiesta: "Fiesta / Vida nocturna",
-  "Vida nocturna": "Fiesta / Vida nocturna",
-  Bienestar: "Relajación",
+  Fiesta: "Vida nocturna",
+  "Fiesta / Vida nocturna": "Vida nocturna",
+  Relajación: "Bienestar",
 };
 
 export const INTEREST_OPTIONS: OnboardingOption[] = [
@@ -57,7 +57,7 @@ export const INTEREST_OPTIONS: OnboardingOption[] = [
   { value: "Gastronomía", label: "Gastronomía", icon: Utensils },
   { value: "Cultura", label: "Cultura", icon: Landmark },
   { value: "Aventura", label: "Aventura", icon: Compass },
-  { value: "Relajación", label: "Bienestar", icon: Flower2 },
+  { value: "Bienestar", label: "Bienestar", icon: Flower2 },
   { value: "Arte y creatividad", label: "Arte y creatividad", icon: Palette },
   { value: "Deportes", label: "Deportes", icon: Dumbbell },
   { value: "Historia y patrimonio", label: "Historia y patrimonio", icon: Landmark },
@@ -68,7 +68,7 @@ export const INTEREST_OPTIONS: OnboardingOption[] = [
   { value: "Fotografía", label: "Fotografía", icon: Camera },
   { value: "Danza", label: "Danza", icon: Heart },
   { value: "Literatura", label: "Literatura", icon: BookOpen },
-  { value: "Fiesta / Vida nocturna", label: "Vida nocturna", icon: PartyPopper },
+  { value: "Vida nocturna", label: "Vida nocturna", icon: PartyPopper },
 ];
 
 export const PROFILE_GENDERS = ["Mujer", "Hombre", "No binario", "Otro", "Prefiero no decir"] as const;

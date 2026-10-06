@@ -41,7 +41,9 @@
   flex: 1 1 auto;
   min-width: 0;
   max-width: 100%;
+  height: auto;
   min-height: 60vh;
+  overflow: visible;
   padding-bottom: 48px;
 }
 
@@ -861,11 +863,19 @@
 
 .dash--exps .dash-exps-roster,
 .dash--exps .dash-exps-roster__viewport,
-.dash--exps .dash-exps-roster__viewport.is-scrollable {
+.dash--exps .dash-exps-roster__viewport.is-scrollable,
+.dash--cats .dash-cats-roster,
+.dash--cats .dash-cats-roster__viewport,
+.dash--cats .dash-cats-roster__viewport.is-scrollable {
+  height: auto;
   max-height: none;
   overflow: visible;
   overscroll-behavior: auto;
   padding-right: 0;
+}
+
+.dash--cats .dash-cats-roster__viewport.is-scrollable::after {
+  content: none;
 }
 
 .dash-team-roster__viewport.is-scrollable:focus-visible,
@@ -2689,9 +2699,11 @@
   display: grid;
   grid-template-columns: minmax(280px, 1.05fr) minmax(320px, 0.95fr);
   gap: 24px;
-  align-items: stretch;
+  align-items: start;
   min-width: 0;
   max-width: 100%;
+  height: auto;
+  overflow: visible;
 }
 
 .dash-exps-studio__stack {
@@ -2704,9 +2716,10 @@
 .dash-exps-mapcard {
   position: sticky;
   top: 12px;
+  align-self: start;
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: auto;
   min-width: 0;
   min-height: 0;
   padding: 0;
@@ -2714,11 +2727,15 @@
 }
 
 .dash-exps-formcard {
+  height: auto;
   min-width: 0;
+  overflow: visible;
 }
 
-.dash--exps .dash-exps-mapcard {
-  overflow: hidden;
+.dash--exps .dash-exps-mapcard,
+.dash--exps .dash-exps-formcard {
+  height: auto;
+  max-height: none;
 }
 
 .dash-exps-form {
@@ -2826,8 +2843,23 @@
 }
 
 .dash-exps-form__grid > :has(+ .dash-exps-categories-field),
-.dash-exps-form__grid > .dash-exps-categories-field {
+.dash-exps-form__grid > .dash-exps-categories-field,
+.dash-exps-form__grid > .dash-exps-form__field {
   align-self: start;
+}
+
+.dash-exps-form__grid--basics > :first-child {
+  grid-column: 1 / -1;
+}
+
+.dash-exps-form__hint {
+  margin: 6px 0 0;
+  color: #8a938e;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: normal;
+  line-height: 1.4;
 }
 
 .dash-exps-form__grid > label > span:first-child,
@@ -3643,21 +3675,21 @@
 
 .dash-exps-mapwrap {
   display: flex;
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   flex-direction: column;
   position: relative;
-  height: 100%;
+  height: auto;
   min-width: 0;
-  min-height: 0;
+  min-height: 28rem;
 }
 
 .dash-exps-map {
   position: relative;
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   isolation: isolate;
   overflow: hidden;
-  height: 100%;
-  min-height: 100%;
+  height: auto;
+  min-height: 28rem;
   border-radius: 0;
   background: #f3f5f4;
 }

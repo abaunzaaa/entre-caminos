@@ -11,6 +11,7 @@ export type ExperienceEditorialFact = {
   href?: string;
   external?: boolean;
   avatarUrl?: string | null;
+  chips?: string[];
 };
 
 function FactValue({
@@ -51,7 +52,17 @@ function FactRows({ facts }: { facts: ExperienceEditorialFact[] }) {
     <div className="dash-exps-dossier__row" key={fact.label}>
       <div className="dash-exps-dossier__copy">
         <span className="dash-exps-dossier__label">{fact.label}</span>
-        <FactValue fact={fact} className="dash-exps-dossier__value" />
+        {fact.chips?.length ? (
+          <span className="dash-exps-dossier__chips">
+            {fact.chips.map((chip) => (
+              <span key={chip} className="dash-exps-dossier__chip">
+                {chip}
+              </span>
+            ))}
+          </span>
+        ) : (
+          <FactValue fact={fact} className="dash-exps-dossier__value" />
+        )}
       </div>
     </div>
   ));
@@ -64,6 +75,7 @@ export function ExperienceEditorialDossier({
   facts,
   places,
   placeFacts = [],
+  organization = null,
 }: {
   photoUrl: string | null;
   photoLabel: string;
@@ -71,6 +83,7 @@ export function ExperienceEditorialDossier({
   facts: ExperienceEditorialFact[];
   places?: ReactNode;
   placeFacts?: ExperienceEditorialFact[];
+  organization?: PublicOrganizationProfile | null;
 }) {
   const hasOrganization = Boolean(organization?.tradeName?.trim());
 

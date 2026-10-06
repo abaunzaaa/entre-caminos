@@ -116,6 +116,9 @@ export type Experience = {
   category?: Category;
   categories?: Category[];
   experienceCategories?: Array<{ position: number; categoryId: string; category: Category }>;
+  experienceInterests?: Array<{ position: number; interest: { id: string; name: string } }>;
+  environments?: string[];
+  idealFor?: string[];
   creator?: {
     id: string;
     name: string;

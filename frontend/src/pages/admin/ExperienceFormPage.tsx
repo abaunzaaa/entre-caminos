@@ -12,6 +12,7 @@ import { Button } from "../../components/ui/Button";
 import { SuccessConfirmDialog } from "../../components/ui/SuccessConfirmDialog";
 import { Input, Textarea } from "../../components/ui/Input";
 import { useAuth } from "../../hooks/useAuth";
+import { COMPANY_OPTIONS, INTEREST_OPTIONS, PLACE_OPTIONS, canonicalizeInterest } from "../../data/onboarding";
 import {
   COLOMBIA_DEPARTMENTS,
   composeLocation,
@@ -186,16 +187,40 @@ function FieldPicker({
   );
 }
 
+const CATEGORY_INTEREST_SUGGESTIONS: Record<string, string[]> = {
+  "arte y creatividad": ["Arte y creatividad", "Talleres", "Fotografía", "Música", "Danza"],
+  artistico: ["Arte y creatividad", "Talleres", "Fotografía", "Música", "Danza"],
+  "cultura e historia": ["Cultura", "Historia y patrimonio", "Literatura", "Música"],
+  cultural: ["Cultura", "Historia y patrimonio", "Literatura", "Música"],
+  gastronomia: ["Gastronomía", "Café", "Talleres"],
+  "naturaleza y aventura": ["Naturaleza", "Aventura", "Fotografía"],
+  "bienestar y deporte": ["Bienestar", "Deportes", "Danza"],
+  deportivo: ["Bienestar", "Deportes", "Danza"],
+  "planes urbanos": ["Planes urbanos", "Vida nocturna", "Café", "Fotografía", "Música"],
+};
+
+function foldCategoryName(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
 function CategoryMultiPicker({
   categories,
   selectedIds,
   onChange,
   onLimit,
+  label = "Categorías",
+  max = 3,
 }: {
-  categories: Category[];
+  categories: Array<Pick<Category, "id" | "name">>;
   selectedIds: string[];
   onChange: (ids: string[]) => void;
   onLimit: () => void;
+  label?: string;
+  max?: number;
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -235,7 +260,7 @@ function CategoryMultiPicker({
       onChange(selectedIds.filter((item) => item !== id));
       return;
     }
-    if (selectedIds.length >= 3) {
+    if (selectedIds.length >= max) {
       onLimit();
       return;
     }
@@ -245,7 +270,7 @@ function CategoryMultiPicker({
   return (
     <div className={`dash-team-role dash-exps-categories-field${open ? " is-open" : ""}`} ref={rootRef}>
       <div className="dash-exps-categories-field__control">
-      <span className="dash-team-role__label">Categorías</span>
+      <span className="dash-team-role__label">{label}</span>
       <div className={`dash-exps-categories-slot${ordered.length ? " has-chips" : ""}`}>
         <button
           type="button"
@@ -257,7 +282,7 @@ function CategoryMultiPicker({
             setQuery("");
           }}
         >
-          <span>{ordered.length ? "Categorías seleccionadas" : "Seleccionar"}</span>
+          <span>{ordered.length ? `${label} seleccionadas` : "Seleccionar"}</span>
           <ChevronDown size={18} strokeWidth={1.7} aria-hidden="true" />
         </button>
         {ordered.length ? (
@@ -319,6 +344,7 @@ export function ExperienceFormPage() {
   const [saving, setSaving] = useState(false);
   const [createdOpen, setCreatedOpen] = useState(false);
   const [createdPendingReview, setCreatedPendingReview] = useState(true);
+  const [successKind, setSuccessKind] = useState<"create" | "update">("create");
   const [uploading, setUploading] = useState(false);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [stampImageUrl, setStampImageUrl] = useState<string | null>(null);
@@ -328,7 +354,11 @@ export function ExperienceFormPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [categoryIds, setCategoryIds] = useState<string[]>([]);
+  const [relatedInterests, setRelatedInterests] = useState<string[]>([]);
+  const [environments, setEnvironments] = useState<string[]>([]);
+  const [idealFor, setIdealFor] = useState<string[]>([]);
   const [categoryLimitOpen, setCategoryLimitOpen] = useState(false);
+  const [interestLimitOpen, setInterestLimitOpen] = useState(false);
   const [price, setPrice] = useState("");
   const [currency, setCurrency] = useState<ExperienceCurrency>("COP");
   const [department, setDepartment] = useState("");
@@ -367,6 +397,26 @@ export function ExperienceFormPage() {
     () => categories.filter((item) => item.status === "APPROVED" || categoryIds.includes(item.id)),
     [categories, categoryIds],
   );
+  const suggestedInterests = useMemo(() => {
+    const selectedNames = selectableCategories
+      .filter((item) => categoryIds.includes(item.id))
+      .map((item) => foldCategoryName(item.name));
+    const suggested = new Set<string>();
+    for (const name of selectedNames) {
+      for (const interest of CATEGORY_INTEREST_SUGGESTIONS[name] ?? []) {
+        if (!relatedInterests.includes(interest)) {
+          suggested.add(interest);
+        }
+      }
+    }
+    return [...suggested];
+  }, [selectableCategories, categoryIds, relatedInterests]);
+  const interestChoices = useMemo(() => {
+    const suggested = new Set(suggestedInterests);
+    return INTEREST_OPTIONS.map((option) => ({ id: option.value, name: option.label })).sort((left, right) => {
+      return Number(!suggested.has(left.name)) - Number(!suggested.has(right.name));
+    });
+  }, [suggestedInterests]);
 
   useEffect(() => {
     let cancelled = false;
@@ -531,6 +581,14 @@ export function ExperienceFormPage() {
         setDescription(experience.description);
         const links = [...(experience.experienceCategories ?? [])].sort((left, right) => left.position - right.position);
         setCategoryIds(links.length ? links.map((link) => link.categoryId) : experience.categoryId ? [experience.categoryId] : []);
+        const savedInterests = [...(experience.experienceInterests ?? [])].sort(
+          (left, right) => left.position - right.position,
+        );
+        setRelatedInterests(savedInterests.map((link) => canonicalizeInterest(link.interest.name)));
+        const placeValues = new Set(PLACE_OPTIONS.map((option) => option.value));
+        const companionValues = new Set(COMPANY_OPTIONS.map((option) => option.value));
+        setEnvironments((experience.environments ?? []).filter((value) => placeValues.has(value)));
+        setIdealFor((experience.idealFor ?? []).filter((value) => companionValues.has(value)));
         setCategoryLimitOpen(false);
         setPrice(String(experience.price));
         setCurrency(experience.currency && isExperienceCurrency(experience.currency) ? experience.currency : "COP");
@@ -715,6 +773,14 @@ export function ExperienceFormPage() {
       setError("Puedes seleccionar máximo 3 categorías por experiencia.");
       return;
     }
+    if (!id && relatedInterests.length < 1) {
+      setError("Selecciona al menos un interés relacionado.");
+      return;
+    }
+    if (relatedInterests.length > 5) {
+      setError("Puedes seleccionar máximo 5 intereses relacionados.");
+      return;
+    }
     const savedPlaces = captureActivePlace();
     setPlaces(savedPlaces);
     for (const [index, place] of savedPlaces.entries()) {
@@ -783,6 +849,9 @@ export function ExperienceFormPage() {
       description,
       categoryId: categoryIds[0],
       categoryIds,
+      relatedInterests,
+      environments,
+      idealFor,
       price: Number(price.replace(",", ".")),
       currency,
       location: composeLocation(primary.address, primary.municipality, primary.department),
@@ -814,13 +883,15 @@ export function ExperienceFormPage() {
         if (submitToReview && (status === "REJECTED" || status === "DRAFT")) {
           await submitExperience(id);
         }
-      } else {
-        const created = await createExperience(payload);
-        setCreatedPendingReview(created.status === "PENDING");
+        setSuccessKind("update");
         setCreatedOpen(true);
         return;
       }
-      navigate("/admin/experiencias");
+      const created = await createExperience(payload);
+      setCreatedPendingReview(created.status === "PENDING");
+      setSuccessKind("create");
+      setCreatedOpen(true);
+      return;
     } catch (err) {
       setError(getApiErrorMessage(err, "No se pudo guardar"));
     } finally {
@@ -924,7 +995,7 @@ export function ExperienceFormPage() {
           <div className="dash-exps-section">
             <h2 className="dash-section__title">Información básica</h2>
             <p className="dash-section__lead">Completa los datos de la experiencia y confirma su ubicación en el mapa.</p>
-            <div className="dash-exps-form__grid">
+            <div className="dash-exps-form__grid dash-exps-form__grid--basics">
               <Input
                 label="Nombre de experiencia"
                 value={title}
@@ -938,6 +1009,43 @@ export function ExperienceFormPage() {
                 onChange={setCategoryIds}
                 onLimit={() => setCategoryLimitOpen(true)}
               />
+              <div className="dash-exps-form__field">
+                <CategoryMultiPicker
+                  label="Intereses relacionados"
+                  max={5}
+                  categories={interestChoices}
+                  selectedIds={relatedInterests}
+                  onChange={setRelatedInterests}
+                  onLimit={() => setInterestLimitOpen(true)}
+                />
+                {suggestedInterests.length ? (
+                  <p className="dash-exps-form__hint">
+                    Intereses sugeridos según la categoría: {suggestedInterests.join(", ")}
+                  </p>
+                ) : null}
+              </div>
+              <div className="dash-exps-form__field">
+                <CategoryMultiPicker
+                  label="Ideal para"
+                  max={COMPANY_OPTIONS.length}
+                  categories={COMPANY_OPTIONS.map((option) => ({ id: option.value, name: option.label }))}
+                  selectedIds={idealFor}
+                  onChange={setIdealFor}
+                  onLimit={() => undefined}
+                />
+                <p className="dash-exps-form__hint">¿Con quién se disfruta mejor esta experiencia?</p>
+              </div>
+              <div className="dash-exps-form__field">
+                <CategoryMultiPicker
+                  label="Ambientes"
+                  max={PLACE_OPTIONS.length}
+                  categories={PLACE_OPTIONS.map((option) => ({ id: option.value, name: option.label }))}
+                  selectedIds={environments}
+                  onChange={setEnvironments}
+                  onLimit={() => undefined}
+                />
+                <p className="dash-exps-form__hint">Selecciona uno o varios ambientes que representen esta experiencia.</p>
+              </div>
             </div>
             <ExperiencePlaceTabs
               label="Ubicaciones"
@@ -1389,14 +1497,27 @@ export function ExperienceFormPage() {
         onClose={() => setCategoryLimitOpen(false)}
       />
 
+      <SuccessConfirmDialog
+        open={interestLimitOpen}
+        className="contact-success--subtle"
+        icon={<AuthKeyIcon className="auth-reset-success__mark" />}
+        title="Máximo de intereses alcanzado"
+        description="Solo puedes seleccionar máximo 5 intereses relacionados por experiencia."
+        actionLabel="Aceptar"
+        initialFocus="action"
+        onClose={() => setInterestLimitOpen(false)}
+      />
+
       <SuccessConfirm
         open={createdOpen}
         variant="experience"
-        title="Experiencia creada correctamente"
+        title={successKind === "update" ? "Experiencia actualizada correctamente" : "Experiencia creada correctamente"}
         text={
-          createdPendingReview
-            ? "La experiencia quedó pendiente de revisión."
-            : "La experiencia ya está publicada en el catálogo."
+          successKind === "update"
+            ? "Los cambios ya están guardados."
+            : createdPendingReview
+              ? "La experiencia quedó pendiente de revisión."
+              : "La experiencia ya está publicada en el catálogo."
         }
         onClose={() => {
           setCreatedOpen(false);
