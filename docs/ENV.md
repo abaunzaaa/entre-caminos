@@ -12,7 +12,10 @@ Los secretos **nunca** van a GitHub.
 | `DIRECT_URL` | Sí | Pooler Supabase session (puerto 5432). Migraciones Prisma |
 | `JWT_ACCESS_SECRET` | Sí | ≥ 32 caracteres |
 | `JWT_REFRESH_SECRET` | Sí | ≥ 32 caracteres |
-| `FRONTEND_URL` | Sí | Origen CORS |
+| `FRONTEND_URL` | Sí | Origen CORS y destino tras el login. Sin barra final |
+| `BACKEND_URL` | En producción, para Google | URL pública del API, sin `/api` y sin barra final. En Render, si falta, se usa `RENDER_EXTERNAL_URL` |
+| `GOOGLE_CLIENT_ID` | Para Google | Cliente OAuth de Google Cloud |
+| `GOOGLE_CLIENT_SECRET` | Para Google | Secreto del mismo cliente. Solo en Render |
 | `PORT` | No | Default 4000 |
 | `BCRYPT_ROUNDS` | No | Default 12 |
 | `SEED_ADMIN_PASSWORD` | Solo seed | Canal privado del equipo. Si lleva `#`, va entre comillas: `SEED_ADMIN_PASSWORD="Clave#2026"` |
@@ -48,7 +51,8 @@ Archivo `frontend/.env`:
   - Vercel usa el `vercel.json` de la raíz: instala y construye solo `frontend/`
   - Output: `frontend/dist`
 - API en **Render** (root `backend/`, ver `backend/render.yaml`).
-- En Vercel, variable de **build**: `VITE_API_URL=https://<servicio-render>/api` (URL pública del API, sin barra final de más).
-- En Render, `FRONTEND_URL=https://<proyecto-vercel>` (origen CORS, sin barra final).
+- En Vercel, variable de **build**: `VITE_API_URL=https://entre-caminos.onrender.com/api` (incluye `/api`, sin barra final).
+- En Render, `FRONTEND_URL=https://entre-caminos.vercel.app` (origen CORS, sin barra final).
+- En Render, `BACKEND_URL=https://entre-caminos.onrender.com` (sin `/api`). El callback de Google es `{BACKEND_URL}/api/auth/google/callback`.
 - Cloudinary obligatorio en producción (disco de Render es efímero).
 - SendGrid recomendado para verificación y recuperación de correo.

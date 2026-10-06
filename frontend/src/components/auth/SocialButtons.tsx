@@ -21,12 +21,24 @@ function GoogleIcon() {
   );
 }
 
-export function SocialButtons({ remember = true }: { remember?: boolean }) {
+function googleAuthHref(remember: boolean) {
   const params = new URLSearchParams({ remember: remember ? "1" : "0" });
+  const path = `/api/auth/google?${params.toString()}`;
+  const api = import.meta.env.VITE_API_URL ?? "/api";
+  if (/^https?:\/\//i.test(api)) {
+    try {
+      return `${new URL(api).origin}${path}`;
+    } catch {
+      return path;
+    }
+  }
+  return path;
+}
 
+export function SocialButtons({ remember = true }: { remember?: boolean }) {
   return (
     <div className="auth-social">
-      <a className="auth-social__google" href={`/api/auth/google?${params.toString()}`}>
+      <a className="auth-social__google" href={googleAuthHref(remember)}>
         <GoogleIcon />
         Continuar con Google
       </a>
