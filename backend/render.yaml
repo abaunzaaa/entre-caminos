@@ -4,8 +4,8 @@ services:
     runtime: node
     plan: starter
     rootDir: backend
-    # --include=dev: con NODE_ENV=production npm omite typescript, prisma y @types, y el build falla.
-    # Si el build falla, Render deja el despliegue anterior (el que hoy responde 404).
+    # typescript, prisma y @types/* van en dependencies: con NODE_ENV=production
+    # npm no instala devDependencies y tsc falla con TS2688 (Cannot find type definition file for 'node').
     buildCommand: npm install --include=dev && npx prisma generate && npm run build
     startCommand: npx prisma migrate deploy && npm run start
     healthCheckPath: /api/health

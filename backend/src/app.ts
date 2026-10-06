@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import morgan from "morgan";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { env } from "./config/env.js";
 import { corsOptions } from "./config/cors.js";
 import { apiRateLimiter } from "./middleware/rate-limit.middleware.js";
 import { errorHandler, notFoundHandler } from "./middleware/error.middleware.js";
@@ -28,7 +29,7 @@ export function createApp() {
     res.type("html").send(
       `<!doctype html><html lang="es"><body style="font-family:Georgia,serif;padding:48px">
         <p>Esta es la API de Entre Caminos.</p>
-        <p>Abre la aplicación en <a href="http://127.0.0.1:5173">http://127.0.0.1:5173</a></p>
+        <p>Abre la aplicación en <a href="${env.FRONTEND_URL}">${env.FRONTEND_URL}</a></p>
       </body></html>`,
     );
   });

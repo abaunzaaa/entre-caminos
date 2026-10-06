@@ -18,7 +18,7 @@ async function bootstrap() {
   }
 
   const server = app.listen(env.PORT, () => {
-    logger.info(`Entre Caminos API lista en http://localhost:${env.PORT}`);
+    logger.info(`Entre Caminos API lista en el puerto ${env.PORT}`);
   });
 
   server.on("error", (error: NodeJS.ErrnoException) => {
