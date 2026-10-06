@@ -103,12 +103,32 @@ async function requestGroqCompletion(messages: GroqChatMessage[]) {
 /**
  * Completions contra Groq (compatible con OpenAI) usando la URL y clave del .env.
  */
+function guideHttpReason(status: number) {
+  if (status === 401 || status === 403) {
+    return "key_invalida";
+  }
+  if (status === 404) {
+    return "modelo_invalido";
+  }
+  if (status === 408) {
+    return "timeout";
+  }
+  if (status === 429) {
+    return "cuota_agotada";
+  }
+  if (status >= 500) {
+    return "error_5xx";
+  }
+  return "error_proveedor";
+}
+
 export async function generateGroqJson(
   system: string,
   turns: Array<{ role: "user" | "assistant"; content: string }>,
 ) {
   const key = groqKey();
   if (!key) {
+    logger.error("Guía sin proveedor", { reason: "key_ausente", provider: "groq", missing: "GROQ_API_KEY u OPENAI_API_KEY" });
     throw ApiError.unavailable("El guía no está configurado en este momento.");
   }
 
@@ -168,7 +188,12 @@ Nunca respondas con texto suelto, preguntas sueltas ni listas fuera del JSON.`,
       });
       return recovered;
     }
-    logger.error("Groq no respondió", { status: response.status, model: groqModel(), detail: detail.slice(0, 300) });
+    logger.error("Groq no respondió", {
+      reason: guideHttpReason(response.status),
+      status: response.status,
+      model: groqModel(),
+      detail: detail.slice(0, 300),
+    });
     throw ApiError.unavailable("No pude encontrar información en este momento.");
   }
 
