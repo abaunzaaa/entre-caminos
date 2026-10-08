@@ -26,6 +26,15 @@ function wrapIndex(value: number, count: number) {
   return (value + count) % count;
 }
 
+/** Visual wrap only. The category name itself stays unchanged. */
+function featuredTabLines(label: string): [string] | [string, string] {
+  const match = label.match(/^(.*\S)\s+([ye])\s+(\S.*)$/i);
+  if (!match) {
+    return [label];
+  }
+  return [`${match[1]} ${match[2]}`, match[3]];
+}
+
 function RecsExperienceGallery({ urls }: { urls: string[] }) {
   const count = urls.length;
   const [index, setIndex] = useState(0);
@@ -276,6 +285,7 @@ export function ExplorerRecommendedSection({ experiences }: ExplorerRecommendedS
                 >
                   {tabs.map((tab, index) => {
                     const selected = tab.id === active?.id;
+                    const lines = featuredTabLines(tab.shortLabel);
                     return (
                       <button
                         key={tab.id}
@@ -295,7 +305,14 @@ export function ExplorerRecommendedSection({ experiences }: ExplorerRecommendedS
                         onFocus={() => selectTab(tab.id)}
                         onClick={() => selectTab(tab.id)}
                       >
-                        <span className="explorer-recs__tab-label">{tab.shortLabel}</span>
+                        <span className={`explorer-recs__tab-label${lines.length > 1 ? " is-wrapped" : ""}`}>
+                          {lines.map((line, lineIndex) => (
+                            <span key={`${tab.id}-line-${lineIndex}`}>
+                              {lineIndex > 0 ? <br /> : null}
+                              {line}
+                            </span>
+                          ))}
+                        </span>
                       </button>
                     );
                   })}
