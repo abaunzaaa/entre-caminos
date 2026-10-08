@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { AuthKeyIcon } from "../auth/AuthKeyIcon";
+import { Pager } from "../ui/Pager";
 import favVacia from "../../assets/fav-vacia.png";
 import heartIcon from "../../assets/heart-icon.png";
 import { useFavoriteToggle } from "../../hooks/useFavoriteToggle";
@@ -884,23 +885,13 @@ export function FavoritesLibrary({ experiences }: FavoritesLibraryProps) {
               ))}
             </div>
             {pageCount > 1 ? (
-              <div className="explorer-discover-pager favorites-library__pager">
-                <button
-                  type="button"
-                  onClick={() => setPage((current) => Math.max(1, current - 1))}
-                  disabled={safePage <= 1}
-                >
-                  Anterior
-                </button>
-                <span className="explorer-discover-pager__page">Página {safePage}</span>
-                <button
-                  type="button"
-                  onClick={() => setPage((current) => Math.min(pageCount, current + 1))}
-                  disabled={safePage >= pageCount}
-                >
-                  Siguiente
-                </button>
-              </div>
+              <Pager
+                className="favorites-library__pager"
+                page={safePage}
+                pageCount={pageCount}
+                onPageChange={setPage}
+                label="Paginación de favoritos"
+              />
             ) : null}
           </>
         ) : (
@@ -998,23 +989,13 @@ export function FavoritesLibrary({ experiences }: FavoritesLibraryProps) {
           </div>
 
           {collections.length > collectionsPerPage ? (
-            <div className="explorer-discover-pager favorites-library__pager">
-              <button
-                type="button"
-                onClick={() => setCollectionsPage((current) => Math.max(1, current - 1))}
-                disabled={safeCollectionsPage <= 1}
-              >
-                Anterior
-              </button>
-              <span className="explorer-discover-pager__page">Página {safeCollectionsPage}</span>
-              <button
-                type="button"
-                onClick={() => setCollectionsPage((current) => Math.min(collectionPageCount, current + 1))}
-                disabled={safeCollectionsPage >= collectionPageCount}
-              >
-                Siguiente
-              </button>
-            </div>
+            <Pager
+              className="favorites-library__pager"
+              page={safeCollectionsPage}
+              pageCount={collectionPageCount}
+              onPageChange={setCollectionsPage}
+              label="Paginación de colecciones"
+            />
           ) : null}
         </section>
       ) : null}

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { ExperienceCatalogCard } from "../components/admin/ExperienceCatalogCard";
+import { Pager } from "../components/ui/Pager";
 import {
   DEFAULT_DISCOVER_FILTERS,
   ExplorerDiscoverFilters,
@@ -429,26 +430,15 @@ export function ExplorePage() {
               ))}
             </div>
 
-            <div
-              className="explorer-discover-pager explorer-reveal"
+            <Pager
+              className="explorer-reveal"
               style={{ "--reveal-delay": `${220 + Math.min(experiences.length, 8) * 80}ms` } as CSSProperties}
-            >
-              <button
-                type="button"
-                onClick={() => setPage((current) => Math.max(1, current - 1))}
-                disabled={loading || page <= 1}
-              >
-                Anterior
-              </button>
-              <span className="explorer-discover-pager__page">Página {page}</span>
-              <button
-                type="button"
-                onClick={() => setPage((current) => current + 1)}
-                disabled={loading || pageCount === 0 || page >= pageCount}
-              >
-                Siguiente
-              </button>
-            </div>
+              page={page}
+              pageCount={pageCount}
+              onPageChange={setPage}
+              disabled={loading}
+              label="Paginación de experiencias"
+            />
           </>
         )}
       </section>

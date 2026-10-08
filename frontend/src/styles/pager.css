@@ -1,0 +1,66 @@
+.dash-exps-pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  max-width: 100%;
+  margin-top: 22px;
+}
+
+.dash-exps-pager__group {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dash-exps-pager__gap {
+  color: var(--admin-muted, #6b746f);
+  font-size: 13px;
+}
+
+.dash-exps-pager button {
+  min-width: 34px;
+  height: 34px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--admin-muted, #6b746f);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.dash-exps-pager button:hover:not(:disabled):not(.is-current) {
+  color: var(--admin-forest, #294942);
+}
+
+.dash-exps-pager button.is-current {
+  background: var(--admin-forest, #294942);
+  color: #ffffff;
+}
+
+.dash-exps-pager button:focus-visible {
+  outline: 2px solid rgba(41, 73, 66, 0.35);
+  outline-offset: 2px;
+}
+
+.dash-exps-pager button:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
+@media (max-width: 640px) {
+  .dash-exps-pager,
+  .dash-exps-pager__group {
+    gap: 4px;
+  }
+
+  .dash-exps-pager button {
+    min-width: 30px;
+    height: 32px;
+    padding: 0 8px;
+  }
+}

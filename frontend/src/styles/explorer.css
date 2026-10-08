@@ -1766,32 +1766,58 @@
 
 .explorer-discover-catalog .dash-exps-tile__body {
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
   align-items: center;
+  justify-content: flex-start;
   gap: 6px;
+  min-height: 0;
   padding: 12px 13px 14px;
   text-align: center;
 }
 
 .explorer-discover-catalog .dash-exps-tile__chips {
   display: flex;
-  flex-wrap: wrap;
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
   justify-content: center;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
+  width: 100%;
+  min-width: 0;
+  min-height: 24px;
+}
+
+.explorer-discover-catalog .dash-exps-tile__chips .admin-status {
+  flex: 0 0 auto;
+  max-width: none;
+  padding: 4px 8px;
+  font-size: 11px;
+  white-space: nowrap;
 }
 
 .explorer-discover-catalog .dash-exps-tile h3 {
   width: 100%;
+  flex: 0 0 auto;
+  margin: 0;
   font-size: 15px;
+  line-height: 1.25;
   text-align: center;
+  min-height: calc(15px * 1.25 * 2);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .explorer-discover-catalog .dash-exps-tile__place {
   display: flex;
   justify-content: center;
   align-items: center;
+  width: 100%;
+  margin-top: auto;
   font-size: 12px;
+  line-height: 1.35;
   text-align: center;
 }
 
@@ -1901,43 +1927,6 @@
 .explorer-discover-more__btn:disabled {
   cursor: wait;
   opacity: 0.72;
-}
-
-.explorer-discover-pager {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  margin: 1.85rem 0 0.35rem;
-  color: #294942;
-  font-family: Poppins, Nunito, system-ui, sans-serif;
-  font-size: 14px;
-}
-
-.explorer-discover-pager button {
-  height: 36px;
-  border: 1px solid #dce3df;
-  border-radius: 999px;
-  padding: 0 14px;
-  color: #294942;
-  background: #fff;
-  cursor: pointer;
-  font-family: inherit;
-  font-size: inherit;
-  font-weight: inherit;
-  letter-spacing: normal;
-  box-shadow: none;
-}
-
-.explorer-discover-pager button:disabled {
-  opacity: 0.45;
-  cursor: default;
-}
-
-.explorer-discover-pager__page {
-  color: inherit;
-  font: inherit;
-  text-align: center;
 }
 
 @media (min-width: 900px) {

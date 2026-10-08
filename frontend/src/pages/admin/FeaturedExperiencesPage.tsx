@@ -5,6 +5,7 @@ import { FeaturedMenuSelect } from "../../components/admin/FeaturedFieldControls
 import { AuthKeyIcon } from "../../components/auth/AuthKeyIcon";
 import { SuccessConfirmDialog } from "../../components/ui/SuccessConfirmDialog";
 import { Button } from "../../components/ui/Button";
+import { Pager } from "../../components/ui/Pager";
 import {
   generateFeaturedExperiences,
   saveEditorialFeatured,
@@ -605,19 +606,12 @@ function SuperAdminFeaturedPage() {
               </article>
             ))}
           </div>
-          <div className="featured-admin__pager">
-            <button type="button" onClick={() => setRankingPage(rankingCurrentPage - 1)} disabled={rankingCurrentPage <= 1}>
-              Anterior
-            </button>
-            <span>Página {rankingCurrentPage}</span>
-            <button
-              type="button"
-              onClick={() => setRankingPage(rankingCurrentPage + 1)}
-              disabled={rankingCurrentPage >= rankingPageCount}
-            >
-              Siguiente
-            </button>
-          </div>
+          <Pager
+            page={rankingCurrentPage}
+            pageCount={rankingPageCount}
+            onPageChange={setRankingPage}
+            label="Paginación del ranking"
+          />
           </>
         ) : null}
       </section>
@@ -669,15 +663,12 @@ function SuperAdminFeaturedPage() {
           })}
         </div>
         {featured.length > 0 ? (
-          <div className="featured-admin__pager">
-            <button type="button" onClick={() => setPage(currentPage - 1)} disabled={currentPage <= 1}>
-              Anterior
-            </button>
-            <span>Página {currentPage}</span>
-            <button type="button" onClick={() => setPage(currentPage + 1)} disabled={currentPage >= pageCount}>
-              Siguiente
-            </button>
-          </div>
+          <Pager
+            page={currentPage}
+            pageCount={pageCount}
+            onPageChange={setPage}
+            label="Paginación de experiencias destacadas"
+          />
         ) : null}
       </section>
     </section>

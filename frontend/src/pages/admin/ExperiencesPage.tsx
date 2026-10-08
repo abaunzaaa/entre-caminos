@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { ChevronDown, Clock, Compass, Plus, Search } from "lucide-react";
 import { Button } from "../../components/ui/Button";
+import { Pager } from "../../components/ui/Pager";
 import { KeyConfirmDialog } from "../../components/ui/KeyConfirmDialog";
 import { SuccessConfirmDialog } from "../../components/ui/SuccessConfirmDialog";
 import { AuthKeyIcon } from "../../components/auth/AuthKeyIcon";
@@ -73,14 +74,6 @@ function FilterMenu<T extends string>({
 
 const SUMMARY_PREVIEW_LIMIT = 3;
 const CATALOG_PAGE_SIZE = 6;
-
-function catalogPageNumbers(current: number, total: number) {
-  if (total <= 7) {
-    return Array.from({ length: total }, (_, index) => index + 1);
-  }
-  const pages = new Set([1, total, current - 1, current, current + 1]);
-  return [...pages].filter((page) => page >= 1 && page <= total).sort((left, right) => left - right);
-}
 
 function SummaryPreviewCard({ experience, meta }: { experience: Experience; meta: string }) {
   const photo = mediaUrl(experienceImages(experience)[0] ?? null);
@@ -315,7 +308,6 @@ export function ExperiencesPage() {
 
   const pageCount = Math.max(1, Math.ceil(visibleExperiences.length / CATALOG_PAGE_SIZE));
   const currentPage = Math.min(page, pageCount);
-  const pageNumbers = catalogPageNumbers(currentPage, pageCount);
   const pagedExperiences = visibleExperiences.slice(
     (currentPage - 1) * CATALOG_PAGE_SIZE,
     currentPage * CATALOG_PAGE_SIZE,
@@ -647,31 +639,12 @@ export function ExperiencesPage() {
               })}
               </div>
             </div>
-              <nav className="dash-exps-pager" aria-label="Paginación de experiencias">
-                <button type="button" onClick={() => goToPage(currentPage - 1)} disabled={currentPage <= 1}>
-                  Anterior
-                </button>
-                {pageNumbers.map((number, index) => {
-                  const previous = pageNumbers[index - 1];
-                  const gap = previous != null && number - previous > 1;
-                  return (
-                    <span key={number} className="dash-exps-pager__group">
-                      {gap ? <span className="dash-exps-pager__gap">…</span> : null}
-                      <button
-                        type="button"
-                        aria-current={number === currentPage ? "page" : undefined}
-                        className={number === currentPage ? "is-current" : undefined}
-                        onClick={() => goToPage(number)}
-                      >
-                        {number}
-                      </button>
-                    </span>
-                  );
-                })}
-                <button type="button" onClick={() => goToPage(currentPage + 1)} disabled={currentPage >= pageCount}>
-                  Siguiente
-                </button>
-              </nav>
+              <Pager
+                page={currentPage}
+                pageCount={pageCount}
+                onPageChange={goToPage}
+                label="Paginación de experiencias"
+              />
             </>
           )}
         </section>
