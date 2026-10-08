@@ -114,6 +114,7 @@ model User {
   conversations            Conversation[]
   folders                  Folder[]
   experienceFavorites      ExperienceFavorite[]
+  experienceVisits         ExperienceVisit[]
   experienceVisitorReviews ExperienceVisitorReview[]
   favoriteCollections      FavoriteCollection[]
   organizationProfile      OrganizationProfile?
@@ -220,6 +221,7 @@ model Experience {
   conversations            Conversation[]
   experienceDetailViews    ExperienceDetailView[]
   experienceFavorites      ExperienceFavorite[]
+  experienceVisits         ExperienceVisit[]
   experienceVisitorReviews ExperienceVisitorReview[]
   favoriteCollectionItems  FavoriteCollectionItem[]
 
@@ -336,6 +338,22 @@ model ExperienceFavorite {
   @@unique([experienceId, userId])
   @@index([experienceId])
   @@map("experience_favorites")
+}
+
+/// Experiencias que el usuario marcó como visitadas. Independiente de favoritos.
+model ExperienceVisit {
+  id           String   @id @default(uuid())
+  experienceId String   @map("experience_id")
+  userId       String   @map("user_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  experience Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([experienceId, userId])
+  @@index([experienceId])
+  @@index([userId, createdAt])
+  @@map("experience_visits")
 }
 
 model FavoriteCollection {

@@ -4,6 +4,7 @@ import { ExperienceEditorialView } from "../components/admin/ExperienceEditorial
 import { useGuide } from "../components/guide/GuideContext";
 import { useAuth } from "../hooks/useAuth";
 import { useFavoriteToggle } from "../hooks/useFavoriteToggle";
+import { useVisitedToggle } from "../hooks/useVisitedToggle";
 import { getNearbyExperiences, getPublicExperience, recordExperienceView } from "../services/catalog.service";
 import type { Experience } from "../types";
 import "../styles/admin-ui.css";
@@ -25,6 +26,9 @@ export function ExperienceDetailPage() {
   const favorite = useFavoriteToggle(id ?? "", {
     loginRedirectTo: id ? `/explorar/${id}` : "/explorar",
     experienceTitle: experience?.title,
+  });
+  const visited = useVisitedToggle(id ?? "", {
+    loginRedirectTo: id ? `/explorar/${id}` : "/explorar",
   });
 
   const fetchNearby = useCallback(async () => getNearbyExperiences(), []);
@@ -98,6 +102,9 @@ export function ExperienceDetailPage() {
         favoriteOn={favorite.favorited}
         favoriteBusy={favorite.busy}
         onFavoriteToggle={favorite.toggle}
+        visitedOn={visited.visited}
+        visitedBusy={visited.busy}
+        onVisitedToggle={visited.toggle}
         nearbyHref={(nearbyId) => `/explorar/${nearbyId}`}
         fetchNearby={fetchNearby}
         onConsultAi={() => {

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { Heart } from "lucide-react";
+import { VisitedCheckIcon } from "../icons/VisitedCheckIcon";
 import { ExperienceEditorialDossier, type ExperienceEditorialFact } from "./ExperienceEditorialDossier";
 import { ExperienceEditorialGallery } from "./ExperienceEditorialGallery";
 import { ExperienceEditorialNearby } from "./ExperienceEditorialNearby";
@@ -130,6 +131,9 @@ export type ExperienceEditorialViewProps = {
   favoriteOn?: boolean;
   favoriteBusy?: boolean;
   onFavoriteToggle?: () => void;
+  visitedOn?: boolean;
+  visitedBusy?: boolean;
+  onVisitedToggle?: () => void;
   nearbyHref?: (id: string) => string;
   fetchNearby?: () => Promise<Experience[]>;
   onConsultAi?: () => void;
@@ -218,11 +222,15 @@ export function ExperienceEditorialView({
   favoriteOn = false,
   favoriteBusy = false,
   onFavoriteToggle,
+  visitedOn = false,
+  visitedBusy = false,
+  onVisitedToggle,
   nearbyHref,
   fetchNearby,
   onConsultAi,
 }: ExperienceEditorialViewProps) {
   const isFavorite = favoriteOn;
+  const isVisited = visitedOn;
   const places = useMemo(() => placesFromExperience(experience), [experience]);
   const [placeIndex, setPlaceIndex] = useState(0);
   useEffect(() => {
@@ -242,7 +250,7 @@ export function ExperienceEditorialView({
   const showPlaceTabs = places.length > 1;
   const generalFacts = showPlaceTabs ? detailFacts.filter((fact) => !PLACE_FACT_LABELS.has(fact.label)) : detailFacts;
   const placeFacts = showPlaceTabs ? detailFacts.filter((fact) => PLACE_FACT_LABELS.has(fact.label)) : [];
-  const showTouristActions = mode === "tourist" && (onConsultAi || onFavoriteToggle);
+  const showTouristActions = mode === "tourist" && (onConsultAi || onFavoriteToggle || onVisitedToggle);
 
   return (
     <section
@@ -270,6 +278,23 @@ export function ExperienceEditorialView({
                 onClick={onConsultAi}
               >
                 Pregúntale a tu guía
+              </button>
+            ) : null}
+            {onVisitedToggle ? (
+              <button
+                type="button"
+                className={`dash-exps-editorial__visited${isVisited ? " is-on" : ""}`}
+                aria-pressed={isVisited}
+                aria-label={isVisited ? "Quitar de visitados" : "Marcar como visitado"}
+                disabled={visitedBusy}
+                onClick={() => {
+                  if (!visitedBusy) {
+                    onVisitedToggle();
+                  }
+                }}
+              >
+                <VisitedCheckIcon filled={isVisited} />
+                <span>{isVisited ? "Ya visité esta experiencia" : "Marcar como visitado"}</span>
               </button>
             ) : null}
             {onFavoriteToggle ? (

@@ -20,6 +20,8 @@ import paloma2 from "../assets/paloma 2.png";
 import { getCoverFeaturedExperiences, getMapPreviewExperiences, getPublicExperiences, getRecommendedExperiences } from "../services/catalog.service";
 import { listFavoriteIds } from "../services/favorites.service";
 import { onFavoritesChanged } from "../services/favorites-sync";
+import { listVisitedIds } from "../services/visits.service";
+import { onVisitsChanged } from "../services/visits-sync";
 import {
   COLOMBIA_DEPARTMENTS,
   findDepartment,
@@ -113,6 +115,7 @@ export function ExplorePage() {
   const [loading, setLoading] = useState(true);
   const [loaded, setLoaded] = useState(false);
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(() => new Set());
+  const [visitedIds, setVisitedIds] = useState<Set<string>>(() => new Set());
 
   useEffect(() => {
     if (!user) {
@@ -135,6 +138,33 @@ export function ExplorePage() {
     }
     loadFavorites();
     const unsubscribe = onFavoritesChanged(loadFavorites);
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!user) {
+      setVisitedIds(new Set());
+      return;
+    }
+    let cancelled = false;
+    function loadVisits() {
+      listVisitedIds()
+        .then((ids) => {
+          if (!cancelled) {
+            setVisitedIds(new Set(ids));
+          }
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setVisitedIds(new Set());
+          }
+        });
+    }
+    loadVisits();
+    const unsubscribe = onVisitsChanged(loadVisits);
     return () => {
       cancelled = true;
       unsubscribe();
@@ -392,6 +422,7 @@ export function ExplorePage() {
                     showManage={false}
                     viewHref={`/explorar/${experience.id}`}
                     favorited={favoriteIds.has(experience.id)}
+                    visited={visitedIds.has(experience.id)}
                     imagePriority={index === 0}
                   />
                 </div>

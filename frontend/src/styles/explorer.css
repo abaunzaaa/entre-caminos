@@ -1737,7 +1737,9 @@
 }
 
 .explorer-discover-card:has(.dash-exps-tile__fav:hover),
-.explorer-discover-card:has(.dash-exps-tile__fav:focus-visible) {
+.explorer-discover-card:has(.dash-exps-tile__fav:focus-visible),
+.explorer-discover-card:has(.dash-exps-tile__visited:hover),
+.explorer-discover-card:has(.dash-exps-tile__visited:focus-visible) {
   z-index: 12;
   position: relative;
 }
@@ -1799,7 +1801,8 @@
   font-size: 12px;
 }
 
-.explorer-discover-catalog .dash-exps-tile__fav {
+.explorer-discover-catalog .dash-exps-tile__fav,
+.explorer-discover-catalog .dash-exps-tile__visited {
   width: 28px;
   height: 28px;
 }
