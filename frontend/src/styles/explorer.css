@@ -5285,6 +5285,36 @@ button.fav-folder:focus-visible {
   line-height: 1.4;
 }
 
+.explorer-user-footer__rates {
+  position: absolute;
+  z-index: 2;
+  bottom: 0.15rem;
+  left: 0.4rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #24453d;
+  font-family: Poppins, Nunito, system-ui, sans-serif;
+  font-size: 0.6rem;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  text-align: left;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.explorer-user-footer__rates:hover,
+.explorer-user-footer__rates:focus-visible {
+  color: #24453d;
+}
+
+.explorer-user-footer__rates:focus-visible {
+  outline: 1px solid rgba(255, 255, 255, 0.35);
+  outline-offset: 2px;
+}
+
 @media (max-width: 720px) {
   .explorer-user-footer {
     min-height: 236px;
