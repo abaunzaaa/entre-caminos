@@ -33,11 +33,11 @@ export const DEFAULT_DISCOVER_FILTERS: DiscoverFiltersState = {
 };
 
 const PRICE_OPTIONS = [
-  { value: "", label: "Cualquier precio" },
-  { value: "0-50000", label: "Hasta $50.000" },
-  { value: "50000-100000", label: "$50.000 – $100.000" },
-  { value: "100000-200000", label: "$100.000 – $200.000" },
-  { value: "200000+", label: "Más de $200.000" },
+  { value: "", label: "Cualquier presupuesto", detail: "Cualquier presupuesto" },
+  { value: "Económico", label: "Económico", detail: "Económico · hasta $150.000" },
+  { value: "Moderado", label: "Moderado", detail: "Moderado · $150.001 – $300.000" },
+  { value: "Alto", label: "Alto", detail: "Alto · $300.001 – $500.000" },
+  { value: "Lujo", label: "Lujo", detail: "Lujo · más de $500.000" },
 ] as const;
 
 const PLAN_OPTIONS: Array<{ value: DiscoverPlan; label: string }> = [
@@ -48,28 +48,8 @@ const PLAN_OPTIONS: Array<{ value: DiscoverPlan; label: string }> = [
   { value: "friends", label: "Con amigos" },
 ];
 
-function priceNumber(value: string | number) {
-  const n = typeof value === "number" ? value : Number(String(value).replace(/[^\d.]/g, ""));
-  return Number.isFinite(n) ? n : 0;
-}
-
-function matchesPrice(experience: Experience, price: string) {
-  if (!price) {
-    return true;
-  }
-  const value = priceNumber(experience.price);
-  if (price === "0-50000") {
-    return value <= 50000;
-  }
-  if (price === "50000-100000") {
-    return value > 50000 && value <= 100000;
-  }
-  if (price === "100000-200000") {
-    return value > 100000 && value <= 200000;
-  }
-  if (price === "200000+") {
-    return value > 200000;
-  }
+/** El listado público clasifica el presupuesto en el servidor. */
+function matchesPrice(_experience: Experience, _price: string) {
   return true;
 }
 
@@ -187,6 +167,7 @@ type FilterSegmentProps = {
   wide?: boolean;
   roomy?: boolean;
   alignEnd?: boolean;
+  menuMinWidth?: number;
 };
 
 type MenuCoords = {
@@ -196,7 +177,17 @@ type MenuCoords = {
   maxHeight: number;
 };
 
-function FilterSegment({ label, valueLabel, open, onToggle, children, wide, roomy, alignEnd }: FilterSegmentProps) {
+function FilterSegment({
+  label,
+  valueLabel,
+  open,
+  onToggle,
+  children,
+  wide,
+  roomy,
+  alignEnd,
+  menuMinWidth,
+}: FilterSegmentProps) {
   const menuId = useId();
   const triggerRef = useRef<HTMLButtonElement>(null);
   const [coords, setCoords] = useState<MenuCoords | null>(null);
@@ -207,15 +198,15 @@ function FilterSegment({ label, valueLabel, open, onToggle, children, wide, room
       return;
     }
     const rect = trigger.getBoundingClientRect();
-    const minWidth = Math.max(rect.width, 184);
-    const maxWidth = Math.min(288, window.innerWidth - 16);
-    const width = Math.min(minWidth, maxWidth);
+    const preferred = Math.max(rect.width, menuMinWidth ?? 184);
+    const maxWidth = Math.min(menuMinWidth ?? 288, window.innerWidth - 16);
+    const width = Math.min(preferred, maxWidth);
     let left = alignEnd ? rect.right - width : rect.left;
     left = Math.max(8, Math.min(left, window.innerWidth - width - 8));
     const top = rect.bottom + 8;
     const maxHeight = Math.max(120, Math.min(248, window.innerHeight - top - 12));
     setCoords({ top, left, minWidth: width, maxHeight });
-  }, [alignEnd, open]);
+  }, [alignEnd, menuMinWidth, open]);
 
   useLayoutEffect(() => {
     if (!open) {
@@ -237,7 +228,7 @@ function FilterSegment({ label, valueLabel, open, onToggle, children, wide, room
         top: coords.top,
         left: coords.left,
         minWidth: coords.minWidth,
-        maxWidth: Math.min(288, window.innerWidth - 16),
+        maxWidth: menuMinWidth ? coords.minWidth : Math.min(288, window.innerWidth - 16),
         maxHeight: coords.maxHeight,
         zIndex: 99999,
       } as CSSProperties)
@@ -378,7 +369,7 @@ export function ExplorerDiscoverFilters({
   const cityLabel = value.city || "Todas";
   const categoryLabel =
     categories.find((item) => item.id === value.categoryId)?.name || "Todas";
-  const priceLabel = PRICE_OPTIONS.find((item) => item.value === value.price)?.label || "Cualquier precio";
+  const priceLabel = PRICE_OPTIONS.find((item) => item.value === value.price)?.label || "Cualquier presupuesto";
   const planLabel = PLAN_OPTIONS.find((item) => item.value === value.plan)?.label || "Cualquier plan";
   const canClearSearch = searchActive || Boolean(searchDraft.trim());
 
@@ -442,11 +433,12 @@ export function ExplorerDiscoverFilters({
         <span className="explorer-filter-bar__divider" aria-hidden="true" />
 
         <FilterSegment
-          label="Precio"
+          label="Presupuesto"
           valueLabel={priceLabel}
           open={openKey === "price"}
           onToggle={() => toggle("price")}
           wide
+          menuMinWidth={312}
         >
           {PRICE_OPTIONS.map((option) => (
             <button
@@ -456,7 +448,7 @@ export function ExplorerDiscoverFilters({
               className={value.price === option.value ? "is-active" : ""}
               onClick={() => patch({ price: option.value })}
             >
-              {option.label}
+              {option.detail}
             </button>
           ))}
         </FilterSegment>

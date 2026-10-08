@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { FALLBACK_USD_TO_COP } from "../../src/config/exchange-rates.js";
 import { filterCatalogItems, paginateCatalog, type CatalogListItem } from "../../src/services/public-catalog.js";
+import { getBudgetLevel, normalizePriceToCOP } from "../../src/utils/budget.js";
 
 function item(partial: Partial<CatalogListItem> & Pick<CatalogListItem, "id" | "title">): CatalogListItem {
   return {
@@ -7,6 +9,7 @@ function item(partial: Partial<CatalogListItem> & Pick<CatalogListItem, "id" | "
     categoryId: "cat-1",
     categoryName: "Cultural",
     price: 80000,
+    currency: "COP",
     location: "Centro, Medellín, Antioquia",
     duration: null,
     durationValue: 2,
@@ -84,5 +87,49 @@ describe("public catalog page", () => {
       "food",
     ]);
     expect(filterCatalogItems(catalog, { q: "Ruta", city: "Medellín" }).map((entry) => entry.id)).toEqual(["food"]);
+  });
+
+  it("combina presupuesto con ciudad, categoría y búsqueda", () => {
+    const local = item({
+      id: "local",
+      title: "Taller de cerámica",
+      price: 100_000,
+      currency: "COP",
+      categoryId: "food",
+      location: "Centro, Medellín, Antioquia",
+      keywords: "cerámica",
+    });
+    const dollars = item({
+      id: "dollars",
+      title: "Plan en dólares",
+      price: 80,
+      currency: "USD",
+      categoryId: "food",
+      location: "Centro, Medellín, Antioquia",
+    });
+    const luxury = item({
+      id: "luxury",
+      title: "Noche de lujo",
+      price: 650_000,
+      currency: "COP",
+      categoryId: "nature",
+      location: "Chapinero, Bogotá, Cundinamarca",
+    });
+    const catalog = [local, dollars, luxury];
+    const dollarLevel = getBudgetLevel(80, "USD");
+
+    expect(normalizePriceToCOP(80, "USD")).toBe(80 * FALLBACK_USD_TO_COP);
+    expect(dollarLevel).not.toBe("Económico");
+    expect(filterCatalogItems(catalog, { price: "Económico", city: "Medellín" }).map((entry) => entry.id)).toEqual([
+      "local",
+    ]);
+    expect(filterCatalogItems(catalog, { price: "Económico", categoryId: "food" }).map((entry) => entry.id)).toEqual([
+      "local",
+    ]);
+    expect(filterCatalogItems(catalog, { price: "Económico", q: "cerámica" }).map((entry) => entry.id)).toEqual([
+      "local",
+    ]);
+    expect(filterCatalogItems(catalog, { price: dollarLevel ?? "" }).map((entry) => entry.id)).toEqual(["dollars"]);
+    expect(filterCatalogItems(catalog, {}).map((entry) => entry.id)).toEqual(["local", "dollars", "luxury"]);
   });
 });

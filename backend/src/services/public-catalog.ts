@@ -1,5 +1,7 @@
-import { ONBOARDING_COMPANION_ALIASES, ONBOARDING_PLACE_ALIASES } from "../config/onboarding.js";
+import { ensureCopRates } from "../config/exchange-rates.js";
+import { ONBOARDING_BUDGETS, ONBOARDING_COMPANION_ALIASES, ONBOARDING_PLACE_ALIASES } from "../config/onboarding.js";
 import { prisma } from "../database/prisma.js";
+import { getBudgetLevel, isBudgetLevel } from "../utils/budget.js";
 
 const DEPARTMENT_NAMES = [
   "Amazonas",
@@ -38,11 +40,10 @@ const DEPARTMENT_NAMES = [
 ];
 
 const PLANS = ["family", "couple", "solo", "friends"] as const;
-const PRICES = ["0-50000", "50000-100000", "100000-200000", "200000+"] as const;
 const DURATIONS = ["short", "medium", "half", "day"] as const;
 
 export type PublicCatalogPlan = (typeof PLANS)[number];
-export type PublicCatalogPrice = (typeof PRICES)[number];
+export type PublicCatalogPrice = (typeof ONBOARDING_BUDGETS)[number];
 export type PublicCatalogDuration = (typeof DURATIONS)[number];
 
 export type PublicCatalogFilters = {
@@ -63,6 +64,7 @@ export type CatalogListItem = {
   categoryName: string;
   categorySearch?: string;
   price: number;
+  currency?: string | null;
   location: string;
   duration: string | null;
   durationValue: number | null;
@@ -124,28 +126,14 @@ export function municipalityOf(location: string) {
   return "";
 }
 
-function priceNumber(value: number) {
-  return Number.isFinite(value) ? value : 0;
-}
-
-function matchesPrice(price: number, band: string) {
+function matchesPrice(item: CatalogListItem, band: string) {
   if (!band) {
     return true;
   }
-  const value = priceNumber(price);
-  if (band === "0-50000") {
-    return value <= 50000;
+  if (!isBudgetLevel(band)) {
+    return false;
   }
-  if (band === "50000-100000") {
-    return value > 50000 && value <= 100000;
-  }
-  if (band === "100000-200000") {
-    return value > 100000 && value <= 200000;
-  }
-  if (band === "200000+") {
-    return value > 200000;
-  }
-  return true;
+  return getBudgetLevel(item.price, item.currency) === band;
 }
 
 function durationMinutes(item: CatalogListItem) {
@@ -267,7 +255,7 @@ export function filterCatalogItems(items: CatalogListItem[], filters: PublicCata
     if (filters.categoryId && item.categoryId !== filters.categoryId) {
       return false;
     }
-    if (!matchesPrice(item.price, filters.price ?? "")) {
+    if (!matchesPrice(item, filters.price ?? "")) {
       return false;
     }
     if (!matchesDuration(item, filters.duration ?? "")) {
@@ -305,6 +293,7 @@ export function paginateCatalog<T>(items: T[], page: number, limit: number) {
 const catalogCategorySelect = { id: true, name: true, icon: true } as const;
 
 export async function listPublicCatalogPage(input: PublicCatalogFilters & { page: number; limit: number }) {
+  const pendingRates = ensureCopRates();
   const rows = await prisma.experience.findMany({
     relationLoadStrategy: "join",
     where: { status: "PUBLISHED" },
@@ -333,6 +322,7 @@ export async function listPublicCatalogPage(input: PublicCatalogFilters & { page
       },
     },
   });
+  await pendingRates;
   const items: CatalogListItem[] = rows.map((row) => {
     const orderedNames = [...(row.experienceCategories ?? [])]
       .sort((left, right) => left.position - right.position)
@@ -355,6 +345,7 @@ export async function listPublicCatalogPage(input: PublicCatalogFilters & { page
       categoryName: row.category?.name ?? "",
       categorySearch: orderedNames.length ? orderedNames.join(" ") : row.category?.name ?? "",
       price: Number(row.price),
+      currency: row.currency,
       location: row.location,
       duration: row.duration,
       durationValue: row.durationValue,
