@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { Camera, KeyRound, LogOut, Building2, UserRound } from "lucide-react";
+import { Camera, LogOut, Building2, UserRound } from "lucide-react";
 import { AuthKeyIcon } from "../auth/AuthKeyIcon";
 import { Button } from "../ui/Button";
 import { useAuth } from "../../hooks/useAuth";
@@ -391,20 +391,6 @@ export function AdminUserMenu({
             {isOrgAdmin ? <Building2 size={18} strokeWidth={1.7} /> : <UserRound size={18} strokeWidth={1.7} />}
             {profileLabel}
           </button>
-          {isExplorerUser || isOrgAdmin ? (
-            <button
-              type="button"
-              className="admin-usermenu__item"
-              role="menuitem"
-              onClick={() => {
-                setOpen(false);
-                navigate("/cambiar-contrasena");
-              }}
-            >
-              <KeyRound size={18} strokeWidth={1.7} />
-              Cambiar contraseña
-            </button>
-          ) : null}
           <button
             type="button"
             className="admin-usermenu__item admin-usermenu__item--logout"

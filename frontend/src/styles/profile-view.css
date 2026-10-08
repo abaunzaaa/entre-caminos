@@ -890,8 +890,36 @@
 
 .profile-edit-modal .onboarding-account > .onboarding-field:first-child,
 .profile-edit-modal .onboarding-account > .onboarding-error,
-.profile-edit-modal .onboarding-account > .onboarding-location {
+.profile-edit-modal .onboarding-account > .onboarding-location,
+.profile-edit-modal .profile-identity-row {
   grid-column: 1 / -1;
+}
+
+.profile-edit-modal .profile-identity-row {
+  display: grid;
+  grid-template-columns: minmax(0, 2.25fr) minmax(6.6rem, 0.9fr) minmax(11rem, 1.75fr);
+  gap: 10px 12px;
+  align-items: start;
+  overflow: visible;
+}
+
+.profile-edit-modal .profile-identity-row__phone,
+.profile-edit-modal .profile-identity-row__age,
+.profile-edit-modal .profile-identity-row__gender {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.profile-edit-modal .profile-identity-row__phone:has(.profile-dial__menu),
+.profile-edit-modal .profile-identity-row__gender:has(.is-open) {
+  position: relative;
+  z-index: 8;
+}
+
+.profile-edit-modal .profile-identity-row__age .onboarding-control input {
+  white-space: nowrap;
 }
 
 .profile-edit-modal .onboarding-field {
@@ -1045,13 +1073,121 @@
 }
 
 .profile-edit-block__hint,
-.profile-edit-modal .onboarding-limit,
-.profile-edit-modal .onboarding-error {
+.profile-edit-modal .onboarding-limit {
   margin: 0.2rem 0 0.5rem;
   color: #8b9893;
   font-size: 0.72rem;
   font-weight: 400;
   line-height: 1.35;
+}
+
+.profile-edit-modal .onboarding-error {
+  margin: 0.2rem 0 0.5rem;
+  color: var(--ob-error, #b56b63);
+  font-size: 0.72rem;
+  font-weight: 400;
+  line-height: 1.35;
+  text-align: left;
+}
+
+.profile-edit-modal__footer .onboarding-error {
+  text-align: center;
+}
+
+.profile-edit-modal .profile-phone-field,
+.profile-edit-modal .profile-phone-row,
+.profile-edit-modal .profile-dial {
+  overflow: visible;
+}
+
+.profile-edit-modal .profile-phone-field {
+  position: relative;
+  z-index: 2;
+}
+
+.profile-edit-modal .profile-phone-field:has(.profile-dial__menu) {
+  z-index: 8;
+}
+
+.profile-edit-modal .profile-phone-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.profile-edit-modal .profile-phone-row input {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.profile-edit-modal .profile-dial {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+.profile-edit-modal .profile-dial__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin: 0;
+  padding: 0 2px 0 0;
+  border: 0;
+  background: transparent;
+  color: #1c332e;
+  font: inherit;
+  font-size: 0.84rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.profile-edit-modal .profile-dial__trigger svg {
+  display: block;
+}
+
+.profile-edit-modal .profile-dial__trigger:focus-visible {
+  outline: 2px solid rgba(41, 73, 66, 0.35);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.profile-edit-modal .profile-dial__menu {
+  position: absolute;
+  z-index: 9;
+  top: calc(100% + 8px);
+  left: 0;
+  width: max-content;
+  min-width: 210px;
+  max-height: 220px;
+  margin: 0;
+  padding: 4px;
+  overflow: auto;
+  list-style: none;
+  border: 1px solid #d5ddd8;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 12px 28px rgba(28, 51, 46, 0.12);
+}
+
+.profile-edit-modal .profile-dial__option {
+  width: 100%;
+  margin: 0;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #1c332e;
+  font: inherit;
+  font-size: 0.8rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.profile-edit-modal .profile-dial__option.is-selected,
+.profile-edit-modal .profile-dial__option:hover {
+  background: #e6eee9;
 }
 
 .profile-edit-modal .onboarding-chips {
@@ -1135,7 +1271,8 @@
   }
 
   .profile-edit-modal .onboarding-account,
-  .profile-edit-modal .location-grid {
+  .profile-edit-modal .location-grid,
+  .profile-edit-modal .profile-identity-row {
     grid-template-columns: 1fr;
   }
 

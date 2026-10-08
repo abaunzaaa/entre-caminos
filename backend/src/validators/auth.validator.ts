@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { PASSWORD_POLICY } from "../config/constants.js";
+import { profilePhoneError } from "../utils/profile-phone.js";
 
 export const passwordSchema = z
   .string()
@@ -102,22 +103,21 @@ const optionalProfileText = (max: number, tooLong: string) =>
       return trimmed.length > 0 ? trimmed : null;
     });
 
-export function isValidColombianPhone(value: string) {
-  const compact = value.replace(/[\s.-]/g, "");
-  const national = compact.startsWith("+57") ? compact.slice(3) : compact;
-  return /^3\d{9}$/.test(national) || /^60\d{8}$/.test(national);
-}
-
 export const updateProfileSchema = z.object({
   name: z
     .string({ required_error: "El nombre es obligatorio" })
     .trim()
     .min(2, "El nombre debe tener al menos 2 caracteres")
     .max(80, "El nombre es demasiado largo"),
-  phone: optionalProfileText(20, "El teléfono es demasiado largo").refine(
-    (value) => value === undefined || value === null || isValidColombianPhone(value),
-    "Ingresa un teléfono colombiano válido. Ejemplo: 300 123 4567",
-  ),
+  phone: optionalProfileText(20, "El teléfono es demasiado largo").superRefine((value, ctx) => {
+    if (value == null) {
+      return;
+    }
+    const message = profilePhoneError(value);
+    if (message) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message });
+    }
+  }),
   country: optionalProfileText(80, "El país es demasiado largo"),
   department: optionalProfileText(80, "El departamento es demasiado largo"),
   city: optionalProfileText(80, "La ciudad es demasiado larga"),

@@ -24,6 +24,18 @@ const TOKEN_ERROR_MESSAGES = new Set([
 
 export const SESSION_ENDED_MESSAGE = "Tu sesión ha finalizado. Por favor inicia sesión nuevamente.";
 
+export function getApiErrorFields(err: unknown) {
+  const body = err as ApiErrorBody;
+  const details = body.response?.data?.error?.details;
+  if (!Array.isArray(details)) {
+    return [];
+  }
+  return details.filter(
+    (item): item is { field: string; message: string } =>
+      Boolean(item?.field && item.message && !isTechnicalMessage(item.message)),
+  );
+}
+
 export function getApiErrorMessage(err: unknown, fallback = "Ocurrió un error") {
   if (axios.isAxiosError(err) && !err.response) {
     return "No hay conexión con el servidor. Comprueba tu conexión e intenta de nuevo.";
