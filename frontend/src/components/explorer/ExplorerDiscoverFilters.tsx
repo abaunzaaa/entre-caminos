@@ -12,6 +12,7 @@ import {
 import { createPortal } from "react-dom";
 import { ChevronDown, X } from "lucide-react";
 import { parseStoredLocation } from "../../data/colombia-locations";
+import { getPreferenceLabel } from "../../data/onboarding";
 import type { Experience } from "../../types";
 import { experienceCategoryNames } from "../../utils/experience-categories";
 
@@ -94,10 +95,26 @@ function matchesPlan(experience: Experience, plan: DiscoverPlan) {
 
 function normalizeSearchText(value: string) {
   return value
-    .trim()
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function keywordText(experience: Experience) {
+  const places = (experience.locations ?? []).flatMap((place) => [
+    place.municipality,
+    place.department,
+    place.address,
+    place.howToGetThere,
+  ]);
+  const interests = (experience.experienceInterests ?? []).map((link) => link.interest?.name);
+  const preferences = [...(experience.environments ?? []), ...(experience.idealFor ?? [])].flatMap((value) => [
+    value,
+    getPreferenceLabel(value),
+  ]);
+  return [...places, experience.howToGetThere, ...interests, ...preferences].filter(Boolean).join(" ");
 }
 
 function matchesQuery(experience: Experience, query: string) {
@@ -115,6 +132,7 @@ function matchesQuery(experience: Experience, query: string) {
       place.department,
       place.municipality,
       experience.description || "",
+      keywordText(experience),
     ].join(" "),
   );
 
@@ -424,7 +442,7 @@ export function ExplorerDiscoverFilters({
         <span className="explorer-filter-bar__divider" aria-hidden="true" />
 
         <FilterSegment
-          label="Precio (COP)"
+          label="Precio"
           valueLabel={priceLabel}
           open={openKey === "price"}
           onToggle={() => toggle("price")}

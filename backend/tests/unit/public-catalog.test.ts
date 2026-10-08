@@ -46,4 +46,43 @@ describe("public catalog page", () => {
     expect(page.items.every((entry) => entry.categoryId === "cultural")).toBe(true);
     expect(paginateCatalog(filtered, 1, 8).page).toBe(1);
   });
+
+  it("busca por palabras clave en campos ya guardados y se combina con los filtros", () => {
+    const birds = item({
+      id: "birds",
+      title: "Avistamiento de aves en Parque Arví",
+      description: "Recorrido de observación.",
+      categoryId: "nature",
+      categoryName: "Naturaleza",
+      categorySearch: "Naturaleza",
+      location: "Parque Arví",
+      keywords: "Medellín Antioquia Talleres Fotografía",
+    });
+    const food = item({
+      id: "food",
+      title: "Ruta gastronómica",
+      description: "Prueba de sabores locales.",
+      categoryId: "food",
+      categoryName: "Gastronomía",
+      categorySearch: "Gastronomía",
+      location: "Centro, Medellín, Antioquia",
+      keywords: "Medellín Antioquia Bogotá Cundinamarca cerámica",
+    });
+    const catalog = [birds, food];
+
+    expect(filterCatalogItems(catalog, { q: "Avistamiento de aves en Parque Arví" }).map((entry) => entry.id)).toEqual([
+      "birds",
+    ]);
+    expect(filterCatalogItems(catalog, { q: "Medellín" }).map((entry) => entry.id).sort()).toEqual(["birds", "food"]);
+    expect(filterCatalogItems(catalog, { q: "medellin" }).map((entry) => entry.id).sort()).toEqual(["birds", "food"]);
+    expect(filterCatalogItems(catalog, { q: "  gastronomia  " }).map((entry) => entry.id)).toEqual(["food"]);
+    expect(filterCatalogItems(catalog, { q: "Talleres" }).map((entry) => entry.id)).toEqual(["birds"]);
+    expect(filterCatalogItems(catalog, { q: "Bogotá" }).map((entry) => entry.id)).toEqual(["food"]);
+    expect(filterCatalogItems(catalog, { q: "ceram" }).map((entry) => entry.id)).toEqual(["food"]);
+    expect(filterCatalogItems(catalog, { q: "xyznoexiste" })).toEqual([]);
+    expect(filterCatalogItems(catalog, { q: "Medellín", categoryId: "food" }).map((entry) => entry.id)).toEqual([
+      "food",
+    ]);
+    expect(filterCatalogItems(catalog, { q: "Ruta", city: "Medellín" }).map((entry) => entry.id)).toEqual(["food"]);
+  });
 });

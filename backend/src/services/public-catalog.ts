@@ -1,3 +1,4 @@
+import { ONBOARDING_COMPANION_ALIASES, ONBOARDING_PLACE_ALIASES } from "../config/onboarding.js";
 import { prisma } from "../database/prisma.js";
 
 const DEPARTMENT_NAMES = [
@@ -67,6 +68,8 @@ export type CatalogListItem = {
   durationValue: number | null;
   durationUnit: "MINUTES" | "HOURS" | "DAYS" | null;
   createdAt: Date;
+  /** Textos ya guardados que también entran en la búsqueda por palabras clave. */
+  keywords?: string;
 };
 
 function fold(value: string) {
@@ -74,7 +77,25 @@ function fold(value: string) {
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
+    .replace(/\s+/g, " ")
     .trim();
+}
+
+function labelsByStoredValue(aliases: Record<string, string>) {
+  const labels = new Map<string, string[]>();
+  for (const [label, value] of Object.entries(aliases)) {
+    const current = labels.get(value) ?? [];
+    current.push(label);
+    labels.set(value, current);
+  }
+  return labels;
+}
+
+const PLACE_LABELS = labelsByStoredValue(ONBOARDING_PLACE_ALIASES);
+const COMPANION_LABELS = labelsByStoredValue(ONBOARDING_COMPANION_ALIASES);
+
+function withVisibleLabels(values: string[], labels: Map<string, string[]>) {
+  return values.flatMap((value) => [value, ...(labels.get(value) ?? [])]);
 }
 
 function isDepartment(value: string) {
@@ -202,7 +223,14 @@ function matchesQuery(item: CatalogListItem, query: string) {
   }
   const city = municipalityOf(item.location);
   const haystack = fold(
-    [item.title, item.categorySearch || item.categoryName, item.location, city, item.description].join(" "),
+    [
+      item.title,
+      item.categorySearch || item.categoryName,
+      item.location,
+      city,
+      item.description,
+      item.keywords ?? "",
+    ].join(" "),
   );
   if (haystack.includes(normalizedQuery)) {
     return true;
@@ -290,12 +318,34 @@ export async function listPublicCatalogPage(input: PublicCatalogFilters & { page
           category: { select: catalogCategorySelect },
         },
       },
+      experienceInterests: {
+        orderBy: { position: "asc" },
+        select: { interest: { select: { name: true } } },
+      },
+      locations: {
+        orderBy: { position: "asc" },
+        select: {
+          municipality: true,
+          department: true,
+          address: true,
+          howToGetThere: true,
+        },
+      },
     },
   });
   const items: CatalogListItem[] = rows.map((row) => {
     const orderedNames = [...(row.experienceCategories ?? [])]
       .sort((left, right) => left.position - right.position)
       .map((link) => link.category?.name?.trim() || "")
+      .filter(Boolean);
+    const placeText = (row.locations ?? []).flatMap((place) => [
+      place.municipality,
+      place.department,
+      place.address,
+      place.howToGetThere,
+    ]);
+    const interestNames = (row.experienceInterests ?? [])
+      .map((link) => link.interest?.name?.trim() || "")
       .filter(Boolean);
     return {
       id: row.id,
@@ -310,6 +360,16 @@ export async function listPublicCatalogPage(input: PublicCatalogFilters & { page
       durationValue: row.durationValue,
       durationUnit: row.durationUnit,
       createdAt: row.createdAt,
+      keywords: [
+        ...placeText,
+        row.howToGetThere,
+        ...interestNames,
+        ...withVisibleLabels(row.environments ?? [], PLACE_LABELS),
+        ...withVisibleLabels(row.idealFor ?? [], COMPANION_LABELS),
+      ]
+        .map((value) => value?.trim() || "")
+        .filter(Boolean)
+        .join(" "),
     };
   });
   const facets = catalogFacets(items);
