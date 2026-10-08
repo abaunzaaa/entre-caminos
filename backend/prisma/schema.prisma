@@ -117,6 +117,10 @@ model User {
   experienceVisitorReviews ExperienceVisitorReview[]
   favoriteCollections      FavoriteCollection[]
   organizationProfile      OrganizationProfile?
+  journeyBoard             JourneyBoard?
+  journeyPlans             JourneyPlan[]
+  journeyDecorations       JourneyDecoration[]
+  journeyMemories          JourneyMemory[]
 
   @@index([roleId])
   @@index([status])
@@ -222,6 +226,8 @@ model Experience {
   experienceFavorites      ExperienceFavorite[]
   experienceVisitorReviews ExperienceVisitorReview[]
   favoriteCollectionItems  FavoriteCollectionItem[]
+  journeyPlans             JourneyPlan[]
+  journeyMemories          JourneyMemory[]
 
   @@index([status])
   @@index([categoryId])
@@ -572,4 +578,105 @@ model Contact {
   @@index([status])
   @@index([type])
   @@map("contacts")
+}
+
+/// Estilo del planner de un usuario. No guarda estampitas del pasaporte.
+model JourneyBoard {
+  userId    String   @id @map("user_id")
+  theme     String   @default("olive")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("journey_boards")
+}
+
+/// Plan personal. No es una reserva confirmada.
+model JourneyPlan {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  experienceId String   @map("experience_id")
+  plannedAt    DateTime @map("planned_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  experience Experience      @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+  memory     JourneyMemory?
+
+  @@index([userId, plannedAt])
+  @@index([experienceId])
+  @@map("journey_plans")
+}
+
+model JourneyDecoration {
+  id         String   @id @default(uuid())
+  userId     String   @map("user_id")
+  kind       String
+  stickerKey String?  @map("sticker_key")
+  text       String?
+  color      String?
+  day        String?
+  x          Float    @default(12)
+  y          Float    @default(12)
+  rotation   Float    @default(0)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("journey_decorations")
+}
+
+model JourneyMemory {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  title        String
+  happenedOn   DateTime @map("happened_on") @db.Date
+  story        String   @default("")
+  background   String   @default("cream")
+  experienceId String?  @map("experience_id")
+  planId       String?  @unique @map("plan_id")
+  attended     Boolean  @default(false)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user       User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  experience Experience?            @relation(fields: [experienceId], references: [id], onDelete: SetNull)
+  plan       JourneyPlan?           @relation(fields: [planId], references: [id], onDelete: SetNull)
+  photos     JourneyMemoryPhoto[]
+  stickers   JourneyMemorySticker[]
+
+  @@index([userId, happenedOn])
+  @@index([experienceId])
+  @@map("journey_memories")
+}
+
+model JourneyMemoryPhoto {
+  id        String   @id @default(uuid())
+  memoryId  String   @map("memory_id")
+  url       String
+  publicId  String?  @map("public_id")
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  memory JourneyMemory @relation(fields: [memoryId], references: [id], onDelete: Cascade)
+
+  @@index([memoryId, sortOrder])
+  @@map("journey_memory_photos")
+}
+
+model JourneyMemorySticker {
+  id         String @id @default(uuid())
+  memoryId   String @map("memory_id")
+  stickerKey String @map("sticker_key")
+  x          Float  @default(18)
+  y          Float  @default(18)
+  rotation   Float  @default(-6)
+
+  memory JourneyMemory @relation(fields: [memoryId], references: [id], onDelete: Cascade)
+
+  @@index([memoryId])
+  @@map("journey_memory_stickers")
 }

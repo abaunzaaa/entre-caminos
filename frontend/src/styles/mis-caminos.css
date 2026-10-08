@@ -1,0 +1,713 @@
+.caminos {
+  --ivory: #f5f1e8;
+  --paper: #f5f1e8;
+  --soft: #fcfaf5;
+  --olive: #3d4028;
+  --sage: #9da48b;
+  --ink: #40392f;
+  --warm: #565b42;
+  --beige: #d6c7ac;
+  min-height: 100vh;
+  padding: var(--explorer-nav-height, 4.75rem) 0 5rem;
+  background: #ffffff;
+  color: var(--ink);
+  font-family: Poppins, Nunito, system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.caminos * { box-sizing: border-box; }
+
+.caminos-wrap {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 1.35rem clamp(1.2rem, 4vw, 3.2rem) 0;
+}
+
+.caminos-intro {
+  background: #ffffff;
+  padding: 0.15rem 0 1.8rem;
+}
+
+.caminos-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
+  gap: clamp(1.4rem, 3.2vw, 2.8rem);
+  align-items: center;
+  padding: 0.15rem 0 0.2rem;
+}
+
+.caminos-hero__stage {
+  position: relative;
+  height: clamp(22rem, 34vw, 28rem);
+  min-height: 22rem;
+}
+
+.caminos-hero__base,
+.caminos-hero__photo {
+  margin: 0;
+  overflow: hidden;
+  background: #e4eaf0;
+}
+
+.caminos-hero__base {
+  position: absolute;
+  top: 4%;
+  left: 0;
+  width: 76%;
+  height: 92%;
+}
+
+.caminos-hero__base img,
+.caminos-hero__photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.caminos-hero__base img {
+  object-position: center 68%;
+  filter: saturate(0.9) brightness(1.04);
+}
+
+.caminos-hero__base::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.caminos-hero__photo {
+  position: absolute;
+  top: 18%;
+  right: 6%;
+  z-index: 1;
+  width: 48%;
+  height: 58%;
+  box-shadow: 0 14px 32px rgba(28, 51, 46, 0.1);
+}
+
+.caminos-hero__photo img {
+  object-position: center 62%;
+}
+
+.caminos-hero__copy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  text-align: center;
+}
+
+.caminos-hero h1 {
+  margin: 0;
+  max-width: none;
+  color: #1c332e;
+  font-family: Poppins, Nunito, system-ui, sans-serif;
+  font-size: clamp(1.7rem, 2.6vw, 2.15rem);
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  line-height: 1.28;
+  text-align: center;
+  text-transform: uppercase;
+  text-wrap: pretty;
+}
+
+.caminos-hero__lead {
+  max-width: 28rem;
+  margin: 0.75rem 0 0;
+  color: #6b746f;
+  font-family: Poppins, Nunito, system-ui, sans-serif;
+  font-size: clamp(0.75rem, 1.05vw, 0.875rem);
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  line-height: 1.5;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.caminos-intro button.tourist-hero__cta {
+  margin-top: 1.15rem;
+  border: 0;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.68rem;
+}
+
+.caminos-space {
+  margin-top: 2.6rem;
+  padding-top: 2.15rem;
+  border-top: 1px solid rgba(41, 73, 66, 0.14);
+  text-align: center;
+}
+
+.caminos-space__mark {
+  margin: 0;
+  font-family: "Great Vibes", cursive;
+  font-size: 1.85rem;
+  font-weight: 400;
+  line-height: 1;
+  color: #6e8f88;
+}
+
+.caminos-space h2 {
+  margin: 0.35rem auto 1.7rem;
+  max-width: 13em;
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: clamp(1.9rem, 3vw, 2.65rem);
+  font-weight: 500;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  color: #1c332e;
+}
+
+.caminos-space__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.4rem 2.4rem;
+  max-width: 52rem;
+  margin: 0 auto;
+}
+
+.caminos-space article {
+  min-width: 0;
+}
+
+.caminos-space figure {
+  margin: 0 0 0.85rem;
+  overflow: hidden;
+  background: #e4eaf0;
+}
+
+.caminos-space img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+}
+
+.caminos-space article:first-child img {
+  object-position: center 38%;
+}
+
+.caminos-space article:last-child img {
+  object-position: center 46%;
+}
+
+.caminos-space h3 {
+  margin: 0;
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 1.45rem;
+  font-weight: 500;
+  line-height: 1.2;
+  color: #1c332e;
+}
+
+.caminos-space article p {
+  max-width: 18.5rem;
+  margin: 0.4rem auto 0;
+  font-family: Poppins, Nunito, system-ui, sans-serif;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: #3d524c;
+}
+
+.caminos-intro button.explorer-empty__cta {
+  margin-top: 0.85rem;
+  cursor: pointer;
+}
+
+#caminos-panel {
+  scroll-margin-top: calc(var(--explorer-nav-height, 4.75rem) + 0.75rem);
+}
+
+.caminos-kicker {
+  margin: 0 0 0.8rem;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--warm);
+}
+
+.caminos-section h2,
+.caminos-panel h3,
+.caminos-ticket h3,
+.caminos-album h3,
+.caminos-editor h3 {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-weight: 500;
+  color: var(--ink);
+  letter-spacing: -0.03em;
+}
+
+.caminos-ticket__photo img,
+.caminos-day__shot,
+.caminos-album__shot img,
+.caminos-spread img,
+.caminos-hits img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.caminos-section__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+  align-items: flex-end;
+  margin-bottom: 1.4rem;
+}
+
+.caminos-section h2 {
+  margin: 0;
+  font-size: clamp(2.6rem, 4vw, 3.4rem);
+  line-height: 0.95;
+}
+
+.caminos-section__lead {
+  max-width: 28rem;
+  margin: 0.45rem 0 0;
+  color: var(--warm);
+  font-size: 16px;
+}
+
+.caminos-actions { display: flex; flex-wrap: wrap; gap: 0.7rem; align-items: center; }
+
+.caminos-btn,
+.caminos-quiet,
+.caminos-text {
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: 500 14px/1 Poppins, Inter, sans-serif;
+  cursor: pointer;
+}
+
+.caminos-btn {
+  padding: 0.75rem 1rem;
+  background: var(--olive);
+  color: var(--soft);
+}
+
+.caminos-btn:disabled { opacity: 0.55; cursor: wait; }
+
+.caminos-quiet {
+  padding: 0.7rem 0.2rem;
+  color: var(--olive);
+  border-bottom: 1px solid transparent;
+}
+
+.caminos-quiet.is-on { border-bottom-color: var(--olive); }
+
+.caminos-monthbar {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0.4rem 0 0.8rem;
+}
+
+.caminos-monthbar h3 {
+  margin: 0;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: clamp(1.8rem, 3vw, 2.4rem);
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.caminos-monthbar__nav { display: flex; gap: 0.8rem; align-items: center; }
+.caminos-monthbar__nav button {
+  width: 2rem;
+  height: 2rem;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 18px;
+}
+
+.caminos-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  border-top: 1px solid rgba(68, 59, 50, 0.16);
+  border-left: 1px solid rgba(68, 59, 50, 0.16);
+  background: var(--soft);
+}
+
+.caminos-board--sand { background: var(--paper); }
+.caminos-board--sage { background: #f3f1e8; }
+.caminos-board--olive { background: #f4f3ec; }
+.caminos-board--cream { background: var(--soft); }
+
+.caminos-dow {
+  padding: 0.45rem 0.35rem;
+  border-right: 1px solid rgba(68, 59, 50, 0.16);
+  border-bottom: 1px solid rgba(68, 59, 50, 0.16);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--warm);
+}
+
+.caminos-day {
+  position: relative;
+  min-height: 7.4rem;
+  padding: 0.35rem;
+  border-right: 1px solid rgba(68, 59, 50, 0.16);
+  border-bottom: 1px solid rgba(68, 59, 50, 0.16);
+  overflow: hidden;
+}
+
+.caminos-grid.is-week .caminos-day { min-height: 16rem; }
+
+.caminos-day.is-out { color: rgba(131, 127, 117, 0.7); }
+.caminos-day.is-today .caminos-day__num { color: var(--olive); text-decoration: underline; text-underline-offset: 3px; }
+.caminos-day.is-selected { background: rgba(214, 199, 172, 0.28); }
+
+.caminos-day__num {
+  position: relative;
+  z-index: 2;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: 500 13px/1 Poppins, Inter, sans-serif;
+  cursor: pointer;
+  min-width: 1.6rem;
+  min-height: 1.6rem;
+  text-align: left;
+}
+
+.caminos-day__shot {
+  width: 2.1rem;
+  height: 2.1rem;
+  margin-top: 0.35rem;
+  object-fit: cover;
+}
+
+.caminos-day__note {
+  display: block;
+  max-width: 100%;
+  margin-top: 0.25rem;
+  font-size: 12px;
+  line-height: 1.25;
+  color: var(--ink);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.caminos-day__note.is-script {
+  font-family: "Great Vibes", cursive;
+  font-size: 18px;
+  white-space: normal;
+}
+
+.caminos-day__note.is-tape {
+  background: rgba(214, 199, 172, 0.55);
+  padding: 0.1rem 0.25rem;
+}
+
+.caminos-day__sticker {
+  position: absolute;
+  z-index: 1;
+  width: 2.4rem;
+  height: 2.4rem;
+  border: 0;
+  background: transparent;
+  padding: 0;
+}
+
+.caminos-day__sticker svg { width: 100%; height: 100%; }
+.caminos-section.is-editing .caminos-day__sticker { cursor: grab; touch-action: none; z-index: 3; pointer-events: auto; }
+.caminos-section:not(.is-editing) .caminos-day__sticker { pointer-events: none; }
+
+.caminos-swatches { display: flex; gap: 0.45rem; }
+.caminos-swatch {
+  width: 0.9rem;
+  height: 0.9rem;
+  padding: 0;
+  border: 1px solid rgba(68, 59, 50, 0.3);
+  border-radius: 50%;
+  cursor: pointer;
+}
+.caminos-swatch.is-on { outline: 1px solid var(--olive); outline-offset: 2px; }
+.caminos-swatch--olive { background: var(--olive); }
+.caminos-swatch--cream { background: var(--soft); }
+.caminos-swatch--sand { background: var(--beige); }
+.caminos-swatch--sage { background: var(--sage); }
+
+.caminos-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(17rem, 22rem);
+  gap: 1.6rem;
+  align-items: start;
+}
+
+.caminos-panel,
+.caminos-sheet {
+  background: transparent;
+}
+
+.caminos-panel h3,
+.caminos-sheet h3 {
+  margin: 0 0 0.35rem;
+  font-size: 2rem;
+}
+
+.caminos-panel p,
+.caminos-sheet p { margin: 0.2rem 0 0.7rem; color: var(--warm); font-size: 15px; }
+
+.caminos-panel label,
+.caminos-sheet label,
+.caminos-editor label {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0.55rem 0;
+  font-size: 13px;
+  color: var(--warm);
+}
+
+.caminos-panel input,
+.caminos-panel textarea,
+.caminos-sheet input,
+.caminos-sheet textarea,
+.caminos-editor input,
+.caminos-editor textarea {
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid rgba(68, 59, 50, 0.25);
+  background: transparent;
+  color: var(--ink);
+  font: 400 15px/1.4 Poppins, Inter, sans-serif;
+  padding: 0.45rem 0;
+}
+
+.caminos-hits { list-style: none; margin: 0.4rem 0; padding: 0; display: grid; gap: 0.45rem; }
+.caminos-hits button {
+  display: grid;
+  grid-template-columns: 3rem 1fr;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+}
+.caminos-hits img { width: 3rem; height: 3rem; object-fit: cover; }
+.caminos-hits .is-on strong { text-decoration: underline; text-underline-offset: 3px; }
+.caminos-hits small { display: block; color: var(--warm); font-size: 12px; }
+
+.caminos-daylist { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.9rem; }
+.caminos-daylist li { display: grid; grid-template-columns: 4.2rem 1fr; gap: 0.7rem; }
+.caminos-daylist img { width: 4.2rem; height: 5rem; object-fit: cover; }
+.caminos-daylist strong { font-family: "Cormorant Garamond", Georgia, serif; font-size: 1.25rem; font-weight: 500; }
+.caminos-inline { display: flex; flex-wrap: wrap; gap: 0.7rem; margin-top: 0.35rem; }
+.caminos-inline a,
+.caminos-inline button,
+.caminos-ticket__actions button,
+.caminos-ticket__actions a {
+  color: var(--olive);
+  background: none;
+  border: 0;
+  padding: 0;
+  font: 500 13px/1 Poppins, Inter, sans-serif;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.caminos-library { display: grid; gap: 0.7rem; margin-top: 0.6rem; }
+.caminos-library h4 { margin: 0; font: 500 12px/1 Poppins, Inter, sans-serif; letter-spacing: 0.12em; text-transform: uppercase; color: var(--warm); }
+.caminos-library__row { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.caminos-library__row button {
+  width: 2.6rem;
+  height: 2.6rem;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+}
+.caminos-library__row svg { width: 100%; height: 100%; }
+
+.caminos-note-styles { display: flex; gap: 0.8rem; }
+.caminos-note-styles label { display: flex; gap: 0.3rem; align-items: center; }
+
+.caminos-ticket { cursor: pointer; }
+.caminos-upcoming.is-compact h2 { font-size: 2.4rem; }
+.caminos-upcoming.is-compact .caminos-ticket { grid-template-columns: 34% minmax(0, 1fr) 22%; min-height: 0; }
+.caminos-upcoming.is-compact .caminos-ticket__photo img { height: 7.5rem; }
+.caminos-upcoming.is-compact .caminos-ticket h3 { font-size: 1.45rem; }
+.caminos-upcoming.is-compact .caminos-ticket time strong { font-size: 1.8rem; }
+.caminos-ticket {
+  display: grid;
+  grid-template-columns: 28% minmax(0, 1fr) 18%;
+  min-height: 11rem;
+  background: var(--soft);
+  border-bottom: 1px solid rgba(68, 59, 50, 0.12);
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  color: inherit;
+  padding: 0;
+}
+.caminos-ticket__photo { min-height: 11rem; overflow: hidden; }
+.caminos-ticket__photo img { width: 100%; height: 11rem; object-fit: cover; }
+.caminos-ticket__body { padding: 1.1rem 1.3rem; }
+.caminos-ticket__body p { margin: 0 0 0.35rem; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--warm); }
+.caminos-ticket h3 { margin: 0 0 0.35rem; font-size: clamp(1.7rem, 2vw, 2.2rem); line-height: 1; }
+.caminos-ticket__body span { display: block; margin-top: 0.2rem; font-size: 14px; color: var(--warm); }
+.caminos-ticket time {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-left: 1px dashed rgba(68, 59, 50, 0.28);
+  font-family: "Cormorant Garamond", Georgia, serif;
+}
+.caminos-ticket time strong { font-size: 3.2rem; line-height: 0.9; font-weight: 500; }
+.caminos-ticket time span { font-size: 14px; letter-spacing: 0.14em; text-transform: uppercase; }
+.caminos-ticket__actions { display: flex; gap: 0.9rem; margin-top: 0.7rem; }
+
+.caminos-empty { padding: 2rem 0 1rem; }
+.caminos-empty p { font-family: "Cormorant Garamond", Georgia, serif; font-size: 1.8rem; margin: 0 0 0.6rem; }
+.caminos-empty a { color: var(--olive); }
+
+.caminos-covers {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 1.4rem 1rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.caminos-covers li:nth-child(3n + 1) { grid-column: span 5; margin-top: 1.5rem; }
+.caminos-covers li:nth-child(3n + 2) { grid-column: span 4; }
+.caminos-covers li:nth-child(3n) { grid-column: span 3; margin-top: 2.4rem; }
+.caminos-album-card {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+}
+.caminos-album__shot {
+  background: var(--soft);
+  padding: 0.55rem 0.55rem 1.4rem;
+  border: 1px solid rgba(68, 59, 50, 0.1);
+}
+.caminos-album__shot img,
+.caminos-album__shot svg { width: 100%; aspect-ratio: 4 / 5; height: auto; object-fit: cover; }
+.caminos-album-card strong { display: block; margin-top: 0.55rem; font-family: "Cormorant Garamond", Georgia, serif; font-size: 1.7rem; font-weight: 500; }
+.caminos-album-card span { color: var(--warm); font-size: 13px; }
+
+.caminos-editor { margin-top: 1rem; }
+.caminos-editor__bar {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 0.8rem;
+}
+.caminos-editor__tools { display: flex; flex-wrap: wrap; gap: 0.8rem; margin-bottom: 0.8rem; }
+.caminos-spread {
+  position: relative;
+  min-height: 28rem;
+  padding: clamp(1.2rem, 3vw, 2.4rem);
+  background: var(--soft);
+  border: 1px solid rgba(68, 59, 50, 0.1);
+}
+.caminos-spread.is-linen { background: var(--paper); }
+.caminos-spread.is-olive { background: #f3f2ea; }
+.caminos-spread.is-pressed {
+  background-image: repeating-linear-gradient(transparent, transparent 27px, rgba(214, 199, 172, 0.45) 28px);
+  background-color: var(--soft);
+}
+.caminos-spread header p { margin: 0; letter-spacing: 0.12em; text-transform: uppercase; font-size: 12px; color: var(--warm); }
+.caminos-spread h3 { margin: 0.2rem 0 0.8rem; font-size: clamp(2.2rem, 4vw, 3.2rem); }
+.caminos-spread__photos { display: flex; flex-wrap: wrap; gap: 0.8rem; }
+.caminos-spread__photos figure {
+  width: min(42%, 14rem);
+  margin: 0;
+  padding: 0.45rem 0.45rem 1.3rem;
+  background: var(--soft);
+  border: 1px solid rgba(68, 59, 50, 0.08);
+}
+.caminos-spread__photos img { aspect-ratio: 1; height: auto; }
+.caminos-spread__story {
+  max-width: 38rem;
+  margin-top: 1rem;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 1.35rem;
+  line-height: 1.35;
+}
+.caminos-spread__sticker {
+  position: absolute;
+  width: 3.4rem;
+  height: 3.4rem;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  touch-action: none;
+  cursor: grab;
+}
+.caminos-templates { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+.caminos-templates button.is-on { border-bottom: 1px solid var(--olive); }
+
+.caminos-error { color: #7a3e32; font-size: 14px; }
+.caminos-saved { color: var(--olive); font-size: 14px; }
+.caminos-loading { color: var(--warm); }
+
+.caminos-confirm { margin-top: 0.6rem; padding-top: 0.6rem; border-top: 1px solid rgba(68, 59, 50, 0.12); }
+
+@media (max-width: 980px) {
+  .caminos-layout { grid-template-columns: 1fr; }
+  .caminos-ticket { grid-template-columns: 34% 1fr; }
+  .caminos-ticket time { grid-column: 1 / -1; flex-direction: row; gap: 0.6rem; border-left: 0; border-top: 1px dashed rgba(68, 59, 50, 0.28); padding: 0.6rem 1rem; }
+  .caminos-covers li { grid-column: span 6 !important; margin-top: 0 !important; }
+}
+
+@media (max-width: 680px) {
+  .caminos-day { min-height: 4.8rem; }
+  .caminos-day__shot { width: 1.15rem; height: 1.15rem; }
+  .caminos-day__note { display: none; }
+  .caminos-ticket { grid-template-columns: 1fr; }
+  .caminos-ticket__photo { min-height: 12rem; }
+  .caminos-covers li { grid-column: span 12 !important; }
+  .caminos-section__head { flex-direction: column; align-items: flex-start; }
+}
+
+@media (max-width: 900px) {
+  .caminos-hero,
+  .caminos-space__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .caminos-hero__stage {
+    width: min(100%, 24rem);
+    height: 23rem;
+    min-height: 0;
+  }
+
+  .caminos-hero__photo {
+    width: 52%;
+    height: 58%;
+    aspect-ratio: auto;
+  }
+
+  .caminos-hero h1,
+  .caminos-space h2 {
+    max-width: none;
+  }
+
+  .caminos-space__grid {
+    max-width: 28rem;
+  }
+}

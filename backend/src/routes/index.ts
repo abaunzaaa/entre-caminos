@@ -9,6 +9,7 @@ import { experienceRouter } from "./experience.routes.js";
 import { favoriteRouter } from "./favorite.routes.js";
 import { uploadRouter } from "./upload.routes.js";
 import { assistantRouter } from "./assistant.routes.js";
+import { journeyRouter } from "./journey.routes.js";
 
 export const apiRouter = Router();
 
@@ -22,4 +23,5 @@ apiRouter.use("/experiences", experienceRouter);
 apiRouter.use("/favorites", favoriteRouter);
 apiRouter.use("/uploads", uploadRouter);
 apiRouter.use("/assistant", assistantRouter);
+apiRouter.use("/journeys", journeyRouter);
 apiRouter.use(assistantRouter);

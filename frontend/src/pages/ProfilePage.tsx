@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import {
   Cake,
-  CalendarDays,
   Camera,
   KeyRound,
   Leaf,
@@ -41,7 +40,7 @@ import "../styles/experience-editorial-gallery.css";
 import "../styles/onboarding.css";
 import "../styles/profile-view.css";
 
-type ProfileTab = "informacion" | "agenda" | "resenas" | "estampitas";
+type ProfileTab = "informacion" | "resenas" | "estampitas";
 
 type ProfileField = {
   label: string;
@@ -60,7 +59,6 @@ function preferenceField(values: string[]): Pick<ProfileField, "text" | "chips">
 
 const TABS: Array<{ id: ProfileTab; label: string; icon: LucideIcon }> = [
   { id: "informacion", label: "Información", icon: UserRound },
-  { id: "agenda", label: "Agenda", icon: CalendarDays },
   { id: "resenas", label: "Reseñas", icon: Star },
   { id: "estampitas", label: "Estampitas", icon: Stamp },
 ];
@@ -381,12 +379,6 @@ export function ProfilePage() {
                   </div>
                 </dl>
               </section>
-            </div>
-          ) : null}
-
-          {tab === "agenda" ? (
-            <div className="profile-agenda">
-              <UnderConstruction title="AGENDA" />
             </div>
           ) : null}
 
