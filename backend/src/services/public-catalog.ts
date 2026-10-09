@@ -1,5 +1,10 @@
 import { ensureCopRates } from "../config/exchange-rates.js";
-import { ONBOARDING_BUDGETS, ONBOARDING_COMPANION_ALIASES, ONBOARDING_PLACE_ALIASES } from "../config/onboarding.js";
+import {
+  ONBOARDING_BUDGETS,
+  ONBOARDING_COMPANION_ALIASES,
+  ONBOARDING_PLACE_ALIASES,
+  type ONBOARDING_COMPANIONS,
+} from "../config/onboarding.js";
 import { prisma } from "../database/prisma.js";
 import { getBudgetLevel, isBudgetLevel } from "../utils/budget.js";
 
@@ -43,6 +48,14 @@ const PLANS = ["family", "couple", "solo", "friends"] as const;
 const DURATIONS = ["short", "medium", "half", "day"] as const;
 
 export type PublicCatalogPlan = (typeof PLANS)[number];
+
+/** Valor del filtro «Tipo de plan» → valor guardado en Experience.idealFor. */
+const PLAN_COMPANION: Record<PublicCatalogPlan, (typeof ONBOARDING_COMPANIONS)[number]> = {
+  family: "Familia",
+  couple: "En pareja",
+  solo: "Solo",
+  friends: "Amigos",
+};
 export type PublicCatalogPrice = (typeof ONBOARDING_BUDGETS)[number];
 export type PublicCatalogDuration = (typeof DURATIONS)[number];
 
@@ -70,6 +83,7 @@ export type CatalogListItem = {
   durationValue: number | null;
   durationUnit: "MINUTES" | "HOURS" | "DAYS" | null;
   createdAt: Date;
+  idealFor?: string[];
   /** Textos ya guardados que también entran en la búsqueda por palabras clave. */
   keywords?: string;
 };
@@ -188,20 +202,11 @@ function matchesPlan(item: CatalogListItem, plan: string) {
   if (!plan) {
     return true;
   }
-  const haystack = `${item.title} ${item.description} ${item.categoryName}`.toLowerCase();
-  if (plan === "family") {
-    return /familia|familiar|niñ/.test(haystack);
+  const companion = PLAN_COMPANION[plan as PublicCatalogPlan];
+  if (!companion) {
+    return true;
   }
-  if (plan === "couple") {
-    return /pareja|románt|romant/.test(haystack);
-  }
-  if (plan === "solo") {
-    return /solo|individual|autogui/.test(haystack);
-  }
-  if (plan === "friends") {
-    return /amigo|grupo|compart/.test(haystack);
-  }
-  return true;
+  return (item.idealFor ?? []).includes(companion);
 }
 
 function matchesQuery(item: CatalogListItem, query: string) {
@@ -351,6 +356,7 @@ export async function listPublicCatalogPage(input: PublicCatalogFilters & { page
       durationValue: row.durationValue,
       durationUnit: row.durationUnit,
       createdAt: row.createdAt,
+      idealFor: row.idealFor ?? [],
       keywords: [
         ...placeText,
         row.howToGetThere,

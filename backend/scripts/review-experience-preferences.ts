@@ -23,17 +23,17 @@ type Proposal = {
 };
 
 const PROPOSALS: Record<string, Proposal> = {
-  "Taller de pasta Italiana en Medellín": {
-    environments: ["Ciudad"],
-    idealFor: ["En pareja", "Amigos", "Familia"],
+  "Avistamiento de aves en Parque Arví": {
+    environments: ["Bosque / Naturaleza"],
+    idealFor: ["Solo", "En pareja", "Amigos", "Familia"],
     confidence: "alta",
-    note: "Taller nocturno en Laureles, con cena. El entorno es urbano.",
+    note: "Avistamiento en el parque de Santa Elena. No es un plan de ciudad.",
   },
-  "Taller de cerámica": {
-    environments: ["Pueblos mágicos"],
-    idealFor: ["Solo", "En pareja", "Amigos"],
+  "Cabalgata ecológica entre montañas en Caldas": {
+    environments: ["Montaña", "Bosque / Naturaleza"],
+    idealFor: ["Solo", "En pareja", "Amigos", "Familia"],
     confidence: "alta",
-    note: "La clase es en El Carmen de Viboral, pueblo ceramista, no en la ciudad.",
+    note: "Recorrido a caballo por senderos y montañas. Edad mínima 8 años.",
   },
   "Candlelight: Concierto bajo las velas": {
     environments: ["Ciudad"],
@@ -41,11 +41,17 @@ const PROPOSALS: Record<string, Proposal> = {
     confidence: "alta",
     note: "Concierto en el Museo de Arte Moderno de Medellín.",
   },
-  "Experiencia Candle Bar": {
+  "Carrera de las Rosas Medellín – 21K": {
     environments: ["Ciudad"],
-    idealFor: ["En pareja", "Amigos"],
+    idealFor: ["Solo", "Amigos"],
     confidence: "alta",
-    note: "Taller de velas en Medellín. Cada persona arma la suya.",
+    note: "Carrera de 21K que sale del Parque de las Luces, en Medellín.",
+  },
+  "Clase grupal de salsa para principiantes en DANCEFREE": {
+    environments: ["Ciudad"],
+    idealFor: ["Solo", "En pareja", "Amigos"],
+    confidence: "alta",
+    note: "Clase en El Poblado, desde los 16 años y sin pareja obligatoria.",
   },
   "Escape room Piratas en Enigma Laureles": {
     environments: ["Ciudad"],
@@ -53,29 +59,47 @@ const PROPOSALS: Record<string, Proposal> = {
     confidence: "alta",
     note: "Sala en Laureles para grupos de 2 a 6. No es un plan individual.",
   },
-  "Carrera de las Rosas Medellín – 21K": {
+  "Experiencia de chocolate colombiano: del grano a la barra": {
     environments: ["Ciudad"],
-    idealFor: ["Solo", "Amigos"],
+    idealFor: ["En pareja", "Amigos", "Familia"],
     confidence: "alta",
-    note: "Carrera de 21K que sale del Parque de las Luces, en Medellín.",
+    note: "Taller en Laureles.",
   },
-  "Tour a Guatapé y la Piedra del Peñol desde Medellín": {
-    environments: ["Montaña", "Pueblos mágicos"],
+  "Experiencia silletera en Santa Elena": {
+    environments: ["Montaña", "Bosque / Naturaleza"],
     idealFor: ["Solo", "En pareja", "Amigos", "Familia"],
     confidence: "alta",
-    note: "El plan es Guatapé, la piedra y el embalse. Caldas solo es el punto de recogida.",
+    note: "Santa Elena está en la ladera. No se usa Pueblos mágicos.",
   },
-  "Tour del café en San Sebastián de Palmitas": {
-    environments: ["Montaña", "Pueblos mágicos"],
-    idealFor: ["Solo", "En pareja", "Amigos", "Familia"],
-    confidence: "alta",
-    note: "La finca está en Palmitas. El hotel del centro solo es el punto de recogida.",
-  },
-  "Tour por la Comuna 13": {
+  "Graffitour Comuna 13 con SAG Tour Medellín": {
     environments: ["Ciudad"],
     idealFor: ["Solo", "En pareja", "Amigos", "Familia"],
     confidence: "alta",
-    note: "Recorrido a pie por el barrio, en Medellín.",
+    note: "Recorrido a pie por la Comuna 13, en Medellín.",
+  },
+  "Ruta gastronómica por Sabaneta y Envigado": {
+    environments: ["Ciudad"],
+    idealFor: ["En pareja", "Amigos", "Familia"],
+    confidence: "alta",
+    note: "Las dos sedes son urbanas. Un solo ambiente: Ciudad.",
+  },
+  "Secretos de una tradición en Herencias Cerámicas": {
+    environments: ["Pueblos mágicos"],
+    idealFor: ["Solo", "En pareja", "Amigos"],
+    confidence: "alta",
+    note: "La sede guardada es Carrera 31 #38-35, El Carmen de Viboral. Mismo criterio de pueblo que ya usa el catálogo para esa localidad.",
+  },
+  "Senderismo guiado por el Sendero Vital – Parque Arví": {
+    environments: ["Bosque / Naturaleza"],
+    idealFor: ["Solo", "En pareja", "Amigos", "Familia"],
+    confidence: "alta",
+    note: "Caminata guiada de hora y media por el parque.",
+  },
+  "Taller de pasta Italiana en Medellín": {
+    environments: ["Ciudad"],
+    idealFor: ["En pareja", "Amigos", "Familia"],
+    confidence: "alta",
+    note: "Taller en Laureles. El entorno es urbano.",
   },
   "Taller técnica de bouquet": {
     environments: ["Ciudad"],
@@ -83,47 +107,29 @@ const PROPOSALS: Record<string, Proposal> = {
     confidence: "alta",
     note: "Taller floral en un café de El Poblado.",
   },
-  "Clase de Pilates": {
-    environments: ["Ciudad"],
-    idealFor: ["Solo", "Amigos"],
-    confidence: "alta",
-    note: "Clase en estudio en Medellín. La vista al jardín no cambia el entorno.",
-  },
-  "Ruta en bicicleta: Entre cerros y cerámica": {
+  "Tour a Guatapé y la Piedra del Peñol desde Medellín": {
     environments: ["Montaña", "Pueblos mágicos"],
-    idealFor: ["Solo", "Amigos"],
+    idealFor: ["Solo", "En pareja", "Amigos", "Familia"],
     confidence: "alta",
-    note: "La ruta es entre cerros y termina en El Carmen de Viboral, no en la ciudad.",
+    note: "El plan es Guatapé, la piedra y el embalse.",
   },
-  "Jardines del Belvedere": {
+  "Tour de las Abejas Rionegro ORIMIEL": {
     environments: ["Bosque / Naturaleza"],
     idealFor: ["Solo", "En pareja", "Amigos", "Familia"],
     confidence: "alta",
-    note: "El plan son los jardines y el estanque, aunque queden en El Poblado.",
+    note: "Apiario en la vereda Cuchillas de San José, no en el casco urbano.",
   },
-  "Clase de cocina": {
-    environments: ["Ciudad"],
-    idealFor: ["En pareja", "Amigos", "Familia"],
+  "Tour del café en San Sebastián de Palmitas": {
+    environments: ["Montaña", "Pueblos mágicos"],
+    idealFor: ["Solo", "En pareja", "Amigos", "Familia"],
     confidence: "alta",
-    note: "Clase en grupo en The Butter Club, Medellín.",
+    note: "La finca está en Palmitas. El hotel del centro solo es el punto de recogida.",
   },
-  "Cerámicas Esmaltarte": {
-    environments: [],
-    idealFor: [],
-    confidence: "requiere revisión",
-    note: "Visita a un taller en El Carmen. Falta confirmar si se clasifica como pueblo antes de guardar.",
-  },
-  preuba: {
-    environments: [],
-    idealFor: [],
-    confidence: "requiere revisión",
-    note: "La descripción no describe la experiencia.",
-  },
-  "prueba 2": {
-    environments: [],
-    idealFor: [],
-    confidence: "requiere revisión",
-    note: "La descripción no describe la experiencia.",
+  "Vuelo en parapente sobre el Valle de Aburrá – Aeroclub San Félix": {
+    environments: ["Montaña"],
+    idealFor: ["Solo", "En pareja", "Amigos"],
+    confidence: "alta",
+    note: "Despegue en San Félix. Hay límites de peso y salud, así que no se marca Familia.",
   },
 };
 
@@ -131,8 +137,30 @@ function sameList(left: string[], right: string[]) {
   return left.length === right.length && left.every((value, index) => value === right[index]);
 }
 
-const apply = process.argv.includes("--apply");
-const dryRun = process.argv.includes("--dry-run") || !apply;
+function listDiff(current: string[], proposed: string[]) {
+  const proposedSet = new Set(proposed);
+  const currentSet = new Set(current);
+  return {
+    add: proposed.filter((value) => !currentSet.has(value)),
+    remove: current.filter((value) => !proposedSet.has(value)),
+    keep: current.filter((value) => proposedSet.has(value)),
+  };
+}
+
+function describeChange(current: string[], proposed: string[]) {
+  if (sameList(current, proposed)) {
+    return "sin cambios";
+  }
+  const diff = listDiff(current, proposed);
+  return [
+    diff.add.length ? `agrega ${diff.add.join(", ")}` : "",
+    diff.remove.length ? `quita ${diff.remove.join(", ")}` : "",
+  ]
+    .filter(Boolean)
+    .join("; ");
+}
+
+const apply = process.argv.includes("--apply") && !process.argv.includes("--dry-run");
 
 const experiences = await prisma.experience.findMany({
   select: {
@@ -192,13 +220,15 @@ const rows: Row[] = experiences.map((experience) => {
       title: experience.title,
       currentEnvironments: experience.environments,
       currentIdealFor: experience.idealFor,
-      environments: [],
-      idealFor: [],
+      environments: experience.environments,
+      idealFor: experience.idealFor,
       confidence: "requiere revisión",
-      note: "No hay una propuesta para este título.",
+      note: "No hay una propuesta para este título. No se modifica.",
       apply: false,
     };
   }
+  const same =
+    sameList(experience.environments, proposal.environments) && sameList(experience.idealFor, proposal.idealFor);
   return {
     id: experience.id,
     title: experience.title,
@@ -208,13 +238,14 @@ const rows: Row[] = experiences.map((experience) => {
     idealFor: proposal.idealFor,
     confidence: proposal.confidence,
     note: proposal.note,
-    apply: proposal.confidence === "alta",
+    apply: proposal.confidence === "alta" && !same,
   };
 });
 
 const multiLocation = experiences.filter((experience) => experience.locations.length > 1);
 
-console.log(dryRun && !apply ? "MODO dry-run. No se escribe nada.\n" : "MODO apply. Solo confianza alta.\n");
+console.log(apply ? "MODO apply. Solo confianza alta con valores distintos.\n" : "MODO dry-run. No se escribe nada.\n");
+console.log("Solo se escribirían environments e idealFor. Categorías, intereses y el resto de Experience no se tocan.\n");
 if (multiLocation.length) {
   console.log(`Experiencias con varias ubicaciones: ${multiLocation.map((item) => item.title).join("; ")}\n`);
 } else {
@@ -227,8 +258,10 @@ for (const row of rows) {
       row.title,
       `ambientes actuales: ${row.currentEnvironments.join(", ") || "(vacío)"}`,
       `ambientes propuestos: ${row.environments.join(", ") || "(vacío)"}`,
+      `ambientes cambiaría: ${describeChange(row.currentEnvironments, row.environments)}`,
       `ideal para actual: ${row.currentIdealFor.join(", ") || "(vacío)"}`,
       `ideal para propuesto: ${row.idealFor.join(", ") || "(vacío)"}`,
+      `ideal para cambiaría: ${describeChange(row.currentIdealFor, row.idealFor)}`,
       `confianza: ${row.confidence}`,
       `aplica: ${row.apply ? "sí" : "no"}`,
       row.note,
@@ -266,7 +299,7 @@ if (blockers.length) {
   process.exit(1);
 }
 
-if (apply && !dryRun) {
+if (apply) {
   for (const row of rows.filter((item) => item.apply)) {
     await prisma.experience.update({
       where: { id: row.id },
@@ -279,7 +312,7 @@ if (apply && !dryRun) {
   }
 }
 
-const after = apply && !dryRun
+const after = apply
   ? await prisma.experience.findMany({
       select: {
         id: true,
@@ -298,7 +331,7 @@ const after = apply && !dryRun
   : [];
 
 const problems: string[] = [];
-if (apply && !dryRun) {
+if (apply) {
   const places = new Set<string>(PLACES);
   const companions = new Set<string>(COMPANIONS);
   for (const experience of after) {
@@ -360,7 +393,13 @@ console.log(
       withEnvironments: rows.filter((row) => row.apply && row.environments.length > 0).length,
       withIdealFor: rows.filter((row) => row.apply && row.idealFor.length > 0).length,
       pending: rows.filter((row) => !row.apply).map((row) => row.title),
-      wrote: apply && !dryRun,
+      unchanged: rows
+        .filter(
+          (row) => sameList(row.currentEnvironments, row.environments) && sameList(row.currentIdealFor, row.idealFor),
+        )
+        .map((row) => row.title),
+      wouldChange: rows.filter((row) => row.apply).map((row) => row.title),
+      wrote: apply,
       multiLocation: multiLocation.map((item) => item.title),
     },
     null,

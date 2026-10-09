@@ -53,24 +53,19 @@ function matchesPrice(_experience: Experience, _price: string) {
   return true;
 }
 
+/** Valor del filtro → valor guardado en Experience.idealFor. */
+const PLAN_COMPANION: Record<Exclude<DiscoverPlan, "">, string> = {
+  family: "Familia",
+  couple: "En pareja",
+  solo: "Solo",
+  friends: "Amigos",
+};
+
 function matchesPlan(experience: Experience, plan: DiscoverPlan) {
   if (!plan) {
     return true;
   }
-  const haystack = `${experience.title} ${experience.description} ${experience.category?.name ?? ""}`.toLowerCase();
-  if (plan === "family") {
-    return /familia|familiar|niñ/.test(haystack);
-  }
-  if (plan === "couple") {
-    return /pareja|románt|romant/.test(haystack);
-  }
-  if (plan === "solo") {
-    return /solo|individual|autogui/.test(haystack);
-  }
-  if (plan === "friends") {
-    return /amigo|grupo|compart/.test(haystack);
-  }
-  return true;
+  return (experience.idealFor ?? []).includes(PLAN_COMPANION[plan]);
 }
 
 function normalizeSearchText(value: string) {

@@ -132,4 +132,69 @@ describe("public catalog page", () => {
     expect(filterCatalogItems(catalog, { price: dollarLevel ?? "" }).map((entry) => entry.id)).toEqual(["dollars"]);
     expect(filterCatalogItems(catalog, {}).map((entry) => entry.id)).toEqual(["local", "dollars", "luxury"]);
   });
+
+  describe("tipo de plan según idealFor", () => {
+    const salsa = item({
+      id: "salsa",
+      title: "Clase grupal de salsa para principiantes en DANCEFREE",
+      description: "No necesitas experiencia previa ni asistir con pareja.",
+      categoryId: "culture",
+      categoryName: "Cultura e historia",
+      location: "Calle 10A #40-27, El Poblado, Medellín, Antioquia",
+      idealFor: ["Solo", "En pareja", "Amigos"],
+      createdAt: new Date("2026-03-03T00:00:00.000Z"),
+    });
+    const tour = item({
+      id: "tour",
+      title: "Tour a Guatapé",
+      description: "Pueblo, embalse y piedra.",
+      categoryId: "nature",
+      categoryName: "Naturaleza y aventura",
+      location: "Piedra del Peñol, Guatapé, Antioquia",
+      price: 129_000,
+      idealFor: ["Familia", "Amigos", "En pareja", "Solo"],
+      createdAt: new Date("2026-03-02T00:00:00.000Z"),
+    });
+    const escape = item({
+      id: "escape",
+      title: "Escape room",
+      description: "Juego para resolver en solo una hora con amigos y familia.",
+      categoryId: "urban",
+      categoryName: "Planes urbanos",
+      location: "Laureles, Medellín, Antioquia",
+      idealFor: ["Amigos", "Familia"],
+      createdAt: new Date("2026-03-01T00:00:00.000Z"),
+    });
+    const empty = item({ id: "empty", title: "Plan sin compañía definida", description: "Ideal en pareja." });
+    const catalog = [salsa, tour, escape, empty];
+    const ids = (plan: string, extra: Record<string, string> = {}) =>
+      filterCatalogItems(catalog, { plan, ...extra }).map((entry) => entry.id);
+
+    it("encuentra la experiencia con cualquiera de sus valores, sin importar el orden", () => {
+      expect(ids("solo")).toEqual(["salsa", "tour"]);
+      expect(ids("couple")).toEqual(["salsa", "tour"]);
+      expect(ids("friends")).toEqual(["salsa", "tour", "escape"]);
+      expect(ids("family")).toEqual(["tour", "escape"]);
+    });
+
+    it("no usa título ni descripción para decidir el tipo de plan", () => {
+      expect(ids("family")).not.toContain("salsa");
+      expect(ids("solo")).not.toContain("escape");
+      expect(ids("couple")).not.toContain("empty");
+    });
+
+    it("sin tipo de plan no filtra por idealFor", () => {
+      expect(ids("")).toEqual(["salsa", "tour", "escape", "empty"]);
+    });
+
+    it("se combina con categoría, ciudad, presupuesto y búsqueda", () => {
+      expect(ids("solo", { categoryId: "culture" })).toEqual(["salsa"]);
+      expect(ids("solo", { categoryId: "urban" })).toEqual([]);
+      expect(ids("friends", { city: "Medellín" })).toEqual(["salsa", "escape"]);
+      expect(ids("family", { city: "Guatapé" })).toEqual(["tour"]);
+      expect(ids("solo", { price: "Económico" })).toEqual(["salsa", "tour"]);
+      expect(ids("solo", { q: "salsa" })).toEqual(["salsa"]);
+      expect(ids("family", { q: "salsa" })).toEqual([]);
+    });
+  });
 });

@@ -81,6 +81,18 @@ function preferenceLabels(options: OnboardingOption[], values?: string[] | null)
   return labels;
 }
 
+function storedPreferenceValues(options: OnboardingOption[], values?: string[] | null) {
+  const allowed = new Set(options.map((option) => option.value));
+  const labels: string[] = [];
+  for (const value of values ?? []) {
+    const trimmed = value.trim();
+    if (allowed.has(trimmed) && !labels.includes(trimmed)) {
+      labels.push(trimmed);
+    }
+  }
+  return labels;
+}
+
 function detailOrganization(experience: Experience): PublicOrganizationProfile | null {
   const creator = experience.creator as
     | (NonNullable<Experience["creator"]> & {
@@ -165,24 +177,61 @@ export function buildExperienceEditorialFacts(
         ]
       : [];
 
+  const categoryNames = experienceCategoryNames(experience);
+  const categoryLabel = categoryNames.length > 1 ? "Categorías" : "Categoría";
+  const idealLabels = storedPreferenceValues(COMPANY_OPTIONS, experience.idealFor);
+  const environmentLabels = storedPreferenceValues(PLACE_OPTIONS, experience.environments);
+  const categoryFact: ExperienceEditorialFact =
+    mode === "tourist"
+      ? {
+          label: "Categoría",
+          value: formatExperienceCategories(experience, "Sin categoría"),
+          columns: [
+            {
+              label: categoryLabel,
+              value: formatExperienceCategories(experience, "Sin categoría"),
+              ...(categoryNames.length ? { chips: categoryNames } : {}),
+              centered: true,
+            },
+            ...(idealLabels.length
+              ? [{ label: "Ideal para", value: idealLabels.join(", "), chips: idealLabels, centered: true }]
+              : []),
+            ...(environmentLabels.length
+              ? [
+                  {
+                    label: "Ambiente",
+                    value: environmentLabels.join(", "),
+                    chips: environmentLabels,
+                    centered: true,
+                  },
+                ]
+              : []),
+          ],
+        }
+      : {
+          label: categoryLabel,
+          value: formatExperienceCategories(experience, "Sin categoría"),
+        };
+
   const detailFacts: ExperienceEditorialFact[] = [
     ...(experience.description?.trim() ? [{ label: "Descripción", value: experience.description }] : []),
     { label: "Precio", value: formatPrice(experience.price, experience.currency) },
-    {
-      label: experienceCategoryNames(experience).length > 1 ? "Categorías" : "Categoría",
-      value: formatExperienceCategories(experience, "Sin categoría"),
-    },
+    categoryFact,
     ...(mode === "admin" ? [{ label: "Estado", value: STATUS_LABEL[experience.status] }] : []),
     { label: "Ubicación", value: experience.location || "—" },
     ...(durationText ? [{ label: "Duración", value: durationText }] : []),
-    ...(() => {
-      const chips = preferenceLabels(PLACE_OPTIONS, experience.environments);
-      return chips.length ? [{ label: "Ambiente", value: chips.join(", "), chips }] : [];
-    })(),
-    ...(() => {
-      const chips = preferenceLabels(COMPANY_OPTIONS, experience.idealFor);
-      return chips.length ? [{ label: "Ideal para", value: chips.join(", "), chips }] : [];
-    })(),
+    ...(mode === "admin"
+      ? [
+          ...(() => {
+            const chips = preferenceLabels(PLACE_OPTIONS, experience.environments);
+            return chips.length ? [{ label: "Ambiente", value: chips.join(", "), chips }] : [];
+          })(),
+          ...(() => {
+            const chips = preferenceLabels(COMPANY_OPTIONS, experience.idealFor);
+            return chips.length ? [{ label: "Ideal para", value: chips.join(", "), chips }] : [];
+          })(),
+        ]
+      : []),
     ...availabilityDetailFacts(experience.availability),
     ...(experience.howToGetThere?.trim()
       ? [{ label: "Cómo llegar", value: experience.howToGetThere.trim() }]
@@ -329,6 +378,7 @@ export function ExperienceEditorialView({
         facts={generalFacts}
         organization={organization}
         placeFacts={placeFacts}
+        clampDescription={mode === "tourist"}
         places={
           showPlaceTabs ? (
             <ExperiencePlaceTabs
