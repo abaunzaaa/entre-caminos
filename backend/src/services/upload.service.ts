@@ -131,6 +131,10 @@ export async function persistProfileImage(file: Express.Multer.File): Promise<St
   return persistImage(file, "entre-caminos/profiles");
 }
 
+export async function persistReviewImage(file: Express.Multer.File): Promise<StoredImage> {
+  return persistImage(file, "entre-caminos/reviews");
+}
+
 async function persistImage(file: Express.Multer.File, folder?: string): Promise<StoredImage> {
   assertImageFile(file);
   if (cloudinaryConfigured()) {

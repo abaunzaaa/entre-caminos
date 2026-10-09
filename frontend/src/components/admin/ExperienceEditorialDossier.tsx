@@ -202,6 +202,7 @@ export function ExperienceEditorialDossier({
   placeFacts = [],
   organization = null,
   clampDescription = false,
+  sectionId,
 }: {
   photoUrl: string | null;
   photoLabel: string;
@@ -211,11 +212,16 @@ export function ExperienceEditorialDossier({
   placeFacts?: ExperienceEditorialFact[];
   organization?: PublicOrganizationProfile | null;
   clampDescription?: boolean;
+  sectionId?: string;
 }) {
   const hasOrganization = Boolean(organization?.tradeName?.trim());
 
   return (
-    <section className="dash-exps-dossier" aria-label="Información de la experiencia">
+    <section
+      id={sectionId}
+      className={`dash-exps-dossier${sectionId ? " experience-detail-target" : ""}`}
+      aria-label="Información de la experiencia"
+    >
       <div className="dash-exps-dossier__column">
       <div className={`dash-exps-dossier__visual${hasOrganization ? " is-clear" : ""}`}>
         <div className="dash-exps-dossier__stamp">

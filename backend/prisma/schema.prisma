@@ -341,6 +341,7 @@ model ExperienceFavorite {
 }
 
 /// Experiencias que el usuario marcó como visitadas. Independiente de favoritos.
+/// No se puede borrar mientras exista una ExperienceVisitorReview del mismo usuario.
 model ExperienceVisit {
   id           String   @id @default(uuid())
   experienceId String   @map("experience_id")
@@ -386,19 +387,46 @@ model FavoriteCollectionItem {
   @@map("favorite_collection_items")
 }
 
+/// Reseña pública de quien visitó la experiencia. Una por usuario y experiencia.
+/// ExperienceReview sigue siendo la decisión de moderación, no esta valoración.
 model ExperienceVisitorReview {
   id           String   @id @default(uuid())
   experienceId String   @map("experience_id")
   userId       String   @map("user_id")
-  rating       Int
+  /// Experiencia general, de 1 a 5 en pasos de 0.5. Las reseñas anteriores solo tienen este valor.
+  rating              Decimal  @db.Decimal(2, 1)
+  /// Complementaria. Nula en reseñas creadas antes de esta dimensión.
+  organizationRating  Int?     @map("organization_rating")
+  /// Complementaria. Nula en reseñas creadas antes de esta dimensión.
+  valueRating         Int?     @map("value_rating")
+  /// Nula en reseñas creadas antes de esta pregunta.
+  recommended         Boolean?
+  comment             String   @default("")
   createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
   experience Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
   user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  images     ExperienceVisitorReviewImage[]
 
   @@unique([experienceId, userId])
   @@index([experienceId, createdAt])
   @@map("experience_visitor_reviews")
+}
+
+/// Foto opcional de una reseña de visitante. El archivo vive en Cloudinary, no en PostgreSQL.
+model ExperienceVisitorReviewImage {
+  id        String   @id @default(uuid())
+  reviewId  String   @map("review_id")
+  imageUrl  String   @map("image_url")
+  publicId  String?  @map("public_id")
+  position  Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  review ExperienceVisitorReview @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@index([reviewId, position])
+  @@map("experience_visitor_review_images")
 }
 
 model Notification {

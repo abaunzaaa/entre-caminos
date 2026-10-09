@@ -1,0 +1,94 @@
+import { api } from "./api";
+
+type ApiResponse<T> = { success: boolean; data: T };
+
+export type VisitorReviewImage = {
+  id: string;
+  imageUrl: string;
+  position: number;
+};
+
+export type VisitorReview = {
+  id: string;
+  experienceId: string;
+  rating: number;
+  score: number;
+  organizationRating: number | null;
+  valueRating: number | null;
+  recommended: boolean | null;
+  comment: string;
+  images: VisitorReviewImage[];
+  createdAt: string;
+  updatedAt: string;
+  user: {
+    id: string;
+    name: string;
+    avatarUrl: string | null;
+  };
+};
+
+export type VisitorReviewPhotos = {
+  keepImageIds: string[];
+  files: File[];
+};
+
+export type VisitorReviewSummary = {
+  averageRating: number | null;
+  count: number;
+};
+
+export type VisitorReviewList = {
+  summary: VisitorReviewSummary;
+  reviews: VisitorReview[];
+  mine: VisitorReview | null;
+};
+
+export type VisitorReviewInput = {
+  rating: number;
+  organizationRating: number;
+  valueRating: number;
+  recommended: boolean;
+  comment: string;
+};
+
+export function listExperienceReviews(experienceId: string) {
+  return api
+    .get<ApiResponse<VisitorReviewList>>(`/experiences/${experienceId}/reviews`)
+    .then((response) => response.data.data);
+}
+
+function reviewForm(input: VisitorReviewInput, photos: VisitorReviewPhotos) {
+  const form = new FormData();
+  form.append("rating", String(input.rating));
+  form.append("organizationRating", String(input.organizationRating));
+  form.append("valueRating", String(input.valueRating));
+  form.append("recommended", String(input.recommended));
+  form.append("comment", input.comment);
+  form.append("keepImageIds", JSON.stringify(photos.keepImageIds));
+  photos.files.forEach((file) => form.append("images", file));
+  return form;
+}
+
+export function createExperienceReview(experienceId: string, input: VisitorReviewInput, photos: VisitorReviewPhotos) {
+  return api
+    .post<ApiResponse<{ review: VisitorReview; summary: VisitorReviewSummary }>>(
+      `/experiences/${experienceId}/reviews`,
+      reviewForm(input, photos),
+    )
+    .then((response) => response.data.data);
+}
+
+export function updateExperienceReview(experienceId: string, input: VisitorReviewInput, photos: VisitorReviewPhotos) {
+  return api
+    .patch<ApiResponse<{ review: VisitorReview; summary: VisitorReviewSummary }>>(
+      `/experiences/${experienceId}/reviews`,
+      reviewForm(input, photos),
+    )
+    .then((response) => response.data.data);
+}
+
+export function deleteExperienceReview(experienceId: string) {
+  return api
+    .delete<ApiResponse<{ summary: VisitorReviewSummary }>>(`/experiences/${experienceId}/reviews`)
+    .then((response) => response.data.data);
+}

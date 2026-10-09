@@ -8,6 +8,7 @@ import { catalogRouter } from "./catalog.routes.js";
 import { experienceRouter } from "./experience.routes.js";
 import { favoriteRouter } from "./favorite.routes.js";
 import { visitRouter } from "./visit.routes.js";
+import { visitorReviewRouter } from "./visitor-review.routes.js";
 import { uploadRouter } from "./upload.routes.js";
 import { assistantRouter } from "./assistant.routes.js";
 
@@ -20,6 +21,7 @@ apiRouter.use("/categories", categoryRouter);
 apiRouter.use("/contact", contactRouter);
 apiRouter.use("/catalog", catalogRouter);
 apiRouter.use("/experiences", experienceRouter);
+apiRouter.use("/experiences", visitorReviewRouter);
 apiRouter.use("/favorites", favoriteRouter);
 apiRouter.use("/visits", visitRouter);
 apiRouter.use("/uploads", uploadRouter);

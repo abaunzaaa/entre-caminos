@@ -1,6 +1,9 @@
+import { useState } from "react";
 import { Heart, MapPin } from "lucide-react";
 import { VisitedCheckIcon } from "../icons/VisitedCheckIcon";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { VisitLockedDialog, VisitMarkedDialog } from "../experiences/VisitReviewDialogs";
+import { EXPERIENCE_DETAIL_SECTIONS } from "../../utils/experience-detail-sections";
 import { parseStoredLocation } from "../../data/colombia-locations";
 import { useFavoriteToggle } from "../../hooks/useFavoriteToggle";
 import { useVisitedToggle } from "../../hooks/useVisitedToggle";
@@ -60,29 +63,52 @@ function TouristVisitedButton({
   experienceId: string;
   initialVisited?: boolean;
 }) {
+  const navigate = useNavigate();
+  const [welcomeOpen, setWelcomeOpen] = useState(false);
+  const [lockOpen, setLockOpen] = useState(false);
   const { visited, busy, toggle } = useVisitedToggle(experienceId, {
     initialVisited,
     loginRedirectTo: `/explorar/${experienceId}`,
+    onMarkedVisited: () => setWelcomeOpen(true),
+    onUnvisitBlocked: () => setLockOpen(true),
   });
 
   return (
-    <button
-      type="button"
-      className={`dash-exps-tile__visited${visited ? " is-on" : ""}`}
-      aria-label={visited ? "Quitar de visitados" : "Marcar como visitado"}
-      aria-pressed={visited}
-      disabled={busy}
-      onClick={(event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        toggle();
-      }}
-    >
-      <VisitedCheckIcon filled={visited} />
-      <span className="dash-exps-tile__fav-tip" role="tooltip">
-        {visited ? "Quitar de visitados" : "Marcar como visitado"}
-      </span>
-    </button>
+    <>
+      <button
+        type="button"
+        className={`dash-exps-tile__visited${visited ? " is-on" : ""}`}
+        aria-label={visited ? "Quitar de visitados" : "Marcar como visitado"}
+        aria-pressed={visited}
+        disabled={busy}
+        onClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          toggle();
+        }}
+      >
+        <VisitedCheckIcon filled={visited} />
+        <span className="dash-exps-tile__fav-tip" role="tooltip">
+          {visited ? "Quitar de visitados" : "Marcar como visitado"}
+        </span>
+      </button>
+      <VisitMarkedDialog
+        open={welcomeOpen}
+        onLater={() => setWelcomeOpen(false)}
+        onRate={() => {
+          setWelcomeOpen(false);
+          navigate(`/explorar/${experienceId}?calificar=1#${EXPERIENCE_DETAIL_SECTIONS.reviews}`);
+        }}
+      />
+      <VisitLockedDialog
+        open={lockOpen}
+        onClose={() => setLockOpen(false)}
+        onViewReview={() => {
+          setLockOpen(false);
+          navigate(`/explorar/${experienceId}#${EXPERIENCE_DETAIL_SECTIONS.reviews}`);
+        }}
+      />
+    </>
   );
 }
 

@@ -20,6 +20,9 @@ export function SuccessConfirm({
   showIcon = true,
   actionLabel = "Continuar",
   actionClassName,
+  secondaryLabel,
+  onAction,
+  onSecondary,
   onClose,
 }: {
   open: boolean;
@@ -30,6 +33,9 @@ export function SuccessConfirm({
   showIcon?: boolean;
   actionLabel?: string;
   actionClassName?: string;
+  secondaryLabel?: string;
+  onAction?: () => void;
+  onSecondary?: () => void;
   onClose: () => void;
 }) {
   const titleId = useId();
@@ -120,13 +126,28 @@ export function SuccessConfirm({
         <p id={`${titleId}-copy`} className="contact-success__text">
           {text}
         </p>
-        <button
-          type="button"
-          className={actionClassName ? `contact-success__action ${actionClassName}` : "contact-success__action admin-cta"}
-          onClick={onClose}
-        >
-          {actionLabel}
-        </button>
+        {secondaryLabel ? (
+          <div className="contact-success__actions">
+            <button
+              type="button"
+              className={actionClassName ? `contact-success__action ${actionClassName}` : "contact-success__action admin-cta"}
+              onClick={onAction ?? onClose}
+            >
+              {actionLabel}
+            </button>
+            <button type="button" className="contact-success__cancel" onClick={onSecondary ?? onClose}>
+              {secondaryLabel}
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            className={actionClassName ? `contact-success__action ${actionClassName}` : "contact-success__action admin-cta"}
+            onClick={onClose}
+          >
+            {actionLabel}
+          </button>
+        )}
       </div>
     </div>,
     document.body,
