@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { Heart } from "lucide-react";
+import { VisitedCheckIcon } from "../icons/VisitedCheckIcon";
 import { ExperienceEditorialDossier, type ExperienceEditorialFact } from "./ExperienceEditorialDossier";
 import { ExperienceEditorialGallery } from "./ExperienceEditorialGallery";
 import { ExperienceEditorialNearby } from "./ExperienceEditorialNearby";
@@ -80,6 +81,18 @@ function preferenceLabels(options: OnboardingOption[], values?: string[] | null)
   return labels;
 }
 
+function storedPreferenceValues(options: OnboardingOption[], values?: string[] | null) {
+  const allowed = new Set(options.map((option) => option.value));
+  const labels: string[] = [];
+  for (const value of values ?? []) {
+    const trimmed = value.trim();
+    if (allowed.has(trimmed) && !labels.includes(trimmed)) {
+      labels.push(trimmed);
+    }
+  }
+  return labels;
+}
+
 function detailOrganization(experience: Experience): PublicOrganizationProfile | null {
   const creator = experience.creator as
     | (NonNullable<Experience["creator"]> & {
@@ -130,6 +143,9 @@ export type ExperienceEditorialViewProps = {
   favoriteOn?: boolean;
   favoriteBusy?: boolean;
   onFavoriteToggle?: () => void;
+  visitedOn?: boolean;
+  visitedBusy?: boolean;
+  onVisitedToggle?: () => void;
   nearbyHref?: (id: string) => string;
   fetchNearby?: () => Promise<Experience[]>;
   onConsultAi?: () => void;
@@ -161,24 +177,61 @@ export function buildExperienceEditorialFacts(
         ]
       : [];
 
+  const categoryNames = experienceCategoryNames(experience);
+  const categoryLabel = categoryNames.length > 1 ? "Categorías" : "Categoría";
+  const idealLabels = storedPreferenceValues(COMPANY_OPTIONS, experience.idealFor);
+  const environmentLabels = storedPreferenceValues(PLACE_OPTIONS, experience.environments);
+  const categoryFact: ExperienceEditorialFact =
+    mode === "tourist"
+      ? {
+          label: "Categoría",
+          value: formatExperienceCategories(experience, "Sin categoría"),
+          columns: [
+            {
+              label: categoryLabel,
+              value: formatExperienceCategories(experience, "Sin categoría"),
+              ...(categoryNames.length ? { chips: categoryNames } : {}),
+              centered: true,
+            },
+            ...(idealLabels.length
+              ? [{ label: "Ideal para", value: idealLabels.join(", "), chips: idealLabels, centered: true }]
+              : []),
+            ...(environmentLabels.length
+              ? [
+                  {
+                    label: "Ambiente",
+                    value: environmentLabels.join(", "),
+                    chips: environmentLabels,
+                    centered: true,
+                  },
+                ]
+              : []),
+          ],
+        }
+      : {
+          label: categoryLabel,
+          value: formatExperienceCategories(experience, "Sin categoría"),
+        };
+
   const detailFacts: ExperienceEditorialFact[] = [
     ...(experience.description?.trim() ? [{ label: "Descripción", value: experience.description }] : []),
     { label: "Precio", value: formatPrice(experience.price, experience.currency) },
-    {
-      label: experienceCategoryNames(experience).length > 1 ? "Categorías" : "Categoría",
-      value: formatExperienceCategories(experience, "Sin categoría"),
-    },
+    categoryFact,
     ...(mode === "admin" ? [{ label: "Estado", value: STATUS_LABEL[experience.status] }] : []),
     { label: "Ubicación", value: experience.location || "—" },
     ...(durationText ? [{ label: "Duración", value: durationText }] : []),
-    ...(() => {
-      const chips = preferenceLabels(PLACE_OPTIONS, experience.environments);
-      return chips.length ? [{ label: "Ambiente", value: chips.join(", "), chips }] : [];
-    })(),
-    ...(() => {
-      const chips = preferenceLabels(COMPANY_OPTIONS, experience.idealFor);
-      return chips.length ? [{ label: "Ideal para", value: chips.join(", "), chips }] : [];
-    })(),
+    ...(mode === "admin"
+      ? [
+          ...(() => {
+            const chips = preferenceLabels(PLACE_OPTIONS, experience.environments);
+            return chips.length ? [{ label: "Ambiente", value: chips.join(", "), chips }] : [];
+          })(),
+          ...(() => {
+            const chips = preferenceLabels(COMPANY_OPTIONS, experience.idealFor);
+            return chips.length ? [{ label: "Ideal para", value: chips.join(", "), chips }] : [];
+          })(),
+        ]
+      : []),
     ...availabilityDetailFacts(experience.availability),
     ...(experience.howToGetThere?.trim()
       ? [{ label: "Cómo llegar", value: experience.howToGetThere.trim() }]
@@ -218,11 +271,15 @@ export function ExperienceEditorialView({
   favoriteOn = false,
   favoriteBusy = false,
   onFavoriteToggle,
+  visitedOn = false,
+  visitedBusy = false,
+  onVisitedToggle,
   nearbyHref,
   fetchNearby,
   onConsultAi,
 }: ExperienceEditorialViewProps) {
   const isFavorite = favoriteOn;
+  const isVisited = visitedOn;
   const places = useMemo(() => placesFromExperience(experience), [experience]);
   const [placeIndex, setPlaceIndex] = useState(0);
   useEffect(() => {
@@ -242,7 +299,7 @@ export function ExperienceEditorialView({
   const showPlaceTabs = places.length > 1;
   const generalFacts = showPlaceTabs ? detailFacts.filter((fact) => !PLACE_FACT_LABELS.has(fact.label)) : detailFacts;
   const placeFacts = showPlaceTabs ? detailFacts.filter((fact) => PLACE_FACT_LABELS.has(fact.label)) : [];
-  const showTouristActions = mode === "tourist" && (onConsultAi || onFavoriteToggle);
+  const showTouristActions = mode === "tourist" && (onConsultAi || onFavoriteToggle || onVisitedToggle);
 
   return (
     <section
@@ -270,6 +327,23 @@ export function ExperienceEditorialView({
                 onClick={onConsultAi}
               >
                 Pregúntale a tu guía
+              </button>
+            ) : null}
+            {onVisitedToggle ? (
+              <button
+                type="button"
+                className={`dash-exps-editorial__visited${isVisited ? " is-on" : ""}`}
+                aria-pressed={isVisited}
+                aria-label={isVisited ? "Quitar de visitados" : "Marcar como visitado"}
+                disabled={visitedBusy}
+                onClick={() => {
+                  if (!visitedBusy) {
+                    onVisitedToggle();
+                  }
+                }}
+              >
+                <VisitedCheckIcon filled={isVisited} />
+                <span>{isVisited ? "Ya visité esta experiencia" : "Marcar como visitado"}</span>
               </button>
             ) : null}
             {onFavoriteToggle ? (
@@ -304,6 +378,7 @@ export function ExperienceEditorialView({
         facts={generalFacts}
         organization={organization}
         placeFacts={placeFacts}
+        clampDescription={mode === "tourist"}
         places={
           showPlaceTabs ? (
             <ExperiencePlaceTabs

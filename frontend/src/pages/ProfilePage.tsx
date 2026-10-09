@@ -33,6 +33,7 @@ import { listFavoriteExperiences } from "../services/favorites.service";
 import { onFavoritesChanged } from "../services/favorites-sync";
 import type { Experience, PublicUser } from "../types";
 import { mediaUrl } from "../utils/media";
+import { formatStoredPhone } from "../utils/profile-phone";
 import { profileToForm, type OnboardingForm } from "../utils/onboarding";
 import { roleCopy } from "../utils/access-copy";
 import { formatPersonName } from "../utils/person-name";
@@ -52,10 +53,10 @@ type ProfileField = {
 
 function preferenceField(values: string[]): Pick<ProfileField, "text" | "chips"> {
   const labels = preferenceLabels(values);
-  if (labels.length > 1) {
+  if (labels.length > 0) {
     return { text: "", chips: labels };
   }
-  return { text: labels[0] ?? "" };
+  return { text: "" };
 }
 
 const TABS: Array<{ id: ProfileTab; label: string; icon: LucideIcon }> = [
@@ -93,20 +94,6 @@ function profilePlace(form: OnboardingForm) {
   return [form.department, form.city].map((part) => part.trim()).filter(Boolean).join(" · ");
 }
 
-function displayPhone(value: string | null | undefined) {
-  const compact = (value ?? "").replace(/[\s.-]/g, "");
-  if (!compact) {
-    return "";
-  }
-  const hasCountry = compact.startsWith("+57");
-  const national = hasCountry ? compact.slice(3) : compact.startsWith("+") ? compact.slice(1) : compact;
-  if (/^3\d{9}$/.test(national) || /^60\d{8}$/.test(national)) {
-    const groups = [national.slice(0, 3), national.slice(3, 6), national.slice(6, 10)].filter(Boolean);
-    return `${hasCountry ? "+57 " : ""}${groups.join(" ")}`;
-  }
-  return value?.trim() ?? "";
-}
-
 export function ProfilePage() {
   const { user, loading: authLoading } = useAuth();
   const form = profileToForm(user?.profile);
@@ -116,7 +103,7 @@ export function ProfilePage() {
   const roleLabel = roleCopy(user?.role ?? "USER").title;
   const status = accountStatus(user?.status);
   const photo = form.localPhotoUrl || (form.profileImageUrl ? mediaUrl(form.profileImageUrl) : "");
-  const phone = displayPhone(user?.phone);
+  const phone = formatStoredPhone(user?.phone);
   const email = user?.email?.trim() ?? "";
   const [tab, setTab] = useState<ProfileTab>("informacion");
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -333,7 +320,7 @@ export function ProfilePage() {
                               <dd className={`dash-exps-dossier__value${empty ? " is-empty" : ""}`}>
                                 {empty ? (
                                   "Sin completar"
-                                ) : chips.length > 1 ? (
+                                ) : chips.length > 0 ? (
                                   <ul className="profile-chips">
                                     {chips.map((chip) => (
                                       <li key={chip}>{chip}</li>

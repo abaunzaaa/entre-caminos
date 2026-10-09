@@ -1,4 +1,12 @@
+import { ensureCopRates } from "../config/exchange-rates.js";
+import {
+  ONBOARDING_BUDGETS,
+  ONBOARDING_COMPANION_ALIASES,
+  ONBOARDING_PLACE_ALIASES,
+  type ONBOARDING_COMPANIONS,
+} from "../config/onboarding.js";
 import { prisma } from "../database/prisma.js";
+import { getBudgetLevel, isBudgetLevel } from "../utils/budget.js";
 
 const DEPARTMENT_NAMES = [
   "Amazonas",
@@ -37,11 +45,18 @@ const DEPARTMENT_NAMES = [
 ];
 
 const PLANS = ["family", "couple", "solo", "friends"] as const;
-const PRICES = ["0-50000", "50000-100000", "100000-200000", "200000+"] as const;
 const DURATIONS = ["short", "medium", "half", "day"] as const;
 
 export type PublicCatalogPlan = (typeof PLANS)[number];
-export type PublicCatalogPrice = (typeof PRICES)[number];
+
+/** Valor del filtro «Tipo de plan» → valor guardado en Experience.idealFor. */
+const PLAN_COMPANION: Record<PublicCatalogPlan, (typeof ONBOARDING_COMPANIONS)[number]> = {
+  family: "Familia",
+  couple: "En pareja",
+  solo: "Solo",
+  friends: "Amigos",
+};
+export type PublicCatalogPrice = (typeof ONBOARDING_BUDGETS)[number];
 export type PublicCatalogDuration = (typeof DURATIONS)[number];
 
 export type PublicCatalogFilters = {
@@ -62,11 +77,15 @@ export type CatalogListItem = {
   categoryName: string;
   categorySearch?: string;
   price: number;
+  currency?: string | null;
   location: string;
   duration: string | null;
   durationValue: number | null;
   durationUnit: "MINUTES" | "HOURS" | "DAYS" | null;
   createdAt: Date;
+  idealFor?: string[];
+  /** Textos ya guardados que también entran en la búsqueda por palabras clave. */
+  keywords?: string;
 };
 
 function fold(value: string) {
@@ -74,7 +93,25 @@ function fold(value: string) {
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
+    .replace(/\s+/g, " ")
     .trim();
+}
+
+function labelsByStoredValue(aliases: Record<string, string>) {
+  const labels = new Map<string, string[]>();
+  for (const [label, value] of Object.entries(aliases)) {
+    const current = labels.get(value) ?? [];
+    current.push(label);
+    labels.set(value, current);
+  }
+  return labels;
+}
+
+const PLACE_LABELS = labelsByStoredValue(ONBOARDING_PLACE_ALIASES);
+const COMPANION_LABELS = labelsByStoredValue(ONBOARDING_COMPANION_ALIASES);
+
+function withVisibleLabels(values: string[], labels: Map<string, string[]>) {
+  return values.flatMap((value) => [value, ...(labels.get(value) ?? [])]);
 }
 
 function isDepartment(value: string) {
@@ -103,28 +140,14 @@ export function municipalityOf(location: string) {
   return "";
 }
 
-function priceNumber(value: number) {
-  return Number.isFinite(value) ? value : 0;
-}
-
-function matchesPrice(price: number, band: string) {
+function matchesPrice(item: CatalogListItem, band: string) {
   if (!band) {
     return true;
   }
-  const value = priceNumber(price);
-  if (band === "0-50000") {
-    return value <= 50000;
+  if (!isBudgetLevel(band)) {
+    return false;
   }
-  if (band === "50000-100000") {
-    return value > 50000 && value <= 100000;
-  }
-  if (band === "100000-200000") {
-    return value > 100000 && value <= 200000;
-  }
-  if (band === "200000+") {
-    return value > 200000;
-  }
-  return true;
+  return getBudgetLevel(item.price, item.currency) === band;
 }
 
 function durationMinutes(item: CatalogListItem) {
@@ -179,20 +202,11 @@ function matchesPlan(item: CatalogListItem, plan: string) {
   if (!plan) {
     return true;
   }
-  const haystack = `${item.title} ${item.description} ${item.categoryName}`.toLowerCase();
-  if (plan === "family") {
-    return /familia|familiar|niñ/.test(haystack);
+  const companion = PLAN_COMPANION[plan as PublicCatalogPlan];
+  if (!companion) {
+    return true;
   }
-  if (plan === "couple") {
-    return /pareja|románt|romant/.test(haystack);
-  }
-  if (plan === "solo") {
-    return /solo|individual|autogui/.test(haystack);
-  }
-  if (plan === "friends") {
-    return /amigo|grupo|compart/.test(haystack);
-  }
-  return true;
+  return (item.idealFor ?? []).includes(companion);
 }
 
 function matchesQuery(item: CatalogListItem, query: string) {
@@ -202,7 +216,14 @@ function matchesQuery(item: CatalogListItem, query: string) {
   }
   const city = municipalityOf(item.location);
   const haystack = fold(
-    [item.title, item.categorySearch || item.categoryName, item.location, city, item.description].join(" "),
+    [
+      item.title,
+      item.categorySearch || item.categoryName,
+      item.location,
+      city,
+      item.description,
+      item.keywords ?? "",
+    ].join(" "),
   );
   if (haystack.includes(normalizedQuery)) {
     return true;
@@ -239,7 +260,7 @@ export function filterCatalogItems(items: CatalogListItem[], filters: PublicCata
     if (filters.categoryId && item.categoryId !== filters.categoryId) {
       return false;
     }
-    if (!matchesPrice(item.price, filters.price ?? "")) {
+    if (!matchesPrice(item, filters.price ?? "")) {
       return false;
     }
     if (!matchesDuration(item, filters.duration ?? "")) {
@@ -277,6 +298,7 @@ export function paginateCatalog<T>(items: T[], page: number, limit: number) {
 const catalogCategorySelect = { id: true, name: true, icon: true } as const;
 
 export async function listPublicCatalogPage(input: PublicCatalogFilters & { page: number; limit: number }) {
+  const pendingRates = ensureCopRates();
   const rows = await prisma.experience.findMany({
     relationLoadStrategy: "join",
     where: { status: "PUBLISHED" },
@@ -290,12 +312,35 @@ export async function listPublicCatalogPage(input: PublicCatalogFilters & { page
           category: { select: catalogCategorySelect },
         },
       },
+      experienceInterests: {
+        orderBy: { position: "asc" },
+        select: { interest: { select: { name: true } } },
+      },
+      locations: {
+        orderBy: { position: "asc" },
+        select: {
+          municipality: true,
+          department: true,
+          address: true,
+          howToGetThere: true,
+        },
+      },
     },
   });
+  await pendingRates;
   const items: CatalogListItem[] = rows.map((row) => {
     const orderedNames = [...(row.experienceCategories ?? [])]
       .sort((left, right) => left.position - right.position)
       .map((link) => link.category?.name?.trim() || "")
+      .filter(Boolean);
+    const placeText = (row.locations ?? []).flatMap((place) => [
+      place.municipality,
+      place.department,
+      place.address,
+      place.howToGetThere,
+    ]);
+    const interestNames = (row.experienceInterests ?? [])
+      .map((link) => link.interest?.name?.trim() || "")
       .filter(Boolean);
     return {
       id: row.id,
@@ -305,11 +350,23 @@ export async function listPublicCatalogPage(input: PublicCatalogFilters & { page
       categoryName: row.category?.name ?? "",
       categorySearch: orderedNames.length ? orderedNames.join(" ") : row.category?.name ?? "",
       price: Number(row.price),
+      currency: row.currency,
       location: row.location,
       duration: row.duration,
       durationValue: row.durationValue,
       durationUnit: row.durationUnit,
       createdAt: row.createdAt,
+      idealFor: row.idealFor ?? [],
+      keywords: [
+        ...placeText,
+        row.howToGetThere,
+        ...interestNames,
+        ...withVisibleLabels(row.environments ?? [], PLACE_LABELS),
+        ...withVisibleLabels(row.idealFor ?? [], COMPANION_LABELS),
+      ]
+        .map((value) => value?.trim() || "")
+        .filter(Boolean)
+        .join(" "),
     };
   });
   const facets = catalogFacets(items);

@@ -13,6 +13,13 @@ type LocationStepProps = {
   locationError: string;
   onChange: (form: OnboardingForm) => void;
   onUseLocation: () => void;
+  fieldErrors?: {
+    country?: string;
+    department?: string;
+    city?: string;
+    neighborhood?: string;
+    address?: string;
+  };
   labels?: {
     department?: string;
     neighborhood?: string;
@@ -43,6 +50,7 @@ export function LocationStep({
   locationError,
   onChange,
   onUseLocation,
+  fieldErrors,
   labels,
 }: LocationStepProps) {
   const departmentLabel = labels?.department ?? "Departamento o estado";
@@ -86,42 +94,73 @@ export function LocationStep({
   return (
     <form className="onboarding-location" onSubmit={(event) => event.preventDefault()}>
       <div className="location-grid">
-        <OnboardingSelect
-          label="País"
-          icon={Globe}
-          value={form.country}
-          placeholder="Selecciona un país"
-          options={COUNTRY_OPTIONS}
-          open={openField === "country"}
-          onOpenChange={(open) => setOpenField(open ? "country" : null)}
-          onChange={setCountry}
-        />
-        <OnboardingSelect
-          label={departmentLabel}
-          icon={MapPin}
-          value={form.department}
-          placeholder="Selecciona un departamento"
-          options={departments}
-          allowEmpty={true}
-          searchable={true}
-          open={openField === "department"}
-          onOpenChange={(open) => setOpenField(open ? "department" : null)}
-          onChange={setDepartment}
-        />
-        <OnboardingSelect
-          label="Ciudad o municipio"
-          icon={Building2}
-          value={form.city}
-          placeholder="Selecciona un municipio"
-          options={toOptions(cities)}
-          allowEmpty={true}
-          searchable={true}
-          placement="down"
-          disabled={!form.department}
-          open={openField === "city"}
-          onOpenChange={(open) => setOpenField(open ? "city" : null)}
-          onChange={(city) => onChange({ ...form, city })}
-        />
+        <div className="location-grid__item">
+          <OnboardingSelect
+            id="location-country"
+            label="País"
+            icon={Globe}
+            value={form.country}
+            placeholder="Selecciona un país"
+            options={COUNTRY_OPTIONS}
+            invalid={Boolean(fieldErrors?.country)}
+            describedBy={fieldErrors?.country ? "location-country-error" : undefined}
+            open={openField === "country"}
+            onOpenChange={(open) => setOpenField(open ? "country" : null)}
+            onChange={setCountry}
+          />
+          {fieldErrors?.country ? (
+            <p id="location-country-error" className="onboarding-error" role="alert">
+              {fieldErrors.country}
+            </p>
+          ) : null}
+        </div>
+        <div className="location-grid__item">
+          <OnboardingSelect
+            id="location-department"
+            label={departmentLabel}
+            icon={MapPin}
+            value={form.department}
+            placeholder="Selecciona un departamento"
+            options={departments}
+            allowEmpty={true}
+            searchable={true}
+            invalid={Boolean(fieldErrors?.department)}
+            describedBy={fieldErrors?.department ? "location-department-error" : undefined}
+            open={openField === "department"}
+            onOpenChange={(open) => setOpenField(open ? "department" : null)}
+            onChange={setDepartment}
+          />
+          {fieldErrors?.department ? (
+            <p id="location-department-error" className="onboarding-error" role="alert">
+              {fieldErrors.department}
+            </p>
+          ) : null}
+        </div>
+        <div className="location-grid__item">
+          <OnboardingSelect
+            id="location-city"
+            label="Ciudad o municipio"
+            icon={Building2}
+            value={form.city}
+            placeholder="Selecciona un municipio"
+            options={toOptions(cities)}
+            allowEmpty={true}
+            searchable={true}
+            placement="down"
+            disabled={!form.department}
+            invalid={Boolean(fieldErrors?.city)}
+            describedBy={fieldErrors?.city ? "location-city-error" : undefined}
+            open={openField === "city"}
+            onOpenChange={(open) => setOpenField(open ? "city" : null)}
+            onChange={(city) => onChange({ ...form, city })}
+          />
+          {fieldErrors?.city ? (
+            <p id="location-city-error" className="onboarding-error" role="alert">
+              {fieldErrors.city}
+            </p>
+          ) : null}
+        </div>
+        <div className="location-grid__item">
         <label className="onboarding-field">
           <FieldIcon icon={House} />
           <span className="onboarding-field__copy">
@@ -131,6 +170,8 @@ export function LocationStep({
                 id="onboarding-neighborhood"
                 name="ec-neighborhood"
                 value={form.neighborhood}
+                aria-invalid={Boolean(fieldErrors?.neighborhood) || undefined}
+                aria-describedby={fieldErrors?.neighborhood ? "location-neighborhood-error" : undefined}
                 onChange={(event) => onChange({ ...form, neighborhood: event.target.value })}
                 placeholder={neighborhoodPlaceholder}
                 autoComplete="off"
@@ -141,6 +182,13 @@ export function LocationStep({
             </span>
           </span>
         </label>
+        {fieldErrors?.neighborhood ? (
+          <p id="location-neighborhood-error" className="onboarding-error" role="alert">
+            {fieldErrors.neighborhood}
+          </p>
+        ) : null}
+        </div>
+        <div className="location-grid__item">
         <div className="onboarding-field--address">
           <div className="onboarding-address-row">
             <label className="onboarding-field">
@@ -155,6 +203,8 @@ export function LocationStep({
                     id="onboarding-address"
                     name="ec-address-ref"
                     value={form.addressReference}
+                    aria-invalid={Boolean(fieldErrors?.address) || undefined}
+                    aria-describedby={fieldErrors?.address ? "location-address-error" : undefined}
                     onChange={(event) => onChange({ ...form, addressReference: event.target.value })}
                     placeholder={addressPlaceholder}
                     autoComplete="off"
@@ -186,6 +236,12 @@ export function LocationStep({
               {locationError}
             </p>
           ) : null}
+          {fieldErrors?.address ? (
+            <p id="location-address-error" className="onboarding-error" role="alert">
+              {fieldErrors.address}
+            </p>
+          ) : null}
+        </div>
         </div>
       </div>
     </form>

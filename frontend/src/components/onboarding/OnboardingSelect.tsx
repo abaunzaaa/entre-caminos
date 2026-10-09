@@ -20,6 +20,9 @@ type OnboardingSelectBase = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   wide?: boolean;
+  id?: string;
+  invalid?: boolean;
+  describedBy?: string;
 };
 
 type OnboardingSelectSingle = OnboardingSelectBase & {
@@ -72,6 +75,9 @@ export function OnboardingSelect(props: OnboardingSelectProps) {
     onOpenChange,
     wide = false,
     multiple = false,
+    id,
+    invalid = false,
+    describedBy,
   } = props;
   const rootRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -263,6 +269,7 @@ export function OnboardingSelect(props: OnboardingSelectProps) {
   return (
     <div
       ref={rootRef}
+      id={id}
       className={`onboarding-field onboarding-field--select${wide ? " onboarding-field--wide" : ""}${open ? " is-open" : ""}${disabled ? " is-disabled" : ""}`}
       onClick={toggleOpen}
     >
@@ -278,6 +285,8 @@ export function OnboardingSelect(props: OnboardingSelectProps) {
           aria-haspopup="listbox"
           aria-expanded={open}
           aria-controls={open ? listId : undefined}
+          aria-invalid={invalid || undefined}
+          aria-describedby={describedBy}
           disabled={disabled}
           onClick={(event) => {
             event.stopPropagation();

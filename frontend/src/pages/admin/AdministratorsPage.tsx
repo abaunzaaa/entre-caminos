@@ -9,6 +9,7 @@ import {
 } from "../../services/catalog.service";
 import type { PublicUser } from "../../types";
 import { Button } from "../../components/ui/Button";
+import { Pager } from "../../components/ui/Pager";
 import { Input } from "../../components/ui/Input";
 import { SuccessConfirmDialog } from "../../components/ui/SuccessConfirmDialog";
 import { AuthKeyIcon } from "../../components/auth/AuthKeyIcon";
@@ -697,15 +698,12 @@ export function AdministratorsPage() {
               </div>
             </div>
             {pageCount > 1 ? (
-              <nav className="dash-team-pager" aria-label="Páginas de administradores">
-                <button type="button" onClick={() => setPage(currentPage - 1)} disabled={currentPage <= 1}>
-                  Anterior
-                </button>
-                <span>Página {currentPage}</span>
-                <button type="button" onClick={() => setPage(currentPage + 1)} disabled={currentPage >= pageCount}>
-                  Siguiente
-                </button>
-              </nav>
+              <Pager
+                page={currentPage}
+                pageCount={pageCount}
+                onPageChange={setPage}
+                label="Páginas de administradores"
+              />
             ) : null}
             </>
           )}

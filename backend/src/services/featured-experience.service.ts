@@ -188,6 +188,10 @@ const recommendationInclude = {
       interest: { select: { name: true } },
     },
   },
+  locations: {
+    orderBy: { position: "asc" as const },
+    select: { municipality: true },
+  },
 } as const;
 
 function loadPublishedForRecommendations() {

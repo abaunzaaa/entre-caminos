@@ -239,30 +239,6 @@
   flex-shrink: 0;
 }
 
-.featured-admin__pager {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  color: var(--admin-forest, #294942);
-  font-size: 14px;
-}
-
-.featured-admin__pager button {
-  height: 36px;
-  border: 1px solid var(--border-soft, #dce3df);
-  border-radius: 999px;
-  padding: 0 14px;
-  color: var(--admin-forest, #294942);
-  background: #fff;
-  cursor: pointer;
-}
-
-.featured-admin__pager button:disabled {
-  opacity: 0.45;
-  cursor: default;
-}
-
 .featured-admin__actions {
   display: flex;
   gap: 8px;

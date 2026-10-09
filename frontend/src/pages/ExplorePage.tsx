@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { ExperienceCatalogCard } from "../components/admin/ExperienceCatalogCard";
+import { Pager } from "../components/ui/Pager";
 import {
   DEFAULT_DISCOVER_FILTERS,
   ExplorerDiscoverFilters,
@@ -20,6 +21,8 @@ import paloma2 from "../assets/paloma 2.png";
 import { getCoverFeaturedExperiences, getMapPreviewExperiences, getPublicExperiences, getRecommendedExperiences } from "../services/catalog.service";
 import { listFavoriteIds } from "../services/favorites.service";
 import { onFavoritesChanged } from "../services/favorites-sync";
+import { listVisitedIds } from "../services/visits.service";
+import { onVisitsChanged } from "../services/visits-sync";
 import {
   COLOMBIA_DEPARTMENTS,
   findDepartment,
@@ -113,6 +116,7 @@ export function ExplorePage() {
   const [loading, setLoading] = useState(true);
   const [loaded, setLoaded] = useState(false);
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(() => new Set());
+  const [visitedIds, setVisitedIds] = useState<Set<string>>(() => new Set());
 
   useEffect(() => {
     if (!user) {
@@ -135,6 +139,33 @@ export function ExplorePage() {
     }
     loadFavorites();
     const unsubscribe = onFavoritesChanged(loadFavorites);
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!user) {
+      setVisitedIds(new Set());
+      return;
+    }
+    let cancelled = false;
+    function loadVisits() {
+      listVisitedIds()
+        .then((ids) => {
+          if (!cancelled) {
+            setVisitedIds(new Set(ids));
+          }
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setVisitedIds(new Set());
+          }
+        });
+    }
+    loadVisits();
+    const unsubscribe = onVisitsChanged(loadVisits);
     return () => {
       cancelled = true;
       unsubscribe();
@@ -392,32 +423,22 @@ export function ExplorePage() {
                     showManage={false}
                     viewHref={`/explorar/${experience.id}`}
                     favorited={favoriteIds.has(experience.id)}
+                    visited={visitedIds.has(experience.id)}
                     imagePriority={index === 0}
                   />
                 </div>
               ))}
             </div>
 
-            <div
-              className="explorer-discover-pager explorer-reveal"
+            <Pager
+              className="explorer-reveal"
               style={{ "--reveal-delay": `${220 + Math.min(experiences.length, 8) * 80}ms` } as CSSProperties}
-            >
-              <button
-                type="button"
-                onClick={() => setPage((current) => Math.max(1, current - 1))}
-                disabled={loading || page <= 1}
-              >
-                Anterior
-              </button>
-              <span className="explorer-discover-pager__page">Página {page}</span>
-              <button
-                type="button"
-                onClick={() => setPage((current) => current + 1)}
-                disabled={loading || pageCount === 0 || page >= pageCount}
-              >
-                Siguiente
-              </button>
-            </div>
+              page={page}
+              pageCount={pageCount}
+              onPageChange={setPage}
+              disabled={loading}
+              label="Paginación de experiencias"
+            />
           </>
         )}
       </section>

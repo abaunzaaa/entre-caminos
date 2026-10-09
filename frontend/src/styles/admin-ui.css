@@ -861,50 +861,6 @@
   content: none;
 }
 
-.dash-exps-pager {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 22px;
-}
-
-.dash-exps-pager__group {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.dash-exps-pager__gap {
-  color: var(--admin-muted, #6b746f);
-  font-size: 13px;
-}
-
-.dash-exps-pager button {
-  min-width: 34px;
-  height: 34px;
-  padding: 0 12px;
-  border: 0;
-  border-radius: 12px;
-  background: transparent;
-  color: var(--admin-muted, #6b746f);
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.dash-exps-pager button.is-current {
-  background: var(--admin-forest, #294942);
-  color: #ffffff;
-}
-
-.dash-exps-pager button:disabled {
-  cursor: default;
-  opacity: 0.4;
-}
-
 .dash-team-roster__viewport.is-scrollable:focus-visible,
 .dash-cats-roster__viewport.is-scrollable:focus-visible,
 .dash-exps-roster__viewport.is-scrollable:focus-visible {
@@ -954,35 +910,6 @@
 .dash-team-roster__viewport .dash-team-card,
 .dash-cats-roster__viewport .dash-team-card {
   flex-shrink: 0;
-}
-
-.dash-team-pager {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  max-width: 100%;
-  margin-top: 16px;
-  color: var(--admin-forest, #294942);
-  font-size: 14px;
-}
-
-.dash-team-pager button {
-  height: 36px;
-  border: 1px solid var(--border-soft, #dce3df);
-  border-radius: 999px;
-  padding: 0 14px;
-  color: var(--admin-forest, #294942);
-  background: #fff;
-  cursor: pointer;
-  font: inherit;
-  font-size: 14px;
-}
-
-.dash-team-pager button:disabled {
-  opacity: 0.45;
-  cursor: default;
 }
 
 .dash-team-board__people {
@@ -2377,7 +2304,9 @@
 
 .dash-exps-tile:has(.is-open),
 .dash-exps-tile:has(.dash-exps-tile__fav:hover),
-.dash-exps-tile:has(.dash-exps-tile__fav:focus-visible) {
+.dash-exps-tile:has(.dash-exps-tile__fav:focus-visible),
+.dash-exps-tile:has(.dash-exps-tile__visited:hover),
+.dash-exps-tile:has(.dash-exps-tile__visited:focus-visible) {
   z-index: 12;
 }
 
@@ -2490,7 +2419,8 @@
   z-index: auto;
 }
 
-.dash-exps-tile__fav {
+.dash-exps-tile__fav,
+.dash-exps-tile__visited {
   position: relative;
   z-index: 5;
   display: inline-grid;
@@ -2516,7 +2446,9 @@
 }
 
 .dash-exps-tile__fav:hover,
-.dash-exps-tile__fav:focus-visible {
+.dash-exps-tile__fav:focus-visible,
+.dash-exps-tile__visited:hover,
+.dash-exps-tile__visited:focus-visible {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.18) 100%),
     rgba(255, 255, 255, 0.52);
@@ -2532,7 +2464,16 @@
   border-color: rgba(41, 73, 66, 0.28);
 }
 
-.dash-exps-tile__fav:disabled {
+.dash-exps-tile__visited.is-on {
+  color: #1c332e;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, rgba(233, 240, 223, 0.55) 100%),
+    rgba(233, 240, 223, 0.72);
+  border-color: rgba(41, 73, 66, 0.28);
+}
+
+.dash-exps-tile__fav:disabled,
+.dash-exps-tile__visited:disabled {
   cursor: wait;
   opacity: 0.7;
   transform: none;
@@ -2562,7 +2503,9 @@
 }
 
 .dash-exps-tile__fav:hover .dash-exps-tile__fav-tip,
-.dash-exps-tile__fav:focus-visible .dash-exps-tile__fav-tip {
+.dash-exps-tile__fav:focus-visible .dash-exps-tile__fav-tip,
+.dash-exps-tile__visited:hover .dash-exps-tile__fav-tip,
+.dash-exps-tile__visited:focus-visible .dash-exps-tile__fav-tip {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
