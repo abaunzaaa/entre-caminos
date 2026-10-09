@@ -1,4 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
+import { useNavigate } from "react-router-dom";
+import palomaLeft from "../assets/paloma1.png";
+import palomaRight from "../assets/paloma 2.png";
 import {
   addJourneyMemorySticker,
   createJourneyDecoration,
@@ -11,7 +14,6 @@ import {
   deleteJourneyPlan,
   loadJourney,
   moveJourneyMemorySticker,
-  saveJourneyTheme,
   updateJourneyDecoration,
   updateJourneyMemory,
   updateJourneyPlan,
@@ -23,14 +25,18 @@ import {
   type JourneyTheme,
   type MemoryInput,
 } from "../services/journey.service";
+import { ExplorerUserFooter } from "../components/explorer/ExplorerUserFooter";
 import { JourneyCalendar } from "../components/journeys/JourneyCalendar";
 import { JourneyJournal, type MemorySeed } from "../components/journeys/JourneyJournal";
+import { JourneyKeepsake } from "../components/journeys/JourneyKeepsake";
+import { JourneyNextPlans } from "../components/journeys/JourneyNextPlans";
 import { JourneyUpcoming } from "../components/journeys/JourneyUpcoming";
 import { getPublicExperiences } from "../services/catalog.service";
 import type { Experience } from "../types";
 import { getApiErrorMessage } from "../utils/api-error";
 import { bogotaDay } from "../utils/journey-dates";
 import { mediaUrl } from "../utils/media";
+import { useInViewReveal } from "../hooks/useInViewReveal";
 import "../styles/mis-caminos.css";
 
 type Section = "calendario" | "proximas" | "bitacora";
@@ -54,6 +60,7 @@ function fail(error: unknown, fallback: string): never {
 }
 
 export function MisCaminosPage() {
+  const navigate = useNavigate();
   const [section, setSection] = useState<Section>("calendario");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -64,7 +71,13 @@ export function MisCaminosPage() {
   const [memories, setMemories] = useState<JourneyMemory[]>([]);
   const [seed, setSeed] = useState<MemorySeed | null>(null);
   const [photos, setPhotos] = useState<IntroPhotos>({ upcoming: "", journal: "" });
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [calendarDay, setCalendarDay] = useState<string | undefined>(undefined);
+  const calendarDialogRef = useRef<HTMLDivElement>(null);
+  const scaleTimers = useRef<Map<string, number>>(new Map());
+  const pendingScales = useRef<Map<string, number>>(new Map());
   const clearSeed = useCallback(() => setSeed(null), []);
+  const { ref: heroRef, inView: heroInView } = useInViewReveal<HTMLDivElement>({ enterRatio: 0.08, leaveRatio: 0.02 });
 
   useEffect(() => {
     let active = true;
@@ -102,8 +115,8 @@ export function MisCaminosPage() {
         }
         const list = result.experiences;
         setPhotos({
-          upcoming: takePhoto(list, ["cabalgata"], 1200),
-          journal: takePhoto(list, ["gastronómica", "gastronomica"], 1200),
+          upcoming: takePhoto(list, ["cabalgata"], 420),
+          journal: takePhoto(list, ["gastronómica", "gastronomica"], 420),
         });
       })
       .catch(() => undefined);
@@ -112,16 +125,58 @@ export function MisCaminosPage() {
     };
   }, []);
 
-  function openSection(next: Section) {
-    setSection(next);
-    window.requestAnimationFrame(() => {
-      const panel = document.getElementById("caminos-panel");
-      if (!panel) {
+  useEffect(() => {
+    if (!calendarOpen) {
+      return;
+    }
+    const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const body = document.body;
+    const previousOverflow = body.style.overflow;
+    body.style.overflow = "hidden";
+    const dialog = calendarDialogRef.current;
+    dialog?.focus();
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setCalendarOpen(false);
         return;
       }
-      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      panel.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
-    });
+      if (event.key !== "Tab" || !dialog) {
+        return;
+      }
+      const nodes = [...dialog.querySelectorAll<HTMLElement>("button, a[href], input, textarea, select")].filter((node) => !node.hasAttribute("disabled"));
+      if (!nodes.length) {
+        return;
+      }
+      const first = nodes[0];
+      const last = nodes[nodes.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", onKey);
+      pendingScales.current.forEach((scale, id) => {
+        const timer = scaleTimers.current.get(id);
+        if (timer) {
+          window.clearTimeout(timer);
+        }
+        void updateJourneyDecoration(id, { rotation: scale }).catch(() => undefined);
+      });
+      pendingScales.current.clear();
+      scaleTimers.current.clear();
+      previous?.focus();
+    };
+  }, [calendarOpen]);
+
+  function openCalendar(day?: string) {
+    setCalendarDay(day);
+    setCalendarOpen(true);
   }
 
   useEffect(() => {
@@ -162,38 +217,29 @@ export function MisCaminosPage() {
     }
   }
 
-  async function changeTheme(next: JourneyTheme) {
-    const previous = theme;
-    setTheme(next);
-    try {
-      await saveJourneyTheme(next);
-      setNotice("Estilo guardado");
-    } catch (reason) {
-      setTheme(previous);
-      setError(getApiErrorMessage(reason, "No pudimos guardar el estilo."));
-    }
-  }
-
   async function decorate(input: {
-    kind: "sticker" | "note";
+    kind: "sticker" | "note" | "fill";
     stickerKey?: JourneyStickerKey;
     text?: string;
     day?: string;
     color?: string;
     x?: number;
     y?: number;
+    rotation?: number;
   }) {
     try {
       const decoration = await createJourneyDecoration({
         ...input,
         x: input.x ?? 28,
         y: input.y ?? 46,
-        rotation: input.kind === "note" ? 0 : -6,
+        rotation: input.rotation ?? (input.kind === "sticker" ? 1 : 0),
       });
       setDecorations((current) => [...current, decoration]);
       setNotice("Decoración guardada");
+      return decoration;
     } catch (reason) {
       setError(getApiErrorMessage(reason, "No pudimos guardar la decoración."));
+      return null;
     }
   }
 
@@ -207,6 +253,56 @@ export function MisCaminosPage() {
       await updateJourneyDecoration(id, { x, y, rotation: item?.rotation ?? 0 });
     } catch (reason) {
       setError(getApiErrorMessage(reason, "No pudimos guardar la posición."));
+    }
+  }
+
+  async function shiftDecoration(id: string, day: string, x: number, y: number) {
+    const previous = decorations.find((item) => item.id === id);
+    setDecorations((current) => current.map((item) => (item.id === id ? { ...item, day, x, y } : item)));
+    try {
+      await updateJourneyDecoration(id, { day, x, y });
+    } catch (reason) {
+      if (previous) {
+        setDecorations((current) => current.map((item) => (item.id === id ? previous : item)));
+      }
+      setError(getApiErrorMessage(reason, "No pudimos mover la decoración."));
+    }
+  }
+
+  function updateNote(id: string, text: string, color: string) {
+    setDecorations((current) => current.map((item) => (item.id === id ? { ...item, text, color } : item)));
+    void updateJourneyDecoration(id, { text, color }).catch((reason) => {
+      setError(getApiErrorMessage(reason, "No pudimos guardar la nota."));
+    });
+  }
+
+  function scaleDecoration(id: string, scale: number) {
+    setDecorations((current) => current.map((item) => (item.id === id ? { ...item, rotation: scale } : item)));
+    pendingScales.current.set(id, scale);
+    const previous = scaleTimers.current.get(id);
+    if (previous) {
+      window.clearTimeout(previous);
+    }
+    scaleTimers.current.set(
+      id,
+      window.setTimeout(() => {
+        pendingScales.current.delete(id);
+        scaleTimers.current.delete(id);
+        void updateJourneyDecoration(id, { rotation: scale }).catch((reason) => {
+          setError(getApiErrorMessage(reason, "No pudimos guardar el tamaño."));
+        });
+      }, 450),
+    );
+  }
+
+  async function recolorDecoration(id: string, color: string) {
+    const previous = decorations.find((item) => item.id === id)?.color ?? null;
+    setDecorations((current) => current.map((item) => (item.id === id ? { ...item, color } : item)));
+    try {
+      await updateJourneyDecoration(id, { color });
+    } catch (reason) {
+      setDecorations((current) => current.map((item) => (item.id === id ? { ...item, color: previous } : item)));
+      setError(getApiErrorMessage(reason, "No pudimos guardar el color."));
     }
   }
 
@@ -265,12 +361,18 @@ export function MisCaminosPage() {
   }
 
   const memoryPlanIds = new Set(memories.map((memory) => memory.planId).filter((id): id is string => Boolean(id)));
+  const keepsakes = [
+    ...memories.flatMap((memory) => memory.photos.map((photo) => mediaUrl(photo.url, 420))),
+    photos.upcoming,
+    photos.journal,
+  ].filter(Boolean);
 
   return (
     <main className="caminos">
       <section className="caminos-intro" aria-label="Mis caminos">
         <div className="caminos-wrap">
-          <div className="caminos-hero">
+          <div className="caminos-hero-screen">
+          <div ref={heroRef} className={`caminos-hero explorer-reveal-scope${heroInView ? " is-revealed" : ""}`}>
             <div className="caminos-hero__stage">
               <figure className="caminos-hero__base">
                 <img src="/mis-caminos/flores.jpg" alt="" />
@@ -280,83 +382,29 @@ export function MisCaminosPage() {
               </figure>
             </div>
             <div className="caminos-hero__copy">
-              <h1>Mis caminos</h1>
-              <p className="caminos-hero__lead">Un espacio para tus planes y recuerdos</p>
-              <button type="button" className="tourist-hero__cta" onClick={() => openSection("calendario")}>
+              <img className="caminos-hero__mark explorer-reveal explorer-reveal--soft" src="/mis-caminos/cartas.png" alt="" style={{ "--reveal-delay": "220ms" } as CSSProperties} />
+              <h1 className="explorer-reveal explorer-reveal--title" style={{ "--reveal-delay": "300ms" } as CSSProperties}>Mis caminos</h1>
+              <p className="caminos-hero__lead explorer-reveal explorer-reveal--soft" style={{ "--reveal-delay": "380ms" } as CSSProperties}>Un espacio para tus planes y recuerdos</p>
+              <button type="button" className="tourist-hero__cta explorer-reveal explorer-reveal--soft" style={{ "--reveal-delay": "460ms" } as CSSProperties} onClick={() => openCalendar()}>
                 Ver mi calendario
               </button>
             </div>
           </div>
-
-          <div className="caminos-space">
-            <p className="caminos-space__mark">mi espacio</p>
-            <h2>Todo lo que vives también merece un lugar</h2>
-            <div className="caminos-space__grid">
-              <article>
-                <figure>
-                  {photos.upcoming ? <img src={photos.upcoming} alt="Cabalgata entre montañas" /> : null}
-                </figure>
-                <h3>Próximas aventuras</h3>
-                <p>Revisa tus próximas experiencias y prepárate para lo que viene.</p>
-                <button type="button" className="explorer-empty__cta" onClick={() => openSection("proximas")}>
-                  Ver próximas aventuras
-                </button>
-              </article>
-              <article>
-                <figure>
-                  {photos.journal ? <img src={photos.journal} alt="Mesa compartida de una ruta gastronómica" /> : null}
-                </figure>
-                <h3>Mi bitácora</h3>
-                <p>Guarda recuerdos, fotos y notas para que cada plan siga contando una historia.</p>
-                <button type="button" className="explorer-empty__cta" onClick={() => openSection("bitacora")}>
-                  Abrir bitácora
-                </button>
-              </article>
-            </div>
           </div>
         </div>
+
+        <section className="caminos-plans" aria-labelledby="caminos-plans-title">
+          <div className="caminos-plans__inner">
+            <JourneyNextPlans plans={plans} loading={loading} onOpenDay={(day) => openCalendar(day)} />
+            <JourneyKeepsake photos={keepsakes} onOpen={() => navigate("/mis-caminos/bitacora")} />
+          </div>
+        </section>
       </section>
 
-      <div className="caminos-wrap" id="caminos-panel">
+      <div className="caminos-wrap caminos-panel" id="caminos-panel">
         {error ? <p className="caminos-error" role="alert">{error}</p> : null}
         {notice ? <p className="caminos-saved" role="status">{notice}</p> : null}
         {loading ? <p className="caminos-loading">Abriendo tu planner…</p> : null}
-
-        {!loading && section === "calendario" ? (
-          <div className="caminos-layout">
-            <JourneyCalendar
-              plans={plans}
-              decorations={decorations}
-              theme={theme}
-              memoryPlanIds={memoryPlanIds}
-              onTheme={(next) => void changeTheme(next)}
-              onCreatePlan={createPlan}
-              onUpdatePlan={updatePlan}
-              onDeletePlan={removePlan}
-              onDecorate={decorate}
-              onMoveDecoration={moveDecoration}
-              onCommitDecoration={commitDecoration}
-              onDeleteDecoration={removeDecoration}
-              onUpdateNote={(id, text, color) => {
-                void updateJourneyDecoration(id, { text, color }).then((decoration) => {
-                  setDecorations((current) => current.map((item) => (item.id === id ? { ...item, text: decoration.text, color: decoration.color } : item)));
-                  setNotice("Nota actualizada");
-                }).catch((reason) => setError(getApiErrorMessage(reason, "No pudimos guardar la nota.")));
-              }}
-              onRemember={(plan) => {
-                setSeed({
-                  title: plan.experience.title,
-                  happenedOn: bogotaDay(plan.plannedAt),
-                  experienceId: plan.experience.id,
-                  planId: plan.id,
-                  location: plan.experience.location,
-                });
-                setSection("bitacora");
-              }}
-            />
-            <JourneyUpcoming plans={plans} compact onUpdatePlan={updatePlan} onDeletePlan={removePlan} onOpenAll={() => setSection("proximas")} />
-          </div>
-        ) : null}
 
         {!loading && section === "proximas" ? (
           <JourneyUpcoming plans={plans} onUpdatePlan={updatePlan} onDeletePlan={removePlan} />
@@ -377,6 +425,64 @@ export function MisCaminosPage() {
           />
         ) : null}
       </div>
+      <div className="caminos-close">
+        <img className="caminos-close__dove caminos-close__dove--left" src={palomaLeft} alt="" aria-hidden="true" decoding="async" />
+        <img className="caminos-close__dove caminos-close__dove--right" src={palomaRight} alt="" aria-hidden="true" decoding="async" />
+        <ExplorerUserFooter />
+      </div>
+      {calendarOpen ? (
+        <div className="caminos-planner">
+          <div className="caminos-planner__backdrop" onClick={() => setCalendarOpen(false)} />
+          <div
+            ref={calendarDialogRef}
+            className="caminos-planner__sheet"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="caminos-calendar-title"
+            tabIndex={-1}
+          >
+            {loading ? (
+              <>
+                <button type="button" className="caminos-calhead__close caminos-planner__dismiss" onClick={() => setCalendarOpen(false)} aria-label="Cerrar calendario">×</button>
+                <p className="caminos-loading">Abriendo tu calendario…</p>
+              </>
+            ) : null}
+            {error ? <p className="caminos-error" role="alert">{error}</p> : null}
+            {!loading ? (
+              <JourneyCalendar
+                plans={plans}
+                decorations={decorations}
+                theme={theme}
+                memoryPlanIds={memoryPlanIds}
+                initialDay={calendarDay}
+                onCreatePlan={createPlan}
+                onUpdatePlan={updatePlan}
+                onDeletePlan={removePlan}
+                onDecorate={decorate}
+                onMoveDecoration={moveDecoration}
+                onCommitDecoration={commitDecoration}
+                onShiftDecoration={shiftDecoration}
+                onScaleDecoration={scaleDecoration}
+                onDeleteDecoration={removeDecoration}
+                onRecolorDecoration={recolorDecoration}
+                onUpdateNote={updateNote}
+                onRemember={(plan) => {
+                  setSeed({
+                    title: plan.experience.title,
+                    happenedOn: bogotaDay(plan.plannedAt),
+                    experienceId: plan.experience.id,
+                    planId: plan.id,
+                    location: plan.experience.location,
+                  });
+                  setCalendarOpen(false);
+                  setSection("bitacora");
+                }}
+                onClose={() => setCalendarOpen(false)}
+              />
+            ) : null}
+          </div>
+        </div>
+      ) : null}
     </main>
   );
 }

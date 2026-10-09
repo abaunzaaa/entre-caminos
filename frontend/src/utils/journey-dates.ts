@@ -40,6 +40,13 @@ export function monthTitle(year: number, month: number) {
   );
 }
 
+export function monthName(year: number, month: number) {
+  const label = new Intl.DateTimeFormat("es-CO", { month: "long", timeZone: "UTC" }).format(
+    new Date(Date.UTC(year, month - 1, 1, 12)),
+  );
+  return label.charAt(0).toLocaleUpperCase("es-CO") + label.slice(1);
+}
+
 export function weekdayShort(iso: string) {
   return new Intl.DateTimeFormat("es-CO", { weekday: "short", timeZone: "UTC" }).format(parseDay(iso));
 }

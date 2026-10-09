@@ -33,7 +33,7 @@ const NAV_LINKS: Array<{
 const EXPLORER_SHELL_PATHS = new Set(["/favoritos", "/mapa", "/plan-con-amigos", "/visitados", "/perfil", "/mis-caminos"]);
 
 export function isExplorerShellPath(pathname: string) {
-  return pathname.startsWith("/explorar") || pathname === "/perfil" || EXPLORER_SHELL_PATHS.has(pathname);
+  return pathname.startsWith("/explorar") || pathname === "/perfil" || pathname.startsWith("/mis-caminos") || EXPLORER_SHELL_PATHS.has(pathname);
 }
 
 export function ExplorerNavbar() {

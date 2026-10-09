@@ -13,7 +13,16 @@ export async function load(req: Request, res: Response) {
 
 export async function catalog(req: Request, res: Response) {
   const q = typeof req.query.q === "string" ? req.query.q : "";
-  const experiences = await journeyService.searchJourneyCatalog(q);
+  const category = typeof req.query.category === "string" ? req.query.category : "";
+  const location = typeof req.query.location === "string" ? req.query.location : "";
+  const rawPrice = typeof req.query.maxPrice === "string" ? Number(req.query.maxPrice) : null;
+  const duration = req.query.duration === "short" || req.query.duration === "half" || req.query.duration === "long" ? req.query.duration : undefined;
+  const experiences = await journeyService.searchJourneyCatalog(q, {
+    category,
+    location,
+    maxPrice: rawPrice != null && Number.isFinite(rawPrice) ? rawPrice : null,
+    duration,
+  });
   return res.json({ success: true, data: { experiences } });
 }
 

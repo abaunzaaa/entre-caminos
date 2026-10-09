@@ -10,6 +10,7 @@ declare module "axios" {
 }
 
 const TOKEN_KEY = "ec_access_token";
+const REFRESH_KEY = "ec_refresh_token";
 const USER_KEY = "ec_auth_user";
 const REMEMBER_KEY = "ec_remember";
 const SESSION_FLAG = "ec_session_expired";
@@ -96,6 +97,34 @@ export function setAccessToken(token: string | null) {
   writeStorage(otherStore(), TOKEN_KEY, null);
 }
 
+export function getRefreshToken() {
+  return readStorage(window.localStorage, REFRESH_KEY) ?? readStorage(window.sessionStorage, REFRESH_KEY);
+}
+
+export function setRefreshToken(token: string | null) {
+  writeStorage(persistStore(), REFRESH_KEY, token);
+  writeStorage(otherStore(), REFRESH_KEY, null);
+}
+
+export function consumeOAuthHandoff() {
+  const hash = window.location.hash.replace(/^#/, "");
+  if (!hash.includes("access_token=")) {
+    return;
+  }
+  const params = new URLSearchParams(hash);
+  const accessToken = params.get("access_token");
+  const refreshToken = params.get("refresh_token");
+  if (accessToken) {
+    setAccessToken(accessToken);
+  }
+  if (refreshToken) {
+    setRefreshToken(refreshToken);
+  }
+  const url = new URL(window.location.href);
+  url.hash = "";
+  window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}`);
+}
+
 export function getStoredUser(): PublicUser | null {
   const raw = readStorage(window.localStorage, USER_KEY) ?? readStorage(window.sessionStorage, USER_KEY);
   if (!raw) {
@@ -120,6 +149,8 @@ export function setStoredUser(user: PublicUser | null) {
 export function clearSession() {
   writeStorage(window.localStorage, TOKEN_KEY, null);
   writeStorage(window.sessionStorage, TOKEN_KEY, null);
+  writeStorage(window.localStorage, REFRESH_KEY, null);
+  writeStorage(window.sessionStorage, REFRESH_KEY, null);
   writeStorage(window.localStorage, USER_KEY, null);
   writeStorage(window.sessionStorage, USER_KEY, null);
   writeStorage(window.localStorage, REMEMBER_KEY, null);
@@ -188,9 +219,10 @@ export async function refreshAccessToken(_options?: { silent?: boolean }) {
     return null;
   }
   if (!refreshInFlight) {
-    const hadToken = Boolean(getAccessToken());
+    const hadToken = Boolean(getAccessToken() || getRefreshToken());
+    const refreshToken = getRefreshToken();
     refreshInFlight = api
-      .post("/auth/refresh", undefined, { skipAuthRefresh: true })
+      .post("/auth/refresh", refreshToken ? { refreshToken } : undefined, { skipAuthRefresh: true })
       .then(({ data }) => {
         const token = data?.data?.accessToken as string | undefined;
         if (!token) {
@@ -198,6 +230,10 @@ export async function refreshAccessToken(_options?: { silent?: boolean }) {
         }
         syncRememberFromLocation();
         setAccessToken(token);
+        const nextRefresh = data?.data?.refreshToken as string | undefined;
+        if (nextRefresh) {
+          setRefreshToken(nextRefresh);
+        }
         const user = data?.data?.user as PublicUser | undefined;
         if (user) {
           setStoredUser(user);

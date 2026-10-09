@@ -2,7 +2,20 @@ import { api } from "./api";
 
 export type JourneyTheme = "olive" | "cream" | "sand" | "sage";
 export type JourneyBackground = "cream" | "linen" | "olive" | "pressed";
-export type JourneyStickerKey = "leaf" | "bloom" | "sprig" | "fern" | "sun" | "ribbon" | "compass" | "cup" | "heart" | "star" | "camera";
+export type JourneyStickerKey =
+  | "leaf"
+  | "bloom"
+  | "sprig"
+  | "fern"
+  | "sun"
+  | "ribbon"
+  | "compass"
+  | "cup"
+  | "heart"
+  | "star"
+  | "camera"
+  | `line-${string}`
+  | `pastel-${string}`;
 
 export type JourneyExperience = {
   id: string;
@@ -12,6 +25,10 @@ export type JourneyExperience = {
   description?: string;
   category: string;
   status?: string;
+  price?: number | null;
+  currency?: string;
+  duration?: string | null;
+  durationMinutes?: number | null;
 };
 
 export type JourneyPlan = {
@@ -69,9 +86,19 @@ export async function loadJourney() {
   return data.data;
 }
 
-export async function searchJourneyCatalog(q: string, signal?: AbortSignal) {
+export async function searchJourneyCatalog(
+  q: string,
+  signal?: AbortSignal,
+  filters?: { category?: string; location?: string; maxPrice?: string; duration?: string },
+) {
   const { data } = await api.get<ApiResponse<{ experiences: JourneyExperience[] }>>("/journeys/catalog", {
-    params: { q },
+    params: {
+      q,
+      category: filters?.category || undefined,
+      location: filters?.location || undefined,
+      maxPrice: filters?.maxPrice || undefined,
+      duration: filters?.duration || undefined,
+    },
     signal,
   });
   return data.data.experiences;
@@ -97,7 +124,7 @@ export async function saveJourneyTheme(theme: JourneyTheme) {
 }
 
 export async function createJourneyDecoration(input: {
-  kind: "sticker" | "note";
+  kind: "sticker" | "note" | "fill";
   stickerKey?: JourneyStickerKey | null;
   text?: string | null;
   color?: string | null;
@@ -112,7 +139,7 @@ export async function createJourneyDecoration(input: {
 
 export async function updateJourneyDecoration(
   decorationId: string,
-  input: Partial<{ x: number; y: number; rotation: number; text: string; color: string; stickerKey: string }>,
+  input: Partial<{ x: number; y: number; rotation: number; text: string; color: string; stickerKey: string; day: string }>,
 ) {
   const { data } = await api.patch<ApiResponse<{ decoration: JourneyDecoration }>>(
     `/journeys/decorations/${decorationId}`,

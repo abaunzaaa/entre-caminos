@@ -121,6 +121,8 @@ model User {
   journeyPlans             JourneyPlan[]
   journeyDecorations       JourneyDecoration[]
   journeyMemories          JourneyMemory[]
+  bitacora                 Bitacora?
+  bitacoraAssets           BitacoraAsset[]
 
   @@index([roleId])
   @@index([status])
@@ -228,6 +230,7 @@ model Experience {
   favoriteCollectionItems  FavoriteCollectionItem[]
   journeyPlans             JourneyPlan[]
   journeyMemories          JourneyMemory[]
+  bitacoraPages            BitacoraPage[]
 
   @@index([status])
   @@index([categoryId])
@@ -679,4 +682,54 @@ model JourneyMemorySticker {
 
   @@index([memoryId])
   @@map("journey_memory_stickers")
+}
+
+/// Diario creativo de un usuario. Una sola bitácora por cuenta.
+model Bitacora {
+  id        String   @id @default(uuid())
+  userId    String   @unique @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user   User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pages  BitacoraPage[]
+  assets BitacoraAsset[]
+
+  @@map("bitacoras")
+}
+
+/// Composición de una página. Los elementos viven en JSON normalizado.
+model BitacoraPage {
+  id           String   @id @default(uuid())
+  bitacoraId   String   @map("bitacora_id")
+  sortOrder    Int      @map("sort_order")
+  background   String   @default("cream")
+  elements     Json     @default("[]")
+  experienceId String?  @map("experience_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  bitacora   Bitacora    @relation(fields: [bitacoraId], references: [id], onDelete: Cascade)
+  experience Experience? @relation(fields: [experienceId], references: [id], onDelete: SetNull)
+
+  @@index([bitacoraId, sortOrder])
+  @@index([experienceId])
+  @@map("bitacora_pages")
+}
+
+/// Fotografía subida por el usuario para usar en su bitácora.
+model BitacoraAsset {
+  id         String   @id @default(uuid())
+  bitacoraId String   @map("bitacora_id")
+  userId     String   @map("user_id")
+  url        String
+  publicId   String?  @map("public_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  bitacora Bitacora @relation(fields: [bitacoraId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([bitacoraId])
+  @@index([userId])
+  @@map("bitacora_assets")
 }

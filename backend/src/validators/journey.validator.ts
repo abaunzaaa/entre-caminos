@@ -17,7 +17,7 @@ export const themeSchema = z.object({
 });
 
 export const decorationSchema = z.object({
-  kind: z.enum(["sticker", "note"]),
+  kind: z.enum(["sticker", "note", "fill"]),
   stickerKey: z.enum(JOURNEY_STICKERS).nullable().optional(),
   text: z.string().max(280).nullable().optional(),
   color: z.string().max(20).nullable().optional(),

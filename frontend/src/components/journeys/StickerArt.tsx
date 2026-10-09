@@ -1,11 +1,21 @@
 import type { JourneyStickerKey } from "../../services/journey.service";
 
-export const STICKER_GROUPS: Array<{ id: string; label: string; keys: JourneyStickerKey[] }> = [
-  { id: "viajes", label: "Viajes", keys: ["compass", "camera", "sun"] },
-  { id: "naturaleza", label: "Naturaleza", keys: ["leaf", "bloom", "sprig", "fern"] },
-  { id: "mesa", label: "Gastronomía", keys: ["cup"] },
-  { id: "fiesta", label: "Celebraciones", keys: ["ribbon", "star"] },
-  { id: "corazon", label: "Corazones", keys: ["heart"] },
+export const STICKER_GROUPS: Array<{ id: string; label: string; keys: string[] }> = [
+  {
+    id: "pastel",
+    label: "Pastel",
+    keys: Array.from({ length: 27 }, (_, index) => `pastel-${String(index + 1).padStart(2, "0")}`),
+  },
+  {
+    id: "lineales",
+    label: "Lineales",
+    keys: [
+      "line-avion", "line-pasaporte", "line-maleta", "line-camara", "line-globo", "line-brujula", "line-mapa", "line-pin", "line-tiquete", "line-van", "line-palmera", "line-montana",
+      "line-sombrilla", "line-sol", "line-ola", "line-concha", "line-palmeras", "line-chanclas", "line-velero", "line-coctel", "line-protector", "line-snorkel", "line-silla", "line-bolso",
+      "line-moto", "line-bici", "line-tren", "line-bus", "line-taxi", "line-ventanilla", "line-hotel", "line-portatil", "line-cafe", "line-camara2", "line-mapa2", "line-senal",
+      "line-carpa", "line-fogata", "line-bota", "line-mochila", "line-cumbre", "line-letrero", "line-binoculares", "line-canoa", "line-pinos", "line-faro", "line-taza", "line-flechas",
+    ],
+  },
 ];
 
 export const PLANNER_STICKERS: Array<{ key: JourneyStickerKey; label: string }> = [
@@ -27,6 +37,9 @@ const olive = "#505840";
 const beige = "#D6C7AC";
 
 export function StickerArt({ stickerKey, className = "" }: { stickerKey: string; className?: string }) {
+  if (stickerKey.startsWith("line-") || stickerKey.startsWith("pastel-")) {
+    return <img src={`/mis-caminos/stickers/${stickerKey}.png`} alt="" className={className} draggable={false} loading="lazy" />;
+  }
   const common = { viewBox: "0 0 64 64", className, "aria-hidden": true as const };
   if (stickerKey === "bloom") {
     return (

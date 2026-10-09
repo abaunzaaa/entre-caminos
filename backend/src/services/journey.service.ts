@@ -1,6 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "../database/prisma.js";
 import { ApiError } from "../utils/api-error.js";
+import { formatDuration } from "../utils/experience-duration.js";
 import {
   assertMemoryAttendance,
   clampPercent,
@@ -26,7 +27,13 @@ const experienceCard = {
   status: true,
   description: true,
   category: { select: { name: true } },
+  price: true,
+  currency: true,
+  durationValue: true,
+  durationUnit: true,
 } satisfies Prisma.ExperienceSelect;
+
+const UNIT_MINUTES = { MINUTES: 1, HOURS: 60, DAYS: 1440 } as const;
 
 function dateOnly(value: Date) {
   return value.toISOString().slice(0, 10);
@@ -43,8 +50,11 @@ function serializePlan(row: {
     status: string;
     description: string;
     category: { name: string } | null;
+    durationValue: number | null;
+    durationUnit: keyof typeof UNIT_MINUTES | null;
   };
 }) {
+  const { durationValue, durationUnit } = row.experience;
   return {
     id: row.id,
     plannedAt: row.plannedAt.toISOString(),
@@ -56,6 +66,7 @@ function serializePlan(row: {
       description: row.experience.description,
       status: row.experience.status,
       category: row.experience.category?.name ?? "",
+      durationMinutes: durationValue && durationUnit ? durationValue * UNIT_MINUTES[durationUnit] : null,
     },
   };
 }
@@ -173,23 +184,41 @@ export async function loadJourney(userId: string) {
   };
 }
 
-export async function searchJourneyCatalog(query: string) {
+const DURATION_FILTERS: Record<"short" | "half" | "long", Prisma.ExperienceWhereInput> = {
+  short: { OR: [{ durationUnit: "MINUTES" }, { durationUnit: "HOURS", durationValue: { lte: 2 } }] },
+  half: { durationUnit: "HOURS", durationValue: { gt: 2, lte: 5 } },
+  long: { OR: [{ durationUnit: "HOURS", durationValue: { gt: 5 } }, { durationUnit: "DAYS" }] },
+};
+
+export async function searchJourneyCatalog(
+  query: string,
+  filters?: { category?: string; location?: string; maxPrice?: number | null; duration?: "short" | "half" | "long" },
+) {
   const q = query.trim();
+  const category = filters?.category?.trim() ?? "";
+  const location = filters?.location?.trim() ?? "";
+  const maxPrice = filters?.maxPrice;
   const rows = await prisma.experience.findMany({
     where: {
       status: "PUBLISHED",
-      ...(q
-        ? {
-            OR: [
-              { title: { contains: q, mode: "insensitive" } },
-              { location: { contains: q, mode: "insensitive" } },
-            ],
-          }
-        : {}),
+      AND: [
+        q
+          ? {
+              OR: [
+                { title: { contains: q, mode: "insensitive" } },
+                { location: { contains: q, mode: "insensitive" } },
+              ],
+            }
+          : {},
+        filters?.duration ? DURATION_FILTERS[filters.duration] : {},
+      ],
+      ...(category ? { category: { name: { equals: category, mode: "insensitive" } } } : {}),
+      ...(location ? { location: { contains: location, mode: "insensitive" } } : {}),
+      ...(maxPrice != null && Number.isFinite(maxPrice) ? { price: { lte: maxPrice } } : {}),
     },
     orderBy: { title: "asc" },
-    take: 8,
-    select: experienceCard,
+    take: 12,
+    select: { ...experienceCard, duration: true },
   });
   return rows.map((row) => ({
     id: row.id,
@@ -198,6 +227,9 @@ export async function searchJourneyCatalog(query: string) {
     location: row.location,
     description: row.description,
     category: row.category?.name ?? "",
+    price: Number(row.price),
+    currency: row.currency,
+    duration: formatDuration(row.durationValue, row.durationUnit) ?? row.duration ?? null,
   }));
 }
 
@@ -248,8 +280,10 @@ export async function saveTheme(userId: string, theme: string) {
   return { theme: saved };
 }
 
+type DecorationKind = "sticker" | "note" | "fill";
+
 type DecorationInput = {
-  kind: "sticker" | "note";
+  kind: DecorationKind;
   stickerKey?: string | null;
   text?: string | null;
   color?: string | null;
@@ -264,6 +298,9 @@ function decorationData(input: DecorationInput) {
     if (!input.stickerKey || !isJourneySticker(input.stickerKey)) {
       throw ApiError.badRequest("Elige un sticker del planner.");
     }
+  }
+  if (input.kind === "fill" && (!input.day || !input.color?.trim())) {
+    throw ApiError.badRequest("Elige un día y un color para la casilla.");
   }
   const text = input.text?.trim() ?? "";
   if (input.kind === "note" && !text) {
@@ -304,7 +341,7 @@ export async function updateDecoration(userId: string, decorationId: string, inp
     throw ApiError.notFound("No encontramos esa decoración.");
   }
   const next = decorationData({
-    kind: input.kind ?? (existing.kind === "note" ? "note" : "sticker"),
+    kind: input.kind ?? (existing.kind === "note" || existing.kind === "fill" ? existing.kind : "sticker"),
     stickerKey: input.stickerKey === undefined ? existing.stickerKey : input.stickerKey,
     text: input.text === undefined ? existing.text : input.text,
     color: input.color === undefined ? existing.color : input.color,

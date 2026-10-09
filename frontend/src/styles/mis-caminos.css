@@ -8,7 +8,7 @@
   --warm: #565b42;
   --beige: #d6c7ac;
   min-height: 100vh;
-  padding: var(--explorer-nav-height, 4.75rem) 0 5rem;
+  padding: var(--explorer-nav-height, 4.75rem) 0 0;
   background: #ffffff;
   color: var(--ink);
   font-family: Poppins, Nunito, system-ui, sans-serif;
@@ -19,43 +19,60 @@
 .caminos * { box-sizing: border-box; }
 
 .caminos-wrap {
-  max-width: 1120px;
+  max-width: 1220px;
   margin: 0 auto;
-  padding: 1.35rem clamp(1.2rem, 4vw, 3.2rem) 0;
+  padding: 0.2rem clamp(1.2rem, 4vw, 3.2rem) 0;
 }
 
 .caminos-intro {
   background: #ffffff;
-  padding: 0.15rem 0 1.8rem;
+  padding: 0;
+}
+
+.caminos-panel:not(:empty) {
+  padding-top: 2.4rem;
+  padding-bottom: 3.5rem;
+}
+
+.caminos-hero-screen {
+  min-height: calc(100svh - var(--explorer-nav-height, 4.75rem));
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .caminos-hero {
   display: grid;
-  grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
-  gap: clamp(1.4rem, 3.2vw, 2.8rem);
+  grid-template-columns: minmax(0, 1.15fr) minmax(16rem, 0.85fr);
+  gap: clamp(2rem, 5vw, 4.2rem);
   align-items: center;
-  padding: 0.15rem 0 0.2rem;
+  width: 100%;
+  padding: 0.2rem 0 0.4rem;
 }
 
 .caminos-hero__stage {
   position: relative;
-  height: clamp(22rem, 34vw, 28rem);
-  min-height: 22rem;
+  width: 100%;
+  height: clamp(26rem, 64vh, 38rem);
+  min-height: 24rem;
+  margin-inline: auto;
 }
 
 .caminos-hero__base,
 .caminos-hero__photo {
   margin: 0;
   overflow: hidden;
-  background: #e4eaf0;
+  border-radius: 0;
+  box-shadow: none;
+  background: #e7ece8;
 }
 
 .caminos-hero__base {
   position: absolute;
-  top: 4%;
+  top: 6%;
   left: 0;
-  width: 76%;
-  height: 92%;
+  width: 92%;
+  height: 90%;
 }
 
 .caminos-hero__base img,
@@ -64,11 +81,29 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  border-radius: 0;
 }
 
 .caminos-hero__base img {
-  object-position: center 68%;
+  object-position: center 74%;
   filter: saturate(0.9) brightness(1.04);
+  opacity: 0;
+  transition: opacity 640ms ease;
+}
+
+.caminos-hero.is-revealed .caminos-hero__base img {
+  opacity: 1;
+}
+
+.caminos-hero__photo img {
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 620ms ease 140ms, transform 620ms ease 140ms;
+}
+
+.caminos-hero.is-revealed .caminos-hero__photo img {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .caminos-hero__base::after {
@@ -80,16 +115,18 @@
 
 .caminos-hero__photo {
   position: absolute;
-  top: 18%;
-  right: 6%;
+  top: 51%;
+  right: 0;
   z-index: 1;
-  width: 48%;
-  height: 58%;
-  box-shadow: 0 14px 32px rgba(28, 51, 46, 0.1);
+  width: 42%;
+  height: 62%;
+  border-radius: 0;
+  box-shadow: none;
+  transform: translateY(-50%);
 }
 
 .caminos-hero__photo img {
-  object-position: center 62%;
+  object-position: 42% 58%;
 }
 
 .caminos-hero__copy {
@@ -97,8 +134,17 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  width: min(100%, 24rem);
   min-width: 0;
+  margin-inline: auto;
   text-align: center;
+}
+
+.caminos-hero__mark {
+  display: block;
+  width: clamp(4.35rem, 5.4vw, 5rem);
+  height: auto;
+  margin: 0 0 1.05rem;
 }
 
 .caminos-hero h1 {
@@ -116,108 +162,33 @@
 }
 
 .caminos-hero__lead {
-  max-width: 28rem;
-  margin: 0.75rem 0 0;
+  max-width: 17.5rem;
+  margin: 0.85rem 0 0;
   color: #6b746f;
   font-family: Poppins, Nunito, system-ui, sans-serif;
-  font-size: clamp(0.75rem, 1.05vw, 0.875rem);
+  font-size: clamp(0.72rem, 0.95vw, 0.82rem);
   font-weight: 500;
-  letter-spacing: 0.18em;
-  line-height: 1.5;
+  letter-spacing: 0.16em;
+  line-height: 1.7;
   text-align: center;
   text-transform: uppercase;
+  text-wrap: balance;
 }
 
-.caminos-intro button.tourist-hero__cta {
-  margin-top: 1.15rem;
+.caminos-intro button.tourist-hero__cta,
+.caminos-intro button.tourist-hero__cta:hover {
+  margin-top: 1.45rem;
   border: 0;
   cursor: pointer;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   font-size: 0.68rem;
+  box-shadow: none;
+  transform: none;
 }
 
-.caminos-space {
-  margin-top: 2.6rem;
-  padding-top: 2.15rem;
-  border-top: 1px solid rgba(41, 73, 66, 0.14);
-  text-align: center;
-}
-
-.caminos-space__mark {
-  margin: 0;
-  font-family: "Great Vibes", cursive;
-  font-size: 1.85rem;
-  font-weight: 400;
-  line-height: 1;
-  color: #6e8f88;
-}
-
-.caminos-space h2 {
-  margin: 0.35rem auto 1.7rem;
-  max-width: 13em;
-  font-family: "Playfair Display", Georgia, serif;
-  font-size: clamp(1.9rem, 3vw, 2.65rem);
-  font-weight: 500;
-  line-height: 1.12;
-  letter-spacing: -0.02em;
-  color: #1c332e;
-}
-
-.caminos-space__grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.4rem 2.4rem;
-  max-width: 52rem;
-  margin: 0 auto;
-}
-
-.caminos-space article {
-  min-width: 0;
-}
-
-.caminos-space figure {
-  margin: 0 0 0.85rem;
-  overflow: hidden;
-  background: #e4eaf0;
-}
-
-.caminos-space img {
-  display: block;
-  width: 100%;
-  aspect-ratio: 3 / 2;
-  object-fit: cover;
-}
-
-.caminos-space article:first-child img {
-  object-position: center 38%;
-}
-
-.caminos-space article:last-child img {
-  object-position: center 46%;
-}
-
-.caminos-space h3 {
-  margin: 0;
-  font-family: "Playfair Display", Georgia, serif;
-  font-size: 1.45rem;
-  font-weight: 500;
-  line-height: 1.2;
-  color: #1c332e;
-}
-
-.caminos-space article p {
-  max-width: 18.5rem;
-  margin: 0.4rem auto 0;
-  font-family: Poppins, Nunito, system-ui, sans-serif;
-  font-size: 0.88rem;
-  line-height: 1.45;
-  color: #3d524c;
-}
-
-.caminos-intro button.explorer-empty__cta {
-  margin-top: 0.85rem;
-  cursor: pointer;
+.caminos-intro button.tourist-hero__cta:hover {
+  background: #243f38;
 }
 
 #caminos-panel {
@@ -304,6 +275,149 @@
 
 .caminos-quiet.is-on { border-bottom-color: var(--olive); }
 
+.caminos-calhead {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem 1.5rem;
+  margin: 0 0 1rem;
+  flex-wrap: wrap;
+}
+
+.caminos-calhead__title h2 {
+  margin: 0;
+  color: #1c332e;
+  font-family: Poppins, Nunito, system-ui, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.caminos-calhead__title h2 span {
+  margin-left: 0.55rem;
+  color: #6b746f;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+}
+
+.caminos-calhead__month {
+  margin: 0.35rem 0 0;
+  color: #1c332e;
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: clamp(2rem, 3.4vw, 2.8rem);
+  font-weight: 500;
+  line-height: 1;
+}
+
+.caminos-calhead__tools {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.85rem 1.1rem;
+  flex-wrap: wrap;
+}
+
+.caminos-calhead__views {
+  display: flex;
+  gap: 0.85rem;
+}
+
+.caminos-calhead__close {
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid rgba(28, 51, 46, 0.22);
+  border-radius: 999px;
+  background: #ffffff;
+  color: #1c332e;
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.caminos-planner__dismiss {
+  position: absolute;
+  top: 0.85rem;
+  right: 0.85rem;
+}
+
+.caminos-planner .caminos-board--olive { background: #ffffff; }
+
+.caminos-planner button.tourist-hero__cta {
+  margin-top: 0;
+  border: 0;
+  cursor: pointer;
+}
+
+.caminos-planner {
+  position: fixed;
+  inset: 0;
+  z-index: 10080;
+  display: grid;
+  place-items: center;
+  padding: 0.45rem;
+}
+
+.caminos-planner__scene {
+  position: absolute;
+  inset: -2.5rem;
+  overflow: hidden;
+  background: #f7f4ee;
+  pointer-events: none;
+}
+
+.caminos-planner__scene img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(28px) saturate(0.8) brightness(1.14);
+  transform: scale(1.16);
+  animation: caminos-scene-in 420ms ease;
+}
+
+.caminos-planner__backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: rgba(22, 33, 30, 0.28);
+}
+
+.caminos-planner__sheet {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  width: min(1240px, 100%);
+  height: calc(100dvh - 0.9rem);
+  max-height: calc(100dvh - 0.9rem);
+  overflow: hidden;
+  padding: 0.65rem 0.85rem 0.7rem;
+  border-radius: 1.7rem;
+  background: #f2f3f2;
+  box-shadow: 0 22px 50px rgba(28, 51, 46, 0.08);
+  animation: caminos-planner-in 380ms ease;
+}
+
+.caminos-planner__sheet:focus {
+  outline: none;
+}
+
+@keyframes caminos-planner-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes caminos-scene-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .caminos-planner__sheet,
+  .caminos-planner__scene img { animation: none; }
+}
+
 .caminos-monthbar {
   display: flex;
   align-items: baseline;
@@ -320,23 +434,26 @@
   text-transform: capitalize;
 }
 
-.caminos-monthbar__nav { display: flex; gap: 0.8rem; align-items: center; }
+.caminos-monthbar__nav { display: flex; gap: 0.35rem; align-items: center; }
 .caminos-monthbar__nav button {
-  width: 2rem;
-  height: 2rem;
   border: 0;
   background: transparent;
-  color: var(--ink);
+  color: #1c332e;
   cursor: pointer;
   font-size: 18px;
+}
+.caminos-monthbar__nav button[aria-label] {
+  width: 2rem;
+  height: 2rem;
 }
 
 .caminos-grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  border-top: 1px solid rgba(68, 59, 50, 0.16);
-  border-left: 1px solid rgba(68, 59, 50, 0.16);
-  background: var(--soft);
+  overflow: hidden;
+  border: 1px solid rgba(28, 51, 46, 0.14);
+  border-radius: 0.9rem;
+  background: #ffffff;
 }
 
 .caminos-board--sand { background: var(--paper); }
@@ -345,33 +462,35 @@
 .caminos-board--cream { background: var(--soft); }
 
 .caminos-dow {
-  padding: 0.45rem 0.35rem;
-  border-right: 1px solid rgba(68, 59, 50, 0.16);
-  border-bottom: 1px solid rgba(68, 59, 50, 0.16);
-  font-size: 12px;
-  letter-spacing: 0.08em;
+  padding: 0.55rem 0.4rem;
+  border-right: 1px solid rgba(28, 51, 46, 0.12);
+  border-bottom: 1px solid rgba(28, 51, 46, 0.12);
+  font-family: Poppins, Nunito, system-ui, sans-serif;
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--warm);
+  color: #6b746f;
 }
 
 .caminos-day {
   position: relative;
-  min-height: 7.4rem;
-  padding: 0.35rem;
-  border-right: 1px solid rgba(68, 59, 50, 0.16);
-  border-bottom: 1px solid rgba(68, 59, 50, 0.16);
+  min-height: 7.6rem;
+  padding: 0.45rem 0.4rem 0.5rem;
+  border-right: 1px solid rgba(28, 51, 46, 0.12);
+  border-bottom: 1px solid rgba(28, 51, 46, 0.12);
   overflow: hidden;
 }
 
 .caminos-grid.is-week .caminos-day { min-height: 16rem; }
 
-.caminos-day.is-out { color: rgba(131, 127, 117, 0.7); }
-.caminos-day.is-today .caminos-day__num { color: var(--olive); text-decoration: underline; text-underline-offset: 3px; }
-.caminos-day.is-selected { background: rgba(214, 199, 172, 0.28); }
+.caminos-day.is-out { color: rgba(110, 143, 136, 0.7); }
+.caminos-day.is-today .caminos-day__num { color: #1c332e; font-weight: 600; }
+.caminos-day.is-selected { background: rgba(28, 51, 46, 0.05); }
 
 .caminos-day__num {
   position: relative;
-  z-index: 2;
+  z-index: 4;
   border: 0;
   background: transparent;
   color: inherit;
@@ -383,10 +502,25 @@
 }
 
 .caminos-day__shot {
-  width: 2.1rem;
-  height: 2.1rem;
-  margin-top: 0.35rem;
+  display: block;
+  width: calc(100% - 0.15rem);
+  max-width: 4.8rem;
+  height: 2.7rem;
+  margin: 0.4rem 0 0;
   object-fit: cover;
+  border-radius: 0.15rem;
+}
+
+.caminos-grid.is-week .caminos-day__shot {
+  max-width: 7.5rem;
+  height: 4.4rem;
+}
+
+.caminos-day__more {
+  display: inline-block;
+  margin-top: 0.25rem;
+  color: #6b746f;
+  font: 500 11px/1 Poppins, Nunito, sans-serif;
 }
 
 .caminos-day__note {
@@ -416,13 +550,13 @@
   position: absolute;
   z-index: 1;
   width: 2.4rem;
-  height: 2.4rem;
+  height: auto;
   border: 0;
   background: transparent;
   padding: 0;
 }
 
-.caminos-day__sticker svg { width: 100%; height: 100%; }
+.caminos-day__sticker svg { width: 100%; height: auto; aspect-ratio: 1; }
 .caminos-section.is-editing .caminos-day__sticker { cursor: grab; touch-action: none; z-index: 3; pointer-events: auto; }
 .caminos-section:not(.is-editing) .caminos-day__sticker { pointer-events: none; }
 
@@ -457,6 +591,14 @@
 .caminos-sheet h3 {
   margin: 0 0 0.35rem;
   font-size: 2rem;
+}
+
+.caminos-planner .caminos-panel h3,
+.caminos-planner .caminos-sheet h3 {
+  color: #1c332e;
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 1.35rem;
+  font-weight: 500;
 }
 
 .caminos-panel p,
@@ -533,7 +675,60 @@
   cursor: pointer;
   padding: 0;
 }
-.caminos-library__row svg { width: 100%; height: 100%; }
+.caminos-library__row svg,
+.caminos-library__row img { width: 100%; height: 100%; object-fit: contain; }
+
+.caminos-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0 0 0.75rem;
+}
+.caminos-tools button {
+  border: 1px solid rgba(28, 51, 46, 0.16);
+  background: #fff;
+  color: #1c332e;
+  border-radius: 999px;
+  padding: 0.32rem 0.72rem;
+  font: 500 0.78rem/1.2 Poppins, Nunito, sans-serif;
+  cursor: pointer;
+}
+.caminos-tools button.is-on {
+  background: #1c332e;
+  color: #fff;
+  border-color: #1c332e;
+}
+
+.caminos-tone {
+  border: 1px solid rgba(28, 51, 46, 0.16);
+  background: #fff;
+  border-radius: 999px;
+  padding: 0.28rem 0.65rem;
+  cursor: pointer;
+  font: 500 0.78rem/1.2 Poppins, Nunito, sans-serif;
+}
+.caminos-tone.is-verde { color: #3f5c52; }
+.caminos-tone.is-rosa { color: #8d5d66; }
+.caminos-tone.is-azul { color: #5d6d78; }
+.caminos-tone.is-amarillo { color: #8a7340; }
+.caminos-tone.is-neutro { color: #40392f; }
+.caminos-tone.is-on { outline: 1px solid #1c332e; }
+
+.caminos-scale { display: grid; gap: 0.45rem; margin-top: 0.7rem; }
+.caminos-scale input { width: 100%; accent-color: #6e8f88; }
+
+.caminos-day__note.is-verde { color: #3f5c52; }
+.caminos-day__note.is-beige { color: #8a7356; }
+.caminos-day__note.is-rosa { color: #8d5d66; }
+.caminos-day__note.is-azul { color: #5d6d78; }
+.caminos-day__note.is-amarillo { color: #8a7340; }
+.caminos-day__note.is-neutro { color: #40392f; }
+.caminos-day__note.is-bold { font-weight: 650; }
+.caminos-day__note.is-serif { font-family: "Playfair Display", Georgia, serif; }
+
+.caminos-section:not(.is-editing) .caminos-day__sticker { pointer-events: none; }
+.caminos-day__sticker.is-picked { outline: 1px solid rgba(28, 51, 46, 0.35); border-radius: 0.35rem; }
+.caminos-day__sticker img { width: 100%; height: auto; display: block; pointer-events: none; }
 
 .caminos-note-styles { display: flex; gap: 0.8rem; }
 .caminos-note-styles label { display: flex; gap: 0.3rem; align-items: center; }
@@ -674,10 +869,13 @@
   .caminos-covers li { grid-column: span 6 !important; margin-top: 0 !important; }
 }
 
-@media (max-width: 680px) {
-  .caminos-day { min-height: 4.8rem; }
-  .caminos-day__shot { width: 1.15rem; height: 1.15rem; }
-  .caminos-day__note { display: none; }
+@media (max-width: 720px) {
+  .caminos-planner { padding: 0.55rem; }
+  .caminos-planner__sheet { padding: 0.85rem 0.7rem 1rem; border-radius: 1rem; }
+  .caminos-calhead { align-items: flex-start; }
+  .caminos-day { min-height: 5.4rem; }
+  .caminos-grid.is-week .caminos-day { min-height: 9rem; }
+  .caminos-day__shot { width: 1.5rem; height: 1.5rem; }
   .caminos-ticket { grid-template-columns: 1fr; }
   .caminos-ticket__photo { min-height: 12rem; }
   .caminos-covers li { grid-column: span 12 !important; }
@@ -685,9 +883,14 @@
 }
 
 @media (max-width: 900px) {
-  .caminos-hero,
-  .caminos-space__grid {
+  .caminos-hero {
     grid-template-columns: 1fr;
+  }
+
+  .caminos-hero-screen {
+    min-height: 0;
+    display: block;
+    padding-top: 0.35rem;
   }
 
   .caminos-hero__stage {
@@ -696,18 +899,3972 @@
     min-height: 0;
   }
 
+  .caminos-hero__copy {
+    margin-top: 0.35rem;
+  }
+
   .caminos-hero__photo {
-    width: 52%;
+    width: 40%;
     height: 58%;
     aspect-ratio: auto;
   }
 
-  .caminos-hero h1,
-  .caminos-space h2 {
+  .caminos-hero h1 {
     max-width: none;
   }
+}
 
-  .caminos-space__grid {
-    max-width: 28rem;
+.caminos-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.caminos-planner__sheet > .caminos-agenda {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.caminos-agenda__bar {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem 0.75rem;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  margin: 0 0 0.45rem;
+}
+
+.caminos-agenda__bar h2 {
+  margin: 0;
+  color: #1c332e;
+  font-family: Poppins, Nunito, system-ui, sans-serif;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.caminos-agenda__nav,
+.caminos-agenda__jump,
+.caminos-agenda__modes,
+.caminos-agenda__modes > div {
+  display: flex;
+  align-items: center;
+}
+
+.caminos-agenda__nav { gap: 0.15rem; }
+.caminos-agenda__jump { gap: 0.2rem; }
+.caminos-agenda__modes { gap: 0.7rem; margin-left: auto; }
+.caminos-agenda__modes > div { gap: 0.55rem; }
+
+.caminos-agenda__nav button[aria-label],
+.caminos-agenda__close {
+  width: 1.7rem;
+  height: 1.7rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #1c332e;
+  cursor: pointer;
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.caminos-agenda__close {
+  border: 1px solid rgba(28, 51, 46, 0.18);
+  background: #fff;
+  font-size: 1.2rem;
+}
+
+.caminos-agenda__jump select {
+  border: 0;
+  background: transparent;
+  color: #1c332e;
+  cursor: pointer;
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 1.15rem;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.caminos-agenda__jump select:last-of-type {
+  color: #6b746f;
+  font-family: Poppins, Nunito, sans-serif;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+}
+
+.caminos-agenda__hoy,
+.caminos-agenda__modes button:not(.tourist-hero__cta) {
+  border: 0;
+  background: transparent;
+  color: #6b746f;
+  cursor: pointer;
+  font: 500 0.72rem/1 Poppins, Nunito, sans-serif;
+  letter-spacing: 0.03em;
+  padding: 0.15rem 0;
+}
+
+.caminos-agenda__modes button.is-on {
+  color: #1c332e;
+  box-shadow: inset 0 -1px 0 #1c332e;
+}
+
+.caminos-planner .caminos-agenda__bar .tourist-hero__cta,
+.caminos-planner .caminos-agenda__form .tourist-hero__cta {
+  padding: 0.36rem 0.85rem;
+  border: 0;
+  border-radius: 999px;
+  background: #1c332e;
+  color: #fff;
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  white-space: nowrap;
+  box-shadow: none;
+}
+
+.caminos-planner .caminos-layout {
+  flex: 1;
+  min-height: 0;
+  grid-template-columns: minmax(0, 1fr) minmax(16rem, 19.5rem);
+  gap: 0.7rem;
+  align-items: stretch;
+}
+
+.caminos-planner .caminos-grid {
+  height: 100%;
+  min-height: 0;
+  grid-template-rows: 1.45rem repeat(6, minmax(0, 1fr));
+  border-color: rgba(28, 51, 46, 0.1);
+  border-radius: 0.7rem;
+}
+
+.caminos-planner .caminos-grid.is-week {
+  grid-template-rows: 1.45rem minmax(0, 1fr);
+}
+
+.caminos-planner .caminos-dow {
+  padding: 0.28rem 0.35rem;
+  font-size: 0.62rem;
+}
+
+.caminos-planner .caminos-day {
+  min-height: 0;
+  padding: 0.28rem 0.32rem 0.32rem;
+}
+
+.caminos-planner .caminos-grid.is-week .caminos-day { min-height: 0; }
+
+.caminos-planner .caminos-day.is-selected { background: #e4efe8; }
+.caminos-planner .caminos-day.is-out { background: #fcfcfb; }
+
+.caminos-planner .caminos-day__hit {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.caminos-planner .caminos-day__num {
+  z-index: 2;
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.35rem;
+  min-height: 1.35rem;
+  pointer-events: none;
+  font-size: 12px;
+}
+
+.caminos-planner .caminos-day.is-today .caminos-day__num {
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 999px;
+  background: #1c332e;
+  color: #fff;
+  font-weight: 600;
+}
+
+.caminos-planner .caminos-day .caminos-day__plan,
+.caminos-planner .caminos-day .caminos-day__note,
+.caminos-planner .caminos-day .caminos-day__more {
+  position: relative;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.caminos-planner .caminos-day__plan {
+  display: flex;
+  align-items: center;
+  gap: 0.28rem;
+  margin-top: 0.18rem;
+  min-width: 0;
+}
+
+.caminos-planner .caminos-day__plan img {
+  width: 1.35rem;
+  height: 1.35rem;
+  margin: 0;
+  flex: 0 0 auto;
+  object-fit: cover;
+  border-radius: 0.15rem;
+}
+
+.caminos-planner .caminos-grid.is-week .caminos-day__plan img {
+  width: 2.4rem;
+  height: 2.4rem;
+}
+
+.caminos-planner .caminos-day__plan span {
+  display: grid;
+  min-width: 0;
+}
+
+.caminos-planner .caminos-day__plan strong,
+.caminos-planner .caminos-day__plan em {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-style: normal;
+}
+
+.caminos-planner .caminos-day__plan strong {
+  color: #1c332e;
+  font: 500 0.62rem/1.15 Poppins, Nunito, sans-serif;
+}
+
+.caminos-planner .caminos-day__plan em {
+  color: #6b746f;
+  font: 500 0.58rem/1.1 Poppins, Nunito, sans-serif;
+}
+
+.caminos-planner .caminos-day__more {
+  display: block;
+  margin-top: 0.12rem;
+  font-size: 0.58rem;
+}
+
+.caminos-planner .caminos-day__note {
+  margin-top: 0.12rem;
+  font-size: 0.62rem;
+  white-space: nowrap;
+}
+
+.caminos-planner .caminos-day__note.is-script {
+  font-size: 0.86rem;
+  white-space: nowrap;
+}
+
+.caminos-planner .caminos-day__note.is-serif { font-size: 0.7rem; }
+
+.caminos-planner .caminos-day__sticker { z-index: 3; }
+.caminos-agenda.is-editing .caminos-day__sticker {
+  z-index: 5;
+  cursor: grab;
+  touch-action: none;
+  pointer-events: auto;
+}
+.caminos-agenda:not(.is-editing) .caminos-day__sticker { pointer-events: none; }
+.caminos-agenda:not(.is-editing) .caminos-day__sticker.is-picked { outline: 0; }
+.caminos-agenda.is-editing .caminos-day__sticker.is-picked {
+  outline: 1px solid rgba(28, 51, 46, 0.28);
+  border-radius: 0.3rem;
+}
+
+.caminos-agenda__side {
+  min-height: 0;
+  overflow: auto;
+  padding: 0.05rem 0.1rem 0.3rem 0.8rem;
+  border-left: 1px solid rgba(28, 51, 46, 0.1);
+}
+
+.caminos-planner .caminos-agenda__side h3 {
+  margin: 0;
+  color: #1c332e;
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 1.02rem;
+  font-weight: 500;
+  line-height: 1.25;
+  text-transform: capitalize;
+  overflow-wrap: anywhere;
+}
+
+.caminos-agenda__hint,
+.caminos-agenda__empty {
+  margin: 0.2rem 0 0.55rem;
+  color: #6b746f;
+  font-size: 0.78rem;
+}
+
+.caminos-planner .caminos-agenda__side .caminos-daylist {
+  gap: 0.65rem;
+}
+
+.caminos-planner .caminos-agenda__side .caminos-daylist li {
+  grid-template-columns: 3.1rem minmax(0, 1fr);
+  gap: 0.55rem;
+}
+
+.caminos-planner .caminos-agenda__side .caminos-daylist img {
+  width: 3.1rem;
+  height: 3.1rem;
+  object-fit: cover;
+  border-radius: 0.15rem;
+}
+
+.caminos-planner .caminos-agenda__side .caminos-daylist strong {
+  display: block;
+  font-family: Poppins, Nunito, sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.caminos-planner .caminos-agenda__side .caminos-daylist span {
+  color: #6b746f;
+  font-size: 0.72rem;
+}
+
+.caminos-agenda__notes {
+  list-style: none;
+  margin: 0.35rem 0 0.5rem;
+  padding: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.caminos-agenda__note-row { display: grid; gap: 0.15rem; }
+
+.caminos-agenda__note-row .caminos-day__note {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  white-space: normal;
+  cursor: pointer;
+  font-size: 0.86rem;
+}
+
+.caminos-agenda__note-row .caminos-day__note.is-script { font-size: 1.35rem; }
+.caminos-agenda__note-row .caminos-day__note.is-serif { font-size: 1rem; }
+
+.caminos-agenda__studio { margin-top: 0.85rem; }
+
+.caminos-agenda__tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.caminos-agenda__tools button {
+  border: 0;
+  border-radius: 999px;
+  background: #fff;
+  color: #5e6762;
+  cursor: pointer;
+  font: 500 0.68rem/1 Poppins, Nunito, sans-serif;
+  padding: 0.38rem 0.72rem;
+}
+
+.caminos-agenda__tools button.is-on {
+  background: #1c332e;
+  color: #fff;
+  box-shadow: none;
+}
+
+.caminos-studio__block { margin-top: 1.05rem; }
+
+.caminos-studio__label {
+  margin: 0.85rem 0 0.4rem;
+  color: #8a918c;
+  font: 600 0.62rem/1 Poppins, Nunito, sans-serif;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.caminos-studio__block > .caminos-studio__label:first-child { margin-top: 0; }
+
+.caminos-studio__add,
+.caminos-studio__quiet {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: 500 0.78rem/1 Poppins, Nunito, sans-serif;
+}
+
+.caminos-studio__add {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.45rem 0.8rem;
+  border-radius: 999px;
+  background: #1c332e;
+  color: #fff;
+}
+
+.caminos-studio__quiet {
+  margin-top: 0.85rem;
+  padding: 0;
+  color: #6b746f;
+}
+
+.caminos-agenda__status {
+  margin: 0.25rem 0 0;
+  color: #3f5c52;
+  font-size: 0.72rem;
+}
+
+.caminos-agenda__tool textarea,
+.caminos-agenda__notes textarea {
+  min-height: 3.2rem;
+  resize: vertical;
+}
+
+.caminos-agenda__tones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.15rem;
+}
+
+.caminos-agenda__fonts {
+  display: grid;
+  gap: 0.2rem;
+  margin-top: 0.15rem;
+}
+
+.caminos-agenda__dot {
+  width: 1.15rem;
+  height: 1.15rem;
+  padding: 0;
+  border: 1px solid rgba(28, 51, 46, 0.16);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.caminos-agenda__dot.is-verde { background: #6e8f88; }
+.caminos-agenda__dot.is-beige { background: #d6c7ac; }
+.caminos-agenda__dot.is-rosa { background: #e4c4c8; }
+.caminos-agenda__dot.is-azul { background: #c5d0d6; }
+.caminos-agenda__dot.is-amarillo { background: #e4d3a4; }
+.caminos-agenda__dot.is-neutro { background: #efeae2; }
+.caminos-agenda__dot.is-on { outline: 1px solid #1c332e; outline-offset: 2px; }
+
+.caminos-agenda__fonts button {
+  border: 0;
+  border-radius: 0.55rem;
+  background: transparent;
+  color: #1c332e;
+  cursor: pointer;
+  font-size: 0.95rem;
+  padding: 0.42rem 0.6rem;
+  text-align: left;
+}
+
+.caminos-agenda__fonts button.is-on { background: #e4efe8; }
+.caminos-agenda__fonts button:nth-child(3) { font-size: 1.25rem; }
+
+.caminos-agenda__library {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.2rem;
+  max-height: 16rem;
+  margin-top: 0.4rem;
+  overflow: auto;
+}
+
+.caminos-agenda__library button {
+  aspect-ratio: 1;
+  padding: 0.15rem;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.caminos-agenda__library img,
+.caminos-agenda__library svg {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.caminos-agenda__remove {
+  list-style: none;
+  margin: 0.4rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.caminos-agenda__remove li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  color: #40392f;
+  font-size: 0.78rem;
+}
+
+.caminos-agenda__remove img,
+.caminos-agenda__remove svg { width: 1.4rem; height: 1.4rem; object-fit: contain; }
+
+.caminos-agenda__remove button,
+.caminos-agenda__add {
+  border: 0;
+  background: transparent;
+  color: #1c332e;
+  cursor: pointer;
+  font: 500 0.75rem/1 Poppins, Nunito, sans-serif;
+}
+
+.caminos-agenda__add { margin-top: 0.7rem; padding: 0; }
+
+.caminos-agenda__form { margin-top: 0.7rem; }
+.caminos-agenda__form h3 { font-size: 1rem; }
+.caminos-agenda__form label span {
+  color: #6b746f;
+  font-weight: 400;
+}
+
+.caminos-planner .caminos-hits {
+  max-height: none;
+  min-height: 8rem;
+  flex: 1;
+  overflow: auto;
+}
+
+.caminos-planner .caminos-agenda__form .tourist-hero__cta {
+  margin-top: 0;
+  padding: 0.38rem 0.85rem;
+  font-size: 0.68rem;
+  text-transform: none;
+  box-shadow: none;
+}
+
+@media (max-width: 980px) {
+  .caminos-planner .caminos-layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) minmax(8.5rem, 34%);
+    gap: 0.45rem;
   }
+
+  .caminos-agenda__side {
+    border-left: 0;
+    border-top: 1px solid rgba(28, 51, 46, 0.1);
+    padding-left: 0;
+  }
+
+  .caminos-agenda__modes { margin-left: 0; }
+}
+
+@media (max-width: 720px) {
+  .caminos-planner {
+    padding: 0.4rem;
+  }
+
+  .caminos-planner__sheet {
+    height: calc(100dvh - 0.8rem);
+    max-height: calc(100dvh - 0.8rem);
+    overflow: hidden;
+    padding: 0.55rem 0.55rem 0.6rem;
+    border-radius: 0.9rem;
+  }
+
+  .caminos-planner .caminos-day,
+  .caminos-planner .caminos-grid.is-week .caminos-day {
+    min-height: 0;
+  }
+}
+
+.caminos-agenda__mast {
+  position: relative;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.05rem;
+  margin: 0 0 0.45rem;
+}
+
+.caminos-agenda__mast .caminos-agenda__modes {
+  margin: 0 0 0.15rem;
+  gap: 0.9rem;
+}
+
+.caminos-agenda__mast .caminos-agenda__modes > div {
+  gap: 0.7rem;
+}
+
+.caminos-agenda__mast .caminos-agenda__modes button:not(.tourist-hero__cta) {
+  color: #8d948c;
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.caminos-agenda__mast .caminos-agenda__modes button.is-on {
+  color: #1c332e;
+  box-shadow: inset 0 -1px 0 #6e8f88;
+}
+
+.caminos-planner .caminos-agenda__mast .tourist-hero__cta {
+  padding: 0.32rem 0.75rem;
+  box-shadow: none;
+}
+
+.caminos-agenda__monthline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.caminos-agenda__month {
+  border: 0;
+  background: transparent;
+  color: #1c332e;
+  cursor: pointer;
+  font-family: Poppins, Nunito, system-ui, sans-serif;
+  font-size: clamp(1.55rem, 3.2vh, 2.15rem);
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  line-height: 1.15;
+  text-align: center;
+  text-transform: uppercase;
+  appearance: none;
+}
+
+.caminos-agenda__year {
+  margin-top: 0.15rem;
+  border: 0;
+  background: transparent;
+  color: #8d948c;
+  cursor: pointer;
+  font-family: Poppins, Nunito, sans-serif;
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  appearance: none;
+}
+
+.caminos-agenda__mast .caminos-agenda__hoy {
+  margin-top: 0.1rem;
+  color: #6e8f88;
+  font-size: 0.66rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.caminos-agenda__mast .caminos-agenda__close {
+  position: absolute;
+  top: 0;
+  right: 0;
+  border: 0;
+  background: transparent;
+  color: #6b746f;
+}
+
+.caminos-planner .caminos-layout {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.caminos-planner .caminos-agenda.is-open .caminos-layout {
+  grid-template-columns: minmax(0, 1fr) minmax(13rem, 15.25rem);
+}
+
+.caminos-planner .caminos-agenda:not(.is-open) .caminos-agenda__side {
+  display: none;
+}
+
+.caminos-planner .caminos-grid {
+  background: #fff;
+  border-color: rgba(28, 51, 46, 0.08);
+  border-radius: 0.85rem;
+}
+
+.caminos-planner .caminos-dow,
+.caminos-planner .caminos-day {
+  border-right-color: rgba(28, 51, 46, 0.08);
+  border-bottom-color: rgba(28, 51, 46, 0.08);
+}
+
+.caminos-planner .caminos-dow {
+  text-align: center;
+  color: #9aa39c;
+  font-size: 0.6rem;
+  letter-spacing: 0.16em;
+}
+
+.caminos-planner .caminos-day__num {
+  color: #8a918c;
+  font-size: 0.68rem;
+  font-weight: 500;
+}
+
+.caminos-planner .caminos-day.is-today .caminos-day__num {
+  background: transparent;
+  color: #1c332e;
+  box-shadow: inset 0 0 0 1px #6e8f88;
+}
+
+.caminos-planner .caminos-day.is-selected {
+  background: #e4efe8;
+}
+
+.caminos-planner .caminos-day.is-out .caminos-day__num {
+  color: #c5c9c3;
+}
+
+.caminos-planner .caminos-day__plan img {
+  width: 1.45rem;
+  height: 1.05rem;
+}
+
+.caminos-planner .caminos-day__plan strong {
+  color: #6b746f;
+  font-size: 0.58rem;
+  font-weight: 500;
+}
+
+.caminos-planner .caminos-day__plan em {
+  display: none;
+}
+
+.caminos-planner .caminos-grid.is-week .caminos-day__plan em {
+  display: block;
+}
+
+.caminos-planner .caminos-day__note {
+  color: #6b746f;
+  font-size: 0.6rem;
+}
+
+.caminos-agenda__fold {
+  border: 0;
+  background: transparent;
+  color: #8d948c;
+  cursor: pointer;
+  font: 500 0.66rem/1 Poppins, Nunito, sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0;
+  margin: 0 0 0.45rem;
+}
+
+.caminos-planner .caminos-agenda__side {
+  background: transparent;
+  border-left-color: rgba(28, 51, 46, 0.08);
+}
+
+.caminos-planner .caminos-agenda__side h3 {
+  font-family: Poppins, Nunito, system-ui, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #1c332e;
+}
+
+@media (max-width: 980px) {
+  .caminos-planner .caminos-layout,
+  .caminos-planner .caminos-agenda.is-open .caminos-layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  .caminos-planner .caminos-agenda.is-open .caminos-layout {
+    grid-template-rows: minmax(0, 1fr) minmax(7.5rem, 30%);
+  }
+
+  .caminos-agenda__month {
+    font-size: clamp(1.35rem, 5.4vw, 1.85rem);
+  }
+
+  .caminos-planner__sheet > .caminos-agenda.is-split {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) minmax(9rem, 34%);
+  }
+}
+
+.caminos-planner__sheet > .caminos-agenda.is-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(17.5rem, 0.9fr);
+  gap: 0.35rem 1rem;
+  align-items: stretch;
+  position: relative;
+}
+
+.caminos-agenda.is-split .caminos-agenda__mast {
+  position: static;
+}
+
+.caminos-agenda.is-split .caminos-agenda__close {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 3;
+}
+
+.caminos-agenda__main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.caminos-agenda__main .caminos-grid {
+  flex: 1;
+  min-height: 0;
+}
+
+.caminos-agenda__actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.65rem;
+  flex-shrink: 0;
+  padding-top: 0.6rem;
+}
+
+.caminos-agenda__actions .tourist-hero__cta,
+.caminos-agenda__save,
+.caminos-agenda__form .tourist-hero__cta {
+  margin: 0;
+  box-shadow: none;
+}
+
+.caminos-agenda__actions .tourist-hero__cta:hover,
+.caminos-agenda__save:hover,
+.caminos-agenda__form .tourist-hero__cta:hover {
+  transform: none;
+  box-shadow: none;
+  background: #243f38;
+}
+
+.caminos-agenda__actions .tourist-hero__cta.is-on {
+  background: #6e8f88;
+}
+
+.caminos-planner .caminos-agenda.is-split .caminos-agenda__side {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: auto;
+  padding: 0.15rem 0.1rem 0.4rem 0.95rem;
+  border-left: 1px solid rgba(28, 51, 46, 0.08);
+}
+
+.caminos-planner .caminos-agenda.is-split .caminos-agenda__form {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.caminos-agenda__studio > .caminos-agenda__save {
+  align-self: flex-start;
+  margin-top: 0.9rem;
+}
+
+.caminos-day__note-pin {
+  position: absolute;
+  z-index: 3;
+  max-width: 78%;
+  min-width: 1.4rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  white-space: pre-wrap;
+  overflow: hidden;
+  line-height: 1.15;
+  outline: none;
+}
+
+.caminos-day__note-pin.is-picked {
+  z-index: 6;
+  cursor: text;
+  outline: 1px solid rgba(110, 143, 136, 0.7);
+  outline-offset: 3px;
+  border-radius: 0.15rem;
+}
+
+.caminos-planner .caminos-agenda.is-editing .caminos-day .caminos-day__note-pin {
+  z-index: 5;
+  pointer-events: auto;
+  cursor: grab;
+  touch-action: none;
+}
+
+.caminos-planner .caminos-agenda.is-editing .caminos-day .caminos-day__note-pin.is-picked {
+  cursor: text;
+}
+
+.caminos-planner .caminos-agenda:not(.is-editing) .caminos-day__note-pin {
+  pointer-events: none;
+}
+
+.caminos-agenda.is-editing .caminos-day__note-pin.is-picked {
+  outline: 1px solid rgba(110, 143, 136, 0.7);
+  outline-offset: 3px;
+  border-radius: 0.15rem;
+}
+
+.caminos-agenda__form select {
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid rgba(68, 59, 50, 0.25);
+  background: transparent;
+  color: #1c332e;
+  font: 400 0.9rem/1.4 Poppins, Nunito, sans-serif;
+  padding: 0.4rem 0;
+}
+
+.caminos-agenda__tools .caminos-agenda__save {
+  margin-left: auto;
+}
+
+.caminos-plans {
+  margin: 0;
+  padding: clamp(4.6rem, 8vw, 6.4rem) clamp(1.2rem, 4vw, 3.2rem) clamp(3.6rem, 6vw, 5rem);
+  background: linear-gradient(180deg, #ffffff 0%, #f4f6f0 14%, #e8ece1 28%, #e3e7dc 42%, #e3e7dc 100%);
+}
+
+.caminos-plans__inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+  gap: clamp(2.6rem, 5vw, 4.6rem);
+  max-width: 68rem;
+  margin: 0 auto;
+}
+
+.caminos-plans__col {
+  min-width: 0;
+}
+
+.caminos-plans__col.explorer-reveal-scope,
+.caminos-keep.explorer-reveal-scope,
+.caminos-hero.explorer-reveal-scope {
+  --reveal-duration: 640ms;
+  --reveal-title-duration: 560ms;
+  --reveal-card-duration: 600ms;
+}
+
+.caminos-plans__head {
+  margin-bottom: clamp(1.3rem, 2.4vw, 1.7rem);
+}
+
+.caminos-plans__head h2,
+.caminos-keep__title {
+  margin: 0;
+  color: #1c332e;
+  font-family: Poppins, Nunito, system-ui, sans-serif;
+  font-size: clamp(1.15rem, 1.9vw, 1.5rem);
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  line-height: 1.28;
+  text-transform: uppercase;
+  text-wrap: balance;
+}
+
+.caminos-plans__lead,
+.caminos-keep__text {
+  margin: 0.55rem 0 0;
+  color: #6b746f;
+  font-family: Poppins, Nunito, system-ui, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  line-height: 1.55;
+}
+
+.caminos-plans__list {
+  display: grid;
+  gap: 0.72rem;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.caminos-pass {
+  display: grid;
+  grid-template-columns: 6.2rem minmax(0, 1fr) 4.6rem;
+  align-items: stretch;
+  width: 100%;
+  min-height: 4.9rem;
+  padding: 0.28rem;
+  border: 0;
+  border-radius: 0.55rem;
+  background: #fbfaf6;
+  box-shadow: 0 1px 2px rgba(28, 51, 46, 0.03);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 220ms ease, box-shadow 220ms ease;
+}
+
+.caminos-pass:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 1px 2px rgba(28, 51, 46, 0.04), 0 8px 18px rgba(28, 51, 46, 0.05);
+}
+
+.caminos-pass:focus-visible {
+  outline: 2px solid #6e8f88;
+  outline-offset: 3px;
+}
+
+.caminos-pass__photo {
+  position: relative;
+  overflow: hidden;
+  min-height: 4.3rem;
+  border-radius: 0.4rem;
+  background: #dfe5dd;
+}
+
+.caminos-pass__photo img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.caminos-pass__body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.14rem;
+  min-width: 0;
+  padding: 0.45rem 0.9rem 0.45rem 0.95rem;
+}
+
+.caminos-pass__when {
+  color: #8a918c;
+  font: 500 0.62rem/1.3 Poppins, Nunito, system-ui, sans-serif;
+  letter-spacing: 0.04em;
+}
+
+.caminos-pass__title {
+  overflow: hidden;
+  color: #1c332e;
+  font: 600 0.84rem/1.3 Poppins, Nunito, system-ui, sans-serif;
+  letter-spacing: 0.01em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.caminos-pass__text {
+  display: -webkit-box;
+  overflow: hidden;
+  color: #6b746f;
+  font: 400 0.7rem/1.4 Poppins, Nunito, system-ui, sans-serif;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.caminos-pass__date {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.12rem;
+  padding: 0.4rem 0.3rem;
+  color: #1c332e;
+}
+
+.caminos-pass__date::before {
+  position: absolute;
+  top: 0.55rem;
+  bottom: 0.55rem;
+  left: 0;
+  width: 3px;
+  background: radial-gradient(circle, rgba(28, 51, 46, 0.2) 0.9px, transparent 1.2px) center top / 3px 6px repeat-y;
+  content: "";
+}
+
+.caminos-pass__month {
+  color: #6e8f88;
+  font: 500 0.58rem/1 Poppins, Nunito, system-ui, sans-serif;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.caminos-pass__day {
+  font: 500 1.5rem/1 Poppins, Nunito, system-ui, sans-serif;
+  letter-spacing: 0.02em;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.caminos-pass__year {
+  color: #8a918c;
+  font: 500 0.56rem/1 Poppins, Nunito, system-ui, sans-serif;
+  letter-spacing: 0.14em;
+}
+
+.caminos-plans__more {
+  margin: 1rem 0 0;
+  color: #8a918c;
+  font: 400 0.7rem/1.4 Poppins, Nunito, system-ui, sans-serif;
+}
+
+.caminos-plans__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: 1.8rem 1.2rem 1.6rem;
+  border-radius: 0.55rem;
+  background: #fbfaf6;
+  box-shadow: 0 1px 2px rgba(28, 51, 46, 0.03);
+  text-align: center;
+}
+
+.caminos-plans__empty p {
+  margin: 0;
+  color: #1c332e;
+  font: 600 0.9rem/1.4 Poppins, Nunito, system-ui, sans-serif;
+}
+
+.caminos-plans__empty span {
+  margin-top: 0.3rem;
+  color: #6b746f;
+  font: 400 0.74rem/1.5 Poppins, Nunito, system-ui, sans-serif;
+}
+
+.caminos-plans .tourist-hero__cta,
+.caminos-plans .tourist-hero__cta:hover {
+  margin-top: 1.5rem;
+  padding: 0.72rem 1.6rem;
+  border: 0;
+  border-radius: 999px;
+  background: #1c332e;
+  color: #fff;
+  cursor: pointer;
+  font: 500 0.62rem/1 Poppins, Nunito, system-ui, sans-serif;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  box-shadow: none;
+  transform: none;
+}
+
+.caminos-plans__empty .tourist-hero__cta,
+.caminos-plans__empty .tourist-hero__cta:hover {
+  margin-top: 1.1rem;
+}
+
+.caminos-plans .tourist-hero__cta:hover {
+  background: #243f38;
+}
+
+/* Sobre: entrada a la bitácora */
+
+.caminos-keep {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+  text-align: center;
+}
+
+.caminos-keep__intro {
+  width: 100%;
+  margin-bottom: clamp(1.3rem, 2.4vw, 1.7rem);
+}
+
+.caminos-keep__text {
+  max-width: 22rem;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.caminos-keep__scene {
+  position: relative;
+  width: min(100%, 25rem);
+  margin-inline: auto;
+  padding: 0.2rem 1.1rem 0;
+}
+
+.caminos-keep__envelope {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 640 / 480;
+  filter: drop-shadow(0 14px 24px rgba(28, 51, 46, 0.08));
+}
+
+.caminos-keep__back,
+.caminos-keep__face {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.caminos-keep__back { z-index: 1; }
+.caminos-keep__face { z-index: 3; pointer-events: none; }
+
+.caminos-keep__back,
+.caminos-keep__face {
+  opacity: 0;
+  transition: opacity 560ms ease;
+}
+
+.caminos-keep.is-revealed .caminos-keep__back,
+.caminos-keep.is-revealed .caminos-keep__face {
+  opacity: 1;
+  transition-delay: 160ms;
+}
+
+.caminos-keep__shot {
+  position: absolute;
+  z-index: 2;
+  width: 38%;
+  transition: transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.caminos-keep__shot.is-1 {
+  left: 16%;
+  top: 9%;
+  width: 33%;
+  transform: translateY(12px) rotate(-5.5deg);
+}
+
+.caminos-keep__shot.is-2 {
+  right: 17%;
+  top: 3.5%;
+  width: 30%;
+  transform: translateY(12px) rotate(4.5deg);
+}
+
+.caminos-keep.is-revealed .caminos-keep__shot.is-1 {
+  transform: rotate(-5.5deg);
+  transition-delay: 280ms;
+}
+
+.caminos-keep.is-revealed .caminos-keep__shot.is-2 {
+  transform: rotate(4.5deg);
+  transition-delay: 360ms;
+}
+
+.caminos-keep__scene:hover .caminos-keep__shot.is-1,
+.caminos-keep__scene:focus-within .caminos-keep__shot.is-1 {
+  transform: translateY(-4px) rotate(-5.5deg);
+}
+
+.caminos-keep__scene:hover .caminos-keep__shot.is-2,
+.caminos-keep__scene:focus-within .caminos-keep__shot.is-2 {
+  transform: translateY(-4px) rotate(4.5deg);
+}
+
+.caminos-keep__polaroid {
+  display: block;
+  aspect-ratio: 0.86;
+  padding: 5.5% 5.5% 16%;
+  background: #fffdf8;
+  box-shadow: 0 1px 2px rgba(28, 51, 46, 0.08);
+}
+
+.caminos-keep__polaroid img,
+.caminos-keep__blank {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.caminos-keep__blank {
+  background: #e4ebe0;
+}
+
+.caminos-keep__seal {
+  position: absolute;
+  z-index: 4;
+  top: 67%;
+  left: 50%;
+  width: 11%;
+  height: auto;
+  opacity: 0;
+  transform: translate(-50%, 6px);
+  transition: opacity 520ms ease, transform 520ms ease;
+  transition-delay: 460ms;
+  pointer-events: none;
+}
+
+.caminos-keep.is-revealed .caminos-keep__seal {
+  opacity: 1;
+  transform: translate(-50%, -42%);
+}
+
+.caminos-keep__sprig {
+  position: absolute;
+  z-index: 0;
+  color: #8b9a84;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 520ms ease, transform 520ms ease;
+}
+
+.caminos-keep__sprig--left {
+  left: 0.15rem;
+  top: 42%;
+  width: 2.4rem;
+  transform: translateY(6px);
+}
+
+.caminos-keep__sprig--right {
+  right: 0.1rem;
+  bottom: 12%;
+  width: 2.15rem;
+  transform: translateY(6px);
+}
+
+.caminos-keep.is-revealed .caminos-keep__sprig {
+  opacity: 0.42;
+  transition-delay: 480ms;
+}
+
+.caminos-keep.is-revealed .caminos-keep__sprig--left,
+.caminos-keep.is-revealed .caminos-keep__sprig--right { transform: none; }
+
+.caminos-keep__bird {
+  position: absolute;
+  z-index: 1;
+  top: 18%;
+  right: 0.15rem;
+  width: 1.25rem;
+  height: auto;
+  pointer-events: none;
+  opacity: 0;
+  filter: brightness(0) invert(0.78);
+  transition: opacity 520ms ease;
+  transition-delay: 520ms;
+}
+
+.caminos-keep.is-revealed .caminos-keep__bird {
+  opacity: 0.38;
+}
+
+.caminos-plans .caminos-keep__cta,
+.caminos-plans .caminos-keep__cta:hover {
+  position: absolute;
+  z-index: 5;
+  left: 50%;
+  bottom: 11%;
+  margin: 0;
+  padding: 0.42rem 0.95rem;
+  border: 0;
+  letter-spacing: 0.12em;
+  font-size: 0.6rem;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  box-shadow: none;
+  transition: background-color 180ms ease;
+}
+
+.caminos-plans .caminos-keep__cta:hover {
+  background: #243f38;
+  transform: translateX(-50%);
+}
+
+.caminos-keep__cta:focus-visible {
+  outline: 2px solid #6e8f88;
+  outline-offset: 3px;
+}
+
+.caminos-keep__cta span {
+  font-size: 0.85em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .caminos-keep__shot,
+  .caminos-keep.is-revealed .caminos-keep__shot,
+  .caminos-keep__scene:hover .caminos-keep__shot,
+  .caminos-keep__seal,
+  .caminos-keep.is-revealed .caminos-keep__seal,
+  .caminos-keep__sprig,
+  .caminos-keep.is-revealed .caminos-keep__sprig,
+  .caminos-keep__bird,
+  .caminos-keep.is-revealed .caminos-keep__back,
+  .caminos-keep.is-revealed .caminos-keep__face {
+    opacity: 1;
+    transition: none;
+  }
+
+  .caminos-keep__shot.is-1,
+  .caminos-keep.is-revealed .caminos-keep__shot.is-1,
+  .caminos-keep__scene:hover .caminos-keep__shot.is-1 {
+    transform: rotate(-5.5deg);
+  }
+
+  .caminos-keep__shot.is-2,
+  .caminos-keep.is-revealed .caminos-keep__shot.is-2,
+  .caminos-keep__scene:hover .caminos-keep__shot.is-2 {
+    transform: rotate(4.5deg);
+  }
+
+  .caminos-hero__base img,
+  .caminos-hero__photo img,
+  .caminos-hero.is-revealed .caminos-hero__photo img {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+.caminos-close {
+  position: relative;
+}
+
+.caminos-close__dove {
+  position: absolute;
+  z-index: 3;
+  top: -0.85rem;
+  width: clamp(2.15rem, 4.8vw, 3.35rem);
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+  filter: brightness(0) invert(0.82);
+  opacity: 0.7;
+}
+
+.caminos-close__dove--left { left: clamp(0.85rem, 5vw, 3.5rem); }
+.caminos-close__dove--right { right: clamp(0.85rem, 5vw, 3.5rem); }
+
+@media (max-width: 640px) {
+  .caminos-close__dove {
+    width: 1.85rem;
+    top: -0.45rem;
+    opacity: 0.62;
+  }
+}
+
+@media (max-width: 900px) {
+  .caminos-plans__inner {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 36rem;
+    gap: 3rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .caminos-plans {
+    padding-inline: 1rem;
+  }
+
+  .caminos-pass {
+    grid-template-columns: 5.2rem minmax(0, 1fr) 4rem;
+    min-height: 4.6rem;
+    padding: 0.26rem;
+  }
+
+  .caminos-pass__photo { min-height: 4rem; }
+
+  .caminos-pass__body { padding: 0.4rem 0.6rem 0.4rem 0.7rem; }
+
+  .caminos-pass__title { font-size: 0.8rem; }
+  .caminos-pass__text { font-size: 0.68rem; }
+  .caminos-pass__day { font-size: 1.35rem; }
+
+  .caminos-keep__scene { width: min(100%, 22rem); padding-inline: 0.4rem; }
+  .caminos-keep__envelope { width: 100%; }
+}
+
+/* Calendario tipo planner */
+
+.caminos-planner .caminos-agenda__month {
+  color: #1c332e;
+  font-family: Poppins, Nunito, system-ui, sans-serif;
+  font-size: clamp(1.6rem, 3.4vh, 2.25rem);
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  line-height: 1.15;
+  text-transform: uppercase;
+}
+
+.caminos-planner .caminos-agenda__year {
+  margin-top: 0.2rem;
+  color: #8a918c;
+  font-size: 0.66rem;
+  letter-spacing: 0.18em;
+}
+
+.caminos-planner__sheet > .caminos-agenda.is-split {
+  grid-template-columns: minmax(0, 1.9fr) minmax(18.5rem, 1fr);
+  gap: 0.35rem 1.4rem;
+}
+
+.caminos-planner .caminos-grid {
+  border-color: rgba(28, 51, 46, 0.07);
+  border-radius: 0.9rem;
+}
+
+.caminos-planner .caminos-dow {
+  padding: 0.35rem 0.35rem 0.3rem;
+  color: #a3aaa4;
+  font: 500 0.56rem/1 Poppins, Nunito, sans-serif;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.caminos-planner .caminos-day__num {
+  color: #8a918c;
+  font-size: 0.64rem;
+  font-weight: 400;
+}
+
+.caminos-planner .caminos-day__plan {
+  max-width: 100%;
+  margin-top: 0.22rem;
+  padding: 0.16rem 0.3rem 0.16rem 0.16rem;
+  gap: 0.3rem;
+  border: 1px solid rgba(28, 51, 46, 0.08);
+  border-radius: 0.4rem;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(28, 51, 46, 0.05);
+}
+
+.caminos-planner .caminos-day__plan img {
+  width: 1.45rem;
+  height: 1.45rem;
+  border-radius: 0.25rem;
+}
+
+.caminos-planner .caminos-day__plan strong {
+  color: #1c332e;
+  font: 500 0.56rem/1.15 Poppins, Nunito, sans-serif;
+}
+
+.caminos-planner .caminos-day__plan em,
+.caminos-planner .caminos-grid.is-week .caminos-day__plan em {
+  display: block;
+  color: #8a918c;
+  font: 400 0.5rem/1.15 Poppins, Nunito, sans-serif;
+}
+
+.caminos-planner .caminos-grid.is-week .caminos-day__plan strong { font-size: 0.66rem; }
+.caminos-planner .caminos-grid.is-week .caminos-day__plan em { font-size: 0.6rem; }
+
+.caminos-planner .caminos-agenda.is-split .caminos-agenda__side {
+  padding: 0.25rem 0 0 1.35rem;
+  border-left: 1px solid rgba(28, 51, 46, 0.08);
+}
+
+.caminos-planner .caminos-agenda.is-split .caminos-agenda__side.is-edit,
+.caminos-planner .caminos-agenda.is-split .caminos-agenda__side.is-catalog {
+  overflow: hidden;
+}
+
+.caminos-studio__head {
+  flex-shrink: 0;
+  padding-right: 2.4rem;
+}
+
+.caminos-planner .caminos-agenda__side .caminos-studio__kicker {
+  margin: 0 0 0.5rem;
+  color: #8a918c;
+  font: 600 0.58rem/1 Poppins, Nunito, sans-serif;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.caminos-planner .caminos-agenda.is-split .caminos-agenda__side h3 {
+  margin: 0;
+  color: #1c332e;
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 1.32rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1.2;
+  text-transform: none;
+}
+
+.caminos-planner .caminos-agenda__side .caminos-studio__lead {
+  margin: 0.4rem 0 0;
+  color: #6b746f;
+  font: 400 0.76rem/1.45 Poppins, Nunito, sans-serif;
+}
+
+.caminos-planner .caminos-agenda__side .caminos-agenda__hint {
+  margin: 0.55rem 0 0;
+  color: #8a918c;
+  font: 400 0.7rem/1.45 Poppins, Nunito, sans-serif;
+}
+
+.caminos-planner .caminos-agenda__side .caminos-daylist {
+  margin-top: 1rem;
+}
+
+.caminos-studio__memo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.7rem;
+  margin-top: 1rem;
+  padding: 0.65rem 0.8rem;
+  border-radius: 0.65rem;
+  background: #fff;
+}
+
+.caminos-planner .caminos-day__note:not(.is-serif):not(.is-script) {
+  font-family: Poppins, Nunito, sans-serif;
+}
+
+.caminos-planner .caminos-day__note.is-verde { color: #3f5c52; }
+.caminos-planner .caminos-day__note.is-beige { color: #8a7356; }
+.caminos-planner .caminos-day__note.is-rosa { color: #8d5d66; }
+.caminos-planner .caminos-day__note.is-azul { color: #5d6d78; }
+.caminos-planner .caminos-day__note.is-amarillo { color: #8a7340; }
+.caminos-planner .caminos-day__note.is-neutro { color: #40392f; }
+
+.caminos-planner .caminos-studio__memo .caminos-day__note {
+  margin: 0;
+  font-size: 0.86rem;
+  white-space: normal;
+}
+
+.caminos-planner .caminos-studio__memo .caminos-day__note.is-script { font-size: 1.15rem; }
+
+.caminos-studio__memo img,
+.caminos-studio__memo svg {
+  width: 1.6rem;
+  height: 1.6rem;
+  object-fit: contain;
+}
+
+.caminos-planner .caminos-agenda.is-split .caminos-agenda__studio {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  margin-top: 1rem;
+}
+
+.caminos-planner .caminos-agenda__tools {
+  display: grid;
+  flex-shrink: 0;
+  grid-template-columns: repeat(auto-fit, minmax(3.2rem, 1fr));
+  gap: 0.2rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid rgba(28, 51, 46, 0.08);
+}
+
+.caminos-planner .caminos-agenda__tools button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.32rem;
+  min-width: 0;
+  padding: 0.5rem 0.1rem 0.45rem;
+  border-radius: 0.55rem;
+  background: transparent;
+  color: #6b746f;
+  font: 500 0.56rem/1.1 Poppins, Nunito, sans-serif;
+  letter-spacing: 0.01em;
+}
+
+.caminos-planner .caminos-agenda__tools button span {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.caminos-planner .caminos-agenda__tools button:hover {
+  background: rgba(28, 51, 46, 0.04);
+  color: #1c332e;
+}
+
+.caminos-planner .caminos-agenda__tools button.is-on {
+  background: #e4efe8;
+  color: #1c332e;
+}
+
+.caminos-studio__body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 1rem 0.2rem 0.6rem 0;
+}
+
+.caminos-planner .caminos-studio__block { margin: 0; }
+
+.caminos-planner .caminos-studio__add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  width: 100%;
+  padding: 0.72rem 1rem;
+  border-radius: 0.6rem;
+  background: #1c332e;
+  color: #fff;
+  font: 500 0.76rem/1 Poppins, Nunito, sans-serif;
+  letter-spacing: 0.02em;
+}
+
+.caminos-planner .caminos-studio__add:hover { background: #243f38; }
+
+.caminos-studio__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.caminos-planner .caminos-agenda__side .caminos-field {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+  color: #6b746f;
+  font: 500 0.66rem/1 Poppins, Nunito, sans-serif;
+}
+
+.caminos-planner .caminos-agenda__side .caminos-field select,
+.caminos-planner .caminos-agenda__side .caminos-field input {
+  box-sizing: border-box;
+  width: 100%;
+  height: 2.35rem;
+  padding: 0 0.7rem;
+  border: 1px solid rgba(28, 51, 46, 0.14);
+  border-radius: 0.55rem;
+  background-color: #fff;
+  color: #1c332e;
+  font: 400 0.78rem/1 Poppins, Nunito, sans-serif;
+}
+
+.caminos-planner .caminos-agenda__side .caminos-field select {
+  padding-right: 1.9rem;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b746f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-position: right 0.65rem center;
+  background-repeat: no-repeat;
+  cursor: pointer;
+}
+
+.caminos-planner .caminos-agenda__side .caminos-field select:focus,
+.caminos-planner .caminos-agenda__side .caminos-field input:focus {
+  border-color: #6e8f88;
+  outline: none;
+}
+
+.caminos-stepper {
+  display: grid;
+  grid-template-columns: 2.1rem minmax(0, 1fr) 2.1rem;
+  height: 2.35rem;
+  overflow: hidden;
+  border: 1px solid rgba(28, 51, 46, 0.14);
+  border-radius: 0.55rem;
+  background: #fff;
+}
+
+.caminos-stepper button {
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: #1c332e;
+  cursor: pointer;
+}
+
+.caminos-stepper button:hover:not(:disabled) { background: rgba(28, 51, 46, 0.04); }
+.caminos-stepper button:disabled { color: #c5c9c3; cursor: default; }
+
+.caminos-stepper output {
+  display: grid;
+  place-items: center;
+  border-inline: 1px solid rgba(28, 51, 46, 0.1);
+  color: #1c332e;
+  font: 500 0.78rem/1 Poppins, Nunito, sans-serif;
+}
+
+.caminos-planner .caminos-agenda__side .caminos-studio__label {
+  margin: 1.1rem 0 0.55rem;
+  color: #6b746f;
+  font: 500 0.66rem/1 Poppins, Nunito, sans-serif;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.caminos-planner .caminos-agenda__side .caminos-studio__block > .caminos-studio__label:first-child { margin-top: 0; }
+
+.caminos-planner .caminos-agenda__tones { gap: 0.55rem; }
+
+.caminos-planner .caminos-agenda__dot {
+  width: 1.7rem;
+  height: 1.7rem;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px rgba(28, 51, 46, 0.14);
+}
+
+.caminos-planner .caminos-agenda__dot.is-verde { background: #3f5c52; }
+.caminos-planner .caminos-agenda__dot.is-beige { background: #8a7356; }
+.caminos-planner .caminos-agenda__dot.is-rosa { background: #8d5d66; }
+.caminos-planner .caminos-agenda__dot.is-azul { background: #5d6d78; }
+.caminos-planner .caminos-agenda__dot.is-amarillo { background: #8a7340; }
+.caminos-planner .caminos-agenda__dot.is-neutro { background: #40392f; }
+
+.caminos-planner .caminos-agenda__dot.is-on {
+  outline: 0;
+  box-shadow: 0 0 0 1.5px #1c332e;
+}
+
+.caminos-planner .caminos-studio__quiet {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.9rem;
+  color: #6b746f;
+  font-size: 0.7rem;
+}
+
+.caminos-planner .caminos-studio__quiet:hover { color: #1c332e; }
+
+.caminos-studio__split {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(28, 51, 46, 0.08);
+}
+
+.caminos-planner .caminos-agenda__side .caminos-studio__split .caminos-studio__label { margin: 0; }
+
+.caminos-studio__split button {
+  border: 0;
+  background: transparent;
+  color: #6b746f;
+  cursor: pointer;
+  font: 500 0.66rem/1 Poppins, Nunito, sans-serif;
+}
+
+.caminos-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(2.7rem, 1fr));
+  gap: 0.45rem;
+  margin-top: 0.65rem;
+}
+
+.caminos-tiles button {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  padding: 0.45rem;
+  border: 1px solid rgba(28, 51, 46, 0.08);
+  border-radius: 0.55rem;
+  background: #fafaf7;
+  cursor: pointer;
+}
+
+.caminos-tiles button:hover {
+  border-color: rgba(28, 51, 46, 0.24);
+  background: #fff;
+}
+
+.caminos-tiles img,
+.caminos-tiles svg {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.caminos-planner .caminos-agenda__fonts { gap: 0.4rem; }
+
+.caminos-planner .caminos-agenda__fonts button {
+  padding: 0.6rem 0.8rem;
+  border: 1px solid rgba(28, 51, 46, 0.08);
+  border-radius: 0.55rem;
+  background: #fff;
+  font-size: 0.98rem;
+}
+
+.caminos-planner .caminos-agenda__fonts button:nth-child(3) { font-size: 1.3rem; }
+
+.caminos-planner .caminos-agenda__fonts button.is-on {
+  border-color: rgba(110, 143, 136, 0.55);
+  background: #e4efe8;
+}
+
+.caminos-planner .caminos-agenda__remove li {
+  padding: 0.45rem 0;
+  border-bottom: 1px solid rgba(28, 51, 46, 0.06);
+  color: #1c332e;
+  font-size: 0.76rem;
+}
+
+.caminos-studio__foot {
+  display: grid;
+  flex-shrink: 0;
+  gap: 0.4rem;
+  padding: 0.8rem 0 0.15rem;
+  border-top: 1px solid rgba(28, 51, 46, 0.08);
+}
+
+.caminos-planner .caminos-agenda__side .caminos-studio__foot p { margin: 0; }
+
+.caminos-planner .caminos-studio__foot .caminos-agenda__save {
+  width: 100%;
+  margin: 0;
+  padding: 0.72rem 1rem;
+  border-radius: 0.6rem;
+  font-size: 0.76rem;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+.caminos-planner .caminos-studio__foot .caminos-agenda__save:disabled {
+  background: #9aa7a2;
+  cursor: default;
+}
+
+.caminos-planner .caminos-agenda.is-split .caminos-catalog {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  margin-top: 1rem;
+}
+
+.caminos-planner .caminos-agenda__side .caminos-catalog__search {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.5rem;
+  height: 2.5rem;
+  margin: 0;
+  padding: 0 0.85rem;
+  border: 1px solid rgba(28, 51, 46, 0.14);
+  border-radius: 999px;
+  background: #fff;
+  color: #8a918c;
+}
+
+.caminos-planner .caminos-agenda__side .caminos-catalog__search input {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #1c332e;
+  font: 400 0.8rem/1 Poppins, Nunito, sans-serif;
+  outline: none;
+}
+
+.caminos-catalog .caminos-studio__row {
+  flex-shrink: 0;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  margin-top: 0.75rem;
+}
+
+.caminos-planner .caminos-catalog .caminos-hits {
+  flex: 1;
+  align-content: start;
+  min-height: 6rem;
+  margin: 0;
+  overflow: auto;
+  gap: 0.4rem;
+}
+
+.caminos-planner .caminos-catalog .caminos-hits button {
+  grid-template-columns: 2.9rem minmax(0, 1fr);
+  align-items: center;
+  padding: 0.4rem;
+  border: 1px solid rgba(28, 51, 46, 0.08);
+  border-radius: 0.6rem;
+  background: #fff;
+}
+
+.caminos-planner .caminos-catalog .caminos-hits button:hover { border-color: rgba(28, 51, 46, 0.2); }
+
+.caminos-planner .caminos-catalog .caminos-hits button.is-on {
+  border-color: rgba(110, 143, 136, 0.6);
+  background: #e4efe8;
+}
+
+.caminos-planner .caminos-catalog .caminos-hits img {
+  width: 2.9rem;
+  height: 2.9rem;
+  border-radius: 0.4rem;
+}
+
+.caminos-planner .caminos-catalog .caminos-hits span { min-width: 0; }
+
+.caminos-planner .caminos-catalog .caminos-hits strong {
+  display: block;
+  overflow: hidden;
+  color: #1c332e;
+  font: 500 0.76rem/1.25 Poppins, Nunito, sans-serif;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.caminos-planner .caminos-catalog .caminos-hits small {
+  overflow: hidden;
+  color: #8a918c;
+  font-size: 0.66rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 980px) {
+  .caminos-planner__sheet > .caminos-agenda.is-split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .caminos-planner .caminos-agenda.is-split .caminos-agenda__side,
+  .caminos-planner .caminos-agenda.is-split .caminos-agenda__side.is-edit,
+  .caminos-planner .caminos-agenda.is-split .caminos-agenda__side.is-catalog {
+    overflow: auto;
+    padding: 0.8rem 0 0;
+    border-top: 1px solid rgba(28, 51, 46, 0.08);
+    border-left: 0;
+  }
+
+  .caminos-planner .caminos-agenda.is-split .caminos-agenda__studio,
+  .caminos-planner .caminos-agenda.is-split .caminos-catalog,
+  .caminos-studio__body {
+    flex: none;
+    overflow: visible;
+  }
+
+  .caminos-planner .caminos-agenda__tools {
+    grid-auto-columns: 3.6rem;
+    grid-auto-flow: column;
+    grid-template-columns: none;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .caminos-planner .caminos-catalog .caminos-hits {
+    flex: none;
+    overflow: visible;
+  }
+
+  .caminos-planner .caminos-agenda__month {
+    font-size: clamp(1.35rem, 5.4vw, 1.85rem);
+  }
+}
+
+/* Planner: experiencias y editor */
+
+.caminos-planner .caminos-agenda__actions {
+  gap: 0.8rem;
+  padding-top: 0.85rem;
+}
+
+.caminos-planner .caminos-agenda__actions .tourist-hero__cta {
+  min-width: 9.5rem;
+  padding: 0.66rem 1.55rem;
+  border: 1px solid #1c332e;
+  font-size: 0.74rem;
+  letter-spacing: 0.02em;
+}
+
+.caminos-planner .caminos-agenda__actions .tourist-hero__cta.is-ghost {
+  border-color: rgba(28, 51, 46, 0.18);
+  background: #fff;
+  color: #1c332e;
+}
+
+.caminos-planner .caminos-agenda__actions .tourist-hero__cta.is-ghost:hover {
+  border-color: rgba(28, 51, 46, 0.4);
+  background: #fff;
+}
+
+.caminos-planner .caminos-day .caminos-day__plan {
+  position: absolute;
+  right: 0.35rem;
+  bottom: 0.35rem;
+  left: 0.35rem;
+  z-index: 2;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.3rem;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.caminos-planner .caminos-day__plan span {
+  display: grid;
+  min-width: 0;
+  padding-bottom: 0.1rem;
+}
+
+.caminos-planner .caminos-day__plan strong {
+  display: -webkit-box;
+  overflow: hidden;
+  color: #1c332e;
+  font: 500 0.56rem/1.2 Poppins, Nunito, sans-serif;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.caminos-planner .caminos-day .caminos-day__plan img {
+  flex: 0 0 auto;
+  width: clamp(2.1rem, 5.4vh, 3.4rem);
+  height: clamp(2.1rem, 5.4vh, 3.4rem);
+  border: 2px solid #fff;
+  border-radius: 0.2rem;
+  box-shadow: 0 3px 8px rgba(28, 51, 46, 0.16);
+  object-fit: cover;
+  transform: rotate(3deg);
+}
+
+.caminos-planner .caminos-grid.is-week .caminos-day .caminos-day__plan {
+  flex-direction: column-reverse;
+  align-items: flex-start;
+}
+
+.caminos-planner .caminos-grid.is-week .caminos-day .caminos-day__plan img {
+  width: 100%;
+  height: 4.5rem;
+  transform: none;
+}
+
+.caminos-day__drop {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border: 1px dashed rgba(28, 51, 46, 0.35);
+  border-radius: 0.45rem;
+  background: rgba(255, 255, 255, 0.7);
+  color: #6e8f88;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.caminos-planner .caminos-day.is-drop {
+  background: #e4efe8;
+  box-shadow: inset 0 0 0 1.5px #6e8f88;
+}
+
+.caminos-planner .caminos-agenda.is-split .caminos-agenda__side h3.is-display {
+  margin-top: 0.15rem;
+  font-size: clamp(1.45rem, 2.1vw, 1.85rem);
+  font-weight: 500;
+  line-height: 1.12;
+}
+
+.caminos-planner .caminos-agenda__side .caminos-studio__date {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.75rem 0 0;
+  padding: 0.38rem 0.75rem;
+  border-radius: 999px;
+  background: #e4efe8;
+  color: #1c332e;
+  font: 500 0.7rem/1 Poppins, Nunito, sans-serif;
+}
+
+.caminos-studio__date label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin: 0 0 0 0.35rem;
+  padding-left: 0.6rem;
+  border-left: 1px solid rgba(28, 51, 46, 0.18);
+  color: #1c332e;
+}
+
+.caminos-planner .caminos-agenda__side .caminos-studio__date input {
+  width: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #1c332e;
+  font: 500 0.7rem/1 Poppins, Nunito, sans-serif;
+}
+
+.caminos-planner .caminos-agenda__side .caminos-catalog__search {
+  height: 2.75rem;
+  padding: 0 1rem;
+  border-color: rgba(28, 51, 46, 0.12);
+  color: #6b746f;
+}
+
+.caminos-chips {
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.8rem;
+}
+
+.caminos-planner .caminos-agenda__side .caminos-chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0 0.7rem;
+  height: 2rem;
+  border: 1px solid rgba(28, 51, 46, 0.14);
+  border-radius: 999px;
+  background: #fff;
+  color: #1c332e;
+  cursor: pointer;
+  font: 500 0.68rem/1 Poppins, Nunito, sans-serif;
+}
+
+.caminos-planner .caminos-agenda__side .caminos-chip:hover { border-color: rgba(28, 51, 46, 0.32); }
+
+.caminos-planner .caminos-agenda__side .caminos-chip.is-on {
+  border-color: rgba(110, 143, 136, 0.55);
+  background: #e4efe8;
+}
+
+.caminos-planner .caminos-agenda__side .caminos-chip select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  opacity: 0;
+  appearance: none;
+}
+
+.caminos-chip__value {
+  max-width: 8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.caminos-planner .caminos-agenda__side .caminos-chip:focus-within {
+  border-color: #6e8f88;
+}
+
+.caminos-planner .caminos-agenda.is-split .caminos-catalog {
+  margin-top: 1rem;
+}
+
+.caminos-offers {
+  display: grid;
+  flex: 1;
+  align-content: start;
+  gap: 0.6rem;
+  min-height: 0;
+  margin: 0.9rem 0 0;
+  padding: 0 0.25rem 0.4rem 0;
+  overflow: auto;
+  list-style: none;
+}
+
+.caminos-offer {
+  display: grid;
+  grid-template-columns: 4.6rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.45rem 0.65rem 0.45rem 0.45rem;
+  border: 1px solid rgba(28, 51, 46, 0.08);
+  border-radius: 0.75rem;
+  background: #fff;
+  cursor: grab;
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.caminos-offer:hover {
+  border-color: rgba(28, 51, 46, 0.18);
+  box-shadow: 0 6px 16px rgba(28, 51, 46, 0.07);
+}
+
+.caminos-offer:active { cursor: grabbing; }
+
+.caminos-offer > img {
+  width: 4.6rem;
+  height: 4.6rem;
+  border-radius: 0.5rem;
+  object-fit: cover;
+}
+
+.caminos-offer__body {
+  display: grid;
+  gap: 0.22rem;
+  min-width: 0;
+}
+
+.caminos-offer__tag {
+  justify-self: start;
+  padding: 0.18rem 0.45rem;
+  border-radius: 999px;
+  background: #f2f3f2;
+  color: #6b746f;
+  font: 600 0.5rem/1 Poppins, Nunito, sans-serif;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.caminos-offer__body strong {
+  display: -webkit-box;
+  overflow: hidden;
+  color: #1c332e;
+  font: 500 0.95rem/1.2 "Playfair Display", Georgia, serif;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.caminos-offer__meta > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.caminos-planner .caminos-day .caminos-day__note-pin {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.caminos-offer__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  overflow: hidden;
+  color: #6b746f;
+  font: 400 0.64rem/1.2 Poppins, Nunito, sans-serif;
+  white-space: nowrap;
+}
+
+.caminos-offer__meta svg { flex: 0 0 auto; }
+
+.caminos-offer__meta em {
+  margin-left: 0.35rem;
+  color: #1c332e;
+  font-style: normal;
+  font-weight: 500;
+}
+
+.caminos-planner .caminos-offer__add {
+  margin: 0;
+  padding: 0.5rem 0.85rem;
+  border: 0;
+  font-size: 0.66rem;
+  box-shadow: none;
+}
+
+.caminos-planner .caminos-offer__add:hover {
+  background: #243f38;
+  box-shadow: none;
+  transform: none;
+}
+
+.caminos-planner .caminos-offer__add.is-done { background: #6e8f88; }
+.caminos-planner .caminos-offer__add:disabled { cursor: default; opacity: 0.75; }
+
+.caminos-planner .caminos-agenda__side .caminos-catalog__tip {
+  flex-shrink: 0;
+  margin: 0.6rem 0 0;
+  padding-top: 0.6rem;
+  border-top: 1px solid rgba(28, 51, 46, 0.08);
+  color: #8a918c;
+  font: 400 0.66rem/1.4 Poppins, Nunito, sans-serif;
+  text-align: center;
+}
+
+@media (max-width: 980px) {
+  .caminos-offers {
+    flex: none;
+    overflow: visible;
+  }
+}
+
+@media (max-width: 520px) {
+  .caminos-offer {
+    grid-template-columns: 3.8rem minmax(0, 1fr);
+  }
+
+  .caminos-offer > img {
+    width: 3.8rem;
+    height: 3.8rem;
+  }
+
+  .caminos-offer__add {
+    grid-column: 1 / -1;
+    justify-self: end;
+  }
+}
+
+/* Planner: refinamiento con el lenguaje de Favoritos */
+
+.caminos-planner .caminos-agenda.is-split .caminos-agenda__side h3,
+.caminos-planner .caminos-agenda.is-split .caminos-agenda__side h3.is-display {
+  margin: 0;
+  color: #1c332e;
+  font: 600 0.78rem/1.4 Poppins, Nunito, system-ui, sans-serif;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.caminos-planner .caminos-agenda__side .caminos-studio__lead {
+  margin: 0.35rem 0 0;
+  color: #8a918c;
+  font: 500 0.6rem/1.4 Poppins, Nunito, system-ui, sans-serif;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.caminos-planner .caminos-agenda__side .caminos-studio__date {
+  margin-top: 0.55rem;
+  padding: 0.32rem 0.7rem;
+  font-size: 0.64rem;
+}
+
+.caminos-planner .caminos-agenda__side .caminos-studio__date input { font-size: 0.64rem; }
+
+.caminos-planner .caminos-agenda__side .caminos-daylist { margin-top: 0.9rem; }
+
+.caminos-planner .caminos-agenda__side .caminos-daylist strong {
+  font: 600 0.78rem/1.3 Poppins, Nunito, system-ui, sans-serif;
+}
+
+.caminos-planner .caminos-agenda__side .caminos-daylist span {
+  color: #8a918c;
+  font: 400 0.68rem/1.4 Poppins, Nunito, system-ui, sans-serif;
+}
+
+.caminos-planner .caminos-agenda__side .caminos-inline {
+  gap: 0.35rem 0.8rem;
+  margin-top: 0.4rem;
+}
+
+.caminos-planner .caminos-agenda__side .caminos-inline > a,
+.caminos-planner .caminos-agenda__side .caminos-inline > button:not(.tourist-hero__cta) {
+  color: #6b746f;
+  font: 500 0.64rem/1.2 Poppins, Nunito, system-ui, sans-serif;
+  text-decoration: none;
+}
+
+.caminos-planner .caminos-agenda__side .caminos-inline > a:hover,
+.caminos-planner .caminos-agenda__side .caminos-inline > button:not(.tourist-hero__cta):hover {
+  color: #1c332e;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.caminos-planner .caminos-agenda__side .caminos-confirm p {
+  margin: 0;
+  color: #1c332e;
+  font: 500 0.68rem/1.4 Poppins, Nunito, system-ui, sans-serif;
+}
+
+.caminos-planner .caminos-agenda.is-split .caminos-agenda__form > p {
+  margin: 0.35rem 0 0.6rem;
+  color: #6b746f;
+  font: 400 0.74rem/1.4 Poppins, Nunito, system-ui, sans-serif;
+}
+
+.caminos-planner .caminos-agenda.is-split .caminos-agenda__form label {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0.6rem 0 0;
+  color: #8a918c;
+  font: 500 0.6rem/1 Poppins, Nunito, system-ui, sans-serif;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.caminos-planner .caminos-agenda.is-split .caminos-agenda__form input {
+  box-sizing: border-box;
+  height: 2.4rem;
+  padding: 0 0.8rem;
+  border: 1px solid rgba(41, 73, 66, 0.16);
+  border-radius: 0.8rem;
+  background: #fff;
+  color: #1c332e;
+  font: 400 0.8rem/1 Poppins, Nunito, system-ui, sans-serif;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.caminos-planner .caminos-agenda.is-split .caminos-agenda__form input:focus {
+  border-color: rgba(41, 73, 66, 0.38);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(41, 73, 66, 0.08);
+}
+
+.caminos-planner .caminos-agenda.is-split .caminos-agenda__form .caminos-inline {
+  align-items: center;
+  margin-top: 0.9rem;
+}
+
+.caminos-planner .caminos-agenda.is-split .caminos-agenda__form .tourist-hero__cta {
+  margin: 0;
+  padding: 0.5rem 1.1rem;
+  border-radius: 999px;
+  font: 500 0.66rem/1 Poppins, Nunito, system-ui, sans-serif;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+/* Botones más delicados */
+
+.caminos-planner .caminos-agenda__actions {
+  gap: 0.55rem;
+  padding-top: 0.7rem;
+}
+
+.caminos-planner .caminos-agenda__actions .tourist-hero__cta {
+  min-width: 0;
+  gap: 0.4rem;
+  padding: 0.5rem 1.05rem;
+  border: 1px solid #1c332e;
+  border-radius: 999px;
+  font: 500 0.66rem/1 Poppins, Nunito, system-ui, sans-serif;
+  letter-spacing: 0.02em;
+}
+
+.caminos-planner .caminos-studio__add {
+  display: inline-flex;
+  justify-self: start;
+  width: auto;
+  gap: 0.35rem;
+  padding: 0.5rem 0.95rem;
+  border-radius: 999px;
+  font: 500 0.66rem/1 Poppins, Nunito, system-ui, sans-serif;
+}
+
+.caminos-planner .caminos-studio__foot {
+  justify-items: end;
+  padding-top: 0.7rem;
+}
+
+.caminos-planner .caminos-studio__foot .caminos-agenda__save {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: auto;
+  padding: 0.5rem 1.1rem;
+  border-radius: 999px;
+  font: 500 0.66rem/1 Poppins, Nunito, system-ui, sans-serif;
+}
+
+/* Herramientas de Personalizar */
+
+.caminos-planner .caminos-agenda__tools button {
+  gap: 0.28rem;
+  padding: 0.45rem 0.1rem 0.4rem;
+  font-size: 0.56rem;
+}
+
+.caminos-studio__fields {
+  display: grid;
+  gap: 1.05rem;
+}
+
+.caminos-studio__field {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.caminos-planner .caminos-agenda__side .caminos-studio__fields .caminos-studio__label {
+  margin: 0;
+  color: #8a918c;
+  font: 500 0.58rem/1 Poppins, Nunito, system-ui, sans-serif;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.caminos-planner .caminos-studio__fields .caminos-tiles { margin-top: 0; }
+
+.caminos-planner .caminos-studio__fields .caminos-stepper {
+  width: 8.5rem;
+  height: 2.3rem;
+  border-color: rgba(41, 73, 66, 0.16);
+  border-radius: 0.8rem;
+}
+
+.caminos-planner .caminos-studio__fields .caminos-stepper output { font-size: 0.74rem; }
+
+.caminos-planner .caminos-studio__fields .caminos-agenda__tones { gap: 0.5rem; }
+
+.caminos-planner .caminos-studio__fields .caminos-agenda__dot {
+  width: 1.45rem;
+  height: 1.45rem;
+}
+
+.caminos-select {
+  position: relative;
+  min-width: 0;
+}
+
+.caminos-select__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  height: 2.3rem;
+  padding: 0 0.8rem;
+  border: 1px solid #dfe3e1;
+  border-radius: 0.75rem;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(28, 51, 46, 0.04);
+  color: #17201d;
+  cursor: pointer;
+  font: 500 0.8rem/1.2 Poppins, Nunito, system-ui, sans-serif;
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.caminos-select__trigger > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.caminos-select__trigger:hover { border-color: #c9d1cd; }
+
+.caminos-select.is-open .caminos-select__trigger,
+.caminos-select__trigger:focus-visible {
+  border-color: #b8c6bf;
+  outline: none;
+  box-shadow: 0 1px 2px rgba(28, 51, 46, 0.04), 0 0 0 3px #e6eee9;
+}
+
+.caminos-select__trigger svg {
+  flex-shrink: 0;
+  color: #6d7a74;
+  transition: transform 200ms ease;
+}
+
+.caminos-select.is-open .caminos-select__trigger svg { transform: rotate(180deg); }
+
+.caminos-select.is-chip .caminos-select__trigger {
+  width: auto;
+  height: 1.8rem;
+  gap: 0.3rem;
+  padding: 0 0.55rem 0 0.7rem;
+  border-radius: 999px;
+  box-shadow: none;
+  color: #4a5c56;
+  font-size: 0.64rem;
+}
+
+.caminos-select.is-chip.is-set .caminos-select__trigger {
+  border-color: #1c332e;
+  background: #1c332e;
+  color: #fff;
+}
+
+.caminos-select.is-chip.is-set .caminos-select__trigger svg { color: rgba(255, 255, 255, 0.8); }
+
+.caminos-select__menu {
+  position: fixed;
+  z-index: 40;
+  display: grid;
+  align-content: start;
+  gap: 0.1rem;
+  box-sizing: border-box;
+  max-width: calc(100vw - 24px);
+  margin: 0;
+  padding: 0.3rem;
+  overflow-y: auto;
+  border: 1px solid #dfe3e1;
+  border-radius: 0.95rem;
+  background: #fff;
+  box-shadow: 0 18px 40px rgba(28, 51, 46, 0.14);
+  list-style: none;
+  overscroll-behavior: contain;
+  scrollbar-color: rgba(28, 51, 46, 0.2) transparent;
+  scrollbar-width: thin;
+  animation: caminos-pop-in 160ms ease;
+}
+
+.caminos-select__menu button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 2.2rem;
+  padding: 0.35rem 0.7rem;
+  border: 0;
+  border-radius: 0.6rem;
+  background: transparent;
+  color: #17201d;
+  cursor: pointer;
+  font: 500 0.78rem/1.2 Poppins, Nunito, system-ui, sans-serif;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.caminos-select__menu button.is-script { font-size: 1.3rem; }
+.caminos-select__menu button.is-serif { font-size: 0.9rem; }
+.caminos-select__menu button:hover,
+.caminos-select__menu button:focus-visible { background: #f2f5f3; outline: none; }
+.caminos-select__menu button.is-selected { background: #e6eee9; color: #1c332e; font-weight: 600; }
+.caminos-select__menu button svg { flex-shrink: 0; color: #294942; }
+
+@keyframes caminos-pop-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+
+.caminos-fills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.caminos-fill {
+  display: inline-block;
+  width: 1.9rem;
+  height: 1.9rem;
+  padding: 0;
+  border: 1px solid rgba(28, 51, 46, 0.12);
+  border-radius: 0.5rem;
+  background: #fff;
+  cursor: pointer;
+}
+
+.caminos-fill.is-none {
+  background: linear-gradient(135deg, transparent 46%, rgba(28, 51, 46, 0.3) 47%, rgba(28, 51, 46, 0.3) 53%, transparent 54%), #fff;
+}
+
+.caminos-fill.is-on { box-shadow: 0 0 0 2px #fff, 0 0 0 3.5px #1c332e; }
+
+.caminos-fill[data-fill="salvia"],
+.caminos-planner .caminos-day[data-fill="salvia"] { background: #e6eee8; }
+.caminos-fill[data-fill="arena"],
+.caminos-planner .caminos-day[data-fill="arena"] { background: #f4efe5; }
+.caminos-fill[data-fill="rosa"],
+.caminos-planner .caminos-day[data-fill="rosa"] { background: #f6eae8; }
+.caminos-fill[data-fill="cielo"],
+.caminos-planner .caminos-day[data-fill="cielo"] { background: #e8eef3; }
+.caminos-fill[data-fill="mostaza"],
+.caminos-planner .caminos-day[data-fill="mostaza"] { background: #f4efda; }
+.caminos-fill[data-fill="lavanda"],
+.caminos-planner .caminos-day[data-fill="lavanda"] { background: #eeebf4; }
+
+.caminos-planner .caminos-agenda__remove li {
+  justify-content: flex-start;
+  gap: 0.6rem;
+  font: 400 0.72rem/1.3 Poppins, Nunito, system-ui, sans-serif;
+}
+
+.caminos-planner .caminos-agenda__remove li > span:not(.caminos-fill) {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.caminos-planner .caminos-agenda__remove .caminos-fill {
+  flex: none;
+  width: 1.3rem;
+  height: 1.3rem;
+  border-radius: 0.35rem;
+  cursor: default;
+}
+
+.caminos-planner .caminos-agenda__remove button {
+  margin-left: auto;
+  color: #6b746f;
+  font: 500 0.64rem/1 Poppins, Nunito, system-ui, sans-serif;
+}
+
+.caminos-planner .caminos-agenda__remove button:hover { color: #1c332e; }
+
+/* Hoy y día seleccionado */
+
+.caminos-planner .caminos-day.is-selected {
+  box-shadow: inset 0 0 0 1.5px #6e8f88;
+}
+
+.caminos-planner .caminos-day.is-selected:not([data-fill]) { background: #eef4f0; }
+
+.caminos-planner .caminos-day.is-today .caminos-day__num {
+  position: relative;
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 999px;
+  background: #1c332e;
+  box-shadow: none;
+  color: #fff;
+  font-weight: 600;
+}
+
+.caminos-planner .caminos-day.is-today .caminos-day__num::after {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 0.3rem);
+  color: #6e8f88;
+  content: "Hoy";
+  font: 600 0.48rem/1 Poppins, Nunito, system-ui, sans-serif;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  transform: translateY(-50%);
+}
+
+.caminos-planner .caminos-day.is-drop {
+  background: #e4efe8;
+  box-shadow: inset 0 0 0 1.5px #6e8f88;
+}
+
+/* Experiencias en la casilla */
+
+.caminos-planner .caminos-day button.caminos-day__plan {
+  border-radius: 0.3rem;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  pointer-events: auto;
+  text-align: left;
+}
+
+.caminos-planner .caminos-day button.caminos-day__plan:hover strong {
+  color: #1c332e;
+  text-decoration: underline;
+  text-underline-offset: 0.16em;
+}
+
+.caminos-planner .caminos-day button.caminos-day__plan:focus-visible {
+  outline: 2px solid #6e8f88;
+  outline-offset: 2px;
+}
+
+/* Edición directa sobre el día */
+
+.caminos-planner .caminos-deco {
+  position: absolute;
+  z-index: 3;
+  display: inline-block;
+  width: max-content;
+  max-width: 92%;
+  pointer-events: none;
+}
+
+.caminos-planner .caminos-agenda.is-editing .caminos-deco {
+  z-index: 5;
+  pointer-events: auto;
+}
+
+.caminos-planner .caminos-day .caminos-deco > .caminos-day__note-pin,
+.caminos-planner .caminos-day .caminos-deco > .caminos-day__sticker {
+  position: relative;
+  top: auto;
+  left: auto;
+  display: block;
+  max-width: 100%;
+  margin: 0;
+}
+
+.caminos-planner .caminos-agenda .caminos-deco .caminos-day__note-pin.is-picked,
+.caminos-planner .caminos-agenda .caminos-deco .caminos-day__sticker.is-picked {
+  outline: 0;
+}
+
+.caminos-planner .caminos-day.has-active {
+  z-index: 3;
+  overflow: visible;
+}
+
+.caminos-planner .caminos-deco.is-active {
+  z-index: 8;
+  border-radius: 2px;
+  outline: 1px solid #6e8f88;
+  outline-offset: 3px;
+}
+
+.caminos-deco__trash {
+  position: absolute;
+  bottom: calc(100% + 0.5rem);
+  left: 50%;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 1.3rem;
+  height: 1.3rem;
+  padding: 0;
+  border: 1px solid #dfe3e1;
+  border-radius: 999px;
+  background: #fff;
+  color: #4a5c56;
+  box-shadow: 0 3px 8px rgba(28, 51, 46, 0.14);
+  cursor: pointer;
+  transform: translateX(-50%);
+  animation: caminos-fade-in 140ms ease;
+  transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease;
+}
+
+.caminos-deco__trash.is-below { top: calc(100% + 0.5rem); bottom: auto; }
+.caminos-deco__trash:hover { border-color: #ecd5cf; background: #f8eeeb; color: #9a4a3a; }
+
+@keyframes caminos-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.caminos-deco__handle {
+  position: absolute;
+  width: 0.5rem;
+  height: 0.5rem;
+  border: 1px solid #6e8f88;
+  border-radius: 999px;
+  background: #fff;
+  touch-action: none;
+}
+
+.caminos-deco__handle.is-nw { top: calc(-3px - 0.25rem); left: calc(-3px - 0.25rem); cursor: nwse-resize; }
+.caminos-deco__handle.is-ne { top: calc(-3px - 0.25rem); right: calc(-3px - 0.25rem); cursor: nesw-resize; }
+.caminos-deco__handle.is-sw { bottom: calc(-3px - 0.25rem); left: calc(-3px - 0.25rem); cursor: nesw-resize; }
+.caminos-deco__handle.is-se { bottom: calc(-3px - 0.25rem); right: calc(-3px - 0.25rem); cursor: nwse-resize; }
+
+/* Agregar experiencia */
+
+.caminos-planner .caminos-agenda__side .caminos-catalog__search {
+  height: 2.4rem;
+  padding: 0 0.85rem;
+  border-color: rgba(41, 73, 66, 0.16);
+  border-radius: 0.8rem;
+}
+
+.caminos-planner .caminos-agenda__side .caminos-catalog__search input { font-size: 0.76rem; }
+
+.caminos-planner .caminos-agenda__side .caminos-catalog__search:focus-within {
+  border-color: rgba(41, 73, 66, 0.38);
+  box-shadow: 0 0 0 3px rgba(41, 73, 66, 0.08);
+}
+
+.caminos-planner .caminos-agenda__side .caminos-chips {
+  gap: 0.35rem;
+  margin-top: 0.65rem;
+}
+
+.caminos-planner .caminos-agenda__side .caminos-chip {
+  gap: 0.25rem;
+  height: 1.75rem;
+  padding: 0 0.6rem;
+  border-color: rgba(41, 73, 66, 0.14);
+  color: #4f5752;
+  font: 500 0.62rem/1 Poppins, Nunito, system-ui, sans-serif;
+}
+
+.caminos-planner .caminos-agenda__side .caminos-chip svg { color: #8a918c; }
+
+.caminos-planner .caminos-offers {
+  gap: 0.45rem;
+  margin-top: 0.8rem;
+}
+
+.caminos-planner .caminos-offer {
+  grid-template-columns: 3.6rem minmax(0, 1fr) auto;
+  gap: 0.7rem;
+  padding: 0.35rem 0.55rem 0.35rem 0.35rem;
+  border-color: rgba(28, 51, 46, 0.07);
+  border-radius: 0.7rem;
+}
+
+.caminos-planner .caminos-offer > img {
+  width: 3.6rem;
+  height: 3.6rem;
+  border-radius: 0.45rem;
+}
+
+.caminos-planner .caminos-offer__body { gap: 0.18rem; }
+
+.caminos-planner .caminos-offer__body strong {
+  font: 500 0.76rem/1.3 Poppins, Nunito, system-ui, sans-serif;
+}
+
+.caminos-planner .caminos-offer__meta {
+  display: block;
+  overflow: hidden;
+  color: #8a918c;
+  font: 400 0.62rem/1.3 Poppins, Nunito, system-ui, sans-serif;
+  text-overflow: ellipsis;
+}
+
+.caminos-planner .caminos-offer__meta.is-facts { color: #4f5752; }
+
+.caminos-planner .caminos-offer__add {
+  display: grid;
+  grid-column: auto;
+  place-items: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  padding: 0;
+  border: 1px solid rgba(28, 51, 46, 0.18);
+  border-radius: 999px;
+  background: #fff;
+  color: #1c332e;
+  cursor: pointer;
+}
+
+.caminos-planner .caminos-offer__add:hover:not(:disabled) {
+  border-color: #1c332e;
+  background: #1c332e;
+  color: #fff;
+}
+
+.caminos-planner .caminos-offer__add.is-done {
+  border-color: #6e8f88;
+  background: #e4efe8;
+  color: #1c332e;
+}
+
+.caminos-planner .caminos-agenda__side .caminos-catalog__tip {
+  font-size: 0.62rem;
+}
+
+/* Vista previa de la experiencia */
+
+.caminos-peek {
+  position: fixed;
+  z-index: 30;
+  width: 18.75rem;
+  overflow: hidden;
+  border: 1px solid rgba(41, 73, 66, 0.1);
+  border-radius: 0.9rem;
+  background: #fff;
+  box-shadow: 0 18px 40px rgba(28, 51, 46, 0.16);
+  animation: caminos-pop-in 180ms ease;
+}
+
+.caminos-peek__photo {
+  display: block;
+  width: 100%;
+  height: 8.2rem;
+  object-fit: cover;
+}
+
+.caminos-peek__close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: grid;
+  place-items: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 2px 6px rgba(28, 51, 46, 0.12);
+  color: #1c332e;
+  cursor: pointer;
+}
+
+.caminos-peek__body {
+  display: grid;
+  gap: 0.22rem;
+  padding: 0.8rem 0.95rem 0.85rem;
+}
+
+.caminos-peek__when {
+  color: #6e8f88;
+  font: 500 0.56rem/1.4 Poppins, Nunito, system-ui, sans-serif;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.caminos-peek__body strong {
+  color: #1c332e;
+  font: 600 0.84rem/1.3 Poppins, Nunito, system-ui, sans-serif;
+}
+
+.caminos-peek__meta {
+  color: #8a918c;
+  font: 400 0.68rem/1.4 Poppins, Nunito, system-ui, sans-serif;
+}
+
+.caminos-peek__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.8rem;
+  margin-top: 0.55rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid rgba(28, 51, 46, 0.07);
+}
+
+.caminos-peek__actions a,
+.caminos-peek__actions button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #6b746f;
+  cursor: pointer;
+  font: 500 0.64rem/1 Poppins, Nunito, system-ui, sans-serif;
+  text-decoration: none;
+}
+
+.caminos-peek__actions a:hover,
+.caminos-peek__actions button:hover { color: #1c332e; }
+
+.caminos-peek__actions .caminos-peek__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.45rem 0.8rem;
+  border-radius: 999px;
+  background: #1c332e;
+  color: #fff;
+}
+
+.caminos-peek__actions .caminos-peek__cta:hover {
+  background: #243f38;
+  color: #fff;
+}
+
+.caminos-peek__actions .is-danger { color: #9a4a3a; }
+
+.caminos-peek__ask {
+  margin-right: auto;
+  color: #1c332e;
+  font: 500 0.66rem/1.3 Poppins, Nunito, system-ui, sans-serif;
+}
+
+.caminos-peek__pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.55rem;
+  color: #8a918c;
+  font: 500 0.6rem/1 Poppins, Nunito, system-ui, sans-serif;
+}
+
+.caminos-peek__pager button {
+  display: grid;
+  place-items: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  padding: 0;
+  border: 1px solid rgba(28, 51, 46, 0.12);
+  border-radius: 999px;
+  background: #fff;
+  color: #1c332e;
+  cursor: pointer;
+}
+
+.caminos-peek__pager button:disabled {
+  color: #c5c9c3;
+  cursor: default;
+}
+
+@media (max-width: 520px) {
+  .caminos-planner .caminos-offer {
+    grid-template-columns: 3.2rem minmax(0, 1fr) auto;
+  }
+
+  .caminos-planner .caminos-offer > img {
+    width: 3.2rem;
+    height: 3.2rem;
+  }
+
+  .caminos-planner .caminos-offer__add {
+    grid-column: auto;
+    justify-self: auto;
+  }
+
+  .caminos-planner .caminos-day.is-today .caminos-day__num::after {
+    display: none;
+  }
+}
+
+/* Planner: editor visual con el lenguaje de Entre Caminos */
+
+.caminos-planner .caminos-agenda__mast .caminos-agenda__modes button:not(.tourist-hero__cta):hover { color: #1c332e; }
+.caminos-planner .caminos-agenda__mast .caminos-agenda__modes button.is-on { box-shadow: inset 0 -1px 0 #1c332e; }
+
+.caminos-monthpick {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+}
+
+.caminos-monthpick__row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.5rem, 1.6vw, 1.1rem);
+}
+
+.caminos-monthpick__step {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 1.9rem;
+  height: 1.9rem;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #294942;
+  cursor: pointer;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+.caminos-monthpick__step:hover { background: #f2f5f3; color: #1c332e; }
+
+.caminos-monthpick__step:focus-visible,
+.caminos-monthpick__year:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px #e6eee9;
+}
+
+.caminos-monthpick__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 9rem;
+  padding: 0.15rem 0.7rem;
+  border: 0;
+  border-radius: 0.85rem;
+  background: transparent;
+  cursor: pointer;
+  transition: background-color 160ms ease;
+}
+
+.caminos-monthpick__trigger:hover,
+.caminos-monthpick.is-open .caminos-monthpick__trigger { background: #f4f6f4; }
+
+.caminos-monthpick__trigger:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px #e6eee9;
+}
+
+.caminos-monthpick__month {
+  padding-left: 0.16em;
+  color: #1c332e;
+  font: 600 clamp(1.4rem, 3vh, 1.95rem)/1.15 Poppins, Nunito, system-ui, sans-serif;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.caminos-monthpick__year {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.45rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #8a918c;
+  cursor: pointer;
+  font: 500 0.62rem/1 Poppins, Nunito, system-ui, sans-serif;
+  letter-spacing: 0.18em;
+  transition: color 160ms ease;
+}
+
+.caminos-monthpick__year:hover,
+.caminos-monthpick.is-open .caminos-monthpick__year { color: #294942; }
+
+.caminos-monthpick__year svg { transition: transform 200ms ease; }
+.caminos-monthpick.is-open .caminos-monthpick__year svg { transform: rotate(180deg); }
+
+.caminos-monthpick__menu {
+  position: fixed;
+  z-index: 40;
+  box-sizing: border-box;
+  width: 15rem;
+  padding: 0.55rem;
+  border: 1px solid #dfe3e1;
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 18px 40px rgba(28, 51, 46, 0.14);
+  animation: caminos-pop-in 160ms ease;
+}
+
+.caminos-monthpick__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.4rem;
+  padding: 0 0 0.45rem;
+  border-bottom: 1px solid #eceeed;
+}
+
+.caminos-monthpick__head span {
+  color: #17201d;
+  font: 600 0.76rem/1 Poppins, Nunito, system-ui, sans-serif;
+  letter-spacing: 0.16em;
+}
+
+.caminos-monthpick__head button {
+  display: grid;
+  place-items: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #294942;
+  cursor: pointer;
+}
+
+.caminos-monthpick__head button:hover { background: #f2f5f3; }
+
+.caminos-monthpick__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.2rem;
+}
+
+.caminos-monthpick__grid button {
+  height: 2.1rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0.6rem;
+  background: transparent;
+  color: #4a5c56;
+  cursor: pointer;
+  font: 500 0.72rem/1 Poppins, Nunito, system-ui, sans-serif;
+  transition: background-color 140ms ease, color 140ms ease;
+}
+
+.caminos-monthpick__grid button:hover { background: #f2f5f3; color: #1c332e; }
+.caminos-monthpick__grid button.is-now { box-shadow: inset 0 0 0 1px #c9d1cd; color: #1c332e; }
+.caminos-monthpick__grid button.is-on { background: #1c332e; box-shadow: none; color: #fff; }
+
+/* Casillas: hoy, seleccionada y arrastre */
+
+.caminos-planner .caminos-day { isolation: isolate; }
+
+.caminos-planner .caminos-day.is-selected { box-shadow: inset 0 0 0 1.5px rgba(41, 73, 66, 0.6); }
+.caminos-planner .caminos-day.is-selected:not([data-fill]) { background: #f3f6f4; }
+.caminos-planner .caminos-day.is-today .caminos-day__num::after { color: #294942; }
+
+.caminos-planner .caminos-day.is-drop,
+.caminos-planner .caminos-day.is-deco-target {
+  background-image: linear-gradient(rgba(41, 73, 66, 0.06), rgba(41, 73, 66, 0.06));
+  box-shadow: inset 0 0 0 1.5px #294942;
+}
+
+.caminos-planner .caminos-day.is-drop:not([data-fill]) { background-color: #f3f6f4; }
+
+.caminos-planner .caminos-day.is-deco-home {
+  z-index: 6;
+  overflow: visible;
+}
+
+.caminos-planner .caminos-agenda.is-editing .caminos-deco { cursor: grab; }
+
+.caminos-planner .caminos-deco.is-active {
+  z-index: 5;
+  outline-color: #294942;
+}
+
+.caminos-planner .caminos-deco.is-dragging {
+  z-index: 30;
+  cursor: grabbing;
+  opacity: 0.94;
+  filter: drop-shadow(0 6px 10px rgba(28, 51, 46, 0.18));
+}
+
+.caminos-planner .caminos-deco.is-dragging .caminos-deco__trash,
+.caminos-planner .caminos-deco.is-dragging .caminos-deco__handle { visibility: hidden; }
+
+.caminos-deco__handle { border-color: #294942; }
+
+.caminos-planner .caminos-day__sticker img { image-rendering: auto; }
+
+/* Panel del día */
+
+.caminos-planner .caminos-agenda__side .caminos-studio__date {
+  border: 1px solid #e3e7e5;
+  background: #f6f8f7;
+}
+
+.caminos-studio__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.5rem;
+}
+
+.caminos-studio__tags span {
+  display: inline-flex;
+  align-items: center;
+  height: 1.3rem;
+  padding: 0 0.6rem;
+  border: 1px solid #e3e7e5;
+  border-radius: 999px;
+  background: #fff;
+  color: #4a5c56;
+  font: 500 0.6rem/1 Poppins, Nunito, system-ui, sans-serif;
+  letter-spacing: 0.02em;
+}
+
+.caminos-studio__tags span.is-today {
+  border-color: #1c332e;
+  background: #1c332e;
+  color: #fff;
+  font-size: 0.54rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.caminos-dayctx {
+  flex-shrink: 0;
+  margin-top: 0.85rem;
+}
+
+.caminos-dayctx__plans {
+  display: grid;
+  gap: 0.35rem;
+  max-height: 7.6rem;
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+  list-style: none;
+}
+
+.caminos-dayctx__plan {
+  display: grid;
+  grid-template-columns: 2.2rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.3rem 0.55rem 0.3rem 0.3rem;
+  border: 1px solid #eceeed;
+  border-radius: 0.75rem;
+  background: #fff;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.caminos-dayctx__plan:hover {
+  border-color: #dfe3e1;
+  box-shadow: 0 4px 12px rgba(28, 51, 46, 0.06);
+}
+
+.caminos-dayctx__plan img {
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 0.5rem;
+  object-fit: cover;
+}
+
+.caminos-dayctx__plan strong,
+.caminos-dayctx__plan em {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.caminos-dayctx__plan strong {
+  color: #17201d;
+  font: 500 0.72rem/1.3 Poppins, Nunito, system-ui, sans-serif;
+}
+
+.caminos-dayctx__plan em {
+  color: #6d7a74;
+  font: 400 0.62rem/1.35 Poppins, Nunito, system-ui, sans-serif;
+}
+
+.caminos-dayctx__plan svg { color: #9aa39e; }
+
+.caminos-dayctx__empty {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.45rem 0.45rem 0.45rem 0.5rem;
+  border: 1px dashed #d7ddda;
+  border-radius: 0.8rem;
+  color: #6d7a74;
+  font: 400 0.68rem/1.3 Poppins, Nunito, system-ui, sans-serif;
+}
+
+.caminos-dayctx__empty > span:nth-child(2) { flex: 1; }
+
+.caminos-dayctx__icon {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 999px;
+  background: #f2f5f3;
+  color: #294942;
+}
+
+.caminos-dayctx__empty button {
+  padding: 0.4rem 0.8rem;
+  border: 1px solid #1c332e;
+  border-radius: 999px;
+  background: #1c332e;
+  color: #fff;
+  cursor: pointer;
+  font: 500 0.6rem/1 Poppins, Nunito, system-ui, sans-serif;
+  letter-spacing: 0.02em;
+}
+
+.caminos-dayctx__empty button:hover { background: #294942; }
+
+.caminos-planner .caminos-agenda.is-split .caminos-agenda__studio { margin-top: 0.85rem; }
+
+.caminos-planner .caminos-agenda__tools {
+  gap: 0.15rem;
+  padding: 0.2rem;
+  border: 0;
+  border-radius: 0.85rem;
+  background: #f3f5f3;
+}
+
+.caminos-planner .caminos-agenda__tools button {
+  padding: 0.42rem 0.1rem 0.36rem;
+  border-radius: 0.65rem;
+  color: #6d7a74;
+  transition: background-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
+}
+
+.caminos-planner .caminos-agenda__tools button:hover {
+  background: rgba(255, 255, 255, 0.7);
+  color: #1c332e;
+}
+
+.caminos-planner .caminos-agenda__tools button.is-on {
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(28, 51, 46, 0.1), 0 0 0 1px rgba(28, 51, 46, 0.05);
+  color: #1c332e;
+}
+
+.caminos-planner .caminos-agenda__tools button.is-on svg { color: #294942; }
+
+.caminos-planner .caminos-studio__body { padding-top: 0.9rem; }
+
+.caminos-planner .caminos-studio__fields { gap: 0.95rem; }
+
+.caminos-planner .caminos-studio__add:hover { background: #294942; }
+
+.caminos-studio__pair {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: end;
+  gap: 0.8rem;
+}
+
+.caminos-format {
+  display: inline-flex;
+  box-sizing: border-box;
+  align-items: center;
+  gap: 0.1rem;
+  height: 2.3rem;
+  padding: 0 0.22rem;
+  border: 1px solid #dfe3e1;
+  border-radius: 0.75rem;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(28, 51, 46, 0.04);
+}
+
+.caminos-format button {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: #6d7a74;
+  cursor: pointer;
+  transition: background-color 140ms ease, color 140ms ease;
+}
+
+.caminos-format button:hover { background: #f2f5f3; color: #1c332e; }
+.caminos-format button.is-on { background: #e6eee9; color: #1c332e; }
+
+.caminos-format__sep {
+  width: 1px;
+  height: 1rem;
+  margin: 0 0.12rem;
+  background: #e3e7e5;
+}
+
+.caminos-planner .caminos-studio__fields .caminos-stepper {
+  height: 2.3rem;
+  border-color: #dfe3e1;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 2px rgba(28, 51, 46, 0.04);
+}
+
+.caminos-planner .caminos-studio__pair .caminos-stepper {
+  width: 100%;
+  min-width: 6.4rem;
+  grid-template-columns: 1.9rem minmax(0, 1fr) 1.9rem;
+}
+
+.caminos-planner .caminos-stepper button:hover:not(:disabled) { background: #f2f5f3; }
+.caminos-planner .caminos-stepper output { border-color: #eceeed; color: #17201d; }
+
+.caminos-planner .caminos-tiles {
+  grid-template-columns: repeat(auto-fill, minmax(2.85rem, 1fr));
+  gap: 0.4rem;
+}
+
+.caminos-planner .caminos-tiles button {
+  padding: 0.42rem;
+  border: 1px solid #eceeed;
+  border-radius: 0.7rem;
+  background: #fff;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.caminos-planner .caminos-tiles button:hover {
+  border-color: #c9d1cd;
+  background: #fff;
+  box-shadow: 0 4px 10px rgba(28, 51, 46, 0.08);
+}
+
+.caminos-planner .caminos-studio__foot { justify-items: center; }
+.caminos-planner .caminos-studio__foot .caminos-agenda__save:hover { background: #294942; }
+
+.caminos-planner .caminos-agenda__actions .tourist-hero__cta:not(.is-ghost):hover { background: #294942; }
+
+.caminos-planner .caminos-agenda__actions .tourist-hero__cta.is-ghost:hover {
+  border-color: #c9d1cd;
+  background: #f6f8f7;
+}
+
+.caminos-planner .caminos-agenda__side .caminos-chips { gap: 0.3rem; }
+
+.caminos-planner .caminos-offer__add.is-done {
+  border-color: #c9d1cd;
+  background: #e6eee9;
+}
+
+/* Panel Personalizar: editor compacto */
+
+@media (min-width: 981px) {
+  .caminos-planner__sheet > .caminos-agenda.is-split {
+    grid-template-columns: minmax(0, 1fr) minmax(18.5rem, 22rem);
+  }
+}
+
+.caminos-planner .caminos-studio__head.is-compact {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 2.1rem;
+}
+
+.caminos-planner .caminos-studio__head.is-compact > div {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.caminos-planner .caminos-agenda__side .caminos-studio__head.is-compact .caminos-studio__kicker {
+  margin: 0;
+  color: #6d7a74;
+  font: 600 0.56rem/1 Poppins, Nunito, system-ui, sans-serif;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.caminos-planner .caminos-agenda.is-split .caminos-agenda__side h3.caminos-studio__day {
+  overflow: hidden;
+  color: #17201d;
+  font: 500 0.92rem/1.2 Poppins, Nunito, system-ui, sans-serif;
+  letter-spacing: 0;
+  text-overflow: ellipsis;
+  text-transform: none;
+  white-space: nowrap;
+}
+
+.caminos-planner .caminos-agenda__side h3.caminos-studio__day::first-letter { text-transform: uppercase; }
+
+.caminos-studio__back {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  border: 1px solid #dfe3e1;
+  border-radius: 999px;
+  background: #fff;
+  color: #294942;
+  cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+.caminos-studio__back:hover { border-color: #c9d3ce; background: #f2f5f3; }
+.caminos-studio__back:focus-visible { outline: none; box-shadow: 0 0 0 3px #e6eee9; }
+
+.caminos-planner .caminos-agenda__side.is-summary .caminos-dayctx { margin-top: 0.9rem; }
+.caminos-planner .caminos-agenda__side.is-summary .caminos-dayctx__plans { max-height: none; }
+
+.caminos-planner .caminos-agenda.is-split .caminos-agenda__studio { margin-top: 0.85rem; }
+
+.caminos-planner .caminos-agenda__tools {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.3rem;
+  padding: 0 0 0.6rem;
+  border: 0;
+  border-bottom: 1px solid #eceeed;
+  border-radius: 0;
+  background: transparent;
+}
+
+.caminos-planner .caminos-agenda__tools button {
+  position: relative;
+  gap: 0.3rem;
+  padding: 0.5rem 0.2rem 0.45rem;
+  border-radius: 0.7rem;
+  background: transparent;
+  box-shadow: none;
+  color: #6d7a74;
+  font: 500 0.6rem/1 Poppins, Nunito, system-ui, sans-serif;
+}
+
+.caminos-planner .caminos-agenda__tools button:hover {
+  background: #f4f6f5;
+  color: #1c332e;
+}
+
+.caminos-planner .caminos-agenda__tools button.is-on {
+  background: #eef3f0;
+  box-shadow: none;
+  color: #1c332e;
+}
+
+.caminos-planner .caminos-agenda__tools button.is-on::after {
+  position: absolute;
+  bottom: calc(-0.6rem - 1px);
+  left: 50%;
+  width: 1.2rem;
+  height: 2px;
+  border-radius: 2px;
+  background: #294942;
+  content: "";
+  transform: translateX(-50%);
+}
+
+.caminos-planner .caminos-agenda__tools button:focus-visible { outline: none; box-shadow: 0 0 0 2px #e6eee9; }
+
+.caminos-planner .caminos-studio__body {
+  padding: 0.9rem 0.3rem 0.6rem 0;
+  scrollbar-width: thin;
+  scrollbar-color: #dfe3e1 transparent;
+}
+
+.caminos-planner .caminos-studio__fields { gap: 0.85rem; }
+.caminos-studio__field { gap: 0.4rem; }
+
+.caminos-planner .caminos-agenda__side .caminos-studio__fields .caminos-studio__label {
+  color: #6d7a74;
+  font-size: 0.55rem;
+  letter-spacing: 0.16em;
+}
+
+.caminos-planner .caminos-studio__add {
+  justify-self: start;
+  height: 2rem;
+  padding: 0 0.95rem;
+  font-size: 0.64rem;
+}
+
+.caminos-studio__pair {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 0.6rem;
+}
+
+.caminos-format {
+  height: 2.15rem;
+  padding: 0 0.2rem;
+}
+
+.caminos-studio__pair .caminos-format {
+  display: flex;
+  width: 100%;
+  justify-content: space-evenly;
+}
+
+.caminos-format button {
+  width: 1.6rem;
+  height: 1.6rem;
+  color: #4a5c56;
+}
+
+.caminos-planner .caminos-studio__fields .caminos-stepper,
+.caminos-planner .caminos-studio__pair .caminos-stepper {
+  width: 100%;
+  min-width: 0;
+  height: 2.15rem;
+  grid-template-columns: 1.8rem minmax(0, 1fr) 1.8rem;
+}
+
+.caminos-planner .caminos-studio__fields .caminos-stepper button:disabled { color: #c3cac6; }
+
+.caminos-planner .caminos-studio__fields .caminos-select.is-field .caminos-select__trigger { height: 2.15rem; }
+
+.caminos-planner .caminos-studio__fields .caminos-agenda__tones { gap: 0.45rem; }
+
+.caminos-planner .caminos-studio__fields .caminos-agenda__dot {
+  width: 1.3rem;
+  height: 1.3rem;
+  border: 0;
+  box-shadow: inset 0 0 0 1px rgba(28, 51, 46, 0.08);
+  transition: box-shadow 140ms ease, transform 140ms ease;
+}
+
+.caminos-planner .caminos-studio__fields .caminos-agenda__dot:hover { transform: scale(1.08); }
+.caminos-planner .caminos-studio__fields .caminos-agenda__dot.is-on { box-shadow: 0 0 0 2px #fff, 0 0 0 3.5px #294942; }
+
+.caminos-planner .caminos-agenda__dot.is-bosque { background: #294942; }
+.caminos-planner .caminos-agenda__dot.is-verde { background: #6a8a7f; }
+.caminos-planner .caminos-agenda__dot.is-neutro { background: #3b403e; }
+.caminos-planner .caminos-agenda__dot.is-beige { background: #a08a6c; }
+.caminos-planner .caminos-agenda__dot.is-rosa { background: #b08088; }
+.caminos-planner .caminos-agenda__dot.is-azul { background: #7d8f9b; }
+.caminos-planner .caminos-agenda__dot.is-ocre { background: #a88d4f; }
+
+.caminos-planner .caminos-day__note.is-bosque { color: #294942; }
+.caminos-planner .caminos-day__note.is-verde { color: #5f7f74; }
+.caminos-planner .caminos-day__note.is-neutro { color: #3b403e; }
+.caminos-planner .caminos-day__note.is-ocre { color: #8a7340; }
+.caminos-planner .caminos-day__note.is-italic { font-style: italic; }
+
+.caminos-planner .caminos-day__note.is-underline {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.14em;
+}
+
+.caminos-presets {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.caminos-presets button {
+  display: flex;
+  align-items: center;
+  min-height: 2.45rem;
+  padding: 0.3rem 0.85rem;
+  border: 1px solid #eceeed;
+  border-radius: 0.75rem;
+  background: #fff;
+  color: #1c332e;
+  cursor: pointer;
+  line-height: 1.1;
+  text-align: left;
+  transition: border-color 150ms ease, background-color 150ms ease;
+}
+
+.caminos-presets button:hover { border-color: #dfe3e1; background: #f6f8f7; }
+.caminos-presets button:focus-visible { outline: none; box-shadow: 0 0 0 3px #e6eee9; }
+
+.caminos-planner .caminos-studio__fields .caminos-tiles {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.25rem;
+}
+
+.caminos-planner .caminos-tiles button {
+  padding: 0.3rem;
+  border: 1px solid transparent;
+  border-radius: 0.6rem;
+  background: transparent;
+  box-shadow: none;
+}
+
+.caminos-planner .caminos-tiles button:hover {
+  border-color: #e3e7e5;
+  background: #f6f8f7;
+  box-shadow: none;
+}
+
+.caminos-planner .caminos-fills { gap: 0.45rem; }
+
+.caminos-planner .caminos-fill {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-color: #e3e7e5;
+  border-radius: 0.55rem;
+}
+
+.caminos-planner .caminos-fill.is-on { box-shadow: 0 0 0 2px #fff, 0 0 0 3.5px #294942; }
+
+.caminos-studio__reset {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: 0.35rem;
+  height: 1.85rem;
+  padding: 0 0.85rem;
+  border: 1px solid #dfe3e1;
+  border-radius: 999px;
+  background: #fff;
+  color: #4a5c56;
+  cursor: pointer;
+  font: 500 0.62rem/1 Poppins, Nunito, system-ui, sans-serif;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+
+.caminos-studio__reset:hover:not(:disabled) { border-color: #c9d3ce; background: #f2f5f3; color: #1c332e; }
+.caminos-studio__reset:disabled { cursor: default; opacity: 0.45; }
+
+.caminos-planner .caminos-agenda.is-editing .caminos-deco,
+.caminos-planner .caminos-agenda.is-editing .caminos-day .caminos-day__note-pin,
+.caminos-planner .caminos-agenda.is-editing .caminos-day__sticker { cursor: move; }
+
+.caminos-planner .caminos-agenda.is-editing .caminos-day .caminos-day__note-pin.is-picked { cursor: text; }
+
+.caminos-planner .caminos-deco.is-active { outline: 1px solid #294942; outline-offset: 3px; }
+
+.caminos-deco__handle {
+  width: 0.42rem;
+  height: 0.42rem;
+  border-color: #294942;
+  box-shadow: 0 1px 2px rgba(28, 51, 46, 0.18);
+}
+
+.caminos-deco__handle.is-nw { top: calc(-3.5px - 0.21rem); left: calc(-3.5px - 0.21rem); }
+.caminos-deco__handle.is-ne { top: calc(-3.5px - 0.21rem); right: calc(-3.5px - 0.21rem); }
+.caminos-deco__handle.is-sw { bottom: calc(-3.5px - 0.21rem); left: calc(-3.5px - 0.21rem); }
+.caminos-deco__handle.is-se { bottom: calc(-3.5px - 0.21rem); right: calc(-3.5px - 0.21rem); }
+
+.caminos-planner .caminos-day .caminos-deco > .caminos-day__sticker { aspect-ratio: 1; }
+
+.caminos-planner .caminos-day__sticker img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
