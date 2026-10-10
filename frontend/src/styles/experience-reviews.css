@@ -1,80 +1,88 @@
 .experience-detail-anchor {
   position: relative;
-  display: grid;
+  display: flex;
+  flex-direction: column;
   width: 100%;
 }
 
 .experience-detail-anchor__main {
-  grid-area: 1 / 1;
   display: flex;
   flex-direction: column;
   gap: 22px;
   min-width: 0;
 }
 
-@media (min-width: 1101px) {
-  .experience-detail-anchor__main {
-    padding-right: 3.8rem;
-  }
-}
-
 .experience-detail-target {
-  scroll-margin-top: calc(var(--explorer-nav-height, 4.75rem) + 1rem);
+  scroll-margin-top: calc(var(--explorer-nav-height, 4.75rem) + 3.65rem);
 }
 
 .experience-detail-nav-slot {
-  grid-area: 1 / 1;
-  justify-self: end;
-  align-self: stretch;
-  z-index: 5;
-  width: 3.27rem;
-  margin: 1.4rem 0.55rem 0 0;
+  position: sticky;
+  top: var(--explorer-nav-height, 4.75rem);
+  z-index: 6;
+  width: 100%;
+  margin: 0;
+  padding: 0.95rem clamp(1.4rem, 5vw, 4.75rem) 0.2rem;
+  border-bottom: 1px solid rgba(41, 73, 66, 0.08);
+  background: rgba(251, 251, 248, 0.96);
+  backdrop-filter: blur(12px);
 }
 
 .experience-detail-nav {
-  position: sticky;
-  top: calc(var(--explorer-nav-height, 4.75rem) + 1.25rem);
   display: flex;
-  flex-direction: column;
-  gap: 0.38rem;
-  width: 3.27rem;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: center;
+  gap: clamp(1.35rem, 4vw, 3.25rem);
+  width: min(100%, 42rem);
+  margin: 0 auto;
   padding: 0;
 }
 
 .experience-detail-nav__tab {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 9.2rem;
-  padding: 0.55rem 0.28rem;
-  border: 1px solid rgba(41, 73, 66, 0.1);
-  border-right: 0;
-  border-radius: var(--recommendation-radius, 1.15rem) 0 0 var(--recommendation-radius, 1.15rem);
-  background: #f3f2ee;
-  color: #5a635e;
+  min-height: 0;
+  padding: 0.35rem 0.15rem 0.7rem;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #6d7a74;
   cursor: pointer;
-  box-shadow: -2px 1px 6px rgba(28, 51, 46, 0.04);
+  box-shadow: none;
 }
 
 .experience-detail-nav__tab:hover,
 .experience-detail-nav__tab.is-active {
-  background: #ffffff;
+  background: transparent;
   color: #1c332e;
-  border-color: rgba(41, 73, 66, 0.08);
+}
+
+.experience-detail-nav__tab.is-active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0.15rem;
+  height: 2px;
+  border-radius: 999px;
+  background: #294942;
 }
 
 .experience-detail-nav__tab:focus-visible {
   outline: 2px solid #294942;
-  outline-offset: 2px;
+  outline-offset: 3px;
 }
 
 .experience-detail-nav__label {
-  writing-mode: vertical-rl;
-  transform: rotate(180deg);
+  writing-mode: horizontal-tb;
+  transform: none;
   font-family: Poppins, Nunito, system-ui, sans-serif;
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   font-weight: 500;
-  letter-spacing: 0.13em;
+  letter-spacing: 0.14em;
   line-height: 1.15;
   text-align: center;
   text-transform: uppercase;
@@ -875,50 +883,31 @@
   opacity: 0.7;
 }
 
-@media (max-width: 1100px) {
-  .experience-detail-anchor {
-    display: flex;
-    flex-direction: column;
-  }
-
+@media (max-width: 640px) {
   .experience-detail-nav-slot {
-    position: sticky;
-    top: var(--explorer-nav-height, 4.75rem);
-    z-index: 5;
-    width: 100%;
-    margin: 0;
-    order: -1;
-    background: rgba(251, 251, 248, 0.94);
+    padding-right: 0.85rem;
+    padding-left: 0.85rem;
   }
 
   .experience-detail-nav {
-    position: static;
-    flex-direction: row;
-    justify-content: center;
+    justify-content: flex-start;
+    gap: 1.15rem;
     width: 100%;
-    padding: 0.7rem 0.8rem;
+    overflow-x: auto;
+    scrollbar-width: none;
   }
 
-  .experience-detail-nav__tab,
-  .experience-detail-nav__tab:hover,
-  .experience-detail-nav__tab.is-active {
-    flex: 1 1 0;
-    min-height: 0;
-    padding: 0.5rem 0.7rem;
-    border: 1px solid rgba(41, 73, 66, 0.1);
-    border-radius: 999px;
-    box-shadow: none;
+  .experience-detail-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .experience-detail-nav__tab {
+    flex: 0 0 auto;
   }
 
   .experience-detail-nav__label {
-    writing-mode: horizontal-tb;
-    transform: none;
-    font-size: 0.64rem;
-    letter-spacing: 0.08em;
-  }
-
-  .experience-detail-target {
-    scroll-margin-top: calc(var(--explorer-nav-height, 4.75rem) + 3.6rem);
+    font-size: 0.66rem;
+    letter-spacing: 0.1em;
   }
 }
 
