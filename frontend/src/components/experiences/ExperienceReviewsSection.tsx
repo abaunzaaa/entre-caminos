@@ -15,6 +15,7 @@ import {
 } from "../../services/reviews.service";
 import { getApiErrorMessage } from "../../utils/api-error";
 import { EXPERIENCE_DETAIL_SECTIONS, scrollToExperienceSection } from "../../utils/experience-detail-sections";
+import { sedeChoices } from "../../utils/experience-places";
 import { showFavoriteToast } from "../../services/favorites-sync";
 import { mediaUrl } from "../../utils/media";
 import reviewBloom from "../../assets/ilustracion-reseña.png";
@@ -178,6 +179,13 @@ function ReviewLightbox({
   );
 }
 
+function SedeLine({ label }: { label?: string | null }) {
+  if (!label) {
+    return null;
+  }
+  return <p className="experience-reviews__sede">Visitó · {label}</p>;
+}
+
 function RecommendMark({
   recommended,
   corner = false,
@@ -292,12 +300,14 @@ function ReviewText({ text }: { text: string }) {
 function ReviewCard({
   review,
   own = false,
+  anchor = false,
   busy = false,
   onEdit,
   onDelete,
 }: {
   review: VisitorReview;
   own?: boolean;
+  anchor?: boolean;
   busy?: boolean;
   onEdit?: () => void;
   onDelete?: () => void;
@@ -309,15 +319,14 @@ function ReviewCard({
 
   return (
     <article
-      id={own ? EXPERIENCE_DETAIL_SECTIONS.ownReview : undefined}
+      id={anchor ? EXPERIENCE_DETAIL_SECTIONS.ownReview : undefined}
       className={`experience-reviews__card${own ? " is-own" : ""}${photos.length ? " has-media" : ""}`}
-      tabIndex={own ? -1 : undefined}
+      tabIndex={anchor ? -1 : undefined}
     >
       <div className="experience-reviews__card-person">
         <span className="experience-reviews__avatar" aria-hidden="true">
           {avatar ? <img src={avatar} alt="" onError={() => setAvatarFailed(true)} /> : nameInitials(review.user.name)}
         </span>
-        <span className="experience-reviews__visited">Visitó</span>
       </div>
 
       <div className="experience-reviews__card-identity">
@@ -328,7 +337,12 @@ function ReviewCard({
 
       <div className="experience-reviews__card-body">
         <ReviewText text={review.comment} />
-        {!photos.length ? <RecommendMark recommended={review.recommended} /> : null}
+        {!photos.length && (review.location?.label || review.recommended != null) ? (
+          <div className="experience-reviews__marks is-inline">
+            <SedeLine label={review.location?.label} />
+            <RecommendMark recommended={review.recommended} />
+          </div>
+        ) : null}
         {own && onEdit && onDelete ? (
           <p className="experience-reviews__card-actions">
             <button type="button" onClick={onEdit} disabled={busy}>
@@ -344,8 +358,13 @@ function ReviewCard({
 
       {photos.length ? (
         <div className="experience-reviews__stage">
-          <RecommendMark recommended={review.recommended} corner />
-          <ReviewPhotos images={photos} />
+          <div className="experience-reviews__marks">
+            <SedeLine label={review.location?.label} />
+            <RecommendMark recommended={review.recommended} corner />
+          </div>
+          <div className="experience-reviews__gallery">
+            <ReviewPhotos images={photos} />
+          </div>
         </div>
       ) : null}
 
@@ -377,6 +396,7 @@ export function ExperienceReviewsSection({
   coverUrl = null,
   visited,
   composeRequest = 0,
+  locations = [],
 }: {
   experienceId: string;
   experienceTitle: string;
@@ -384,16 +404,19 @@ export function ExperienceReviewsSection({
   coverUrl?: string | null;
   visited: boolean;
   composeRequest?: number;
+  locations?: Array<{ id: string; municipality?: string | null; address?: string | null }>;
 }) {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const mineRef = useRef<VisitorReview | null>(null);
+  const mineRef = useRef<VisitorReview[]>([]);
+  const sedeRef = useRef(sedeChoices(locations));
   const [summary, setSummary] = useState<VisitorReviewSummary>(EMPTY_SUMMARY);
   const [reviews, setReviews] = useState<VisitorReview[]>([]);
-  const [mine, setMine] = useState<VisitorReview | null>(null);
+  const [mine, setMine] = useState<VisitorReview[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [composer, setComposer] = useState<"create" | "edit" | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [visibleCount, setVisibleCount] = useState(REVIEW_PAGE);
 
@@ -408,7 +431,7 @@ export function ExperienceReviewsSection({
         }
         setSummary(data.summary);
         setReviews(data.reviews);
-        setMine(data.mine);
+        setMine(Array.isArray(data.mine) ? data.mine : []);
       })
       .catch((err) => {
         if (!cancelled) {
@@ -429,17 +452,32 @@ export function ExperienceReviewsSection({
     setVisibleCount(REVIEW_PAGE);
   }, [experienceId]);
 
+  const sedeOptions = sedeChoices(locations);
   mineRef.current = mine;
+  sedeRef.current = sedeOptions;
+  const reviewedSedes = new Set(mine.flatMap((review) => (review.location?.id ? [review.location.id] : [])));
+  const openSedes = sedeOptions.filter((place) => !reviewedSedes.has(place.id));
+  const editing = mine.find((review) => review.id === editingId) ?? null;
 
   useEffect(() => {
     if (!composeRequest) {
       return;
     }
-    setComposer(mineRef.current ? "edit" : "create");
+    const options = sedeRef.current;
+    const reviewed = new Set(mineRef.current.flatMap((review) => (review.location?.id ? [review.location.id] : [])));
+    const pending = options.filter((place) => !reviewed.has(place.id));
+    if (pending.length) {
+      setEditingId(null);
+      setComposer("create");
+    } else if (mineRef.current.length === 1) {
+      setEditingId(mineRef.current[0]?.id ?? null);
+      setComposer("edit");
+    }
     scrollToExperienceSection(EXPERIENCE_DETAIL_SECTIONS.reviews);
   }, [composeRequest]);
 
-  function openComposer(mode: "create" | "edit") {
+  function openComposer(mode: "create" | "edit", reviewId?: string) {
+    setEditingId(mode === "edit" ? reviewId ?? null : null);
     setComposer(mode);
   }
 
@@ -447,18 +485,29 @@ export function ExperienceReviewsSection({
     if (busy) {
       return;
     }
-    const editingExisting = composer === "edit";
+    const editingExisting = composer === "edit" && editing;
+    const canAssignSede = !editingExisting || !editingExisting.location;
+    const locationId = canAssignSede
+      ? input.locationId || (sedeOptions.length === 1 ? sedeOptions[0]?.id : undefined)
+      : undefined;
+    if (
+      editingExisting &&
+      !editingExisting.location &&
+      locationId &&
+      mine.some((review) => review.id !== editingExisting.id && review.location?.id === locationId)
+    ) {
+      showFavoriteToast("Ya publicaste una reseña para esta sede.", "error");
+      return;
+    }
+    const payload = locationId ? { ...input, locationId } : input;
     setBusy(true);
     try {
       const data = editingExisting
-        ? await updateExperienceReview(experienceId, input, photos)
-        : await createExperienceReview(experienceId, input, photos);
-      setMine(data.review);
+        ? await updateExperienceReview(experienceId, editingExisting.id, payload, photos)
+        : await createExperienceReview(experienceId, payload, photos);
+      setMine((current) => [data.review, ...current.filter((review) => review.id !== data.review.id)]);
       setSummary(data.summary);
-      setReviews((current) => {
-        const rest = current.filter((review) => review.id !== data.review.id && review.user.id !== data.review.user.id);
-        return [data.review, ...rest];
-      });
+      setReviews((current) => [data.review, ...current.filter((review) => review.id !== data.review.id)]);
       setComposer(null);
       showFavoriteToast(editingExisting ? REVIEW_UPDATED : REVIEW_PUBLISHED);
     } catch (err) {
@@ -471,15 +520,15 @@ export function ExperienceReviewsSection({
     }
   }
 
-  async function removeOwn() {
-    if (!mine || busy) {
+  async function removeOwn(reviewId: string) {
+    if (!reviewId || busy) {
       return;
     }
     setBusy(true);
     try {
-      const data = await deleteExperienceReview(experienceId);
-      setReviews((current) => current.filter((review) => review.id !== mine.id));
-      setMine(null);
+      const data = await deleteExperienceReview(experienceId, reviewId);
+      setReviews((current) => current.filter((review) => review.id !== reviewId));
+      setMine((current) => current.filter((review) => review.id !== reviewId));
       setSummary(data.summary);
       setComposer(null);
       showFavoriteToast(REVIEW_DELETED);
@@ -490,10 +539,14 @@ export function ExperienceReviewsSection({
     }
   }
 
-  const publicReviews = reviews.filter((review) => review.id !== mine?.id);
-  const orderedReviews = mine ? [mine, ...publicReviews] : publicReviews;
+  const mineIds = new Set(mine.map((review) => review.id));
+  const orderedReviews = [
+    ...reviews.filter((review) => mineIds.has(review.id)),
+    ...reviews.filter((review) => !mineIds.has(review.id)),
+  ];
+  const firstOwnId = orderedReviews.find((review) => mineIds.has(review.id))?.id;
   const visibleReviews = orderedReviews.slice(0, visibleCount);
-  const canCompose = Boolean(user && visited && !mine);
+  const canCompose = Boolean(user && visited && openSedes.length > 0);
 
   return (
     <section
@@ -541,7 +594,7 @@ export function ExperienceReviewsSection({
           </p>
         ) : null}
 
-        {user && !mine && !visited ? (
+        {user && mine.length === 0 && !visited ? (
           <p className="experience-reviews__note">Marca esta experiencia como visitada para poder calificarla.</p>
         ) : null}
 
@@ -562,17 +615,21 @@ export function ExperienceReviewsSection({
       {visibleReviews.length ? (
         <div className="experience-reviews__board">
           <ul className="experience-reviews__list">
-            {visibleReviews.map((review) => (
+            {visibleReviews.map((review) => {
+              const own = mineIds.has(review.id);
+              return (
               <li key={review.id}>
                 <ReviewCard
                   review={review}
-                  own={review.id === mine?.id}
+                  own={own}
+                  anchor={review.id === firstOwnId}
                   busy={busy}
-                  onEdit={review.id === mine?.id ? () => openComposer("edit") : undefined}
-                  onDelete={review.id === mine?.id ? () => void removeOwn() : undefined}
+                  onEdit={own ? () => openComposer("edit", review.id) : undefined}
+                  onDelete={own ? () => void removeOwn(review.id) : undefined}
                 />
               </li>
-            ))}
+              );
+            })}
           </ul>
           {orderedReviews.length > visibleCount ? (
             <p className="experience-reviews__pager">
@@ -590,8 +647,14 @@ export function ExperienceReviewsSection({
           experienceTitle={experienceTitle}
           marks={marks}
           coverUrl={coverUrl}
-          initial={composer === "edit" ? draftFromReview(mine) : undefined}
-          initialPhotos={composer === "edit" ? mine?.images ?? [] : []}
+          initial={composer === "edit" ? draftFromReview(editing) : undefined}
+          initialPhotos={composer === "edit" ? editing?.images ?? [] : []}
+          locations={
+            sedeOptions.length > 1 && (composer === "create" || (composer === "edit" && !editing?.location))
+              ? sedeOptions
+              : []
+          }
+          sedeLabel={composer === "edit" ? editing?.location?.label ?? null : null}
           busy={busy}
           onClose={() => {
             setComposer(null);

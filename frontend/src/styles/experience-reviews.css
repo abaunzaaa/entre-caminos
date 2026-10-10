@@ -234,10 +234,10 @@
 .experience-reviews__card {
   display: grid;
   flex: 1 1 auto;
-  grid-template-columns: auto minmax(0, 1fr) 4.4rem;
+  grid-template-columns: auto minmax(0, 1fr) 3.5rem;
   grid-template-areas:
     "person identity date"
-    "person body date";
+    "body body date";
   column-gap: 0.85rem;
   row-gap: 0.15rem;
   align-items: start;
@@ -252,10 +252,10 @@
 }
 
 .experience-reviews__card.has-media {
-  grid-template-columns: auto minmax(13.5rem, 1fr) minmax(14.5rem, 17.5rem) 4.6rem;
+  grid-template-columns: auto minmax(13.5rem, 1fr) minmax(14.5rem, 16.5rem) 3.65rem;
   grid-template-areas:
     "person identity media date"
-    "person body media date";
+    "body body media date";
 }
 
 .experience-reviews__card:focus {
@@ -290,15 +290,6 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-}
-
-.experience-reviews__visited {
-  color: #8a938e;
-  font-size: 0.62rem;
-  font-weight: 500;
-  letter-spacing: 0.12em;
-  line-height: 1.2;
-  text-transform: uppercase;
 }
 
 .experience-reviews__card-identity {
@@ -398,7 +389,10 @@
 }
 
 .experience-reviews__more {
+  display: block;
+  width: fit-content;
   margin-top: 0.35rem;
+  text-align: left;
 }
 
 .experience-reviews__more:hover,
@@ -416,19 +410,60 @@
   min-height: 100%;
 }
 
-.experience-reviews__stage .experience-reviews__chip {
+.experience-reviews__marks {
   grid-row: 1;
-  justify-self: end;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
   align-self: start;
+  width: 100%;
+  gap: 0.28rem;
+}
+
+.experience-reviews__marks.is-inline {
+  align-items: flex-start;
+  width: auto;
+  margin-top: 0.7rem;
+}
+
+.experience-reviews__marks .experience-reviews__chip {
   margin-top: 0;
 }
 
-.experience-reviews__media {
+.experience-reviews__marks .experience-reviews__sede {
+  margin: 0;
+  text-align: right;
+}
+
+.experience-reviews__marks.is-inline .experience-reviews__sede {
+  text-align: left;
+}
+
+.experience-reviews__gallery {
   grid-row: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   align-self: center;
+  gap: 0.4rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.experience-reviews__media {
   width: 100%;
   min-width: 0;
   height: 7.25rem;
+}
+
+.experience-reviews__sede {
+  margin: 0.15rem 0 0;
+  color: #6d7a74;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  line-height: 1.35;
+  text-transform: uppercase;
 }
 
 .experience-reviews__media-frame {
@@ -520,10 +555,14 @@
 .experience-reviews__card-actions {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 0.45rem;
-  margin: 0.7rem 0 0;
+  width: fit-content;
+  margin: 0.55rem 0 0;
+  padding: 0;
   color: #8a938e;
   font-size: 0.82rem;
+  text-align: left;
 }
 
 .experience-reviews__card-actions button:disabled {
@@ -599,7 +638,7 @@
   align-self: stretch;
   justify-content: center;
   min-height: 100%;
-  padding-left: 0.85rem;
+  padding-left: 0.62rem;
   border-left: 1px solid rgba(41, 73, 66, 0.12);
   color: #8a938e;
   text-align: center;
@@ -627,7 +666,7 @@
     grid-template-columns: auto minmax(0, 1fr);
     grid-template-areas:
       "person identity"
-      "person body"
+      "body body"
       "date date";
   }
 
@@ -635,7 +674,7 @@
     grid-template-columns: auto minmax(0, 1fr);
     grid-template-areas:
       "person identity"
-      "person body"
+      "body body"
       "media media"
       "date date";
   }
@@ -648,9 +687,12 @@
     margin-top: 0.85rem;
   }
 
-  .experience-reviews__stage .experience-reviews__media {
+  .experience-reviews__gallery {
     align-self: start;
-    height: auto;
+  }
+
+  .experience-reviews__stage .experience-reviews__media {
+    height: 7.25rem;
   }
 
   .experience-reviews__media-frame {
@@ -883,6 +925,21 @@
 }
 
 .review-modal {
+  --ob-forest: #294942;
+  --ob-forest-deep: #1c332e;
+  --ob-sage: #91a69e;
+  --ob-sage-soft: #e6eee9;
+  --interest-selected: #dce9e2;
+  --interest-selected-border: #86a397;
+  --onboarding-title: #17201d;
+  --ob-ink: #24352f;
+  --ob-muted: #6d7a74;
+  --ob-label: #4a5c56;
+  --ob-line: #eceeed;
+  --ob-line-strong: #dfe3e1;
+  --ob-control: #f2f3f2;
+  --ob-error: #b56b63;
+  --ob-ease: cubic-bezier(0.22, 1, 0.36, 1);
   position: relative;
   box-sizing: border-box;
   display: flex;
@@ -1141,6 +1198,56 @@
   gap: 1.15rem;
   overflow: auto;
   padding: 0.85rem 1.35rem 1.1rem;
+}
+
+.review-modal__sede {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  margin: 0;
+}
+
+.review-modal__sede select {
+  width: min(100%, 18rem);
+  padding: 0.55rem 0.75rem;
+  border: 1px solid rgba(41, 73, 66, 0.16);
+  border-radius: 0.8rem;
+  background: #ffffff;
+  color: #1c332e;
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 500;
+}
+
+.review-modal__sede select:focus {
+  outline: 2px solid rgba(28, 51, 46, 0.22);
+  outline-offset: 1px;
+}
+
+.review-modal__sede select[aria-invalid="true"] {
+  border-color: #c98982;
+}
+
+p.review-modal__sede {
+  color: #6d7a74;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+p.review-modal__sede.is-missing {
+  letter-spacing: 0.04em;
+  text-transform: none;
+}
+
+.review-modal__place .onboarding-field {
+  width: 100%;
+}
+
+.review-modal__place .onboarding-field:has([aria-invalid="true"]) {
+  border-color: #c98982;
 }
 
 .review-modal__ratings {

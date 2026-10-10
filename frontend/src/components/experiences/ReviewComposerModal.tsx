@@ -1,6 +1,8 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Plus, X } from "lucide-react";
+import { MapPin, Plus, X } from "lucide-react";
+import { OnboardingSelect } from "../onboarding/OnboardingSelect";
+import "../../styles/onboarding.css";
 import brandLogo from "../../assets/logo.png";
 import { AvatarPreview } from "../onboarding/AvatarPreview";
 import { useAuth } from "../../hooks/useAuth";
@@ -328,6 +330,8 @@ export function ReviewComposerModal({
   coverUrl = null,
   initial = EMPTY_DRAFT,
   initialPhotos = [],
+  locations = [],
+  sedeLabel = null,
   busy,
   error = "",
   onClose,
@@ -339,6 +343,8 @@ export function ReviewComposerModal({
   coverUrl?: string | null;
   initial?: ReviewDraft;
   initialPhotos?: VisitorReviewImage[];
+  locations?: Array<{ id: string; label: string }>;
+  sedeLabel?: string | null;
   busy: boolean;
   error?: string;
   onClose: () => void;
@@ -351,6 +357,9 @@ export function ReviewComposerModal({
   const [draft, setDraft] = useState<ReviewDraft>(initial);
   const [photos, setPhotos] = useState<ReviewComposerPhoto[]>(() => photosFromReview(initialPhotos));
   const [photoNotice, setPhotoNotice] = useState("");
+  const [locationId, setLocationId] = useState("");
+  const [locationError, setLocationError] = useState("");
+  const [sedeOpen, setSedeOpen] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<ReviewFieldErrors>({});
   const [banner, setBanner] = useState("");
   const [confirmLeave, setConfirmLeave] = useState(false);
@@ -400,7 +409,7 @@ export function ReviewComposerModal({
       }
       const focusable = [
         ...dialogRef.current.querySelectorAll<HTMLElement>(
-          "button:not([disabled]), textarea:not([disabled])",
+          "button:not([disabled]), textarea:not([disabled]), select:not([disabled])",
         ),
       ];
       if (!focusable.length) {
@@ -461,10 +470,15 @@ export function ReviewComposerModal({
     const next = fieldProblems(draft);
     fieldErrorsRef.current = next;
     setFieldErrors(next);
+    const needsSede = !sedeLabel && locations.length > 1;
+    const missingSede = needsSede && !locationId;
+    setLocationError(missingSede ? "Selecciona la sede que visitaste." : "");
     const first = FIELD_ORDER.find((key) => next[key]);
-    if (first || draft.recommended === null) {
+    if (first || draft.recommended === null || missingSede) {
       setBanner(SAVE_BLOCKED);
-      if (first) {
+      if (missingSede) {
+        document.getElementById("review-field-location")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      } else if (first) {
         scrollToReviewField(first);
       }
       return;
@@ -478,6 +492,7 @@ export function ReviewComposerModal({
         valueRating: draft.valueRating,
         recommended: draft.recommended,
         comment: draft.comment.trim(),
+        ...(!sedeLabel && locationId ? { locationId } : {}),
       },
       {
         keepImageIds: photos.flatMap((photo) => (photo.kind === "existing" ? [photo.id] : [])),
@@ -570,6 +585,31 @@ export function ReviewComposerModal({
         </header>
 
         <div className="review-modal__body">
+          {sedeLabel ? <p className="review-modal__sede">Sede · {sedeLabel}</p> : null}
+          {!sedeLabel && locations.length > 1 ? (
+            <div className="review-modal__place" id="review-field-location">
+              <OnboardingSelect
+                label="¿En qué sede viviste esta experiencia?"
+                icon={MapPin}
+                placeholder="Selecciona la sede"
+                options={locations.map((place) => ({ value: place.id, label: place.label }))}
+                value={locationId}
+                onChange={(value) => {
+                  setLocationId(value);
+                  setLocationError("");
+                  if (!Object.keys(fieldErrorsRef.current).length) {
+                    setBanner("");
+                  }
+                }}
+                open={sedeOpen}
+                onOpenChange={setSedeOpen}
+                invalid={Boolean(locationError)}
+                describedBy={locationError ? "review-field-location-error" : undefined}
+                placement="down"
+              />
+              <FieldAlert id="review-field-location-error" message={locationError} />
+            </div>
+          ) : null}
           <div className="review-modal__ratings">
             <StarPicker
               variant="lead"

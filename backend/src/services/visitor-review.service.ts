@@ -20,7 +20,101 @@ const reviewUserSelect = {
 const reviewInclude = {
   user: { select: reviewUserSelect },
   images: { orderBy: { position: "asc" as const } },
+  location: { select: { id: true, municipality: true, address: true, position: true } },
 } as const;
+
+type SedeRow = { id: string; municipality: string; address: string; position: number };
+
+function sedeOptionLabel(place: SedeRow, places: SedeRow[], index: number) {
+  const city = place.municipality.trim();
+  if (!city) {
+    return `Sede ${index + 1}`;
+  }
+  const sameCity = places.filter((item) => item.municipality.trim() === city);
+  if (sameCity.length < 2) {
+    return city;
+  }
+  const reference = place.address.trim();
+  if (reference) {
+    return `${city} · ${reference}`;
+  }
+  const nth = places.slice(0, index + 1).filter((item) => item.municipality.trim() === city).length;
+  return `${city} ${nth}`;
+}
+
+function sedeLabels(places: SedeRow[]) {
+  const ordered = [...places].sort((left, right) => left.position - right.position);
+  const base = ordered.map((place, index) => sedeOptionLabel(place, ordered, index));
+  const counts = new Map<string, number>();
+  base.forEach((label) => counts.set(label, (counts.get(label) ?? 0) + 1));
+  const seen = new Map<string, number>();
+  const labels = new Map<string, string>();
+  ordered.forEach((place, index) => {
+    const label = base[index] ?? "Sede";
+    if ((counts.get(label) ?? 0) < 2) {
+      labels.set(place.id, label);
+      return;
+    }
+    const nth = (seen.get(label) ?? 0) + 1;
+    seen.set(label, nth);
+    labels.set(place.id, `${label} ${nth}`);
+  });
+  return labels;
+}
+
+async function sedesFor(experienceId: string) {
+  return prisma.experienceLocation.findMany({
+    where: { experienceId },
+    orderBy: { position: "asc" },
+    select: { id: true, municipality: true, address: true, position: true },
+  });
+}
+
+function resolveLocationId(places: SedeRow[], requested?: string) {
+  if (!places.length) {
+    throw ApiError.badRequest(VISITOR_REVIEW_MESSAGES.locationMissing);
+  }
+  if (places.length === 1) {
+    const only = places[0]?.id;
+    if (!only || (requested && requested !== only)) {
+      throw ApiError.badRequest(VISITOR_REVIEW_MESSAGES.locationInvalid);
+    }
+    return only;
+  }
+  if (!requested) {
+    throw ApiError.badRequest(VISITOR_REVIEW_MESSAGES.locationRequired);
+  }
+  if (!places.some((place) => place.id === requested)) {
+    throw ApiError.badRequest(VISITOR_REVIEW_MESSAGES.locationInvalid);
+  }
+  return requested;
+}
+
+async function locationForUnassignedReview(
+  existing: { id: string; locationId: string | null },
+  userId: string,
+  experienceId: string,
+  requested?: string,
+) {
+  if (existing.locationId) {
+    return undefined;
+  }
+  const places = await sedesFor(experienceId);
+  const locationId = resolveLocationId(places, requested);
+  const taken = await prisma.experienceVisitorReview.findFirst({
+    where: {
+      userId,
+      experienceId,
+      locationId,
+      NOT: { id: existing.id },
+    },
+    select: { id: true },
+  });
+  if (taken) {
+    throw ApiError.conflict(VISITOR_REVIEW_MESSAGES.duplicate);
+  }
+  return locationId;
+}
 
 const PHOTO_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
@@ -36,6 +130,7 @@ type ReviewWrite = {
   valueRating: number;
   recommended: boolean;
   comment: string;
+  locationId?: string;
 };
 
 function assertStar(value: number, message: string) {
@@ -114,12 +209,16 @@ async function storeReviewPhotos(files: Express.Multer.File[]) {
   }
 }
 
-function serializeReview(row: ReviewRow) {
+function serializeReview(row: ReviewRow, labels: Map<string, string>) {
   const images = row.images ?? [];
   const rating = ratingNumber(row.rating);
+  const place = row.location;
   return {
     id: row.id,
     experienceId: row.experienceId,
+    location: place
+      ? { id: place.id, label: labels.get(place.id) ?? (place.municipality.trim() || "Sede") }
+      : null,
     rating,
     score: reviewScore(rating, row.organizationRating, row.valueRating),
     organizationRating: row.organizationRating,
@@ -142,6 +241,7 @@ function serializeReview(row: ReviewRow) {
 }
 
 async function summaryFor(experienceId: string) {
+  // Promedio de todas las sedes. locationId queda en cada reseña para filtrar después.
   const rows = await prisma.experienceVisitorReview.findMany({
     where: { experienceId },
     select: { rating: true, organizationRating: true, valueRating: true },
@@ -159,29 +259,32 @@ async function summaryFor(experienceId: string) {
   };
 }
 
-async function ownReview(experienceId: string, userId: string) {
-  return prisma.experienceVisitorReview.findUnique({
-    where: { experienceId_userId: { experienceId, userId } },
+async function reviewOwnedBy(reviewId: string, userId: string, experienceId: string) {
+  return prisma.experienceVisitorReview.findFirst({
+    where: { id: reviewId, userId, experienceId },
     include: reviewInclude,
   });
 }
 
 export async function listVisitorReviews(experienceId: string, viewerId?: string) {
   await assertPublishedExperience(experienceId);
-  const [summary, reviews, mine] = await Promise.all([
+  const [summary, reviews, places] = await Promise.all([
     summaryFor(experienceId),
     prisma.experienceVisitorReview.findMany({
       where: { experienceId },
       orderBy: { createdAt: "desc" },
       include: reviewInclude,
     }),
-    viewerId ? ownReview(experienceId, viewerId) : Promise.resolve(null),
+    sedesFor(experienceId),
   ]);
+  const labels = sedeLabels(places);
 
   return {
     summary,
-    reviews: reviews.map(serializeReview),
-    mine: mine ? serializeReview(mine) : null,
+    reviews: reviews.map((review) => serializeReview(review, labels)),
+    mine: viewerId
+      ? reviews.filter((review) => review.userId === viewerId).map((review) => serializeReview(review, labels))
+      : [],
   };
 }
 
@@ -200,17 +303,24 @@ export async function createVisitorReview(
     throw ApiError.forbidden(VISITOR_REVIEW_MESSAGES.notVisited);
   }
 
-  const existing = await ownReview(experienceId, userId);
+  const places = await sedesFor(experienceId);
+  const locationId = resolveLocationId(places, input.locationId);
+  const existing = await prisma.experienceVisitorReview.findFirst({
+    where: { userId, experienceId, locationId },
+    select: { id: true },
+  });
   if (existing) {
     throw ApiError.conflict(VISITOR_REVIEW_MESSAGES.duplicate);
   }
 
   const uploaded = await storeReviewPhotos(files);
+  const labels = sedeLabels(places);
   try {
     const review = await prisma.experienceVisitorReview.create({
       data: {
         userId,
         experienceId,
+        locationId,
         ...data,
         ...(uploaded.length
           ? {
@@ -227,7 +337,7 @@ export async function createVisitorReview(
       include: reviewInclude,
     });
     return {
-      review: serializeReview(review),
+      review: serializeReview(review, labels),
       summary: await summaryFor(experienceId),
     };
   } catch (error) {
@@ -239,6 +349,7 @@ export async function createVisitorReview(
 export async function updateVisitorReview(
   userId: string,
   experienceId: string,
+  reviewId: string,
   input: ReviewWrite,
   extras?: { files?: Express.Multer.File[]; keepImageIds?: string[] },
 ) {
@@ -246,10 +357,13 @@ export async function updateVisitorReview(
   const files = extras?.files ?? [];
   await assertPublishedExperience(experienceId);
 
-  const existing = await ownReview(experienceId, userId);
+  const existing = await reviewOwnedBy(reviewId, userId, experienceId);
   if (!existing) {
     throw ApiError.notFound("No tienes una reseña en esta experiencia.");
   }
+
+  const assignedLocationId = await locationForUnassignedReview(existing, userId, experienceId, input.locationId);
+  const write = assignedLocationId ? { ...data, locationId: assignedLocationId } : data;
 
   const currentImages = existing.images ?? [];
   const keepIds = extras?.keepImageIds;
@@ -261,14 +375,15 @@ export async function updateVisitorReview(
   const uploaded = await storeReviewPhotos(files);
 
   try {
+    const labels = sedeLabels(await sedesFor(experienceId));
     if (!files.length && keepIds === undefined) {
       const review = await prisma.experienceVisitorReview.update({
         where: { id: existing.id },
-        data,
+        data: write,
         include: reviewInclude,
       });
       return {
-        review: serializeReview(review),
+        review: serializeReview(review, labels),
         summary: await summaryFor(experienceId),
       };
     }
@@ -276,7 +391,7 @@ export async function updateVisitorReview(
     await prisma.$transaction(async (tx) => {
       await tx.experienceVisitorReview.update({
         where: { id: existing.id },
-        data,
+        data: write,
       });
       if (removed.length) {
         await tx.experienceVisitorReviewImage.deleteMany({
@@ -303,9 +418,9 @@ export async function updateVisitorReview(
       }
     });
     await Promise.all(removed.map((image) => destroyStoredImage(image.publicId)));
-    const review = await ownReview(experienceId, userId);
+    const review = await reviewOwnedBy(existing.id, userId, experienceId);
     return {
-      review: serializeReview(review ?? existing),
+      review: serializeReview(review ?? existing, labels),
       summary: await summaryFor(experienceId),
     };
   } catch (error) {
@@ -314,10 +429,10 @@ export async function updateVisitorReview(
   }
 }
 
-export async function deleteVisitorReview(userId: string, experienceId: string) {
+export async function deleteVisitorReview(userId: string, experienceId: string, reviewId: string) {
   await assertPublishedExperience(experienceId);
 
-  const existing = await ownReview(experienceId, userId);
+  const existing = await reviewOwnedBy(reviewId, userId, experienceId);
   if (!existing) {
     throw ApiError.notFound("No tienes una reseña en esta experiencia.");
   }

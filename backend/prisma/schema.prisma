@@ -249,7 +249,8 @@ model ExperienceLocation {
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
-  experience Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+  experience      Experience               @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+  visitorReviews  ExperienceVisitorReview[]
 
   @@unique([experienceId, position])
   @@index([experienceId])
@@ -387,12 +388,14 @@ model FavoriteCollectionItem {
   @@map("favorite_collection_items")
 }
 
-/// Reseña pública de quien visitó la experiencia. Una por usuario y experiencia.
+/// Reseña pública de quien visitó la experiencia. Una por usuario, experiencia y sede.
 /// ExperienceReview sigue siendo la decisión de moderación, no esta valoración.
 model ExperienceVisitorReview {
   id           String   @id @default(uuid())
   experienceId String   @map("experience_id")
   userId       String   @map("user_id")
+  /// Sede real. Nula solo si la reseña es anterior y la experiencia tenía varias sedes.
+  locationId   String?  @map("location_id")
   /// Experiencia general, de 1 a 5 en pasos de 0.5. Las reseñas anteriores solo tienen este valor.
   rating              Decimal  @db.Decimal(2, 1)
   /// Complementaria. Nula en reseñas creadas antes de esta dimensión.
@@ -405,12 +408,14 @@ model ExperienceVisitorReview {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
-  experience Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
-  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  experience Experience          @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+  user       User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  location   ExperienceLocation? @relation(fields: [locationId], references: [id], onDelete: SetNull)
   images     ExperienceVisitorReviewImage[]
 
-  @@unique([experienceId, userId])
+  @@unique([experienceId, userId, locationId], map: "visitor_reviews_user_experience_location_key")
   @@index([experienceId, createdAt])
+  @@index([locationId])
   @@map("experience_visitor_reviews")
 }
 

@@ -24,6 +24,7 @@ export async function update(req: Request, res: Response) {
   const data = await visitorReviewService.updateVisitorReview(
     req.user!.id,
     String(req.params.experienceId),
+    String(req.params.reviewId),
     req.body,
     { files: reviewFiles(req), keepImageIds: req.body.keepImageIds },
   );
@@ -31,6 +32,10 @@ export async function update(req: Request, res: Response) {
 }
 
 export async function remove(req: Request, res: Response) {
-  const data = await visitorReviewService.deleteVisitorReview(req.user!.id, String(req.params.experienceId));
+  const data = await visitorReviewService.deleteVisitorReview(
+    req.user!.id,
+    String(req.params.experienceId),
+    String(req.params.reviewId),
+  );
   return res.json({ success: true, data });
 }

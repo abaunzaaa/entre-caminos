@@ -60,8 +60,8 @@ export async function addVisit(userId: string, experienceId: string) {
 }
 
 export async function removeVisit(userId: string, experienceId: string) {
-  const review = await prisma.experienceVisitorReview.findUnique({
-    where: { experienceId_userId: { experienceId, userId } },
+  const review = await prisma.experienceVisitorReview.findFirst({
+    where: { experienceId, userId },
     select: { id: true },
   });
   if (review) {

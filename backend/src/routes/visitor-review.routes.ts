@@ -45,7 +45,7 @@ visitorReviewRouter.post(
 );
 
 visitorReviewRouter.patch(
-  "/:experienceId/reviews",
+  "/:experienceId/reviews/:reviewId",
   authMiddleware,
   reviewImages,
   validate(visitorReviewSchema),
@@ -53,7 +53,7 @@ visitorReviewRouter.patch(
 );
 
 visitorReviewRouter.delete(
-  "/:experienceId/reviews",
+  "/:experienceId/reviews/:reviewId",
   authMiddleware,
   asyncHandler(visitorReviewController.remove),
 );

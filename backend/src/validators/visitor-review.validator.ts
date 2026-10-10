@@ -10,7 +10,10 @@ export const VISITOR_REVIEW_MESSAGES = {
   commentRequired: "Escribe un comentario sobre tu experiencia.",
   commentTooLong: `El comentario es demasiado largo. Puede tener hasta ${CONTACT_MESSAGE_MAX} caracteres.`,
   notVisited: "Marca esta experiencia como visitada para poder compartir tu reseña.",
-  duplicate: "Ya publicaste una reseña para esta experiencia.",
+  duplicate: "Ya publicaste una reseña para esta sede.",
+  locationRequired: "Elige la sede donde viviste esta experiencia.",
+  locationInvalid: "La sede no pertenece a esta experiencia.",
+  locationMissing: "Esta experiencia no tiene una sede para asociar la reseña.",
   publishFailed: "No pudimos publicar tu reseña. Inténtalo nuevamente.",
   photosMax: "Puedes agregar máximo 5 fotos.",
   photoType: "Esta imagen no tiene un formato permitido.",
@@ -92,4 +95,5 @@ export const visitorReviewSchema = z.object({
     .min(1, VISITOR_REVIEW_MESSAGES.commentRequired)
     .max(CONTACT_MESSAGE_MAX, VISITOR_REVIEW_MESSAGES.commentTooLong),
   keepImageIds: z.preprocess(asIdList, z.array(z.string().min(1)).max(VISITOR_REVIEW_PHOTO_MAX).optional()),
+  locationId: z.string().uuid(VISITOR_REVIEW_MESSAGES.locationInvalid).optional(),
 });

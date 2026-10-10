@@ -8,9 +8,15 @@ export type VisitorReviewImage = {
   position: number;
 };
 
+export type VisitorReviewLocation = {
+  id: string;
+  label: string;
+};
+
 export type VisitorReview = {
   id: string;
   experienceId: string;
+  location: VisitorReviewLocation | null;
   rating: number;
   score: number;
   organizationRating: number | null;
@@ -40,7 +46,7 @@ export type VisitorReviewSummary = {
 export type VisitorReviewList = {
   summary: VisitorReviewSummary;
   reviews: VisitorReview[];
-  mine: VisitorReview | null;
+  mine: VisitorReview[];
 };
 
 export type VisitorReviewInput = {
@@ -49,6 +55,7 @@ export type VisitorReviewInput = {
   valueRating: number;
   recommended: boolean;
   comment: string;
+  locationId?: string;
 };
 
 export function listExperienceReviews(experienceId: string) {
@@ -64,6 +71,9 @@ function reviewForm(input: VisitorReviewInput, photos: VisitorReviewPhotos) {
   form.append("valueRating", String(input.valueRating));
   form.append("recommended", String(input.recommended));
   form.append("comment", input.comment);
+  if (input.locationId) {
+    form.append("locationId", input.locationId);
+  }
   form.append("keepImageIds", JSON.stringify(photos.keepImageIds));
   photos.files.forEach((file) => form.append("images", file));
   return form;
@@ -78,17 +88,22 @@ export function createExperienceReview(experienceId: string, input: VisitorRevie
     .then((response) => response.data.data);
 }
 
-export function updateExperienceReview(experienceId: string, input: VisitorReviewInput, photos: VisitorReviewPhotos) {
+export function updateExperienceReview(
+  experienceId: string,
+  reviewId: string,
+  input: VisitorReviewInput,
+  photos: VisitorReviewPhotos,
+) {
   return api
     .patch<ApiResponse<{ review: VisitorReview; summary: VisitorReviewSummary }>>(
-      `/experiences/${experienceId}/reviews`,
+      `/experiences/${experienceId}/reviews/${reviewId}`,
       reviewForm(input, photos),
     )
     .then((response) => response.data.data);
 }
 
-export function deleteExperienceReview(experienceId: string) {
+export function deleteExperienceReview(experienceId: string, reviewId: string) {
   return api
-    .delete<ApiResponse<{ summary: VisitorReviewSummary }>>(`/experiences/${experienceId}/reviews`)
+    .delete<ApiResponse<{ summary: VisitorReviewSummary }>>(`/experiences/${experienceId}/reviews/${reviewId}`)
     .then((response) => response.data.data);
 }

@@ -358,6 +358,9 @@ export function ExperienceEditorialView({
           coverUrl={mainPhoto}
           visited={isVisited}
           composeRequest={reviewComposeRequest}
+          locations={places.flatMap((place) =>
+            place.id ? [{ id: place.id, municipality: place.municipality, address: place.address }] : [],
+          )}
         />
       ) : null}
     </>
