@@ -9,6 +9,7 @@ import { AuthKeyIcon } from "../../components/auth/AuthKeyIcon";
 import { ExperienceCatalogCard } from "../../components/admin/ExperienceCatalogCard";
 import { Panel } from "../../components/admin/Panel";
 import { useAuth } from "../../hooks/useAuth";
+import { usePageScrollLock } from "../../hooks/usePageScrollLock";
 import {
   changeExperienceStatus,
   deleteExperience,
@@ -198,13 +199,12 @@ export function ExperiencesPage() {
       }
     }
     document.addEventListener("keydown", onKeyDown);
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
     return () => {
       document.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = previousOverflow;
     };
   }, [pendingDelete, pendingDeactivate, deleting, statusBusyId]);
+
+  usePageScrollLock(Boolean(pendingDeactivate));
 
   async function applyStatusChange(experience: Experience, status: ExperienceStatus) {
     setError("");

@@ -439,7 +439,10 @@ export async function deleteVisitorReview(userId: string, experienceId: string, 
 
   const photos = existing.images ?? [];
   await prisma.experienceVisitorReview.delete({ where: { id: existing.id } });
-  await Promise.all(photos.map((image) => destroyStoredImage(image.publicId)));
+  const summary = await summaryFor(experienceId);
+  if (photos.length) {
+    void Promise.all(photos.map((image) => destroyStoredImage(image.publicId)));
+  }
 
-  return { summary: await summaryFor(experienceId) };
+  return { summary };
 }

@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef } from "react";
 import { createPortal } from "react-dom";
+import { usePageScrollLock } from "../../hooks/usePageScrollLock";
 import { X } from "lucide-react";
 import { AuthKeyIcon } from "../auth/AuthKeyIcon";
 import bannerCategoria from "../../assets/banner_categoria.png";
@@ -24,6 +25,7 @@ export function SuccessConfirm({
   onAction,
   onSecondary,
   onClose,
+  className,
 }: {
   open: boolean;
   title: string;
@@ -37,19 +39,20 @@ export function SuccessConfirm({
   onAction?: () => void;
   onSecondary?: () => void;
   onClose: () => void;
+  className?: string;
 }) {
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const icon = image ?? SUCCESS_BANNERS[variant];
 
+  usePageScrollLock(open);
+
   useEffect(() => {
     if (!open) {
       return;
     }
     closeRef.current?.focus();
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -79,7 +82,6 @@ export function SuccessConfirm({
 
     window.addEventListener("keydown", onKeyDown, true);
     return () => {
-      document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", onKeyDown, true);
     };
   }, [open, onClose]);
@@ -89,7 +91,7 @@ export function SuccessConfirm({
   }
 
   return createPortal(
-    <div className="contact-success" role="presentation" onClick={onClose}>
+    <div className={className ? `contact-success ${className}` : "contact-success"} role="presentation" onClick={onClose}>
       <div
         ref={dialogRef}
         className="contact-success__dialog"

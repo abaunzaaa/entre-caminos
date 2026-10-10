@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -18,6 +18,7 @@ import { EXPERIENCE_DETAIL_SECTIONS, scrollToExperienceSection } from "../../uti
 import { sedeChoices } from "../../utils/experience-places";
 import { showFavoriteToast } from "../../services/favorites-sync";
 import { mediaUrl } from "../../utils/media";
+import { usePageScrollLock } from "../../hooks/usePageScrollLock";
 import reviewBloom from "../../assets/ilustracion-reseña.png";
 import { ReviewComposerModal, type ReviewDraft, type ReviewModalMark } from "./ReviewComposerModal";
 
@@ -108,6 +109,8 @@ function ReviewLightbox({
 }) {
   const closeRef = useRef<HTMLButtonElement>(null);
 
+  usePageScrollLock(true);
+
   useEffect(() => {
     closeRef.current?.focus();
     const onKey = (event: KeyboardEvent) => {
@@ -120,11 +123,8 @@ function ReviewLightbox({
       }
     };
     document.addEventListener("keydown", onKey);
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
     return () => {
       document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = previousOverflow;
     };
   }, [images.length, index, onChange, onClose]);
 
@@ -270,17 +270,56 @@ function ReviewPhotos({ images }: { images: VisitorReview["images"] }) {
   );
 }
 
+function commentOverflows(node: HTMLParagraphElement) {
+  const width = node.clientWidth;
+  if (!width) {
+    return false;
+  }
+  const probe = node.cloneNode(true) as HTMLParagraphElement;
+  probe.style.position = "absolute";
+  probe.style.visibility = "hidden";
+  probe.style.pointerEvents = "none";
+  probe.style.height = "auto";
+  probe.style.maxHeight = "none";
+  probe.style.overflow = "visible";
+  probe.style.display = "block";
+  probe.style.webkitLineClamp = "unset";
+  probe.style.width = `${width}px`;
+  node.parentElement?.appendChild(probe);
+  const full = probe.getBoundingClientRect().height;
+  probe.remove();
+  const lineHeight = Number.parseFloat(getComputedStyle(node).lineHeight);
+  if (!Number.isFinite(lineHeight) || lineHeight <= 0) {
+    return false;
+  }
+  return full > lineHeight * 4 + 1;
+}
+
 function ReviewText({ text }: { text: string }) {
   const ref = useRef<HTMLParagraphElement>(null);
   const [open, setOpen] = useState(false);
   const [canToggle, setCanToggle] = useState(false);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const node = ref.current;
-    if (!node || open) {
+    if (!node) {
       return;
     }
-    setCanToggle(node.scrollHeight > node.clientHeight + 1);
+    const update = () => {
+      const current = ref.current;
+      if (!current) {
+        return;
+      }
+      setCanToggle(commentOverflows(current));
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(node);
+    const fonts = document.fonts?.ready.then(update);
+    return () => {
+      observer.disconnect();
+      void fonts;
+    };
   }, [text, open]);
 
   return (
@@ -302,6 +341,7 @@ function ReviewCard({
   own = false,
   anchor = false,
   busy = false,
+  deleting = false,
   onEdit,
   onDelete,
 }: {
@@ -309,6 +349,7 @@ function ReviewCard({
   own?: boolean;
   anchor?: boolean;
   busy?: boolean;
+  deleting?: boolean;
   onEdit?: () => void;
   onDelete?: () => void;
 }) {
@@ -316,11 +357,13 @@ function ReviewCard({
   const avatar = review.user.avatarUrl?.trim() && !avatarFailed ? mediaUrl(review.user.avatarUrl, 128) : "";
   const date = reviewDateParts(review.updatedAt || review.createdAt);
   const photos = review.images ?? [];
+  const showMarks = Boolean(review.location?.label) || review.recommended != null;
+  const showRail = photos.length > 0 || showMarks;
 
   return (
     <article
       id={anchor ? EXPERIENCE_DETAIL_SECTIONS.ownReview : undefined}
-      className={`experience-reviews__card${own ? " is-own" : ""}${photos.length ? " has-media" : ""}`}
+      className={`experience-reviews__card${own ? " is-own" : ""}${photos.length ? " has-media" : ""}${!photos.length && showMarks ? " has-marks" : ""}`}
       tabIndex={anchor ? -1 : undefined}
     >
       <div className="experience-reviews__card-person">
@@ -337,12 +380,6 @@ function ReviewCard({
 
       <div className="experience-reviews__card-body">
         <ReviewText text={review.comment} />
-        {!photos.length && (review.location?.label || review.recommended != null) ? (
-          <div className="experience-reviews__marks is-inline">
-            <SedeLine label={review.location?.label} />
-            <RecommendMark recommended={review.recommended} />
-          </div>
-        ) : null}
         {own && onEdit && onDelete ? (
           <p className="experience-reviews__card-actions">
             <button type="button" onClick={onEdit} disabled={busy}>
@@ -350,21 +387,25 @@ function ReviewCard({
             </button>
             <span aria-hidden="true">·</span>
             <button type="button" onClick={onDelete} disabled={busy}>
-              Eliminar
+              {deleting ? "Eliminando…" : "Eliminar"}
             </button>
           </p>
         ) : null}
       </div>
 
-      {photos.length ? (
-        <div className="experience-reviews__stage">
-          <div className="experience-reviews__marks">
-            <SedeLine label={review.location?.label} />
-            <RecommendMark recommended={review.recommended} corner />
-          </div>
-          <div className="experience-reviews__gallery">
-            <ReviewPhotos images={photos} />
-          </div>
+      {showRail ? (
+        <div className={`experience-reviews__stage${photos.length ? "" : " is-marks-only"}`}>
+          {showMarks ? (
+            <div className="experience-reviews__marks">
+              <SedeLine label={review.location?.label} />
+              <RecommendMark recommended={review.recommended} corner />
+            </div>
+          ) : null}
+          {photos.length ? (
+            <div className="experience-reviews__gallery">
+              <ReviewPhotos images={photos} />
+            </div>
+          ) : null}
         </div>
       ) : null}
 
@@ -418,6 +459,8 @@ export function ExperienceReviewsSection({
   const [composer, setComposer] = useState<"create" | "edit" | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const deleteLock = useRef(false);
   const [visibleCount, setVisibleCount] = useState(REVIEW_PAGE);
 
   useEffect(() => {
@@ -521,9 +564,11 @@ export function ExperienceReviewsSection({
   }
 
   async function removeOwn(reviewId: string) {
-    if (!reviewId || busy) {
+    if (!reviewId || busy || deleteLock.current) {
       return;
     }
+    deleteLock.current = true;
+    setDeletingId(reviewId);
     setBusy(true);
     try {
       const data = await deleteExperienceReview(experienceId, reviewId);
@@ -535,6 +580,8 @@ export function ExperienceReviewsSection({
     } catch (err) {
       showFavoriteToast(reviewErrorMessage(err, REVIEW_DELETE_FAILED), "error");
     } finally {
+      deleteLock.current = false;
+      setDeletingId(null);
       setBusy(false);
     }
   }
@@ -624,6 +671,7 @@ export function ExperienceReviewsSection({
                   own={own}
                   anchor={review.id === firstOwnId}
                   busy={busy}
+                  deleting={deletingId === review.id}
                   onEdit={own ? () => openComposer("edit", review.id) : undefined}
                   onDelete={own ? () => void removeOwn(review.id) : undefined}
                 />
@@ -655,6 +703,11 @@ export function ExperienceReviewsSection({
               : []
           }
           sedeLabel={composer === "edit" ? editing?.location?.label ?? null : null}
+          placeName={
+            locations.length === 1 && (composer === "create" || (composer === "edit" && !editing?.location))
+              ? locations[0]?.municipality?.trim() || null
+              : null
+          }
           busy={busy}
           onClose={() => {
             setComposer(null);

@@ -19,6 +19,7 @@ import {
   updateCategory,
 } from "../../services/catalog.service";
 import { useAuth } from "../../hooks/useAuth";
+import { usePageScrollLock } from "../../hooks/usePageScrollLock";
 import { getApiErrorMessage } from "../../utils/api-error";
 import { canManageApprovedCategories, canMutateApprovedCatalog, notifyCategoriesChanged } from "../../utils/admin-access";
 import { DEFAULT_CATEGORY_ICON, getCategoryIcon } from "../../utils/category-icons";
@@ -167,13 +168,12 @@ export function CategoriesPage() {
       }
     }
     document.addEventListener("keydown", onKeyDown);
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
     return () => {
       document.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = previousOverflow;
     };
   }, [pendingDelete, pendingReject, deleting, reviewing]);
+
+  usePageScrollLock(Boolean(pendingDelete || pendingReject));
 
   function startEdit(category: Category) {
     if (!canMutateApproved) {

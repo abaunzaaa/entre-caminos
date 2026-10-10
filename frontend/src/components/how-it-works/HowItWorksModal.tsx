@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef } from "react";
+import { usePageScrollLock } from "../../hooks/usePageScrollLock";
 import { Bookmark, Compass, SlidersHorizontal, Sparkles, Users } from "lucide-react";
 import comoFuncionaImg from "../../assets/como-funciona.png";
 import "../../styles/how-it-works-modal.css";
@@ -57,11 +58,11 @@ export function HowItWorksModal({
   const closeRef = useRef<HTMLButtonElement>(null);
   const timelineRef = useRef<HTMLOListElement>(null);
 
+  usePageScrollLock(open);
+
   useEffect(() => {
     if (!open) return;
 
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
     closeRef.current?.focus();
 
     const onKeyDown = (event: KeyboardEvent) => {
@@ -70,7 +71,6 @@ export function HowItWorksModal({
 
     window.addEventListener("keydown", onKeyDown);
     return () => {
-      document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", onKeyDown);
     };
   }, [open, onClose]);

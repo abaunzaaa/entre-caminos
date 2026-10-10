@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { MapPin, Plus, X } from "lucide-react";
 import { OnboardingSelect } from "../onboarding/OnboardingSelect";
@@ -9,6 +9,8 @@ import { useAuth } from "../../hooks/useAuth";
 import type { VisitorReviewImage, VisitorReviewInput, VisitorReviewPhotos } from "../../services/reviews.service";
 import type { AvatarConfig } from "../../types";
 import { nameInitial, resolveAvatarUrl } from "../../utils/admin-avatar";
+import { SuccessConfirm } from "../feedback/SuccessConfirm";
+import { usePageScrollLock } from "../../hooks/usePageScrollLock";
 
 export type ReviewModalMark = {
   src: string;
@@ -194,23 +196,33 @@ function ReviewCover({
   src,
   marks,
   title,
+  sede = null,
+  sedeMode = "none",
+  recommend = null,
 }: {
   src?: string | null;
   marks: ReviewModalMark[];
   title: string;
+  sede?: ReactNode;
+  sedeMode?: "none" | "choose" | "set";
+  recommend?: ReactNode;
 }) {
   const [failed, setFailed] = useState(false);
   const photo = src && !failed ? src : "";
 
   return (
-    <aside className="review-modal__cover">
-      <p className="review-modal__experience">{title}</p>
+    <aside className={`review-modal__cover${sedeMode === "none" ? "" : ` is-${sedeMode}`}`}>
+      <div className="review-modal__cover-top">
+        <p className="review-modal__experience">{title}</p>
+        {sede}
+      </div>
       <div className="review-modal__photo">
         <ReviewMark marks={marks} />
         <div className={`review-modal__cover-frame${photo ? "" : " is-fallback"}`}>
           <img src={photo || brandLogo} alt="" onError={() => setFailed(true)} />
         </div>
       </div>
+      {recommend ? <div className="review-modal__cover-recommend">{recommend}</div> : null}
     </aside>
   );
 }
@@ -332,6 +344,7 @@ export function ReviewComposerModal({
   initialPhotos = [],
   locations = [],
   sedeLabel = null,
+  placeName = null,
   busy,
   error = "",
   onClose,
@@ -345,6 +358,7 @@ export function ReviewComposerModal({
   initialPhotos?: VisitorReviewImage[];
   locations?: Array<{ id: string; label: string }>;
   sedeLabel?: string | null;
+  placeName?: string | null;
   busy: boolean;
   error?: string;
   onClose: () => void;
@@ -368,7 +382,7 @@ export function ReviewComposerModal({
   photosRef.current = photos;
   const initialPhotoKeys = photosFromReview(initialPhotos).map((photo) => photo.key).join("|");
   const photoKeys = photos.map((photo) => photo.key).join("|");
-  const dirty = !sameDraft(draft, initial) || photoKeys !== initialPhotoKeys;
+  const dirty = !sameDraft(draft, initial) || photoKeys !== initialPhotoKeys || locationId !== "";
   const bannerText = banner || error;
   const fieldErrorsRef = useRef(fieldErrors);
   fieldErrorsRef.current = fieldErrors;
@@ -381,6 +395,8 @@ export function ReviewComposerModal({
       ? "Tu reseña es pública en Entre Caminos"
       : "Tu reseña será pública en Entre Caminos";
   const requestCloseRef = useRef<() => void>(() => undefined);
+  const confirmLeaveRef = useRef(false);
+  confirmLeaveRef.current = confirmLeave;
   requestCloseRef.current = () => {
     if (busy) {
       return;
@@ -392,23 +408,31 @@ export function ReviewComposerModal({
     onClose();
   };
 
+  usePageScrollLock(true);
+
   useEffect(() => {
     closeRef.current?.focus();
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         event.preventDefault();
         event.stopImmediatePropagation();
+        if (confirmLeaveRef.current) {
+          setConfirmLeave(false);
+          return;
+        }
         requestCloseRef.current();
         return;
       }
-      if (event.key !== "Tab" || !dialogRef.current) {
+      if (confirmLeaveRef.current) {
+        return;
+      }
+      const trapRoot = dialogRef.current;
+      if (event.key !== "Tab" || !trapRoot) {
         return;
       }
       const focusable = [
-        ...dialogRef.current.querySelectorAll<HTMLElement>(
+        ...trapRoot.querySelectorAll<HTMLElement>(
           "button:not([disabled]), textarea:not([disabled]), select:not([disabled])",
         ),
       ];
@@ -430,7 +454,6 @@ export function ReviewComposerModal({
 
     window.addEventListener("keydown", onKeyDown, true);
     return () => {
-      document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", onKeyDown, true);
     };
   }, []);
@@ -548,7 +571,7 @@ export function ReviewComposerModal({
 
   return createPortal(
     <div className="review-modal-overlay" onMouseDown={requestClose}>
-      <div className="review-modal-frame" onMouseDown={(event) => event.stopPropagation()}>
+      <div className="review-modal-frame" inert={confirmLeave ? true : undefined} onMouseDown={(event) => event.stopPropagation()}>
         <div
           ref={dialogRef}
           className="review-modal"
@@ -557,7 +580,77 @@ export function ReviewComposerModal({
           aria-labelledby={titleId}
         >
         <div className="review-modal__layout">
-        <ReviewCover src={coverUrl} marks={marks} title={experienceTitle} />
+        <ReviewCover
+          src={coverUrl}
+          marks={marks}
+          title={experienceTitle}
+          sedeMode={sedeLabel || placeName ? "set" : locations.length > 1 ? "choose" : "none"}
+          sede={
+            sedeLabel ? (
+              <p className="review-modal__sede">Sede · {sedeLabel}</p>
+            ) : placeName ? (
+              <p className="review-modal__sede">{placeName}</p>
+            ) : locations.length > 1 ? (
+              <div className="review-modal__place" id="review-field-location">
+                <OnboardingSelect
+                  label="¿En qué sede viviste esta experiencia?"
+                  icon={MapPin}
+                  placeholder="Selecciona la sede"
+                  options={locations.map((place) => ({ value: place.id, label: place.label }))}
+                  value={locationId}
+                  onChange={(value) => {
+                    setLocationId(value);
+                    setLocationError("");
+                    if (!Object.keys(fieldErrorsRef.current).length) {
+                      setBanner("");
+                    }
+                  }}
+                  open={sedeOpen}
+                  onOpenChange={setSedeOpen}
+                  invalid={Boolean(locationError)}
+                  describedBy={locationError ? "review-field-location-error" : undefined}
+                  placement="down"
+                />
+                <FieldAlert id="review-field-location-error" message={locationError} />
+              </div>
+            ) : null
+          }
+          recommend={
+            <div
+              id="review-field-recommended"
+              className={`review-modal__criterion review-modal__recommend${fieldErrors.recommended ? " is-invalid" : ""}`}
+            >
+              <p id="review-recommend-label" className="dash-exps-dossier__kicker">
+                ¿Recomendarías esta experiencia?
+              </p>
+              <div
+                className="review-modal__chips"
+                role="group"
+                aria-labelledby="review-recommend-label"
+                aria-invalid={fieldErrors.recommended ? true : undefined}
+                aria-describedby={fieldErrors.recommended ? "review-field-recommended-error" : undefined}
+              >
+                <button
+                  type="button"
+                  className={draft.recommended === true ? "is-on" : ""}
+                  aria-pressed={draft.recommended === true}
+                  onClick={() => commitDraft({ ...draft, recommended: true })}
+                >
+                  Sí
+                </button>
+                <button
+                  type="button"
+                  className={draft.recommended === false ? "is-on" : ""}
+                  aria-pressed={draft.recommended === false}
+                  onClick={() => commitDraft({ ...draft, recommended: false })}
+                >
+                  No
+                </button>
+              </div>
+              <FieldAlert id="review-field-recommended-error" message={fieldErrors.recommended} />
+            </div>
+          }
+        />
         <div className="review-modal__panel">
         <header className="review-modal__header">
           <button
@@ -569,8 +662,10 @@ export function ReviewComposerModal({
           >
             <X size={16} strokeWidth={1.75} />
           </button>
-          <h2 id={titleId}>¿Cómo fue tu experiencia?</h2>
-          <p className="review-modal__hint">Tu opinión ayuda a otros a elegir su próximo camino.</p>
+          <div className="review-modal__headline">
+            <h2 id={titleId}>¿Cómo fue tu experiencia?</h2>
+            <p className="review-modal__hint">Tu opinión ayuda a otros a elegir su próximo camino.</p>
+          </div>
           {reviewerName ? (
             <div className="review-modal__author">
               <span className="review-modal__author-photo">
@@ -585,31 +680,6 @@ export function ReviewComposerModal({
         </header>
 
         <div className="review-modal__body">
-          {sedeLabel ? <p className="review-modal__sede">Sede · {sedeLabel}</p> : null}
-          {!sedeLabel && locations.length > 1 ? (
-            <div className="review-modal__place" id="review-field-location">
-              <OnboardingSelect
-                label="¿En qué sede viviste esta experiencia?"
-                icon={MapPin}
-                placeholder="Selecciona la sede"
-                options={locations.map((place) => ({ value: place.id, label: place.label }))}
-                value={locationId}
-                onChange={(value) => {
-                  setLocationId(value);
-                  setLocationError("");
-                  if (!Object.keys(fieldErrorsRef.current).length) {
-                    setBanner("");
-                  }
-                }}
-                open={sedeOpen}
-                onOpenChange={setSedeOpen}
-                invalid={Boolean(locationError)}
-                describedBy={locationError ? "review-field-location-error" : undefined}
-                placement="down"
-              />
-              <FieldAlert id="review-field-location-error" message={locationError} />
-            </div>
-          ) : null}
           <div className="review-modal__ratings">
             <StarPicker
               variant="lead"
@@ -637,45 +707,11 @@ export function ReviewComposerModal({
             </div>
           </div>
 
-          <div
-            id="review-field-recommended"
-            className={`review-modal__criterion review-modal__recommend${fieldErrors.recommended ? " is-invalid" : ""}`}
-          >
-            <p id="review-recommend-label" className="dash-exps-dossier__kicker">
-              ¿Recomendarías esta experiencia?
-            </p>
-            <div
-              className="review-modal__chips"
-              role="group"
-              aria-labelledby="review-recommend-label"
-              aria-invalid={fieldErrors.recommended ? true : undefined}
-              aria-describedby={fieldErrors.recommended ? "review-field-recommended-error" : undefined}
-            >
-              <button
-                type="button"
-                className={draft.recommended === true ? "is-on" : ""}
-                aria-pressed={draft.recommended === true}
-                onClick={() => commitDraft({ ...draft, recommended: true })}
-              >
-                Sí
-              </button>
-              <button
-                type="button"
-                className={draft.recommended === false ? "is-on" : ""}
-                aria-pressed={draft.recommended === false}
-                onClick={() => commitDraft({ ...draft, recommended: false })}
-              >
-                No
-              </button>
-            </div>
-            <FieldAlert id="review-field-recommended-error" message={fieldErrors.recommended} />
-          </div>
-
           <label className="review-modal__comment" id="review-field-comment">
             <span className="dash-exps-dossier__kicker">Cuéntanos un poco más</span>
             <textarea
               value={draft.comment}
-              rows={6}
+              rows={4}
               aria-invalid={fieldErrors.comment ? true : undefined}
               aria-describedby={fieldErrors.comment ? "review-field-comment-error" : undefined}
               placeholder="¿Qué fue lo que más te gustó? ¿Hay algo que otros viajeros deberían saber?"
@@ -717,19 +753,6 @@ export function ReviewComposerModal({
             <FieldAlert id="review-field-photos-error" message={photoNotice} />
           </div>
 
-          {confirmLeave ? (
-            <div className="review-modal__confirm" role="status">
-              <p>Si sales ahora, se perderá lo que escribiste.</p>
-              <div>
-                <button type="button" onClick={() => setConfirmLeave(false)}>
-                  Seguir editando
-                </button>
-                <button type="button" onClick={onClose}>
-                  Salir sin guardar
-                </button>
-              </div>
-            </div>
-          ) : null}
         </div>
 
         <footer className="review-modal__footer">
@@ -751,6 +774,18 @@ export function ReviewComposerModal({
         </div>
         </div>
       </div>
+      <SuccessConfirm
+        open={confirmLeave}
+        variant="experience"
+        className="review-leave-confirm"
+        title="¿Salir sin guardar?"
+        text="Los cambios que hiciste se perderán."
+        actionLabel="Salir"
+        secondaryLabel="Seguir editando"
+        onAction={onClose}
+        onSecondary={() => setConfirmLeave(false)}
+        onClose={() => setConfirmLeave(false)}
+      />
     </div>,
     document.body,
   );

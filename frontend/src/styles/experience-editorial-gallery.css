@@ -187,13 +187,14 @@
   min-height: 22rem;
   padding: 0.35rem 0.15rem 0.5rem;
   overflow-x: auto;
-  overflow-y: hidden;
+  overflow-y: clip;
+  overscroll-behavior-x: contain;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
 
 .dash-exps-editorial__track--marquee {
-  overflow-x: hidden;
+  overflow: clip;
 }
 
 .dash-exps-editorial__shift {

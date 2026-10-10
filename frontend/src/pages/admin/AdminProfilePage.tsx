@@ -11,6 +11,7 @@ import { AdminChangePasswordDialog } from "../../components/admin/AdminChangePas
 import { AdminProfileHeroArt } from "../../components/admin/AdminProfileHeroArt";
 import { UserAvatar } from "../../components/user/UserAvatar";
 import { useAuth } from "../../hooks/useAuth";
+import { usePageScrollLock } from "../../hooks/usePageScrollLock";
 import type { PublicUser } from "../../types";
 import perfilActualizadoIcon from "../../assets/perfil-actualizado-icon.svg";
 import {
@@ -371,19 +372,11 @@ export function AdminProfilePage() {
 
   const photoModalOpen = photoDialog !== null;
 
+  usePageScrollLock(photoModalOpen);
+
   useEffect(() => {
     if (!photoModalOpen) {
       return;
-    }
-
-    const { body } = document;
-    const previousOverflow = body.style.overflow;
-    const previousPaddingRight = body.style.paddingRight;
-    const scrollbar = window.innerWidth - document.documentElement.clientWidth;
-    body.style.overflow = "hidden";
-    if (scrollbar > 0) {
-      const currentPadding = Number.parseInt(previousPaddingRight || "0", 10) || 0;
-      body.style.paddingRight = `${currentPadding + scrollbar}px`;
     }
 
     photoCloseRef.current?.focus();
@@ -423,8 +416,6 @@ export function AdminProfilePage() {
 
     window.addEventListener("keydown", onKeyDown, true);
     return () => {
-      body.style.overflow = previousOverflow;
-      body.style.paddingRight = previousPaddingRight;
       window.removeEventListener("keydown", onKeyDown, true);
     };
   }, [photoModalOpen, successOpen]);

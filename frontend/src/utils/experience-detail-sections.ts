@@ -10,6 +10,5 @@ export function scrollToExperienceSection(id: string) {
   if (!node) {
     return;
   }
-  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  node.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+  node.scrollIntoView({ behavior: "auto", block: "start" });
 }

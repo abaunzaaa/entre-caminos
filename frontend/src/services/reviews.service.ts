@@ -1,4 +1,4 @@
-import { api } from "./api";
+import { api, ensureFreshAccessToken } from "./api";
 
 type ApiResponse<T> = { success: boolean; data: T };
 
@@ -102,8 +102,10 @@ export function updateExperienceReview(
     .then((response) => response.data.data);
 }
 
-export function deleteExperienceReview(experienceId: string, reviewId: string) {
-  return api
-    .delete<ApiResponse<{ summary: VisitorReviewSummary }>>(`/experiences/${experienceId}/reviews/${reviewId}`)
-    .then((response) => response.data.data);
+export async function deleteExperienceReview(experienceId: string, reviewId: string) {
+  await ensureFreshAccessToken();
+  const response = await api.delete<ApiResponse<{ summary: VisitorReviewSummary }>>(
+    `/experiences/${experienceId}/reviews/${reviewId}`,
+  );
+  return response.data.data;
 }

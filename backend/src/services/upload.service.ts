@@ -202,5 +202,6 @@ export async function destroyStoredImage(publicId: string | null | undefined) {
   await fetch(`https://api.cloudinary.com/v1_1/${env.CLOUDINARY_CLOUD_NAME}/image/destroy`, {
     method: "POST",
     body: form,
+    signal: AbortSignal.timeout(8_000),
   }).catch(() => undefined);
 }

@@ -3681,6 +3681,11 @@
   cursor: default;
 }
 
+.dash-exps-map.is-readonly .dash-exps-map__viewport {
+  overflow: clip;
+  touch-action: pan-y;
+}
+
 .dash-exps-map__tile {
   position: absolute;
   top: 0;
