@@ -6,6 +6,11 @@ import { ExperienceEditorialGallery } from "./ExperienceEditorialGallery";
 import { ExperienceEditorialNearby } from "./ExperienceEditorialNearby";
 import { ExperienceEditorialPlace } from "./ExperienceEditorialPlace";
 import { ExperiencePlaceTabs } from "./ExperiencePlaceTabs";
+import { ExperienceDetailNav } from "../experiences/ExperienceDetailNav";
+import brandLogo from "../../assets/logo.png";
+import { ExperienceReviewsSection } from "../experiences/ExperienceReviewsSection";
+import type { ReviewModalMark } from "../experiences/ReviewComposerModal";
+import { EXPERIENCE_DETAIL_SECTIONS } from "../../utils/experience-detail-sections";
 import { COMPANY_OPTIONS, PLACE_OPTIONS, type OnboardingOption } from "../../data/onboarding";
 import { formatDepartmentMunicipality } from "../../data/colombia-locations";
 import { formatPrice } from "../../utils/cn";
@@ -18,6 +23,7 @@ import {
 import { experienceImages, mediaUrl } from "../../utils/media";
 import { placeTabLabel, placesFromExperience, projectExperience } from "../../utils/experience-places";
 import type { Experience, ExperienceStatus, PublicOrganizationProfile } from "../../types";
+import "../../styles/experience-reviews.css";
 
 const PLACE_FACT_LABELS = new Set([
   "Ubicación",
@@ -122,6 +128,16 @@ function detailOrganization(experience: Experience): PublicOrganizationProfile |
   };
 }
 
+function reviewModalMarks(organization: PublicOrganizationProfile | null): ReviewModalMark[] {
+  const marks: ReviewModalMark[] = [];
+  const logo = organization?.logoUrl?.trim();
+  if (logo) {
+    marks.push({ src: mediaUrl(logo, 256), kind: "logo" });
+  }
+  marks.push({ src: brandLogo, kind: "brand" });
+  return marks;
+}
+
 function formatPublishedDate(value?: string | null) {
   if (!value) {
     return "";
@@ -149,6 +165,7 @@ export type ExperienceEditorialViewProps = {
   nearbyHref?: (id: string) => string;
   fetchNearby?: () => Promise<Experience[]>;
   onConsultAi?: () => void;
+  reviewComposeRequest?: number;
 };
 
 export function buildExperienceEditorialFacts(
@@ -277,6 +294,7 @@ export function ExperienceEditorialView({
   nearbyHref,
   fetchNearby,
   onConsultAi,
+  reviewComposeRequest = 0,
 }: ExperienceEditorialViewProps) {
   const isFavorite = favoriteOn;
   const isVisited = visitedOn;
@@ -300,6 +318,53 @@ export function ExperienceEditorialView({
   const generalFacts = showPlaceTabs ? detailFacts.filter((fact) => !PLACE_FACT_LABELS.has(fact.label)) : detailFacts;
   const placeFacts = showPlaceTabs ? detailFacts.filter((fact) => PLACE_FACT_LABELS.has(fact.label)) : [];
   const showTouristActions = mode === "tourist" && (onConsultAi || onFavoriteToggle || onVisitedToggle);
+  const sectionIds = mode === "tourist" ? EXPERIENCE_DETAIL_SECTIONS : null;
+  const editorialBody = (
+    <>
+      <ExperienceEditorialDossier
+        photoUrl={mainPhoto}
+        photoLabel={experience.title}
+        noteFacts={noteFacts}
+        facts={generalFacts}
+        organization={organization}
+        placeFacts={placeFacts}
+        clampDescription={mode === "tourist"}
+        sectionId={sectionIds?.info}
+        places={
+          showPlaceTabs ? (
+            <ExperiencePlaceTabs
+              label="Disponible en"
+              tabs={places.map((place, index) => placeTabLabel(place, index, places))}
+              active={activePlace}
+              onSelect={setPlaceIndex}
+            />
+          ) : null
+        }
+      />
+
+      <ExperienceEditorialPlace
+        experience={view}
+        latitude={lat}
+        longitude={lng}
+        hasPoint={hasPoint}
+        sectionId={sectionIds?.location}
+      />
+
+      {mode === "tourist" ? (
+        <ExperienceReviewsSection
+          experienceId={experience.id}
+          experienceTitle={experience.title}
+          marks={reviewModalMarks(organization)}
+          coverUrl={mainPhoto}
+          visited={isVisited}
+          composeRequest={reviewComposeRequest}
+          locations={places.flatMap((place) =>
+            place.id ? [{ id: place.id, municipality: place.municipality, address: place.address }] : [],
+          )}
+        />
+      ) : null}
+    </>
+  );
 
   return (
     <section
@@ -371,32 +436,16 @@ export function ExperienceEditorialView({
         ) : null}
       </section>
 
-      <ExperienceEditorialDossier
-        photoUrl={mainPhoto}
-        photoLabel={experience.title}
-        noteFacts={noteFacts}
-        facts={generalFacts}
-        organization={organization}
-        placeFacts={placeFacts}
-        clampDescription={mode === "tourist"}
-        places={
-          showPlaceTabs ? (
-            <ExperiencePlaceTabs
-              label="Disponible en"
-              tabs={places.map((place, index) => placeTabLabel(place, index, places))}
-              active={activePlace}
-              onSelect={setPlaceIndex}
-            />
-          ) : null
-        }
-      />
-
-      <ExperienceEditorialPlace
-        experience={view}
-        latitude={lat}
-        longitude={lng}
-        hasPoint={hasPoint}
-      />
+      {mode === "tourist" ? (
+        <div className="experience-detail-anchor">
+          <div className="experience-detail-nav-slot">
+            <ExperienceDetailNav />
+          </div>
+          <div className="experience-detail-anchor__main">{editorialBody}</div>
+        </div>
+      ) : (
+        editorialBody
+      )}
 
       <ExperienceEditorialNearby
         experience={view}

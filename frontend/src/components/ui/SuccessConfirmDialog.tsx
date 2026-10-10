@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { usePageScrollLock } from "../../hooks/usePageScrollLock";
 import { X } from "lucide-react";
 import "../../styles/contact-modal.css";
 
@@ -32,6 +33,8 @@ export function SuccessConfirmDialog({
   const closeRef = useRef<HTMLButtonElement>(null);
   const actionRef = useRef<HTMLButtonElement>(null);
 
+  usePageScrollLock(open);
+
   useEffect(() => {
     if (!open) {
       return;
@@ -39,16 +42,6 @@ export function SuccessConfirmDialog({
 
     const focusTarget = initialFocus === "action" ? actionRef : closeRef;
     focusTarget.current?.focus();
-
-    const { body } = document;
-    const previousOverflow = body.style.overflow;
-    const previousPaddingRight = body.style.paddingRight;
-    const scrollbar = window.innerWidth - document.documentElement.clientWidth;
-    body.style.overflow = "hidden";
-    if (scrollbar > 0) {
-      const currentPadding = Number.parseInt(previousPaddingRight || "0", 10) || 0;
-      body.style.paddingRight = `${currentPadding + scrollbar}px`;
-    }
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -78,8 +71,6 @@ export function SuccessConfirmDialog({
 
     window.addEventListener("keydown", onKeyDown, true);
     return () => {
-      body.style.overflow = previousOverflow;
-      body.style.paddingRight = previousPaddingRight;
       window.removeEventListener("keydown", onKeyDown, true);
     };
   }, [open, onClose, initialFocus]);

@@ -36,6 +36,11 @@ export function getApiErrorFields(err: unknown) {
   );
 }
 
+export function getApiErrorCode(err: unknown) {
+  const body = err as ApiErrorBody;
+  return body.response?.data?.error?.code ?? "";
+}
+
 export function getApiErrorMessage(err: unknown, fallback = "Ocurrió un error") {
   if (axios.isAxiosError(err) && !err.response) {
     return "No hay conexión con el servidor. Comprueba tu conexión e intenta de nuevo.";

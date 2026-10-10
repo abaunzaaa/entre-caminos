@@ -5361,6 +5361,10 @@ button.fav-folder:focus-visible {
   }
 }
 
+html:has(.tourist-editorial-shell) {
+  scroll-behavior: auto;
+}
+
 .tourist-editorial-shell {
   box-sizing: border-box;
   width: 100%;

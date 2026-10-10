@@ -17,6 +17,7 @@ import { CountUp } from "../../components/admin/CountUp";
 import { Panel, StatusDot } from "../../components/admin/Panel";
 import { TeamInviteCarousel } from "../../components/admin/TeamInviteCarousel";
 import { useAuth } from "../../hooks/useAuth";
+import { usePageScrollLock } from "../../hooks/usePageScrollLock";
 import { getApiErrorMessage } from "../../utils/api-error";
 import { nameInitial, resolveAvatarUrl } from "../../utils/admin-avatar";
 import adminIlus from "../../assets/admin-ilus.png";
@@ -174,13 +175,12 @@ export function AdministratorsPage() {
       }
     }
     document.addEventListener("keydown", onKeyDown);
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
     return () => {
       document.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = previousOverflow;
     };
   }, [pendingDeactivate, pendingDelete, statusBusyId, deleteBusy]);
+
+  usePageScrollLock(Boolean(pendingDeactivate || pendingDelete));
 
   async function changeAdminStatus(admin: PublicUser, status: "ACTIVE" | "INACTIVE") {
     setStatusBusyId(admin.id);

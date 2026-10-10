@@ -64,7 +64,12 @@ async function loadMetricMaps(experienceIds?: string[]) {
     UNION ALL
     SELECT 'review', experience_id, COUNT(*)::int,
            COUNT(*) FILTER (WHERE created_at >= ${since})::int,
-           AVG(rating)::float8
+           AVG(
+             CASE
+               WHEN organization_rating IS NULL OR value_rating IS NULL THEN rating
+               ELSE rating * 0.70 + organization_rating * 0.15 + value_rating * 0.15
+             END
+           )::float8
     FROM experience_visitor_reviews
     WHERE TRUE ${idClause}
     GROUP BY experience_id

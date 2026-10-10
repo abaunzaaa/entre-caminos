@@ -3,10 +3,15 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "./useAuth";
 import { addVisit, getVisitedStatus, removeVisit } from "../services/visits.service";
 import { notifyVisitedStatus, notifyVisitsChanged, onVisitedStatus } from "../services/visits-sync";
+import { getApiErrorCode } from "../utils/api-error";
+
+const VISIT_HAS_REVIEW = "VISIT_HAS_REVIEW";
 
 type UseVisitedToggleOptions = {
   initialVisited?: boolean;
   loginRedirectTo?: string;
+  onMarkedVisited?: () => void;
+  onUnvisitBlocked?: () => void;
 };
 
 export function useVisitedToggle(experienceId: string, options: UseVisitedToggleOptions = {}) {
@@ -76,8 +81,14 @@ export function useVisitedToggle(experienceId: string, options: UseVisitedToggle
       }
       notifyVisitedStatus(experienceId, next);
       notifyVisitsChanged();
-    } catch {
+      if (next) {
+        options.onMarkedVisited?.();
+      }
+    } catch (error) {
       setVisited(!next);
+      if (!next && getApiErrorCode(error) === VISIT_HAS_REVIEW) {
+        options.onUnvisitBlocked?.();
+      }
     } finally {
       setBusy(false);
     }

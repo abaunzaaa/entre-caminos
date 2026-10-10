@@ -2,11 +2,15 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "../database/prisma.js";
 import { ApiError } from "../utils/api-error.js";
 
+export const VISIT_HAS_REVIEW_CODE = "VISIT_HAS_REVIEW";
+export const VISIT_HAS_REVIEW_MESSAGE =
+  "Tienes una reseña publicada sobre esta experiencia. Para quitarla de tus experiencias visitadas, primero debes eliminar tu reseña.";
+
 function isUniqueViolation(error: unknown) {
   return error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";
 }
 
-async function assertPublishedExperience(experienceId: string) {
+export async function assertPublishedExperience(experienceId: string) {
   const experience = await prisma.experience.findFirst({
     where: { id: experienceId, status: "PUBLISHED" },
     select: { id: true },
@@ -56,6 +60,14 @@ export async function addVisit(userId: string, experienceId: string) {
 }
 
 export async function removeVisit(userId: string, experienceId: string) {
+  const review = await prisma.experienceVisitorReview.findFirst({
+    where: { experienceId, userId },
+    select: { id: true },
+  });
+  if (review) {
+    throw new ApiError(409, VISIT_HAS_REVIEW_MESSAGE, VISIT_HAS_REVIEW_CODE);
+  }
+
   await prisma.experienceVisit.deleteMany({
     where: { userId, experienceId },
   });

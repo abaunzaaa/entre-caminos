@@ -15,6 +15,7 @@ import { AdminNotifications } from "../admin/AdminNotifications";
 import { AdminUserMenu } from "../admin/AdminUserMenu";
 import brandLogo from "../../assets/logo.png";
 import { useAuth } from "../../hooks/useAuth";
+import { EXPERIENCE_DETAIL_SECTIONS } from "../../utils/experience-detail-sections";
 import "../../styles/admin-topbar.css";
 
 const NAV_LINKS: Array<{
@@ -76,7 +77,8 @@ export function ExplorerNavbar() {
       return;
     }
     const frame = window.requestAnimationFrame(() => {
-      target.scrollIntoView({ behavior: "smooth", block: "start" });
+      const sectionJump = (Object.values(EXPERIENCE_DETAIL_SECTIONS) as string[]).includes(id);
+      target.scrollIntoView({ behavior: sectionJump ? "auto" : "smooth", block: "start" });
     });
     return () => window.cancelAnimationFrame(frame);
   }, [hash, pathname]);
