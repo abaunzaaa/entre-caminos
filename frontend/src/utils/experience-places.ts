@@ -122,6 +122,43 @@ export function placesFromExperience(experience: Experience): ExperiencePlaceDra
   });
 }
 
+export function sedeOptionLabel(
+  place: { municipality?: string | null; address?: string | null },
+  places: Array<{ municipality?: string | null; address?: string | null }>,
+  index: number,
+) {
+  const city = place.municipality?.trim() ?? "";
+  if (!city) {
+    return `Sede ${index + 1}`;
+  }
+  const sameCity = places.filter((item) => (item.municipality?.trim() ?? "") === city);
+  if (sameCity.length < 2) {
+    return city;
+  }
+  const reference = place.address?.trim() ?? "";
+  if (reference) {
+    return `${city} · ${reference}`;
+  }
+  const nth = places.slice(0, index + 1).filter((item) => (item.municipality?.trim() ?? "") === city).length;
+  return `${city} ${nth}`;
+}
+
+export function sedeChoices<T extends { id: string; municipality?: string | null; address?: string | null }>(places: T[]) {
+  const base = places.map((place, index) => sedeOptionLabel(place, places, index));
+  const counts = new Map<string, number>();
+  base.forEach((label) => counts.set(label, (counts.get(label) ?? 0) + 1));
+  const seen = new Map<string, number>();
+  return places.map((place, index) => {
+    const label = base[index] ?? "Sede";
+    if ((counts.get(label) ?? 0) < 2) {
+      return { id: place.id, label };
+    }
+    const nth = (seen.get(label) ?? 0) + 1;
+    seen.set(label, nth);
+    return { id: place.id, label: `${label} ${nth}` };
+  });
+}
+
 export function placeTabLabel(place: ExperiencePlaceDraft, index: number, places: ExperiencePlaceDraft[]) {
   const city = place.municipality.trim();
   if (!city) {

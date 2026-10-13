@@ -3,7 +3,7 @@ import { MapPin } from "lucide-react";
 import type { Experience } from "../../types";
 import fotoInicioTurista from "../../assets/foto-inicio-turista.png";
 import { ExperienceGallery } from "./ExperienceGallery";
-import { municipalityLabel } from "./explorer-media";
+import { cardMunicipality } from "./explorer-media";
 import { formatExperienceCategories } from "../../utils/experience-categories";
 
 type TouristHomeHeroProps = {
@@ -60,7 +60,7 @@ export function TouristHomeHero({
   hasInterests = false,
   interestsHref,
 }: TouristHomeHeroProps) {
-  const place = selected ? municipalityLabel(selected.location) : "";
+  const place = selected ? cardMunicipality(selected) : "";
   const category = selected ? formatExperienceCategories(selected, "Experiencia") : "Experiencia";
 
   return (

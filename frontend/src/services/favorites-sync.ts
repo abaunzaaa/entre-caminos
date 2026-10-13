@@ -1,10 +1,13 @@
 type ChangeListener = () => void;
-type ToastListener = (message: string) => void;
+type ToastTone = "ok" | "error";
+type ToastListener = (message: string, tone?: ToastTone) => void;
+type ToastDismissListener = (message?: string) => void;
 type SaveModalListener = (payload: { experienceId: string; experienceTitle?: string }) => void;
 type FavoritedListener = (experienceId: string, favorited: boolean) => void;
 
 const changeListeners = new Set<ChangeListener>();
 const toastListeners = new Set<ToastListener>();
+const toastDismissListeners = new Set<ToastDismissListener>();
 const saveModalListeners = new Set<SaveModalListener>();
 const favoritedListeners = new Set<FavoritedListener>();
 
@@ -20,14 +23,25 @@ export function onFavoritesChanged(listener: ChangeListener) {
   };
 }
 
-export function showFavoriteToast(message: string) {
-  toastListeners.forEach((listener) => listener(message));
+export function showFavoriteToast(message: string, tone: ToastTone = "ok") {
+  toastListeners.forEach((listener) => listener(message, tone));
 }
 
 export function onFavoriteToast(listener: ToastListener) {
   toastListeners.add(listener);
   return () => {
     toastListeners.delete(listener);
+  };
+}
+
+export function dismissFavoriteToast(message?: string) {
+  toastDismissListeners.forEach((listener) => listener(message));
+}
+
+export function onFavoriteToastDismiss(listener: ToastDismissListener) {
+  toastDismissListeners.add(listener);
+  return () => {
+    toastDismissListeners.delete(listener);
   };
 }
 

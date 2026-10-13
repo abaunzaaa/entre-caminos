@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, type ReactNode } from "react";
+import { usePageScrollLock } from "../../hooks/usePageScrollLock";
 import { AuthKeyIcon } from "../auth/AuthKeyIcon";
 import "../../styles/terms-modal.css";
 
@@ -330,11 +331,11 @@ export function TermsModal({
   const bodyRef = useRef<HTMLDivElement>(null);
   const copy = documents[kind];
 
+  usePageScrollLock(open);
+
   useEffect(() => {
     if (!open) return;
 
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
     closeRef.current?.focus();
     bodyRef.current?.scrollTo(0, 0);
 
@@ -344,7 +345,6 @@ export function TermsModal({
 
     window.addEventListener("keydown", onKeyDown);
     return () => {
-      document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", onKeyDown);
     };
   }, [open, onClose, kind]);

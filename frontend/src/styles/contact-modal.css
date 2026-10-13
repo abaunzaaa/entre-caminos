@@ -525,6 +525,17 @@
   margin-top: 0;
 }
 
+.contact-success__actions .contact-success__action.admin-cta,
+.contact-success__actions .contact-success__cancel {
+  box-sizing: border-box;
+  height: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0 1.35rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
 .contact-success__cancel {
   display: inline-flex;
   align-items: center;

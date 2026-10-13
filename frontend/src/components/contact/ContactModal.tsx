@@ -6,6 +6,7 @@ import contactSuccessEmailIcon from "../../assets/contact-success-email-no-heart
 import { SuccessConfirmDialog } from "../ui/SuccessConfirmDialog";
 import { sendContact } from "../../services/contact.service";
 import { getApiErrorMessage } from "../../utils/api-error";
+import { usePageScrollLock } from "../../hooks/usePageScrollLock";
 import "../../styles/contact-modal.css";
 
 type ContactIntent = "discover" | "ally";
@@ -216,11 +217,11 @@ export function ContactModal({
 
   openRef.current = open;
 
+  usePageScrollLock(open);
+
   useEffect(() => {
     if (!open) return;
 
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
     closeRef.current?.focus();
 
     const onKeyDown = (event: KeyboardEvent) => {
@@ -232,7 +233,6 @@ export function ContactModal({
 
     window.addEventListener("keydown", onKeyDown);
     return () => {
-      document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", onKeyDown);
     };
   }, [open, onClose]);

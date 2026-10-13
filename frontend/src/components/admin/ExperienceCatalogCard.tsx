@@ -1,7 +1,12 @@
+import { useState } from "react";
 import { Heart, MapPin } from "lucide-react";
-import { Link } from "react-router-dom";
+import { VisitedCheckIcon } from "../icons/VisitedCheckIcon";
+import { Link, useNavigate } from "react-router-dom";
+import { VisitLockedDialog, VisitMarkedDialog } from "../experiences/VisitReviewDialogs";
+import { EXPERIENCE_DETAIL_SECTIONS } from "../../utils/experience-detail-sections";
 import { parseStoredLocation } from "../../data/colombia-locations";
 import { useFavoriteToggle } from "../../hooks/useFavoriteToggle";
+import { useVisitedToggle } from "../../hooks/useVisitedToggle";
 import { experienceImages, mediaUrl } from "../../utils/media";
 import { formatPrice } from "../../utils/cn";
 import { formatExperienceCategories } from "../../utils/experience-categories";
@@ -49,6 +54,62 @@ function formatSentAt(value?: string | null) {
     month: "short",
     year: "numeric",
   }).format(date);
+}
+
+function TouristVisitedButton({
+  experienceId,
+  initialVisited,
+}: {
+  experienceId: string;
+  initialVisited?: boolean;
+}) {
+  const navigate = useNavigate();
+  const [welcomeOpen, setWelcomeOpen] = useState(false);
+  const [lockOpen, setLockOpen] = useState(false);
+  const { visited, busy, toggle } = useVisitedToggle(experienceId, {
+    initialVisited,
+    loginRedirectTo: `/explorar/${experienceId}`,
+    onMarkedVisited: () => setWelcomeOpen(true),
+    onUnvisitBlocked: () => setLockOpen(true),
+  });
+
+  return (
+    <>
+      <button
+        type="button"
+        className={`dash-exps-tile__visited${visited ? " is-on" : ""}`}
+        aria-label={visited ? "Quitar de visitados" : "Marcar como visitado"}
+        aria-pressed={visited}
+        disabled={busy}
+        onClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          toggle();
+        }}
+      >
+        <VisitedCheckIcon filled={visited} />
+        <span className="dash-exps-tile__fav-tip" role="tooltip">
+          {visited ? "Quitar de visitados" : "Marcar como visitado"}
+        </span>
+      </button>
+      <VisitMarkedDialog
+        open={welcomeOpen}
+        onLater={() => setWelcomeOpen(false)}
+        onRate={() => {
+          setWelcomeOpen(false);
+          navigate(`/explorar/${experienceId}?calificar=1#${EXPERIENCE_DETAIL_SECTIONS.reviews}`);
+        }}
+      />
+      <VisitLockedDialog
+        open={lockOpen}
+        onClose={() => setLockOpen(false)}
+        onViewReview={() => {
+          setLockOpen(false);
+          navigate(`/explorar/${experienceId}#${EXPERIENCE_DETAIL_SECTIONS.reviews}`);
+        }}
+      />
+    </>
+  );
 }
 
 function TouristFavoriteButton({
@@ -103,6 +164,7 @@ export function ExperienceCatalogCard({
   variant = "admin",
   imagePriority = true,
   favorited,
+  visited,
   onToggleStatus,
   onChangeStatus,
   onDelete,
@@ -120,6 +182,8 @@ export function ExperienceCatalogCard({
   imagePriority?: boolean;
   /** Optional shared favorite state from a page-level batch load. */
   favorited?: boolean;
+  /** Optional shared visited state from a page-level batch load. */
+  visited?: boolean;
   onToggleStatus?: () => void;
   onChangeStatus?: (status: ExperienceStatus) => void;
   onDelete?: () => void;
@@ -167,7 +231,7 @@ export function ExperienceCatalogCard({
         </div>
         {isTourist ? (
           <div className="dash-exps-tile__actions">
-            {viewLink}
+            <TouristVisitedButton experienceId={experience.id} initialVisited={visited} />
             <TouristFavoriteButton
               experienceId={experience.id}
               experienceTitle={experience.title}

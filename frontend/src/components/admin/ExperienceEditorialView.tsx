@@ -1,10 +1,16 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { Heart } from "lucide-react";
+import { VisitedCheckIcon } from "../icons/VisitedCheckIcon";
 import { ExperienceEditorialDossier, type ExperienceEditorialFact } from "./ExperienceEditorialDossier";
 import { ExperienceEditorialGallery } from "./ExperienceEditorialGallery";
 import { ExperienceEditorialNearby } from "./ExperienceEditorialNearby";
 import { ExperienceEditorialPlace } from "./ExperienceEditorialPlace";
 import { ExperiencePlaceTabs } from "./ExperiencePlaceTabs";
+import { ExperienceDetailNav } from "../experiences/ExperienceDetailNav";
+import brandLogo from "../../assets/logo.png";
+import { ExperienceReviewsSection } from "../experiences/ExperienceReviewsSection";
+import type { ReviewModalMark } from "../experiences/ReviewComposerModal";
+import { EXPERIENCE_DETAIL_SECTIONS } from "../../utils/experience-detail-sections";
 import { COMPANY_OPTIONS, PLACE_OPTIONS, type OnboardingOption } from "../../data/onboarding";
 import { formatDepartmentMunicipality } from "../../data/colombia-locations";
 import { formatPrice } from "../../utils/cn";
@@ -17,6 +23,7 @@ import {
 import { experienceImages, mediaUrl } from "../../utils/media";
 import { placeTabLabel, placesFromExperience, projectExperience } from "../../utils/experience-places";
 import type { Experience, ExperienceStatus, PublicOrganizationProfile } from "../../types";
+import "../../styles/experience-reviews.css";
 
 const PLACE_FACT_LABELS = new Set([
   "Ubicación",
@@ -80,6 +87,18 @@ function preferenceLabels(options: OnboardingOption[], values?: string[] | null)
   return labels;
 }
 
+function storedPreferenceValues(options: OnboardingOption[], values?: string[] | null) {
+  const allowed = new Set(options.map((option) => option.value));
+  const labels: string[] = [];
+  for (const value of values ?? []) {
+    const trimmed = value.trim();
+    if (allowed.has(trimmed) && !labels.includes(trimmed)) {
+      labels.push(trimmed);
+    }
+  }
+  return labels;
+}
+
 function detailOrganization(experience: Experience): PublicOrganizationProfile | null {
   const creator = experience.creator as
     | (NonNullable<Experience["creator"]> & {
@@ -109,6 +128,16 @@ function detailOrganization(experience: Experience): PublicOrganizationProfile |
   };
 }
 
+function reviewModalMarks(organization: PublicOrganizationProfile | null): ReviewModalMark[] {
+  const marks: ReviewModalMark[] = [];
+  const logo = organization?.logoUrl?.trim();
+  if (logo) {
+    marks.push({ src: mediaUrl(logo, 256), kind: "logo" });
+  }
+  marks.push({ src: brandLogo, kind: "brand" });
+  return marks;
+}
+
 function formatPublishedDate(value?: string | null) {
   if (!value) {
     return "";
@@ -130,9 +159,13 @@ export type ExperienceEditorialViewProps = {
   favoriteOn?: boolean;
   favoriteBusy?: boolean;
   onFavoriteToggle?: () => void;
+  visitedOn?: boolean;
+  visitedBusy?: boolean;
+  onVisitedToggle?: () => void;
   nearbyHref?: (id: string) => string;
   fetchNearby?: () => Promise<Experience[]>;
   onConsultAi?: () => void;
+  reviewComposeRequest?: number;
 };
 
 export function buildExperienceEditorialFacts(
@@ -161,24 +194,61 @@ export function buildExperienceEditorialFacts(
         ]
       : [];
 
+  const categoryNames = experienceCategoryNames(experience);
+  const categoryLabel = categoryNames.length > 1 ? "Categorías" : "Categoría";
+  const idealLabels = storedPreferenceValues(COMPANY_OPTIONS, experience.idealFor);
+  const environmentLabels = storedPreferenceValues(PLACE_OPTIONS, experience.environments);
+  const categoryFact: ExperienceEditorialFact =
+    mode === "tourist"
+      ? {
+          label: "Categoría",
+          value: formatExperienceCategories(experience, "Sin categoría"),
+          columns: [
+            {
+              label: categoryLabel,
+              value: formatExperienceCategories(experience, "Sin categoría"),
+              ...(categoryNames.length ? { chips: categoryNames } : {}),
+              centered: true,
+            },
+            ...(idealLabels.length
+              ? [{ label: "Ideal para", value: idealLabels.join(", "), chips: idealLabels, centered: true }]
+              : []),
+            ...(environmentLabels.length
+              ? [
+                  {
+                    label: "Ambiente",
+                    value: environmentLabels.join(", "),
+                    chips: environmentLabels,
+                    centered: true,
+                  },
+                ]
+              : []),
+          ],
+        }
+      : {
+          label: categoryLabel,
+          value: formatExperienceCategories(experience, "Sin categoría"),
+        };
+
   const detailFacts: ExperienceEditorialFact[] = [
     ...(experience.description?.trim() ? [{ label: "Descripción", value: experience.description }] : []),
     { label: "Precio", value: formatPrice(experience.price, experience.currency) },
-    {
-      label: experienceCategoryNames(experience).length > 1 ? "Categorías" : "Categoría",
-      value: formatExperienceCategories(experience, "Sin categoría"),
-    },
+    categoryFact,
     ...(mode === "admin" ? [{ label: "Estado", value: STATUS_LABEL[experience.status] }] : []),
     { label: "Ubicación", value: experience.location || "—" },
     ...(durationText ? [{ label: "Duración", value: durationText }] : []),
-    ...(() => {
-      const chips = preferenceLabels(PLACE_OPTIONS, experience.environments);
-      return chips.length ? [{ label: "Ambiente", value: chips.join(", "), chips }] : [];
-    })(),
-    ...(() => {
-      const chips = preferenceLabels(COMPANY_OPTIONS, experience.idealFor);
-      return chips.length ? [{ label: "Ideal para", value: chips.join(", "), chips }] : [];
-    })(),
+    ...(mode === "admin"
+      ? [
+          ...(() => {
+            const chips = preferenceLabels(PLACE_OPTIONS, experience.environments);
+            return chips.length ? [{ label: "Ambiente", value: chips.join(", "), chips }] : [];
+          })(),
+          ...(() => {
+            const chips = preferenceLabels(COMPANY_OPTIONS, experience.idealFor);
+            return chips.length ? [{ label: "Ideal para", value: chips.join(", "), chips }] : [];
+          })(),
+        ]
+      : []),
     ...availabilityDetailFacts(experience.availability),
     ...(experience.howToGetThere?.trim()
       ? [{ label: "Cómo llegar", value: experience.howToGetThere.trim() }]
@@ -218,11 +288,16 @@ export function ExperienceEditorialView({
   favoriteOn = false,
   favoriteBusy = false,
   onFavoriteToggle,
+  visitedOn = false,
+  visitedBusy = false,
+  onVisitedToggle,
   nearbyHref,
   fetchNearby,
   onConsultAi,
+  reviewComposeRequest = 0,
 }: ExperienceEditorialViewProps) {
   const isFavorite = favoriteOn;
+  const isVisited = visitedOn;
   const places = useMemo(() => placesFromExperience(experience), [experience]);
   const [placeIndex, setPlaceIndex] = useState(0);
   useEffect(() => {
@@ -242,7 +317,54 @@ export function ExperienceEditorialView({
   const showPlaceTabs = places.length > 1;
   const generalFacts = showPlaceTabs ? detailFacts.filter((fact) => !PLACE_FACT_LABELS.has(fact.label)) : detailFacts;
   const placeFacts = showPlaceTabs ? detailFacts.filter((fact) => PLACE_FACT_LABELS.has(fact.label)) : [];
-  const showTouristActions = mode === "tourist" && (onConsultAi || onFavoriteToggle);
+  const showTouristActions = mode === "tourist" && (onConsultAi || onFavoriteToggle || onVisitedToggle);
+  const sectionIds = mode === "tourist" ? EXPERIENCE_DETAIL_SECTIONS : null;
+  const editorialBody = (
+    <>
+      <ExperienceEditorialDossier
+        photoUrl={mainPhoto}
+        photoLabel={experience.title}
+        noteFacts={noteFacts}
+        facts={generalFacts}
+        organization={organization}
+        placeFacts={placeFacts}
+        clampDescription={mode === "tourist"}
+        sectionId={sectionIds?.info}
+        places={
+          showPlaceTabs ? (
+            <ExperiencePlaceTabs
+              label="Disponible en"
+              tabs={places.map((place, index) => placeTabLabel(place, index, places))}
+              active={activePlace}
+              onSelect={setPlaceIndex}
+            />
+          ) : null
+        }
+      />
+
+      <ExperienceEditorialPlace
+        experience={view}
+        latitude={lat}
+        longitude={lng}
+        hasPoint={hasPoint}
+        sectionId={sectionIds?.location}
+      />
+
+      {mode === "tourist" ? (
+        <ExperienceReviewsSection
+          experienceId={experience.id}
+          experienceTitle={experience.title}
+          marks={reviewModalMarks(organization)}
+          coverUrl={mainPhoto}
+          visited={isVisited}
+          composeRequest={reviewComposeRequest}
+          locations={places.flatMap((place) =>
+            place.id ? [{ id: place.id, municipality: place.municipality, address: place.address }] : [],
+          )}
+        />
+      ) : null}
+    </>
+  );
 
   return (
     <section
@@ -272,6 +394,23 @@ export function ExperienceEditorialView({
                 Pregúntale a tu guía
               </button>
             ) : null}
+            {onVisitedToggle ? (
+              <button
+                type="button"
+                className={`dash-exps-editorial__visited${isVisited ? " is-on" : ""}`}
+                aria-pressed={isVisited}
+                aria-label={isVisited ? "Quitar de visitados" : "Marcar como visitado"}
+                disabled={visitedBusy}
+                onClick={() => {
+                  if (!visitedBusy) {
+                    onVisitedToggle();
+                  }
+                }}
+              >
+                <VisitedCheckIcon filled={isVisited} />
+                <span>{isVisited ? "Ya visité esta experiencia" : "Marcar como visitado"}</span>
+              </button>
+            ) : null}
             {onFavoriteToggle ? (
               <button
                 type="button"
@@ -297,31 +436,16 @@ export function ExperienceEditorialView({
         ) : null}
       </section>
 
-      <ExperienceEditorialDossier
-        photoUrl={mainPhoto}
-        photoLabel={experience.title}
-        noteFacts={noteFacts}
-        facts={generalFacts}
-        organization={organization}
-        placeFacts={placeFacts}
-        places={
-          showPlaceTabs ? (
-            <ExperiencePlaceTabs
-              label="Disponible en"
-              tabs={places.map((place, index) => placeTabLabel(place, index, places))}
-              active={activePlace}
-              onSelect={setPlaceIndex}
-            />
-          ) : null
-        }
-      />
-
-      <ExperienceEditorialPlace
-        experience={view}
-        latitude={lat}
-        longitude={lng}
-        hasPoint={hasPoint}
-      />
+      {mode === "tourist" ? (
+        <div className="experience-detail-anchor">
+          <div className="experience-detail-nav-slot">
+            <ExperienceDetailNav />
+          </div>
+          <div className="experience-detail-anchor__main">{editorialBody}</div>
+        </div>
+      ) : (
+        editorialBody
+      )}
 
       <ExperienceEditorialNearby
         experience={view}

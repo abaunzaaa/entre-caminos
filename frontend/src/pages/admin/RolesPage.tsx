@@ -8,6 +8,7 @@ import { AccessPermissionCard } from "../../components/admin/AccessPermissionCar
 import { AccessRoleCard } from "../../components/admin/AccessRoleCard";
 import { getApiErrorMessage } from "../../utils/api-error";
 import { useAuth } from "../../hooks/useAuth";
+import { usePageScrollLock } from "../../hooks/usePageScrollLock";
 import {
   CRITICAL_PERMISSIONS,
   EXPLORER_CAPABILITIES,
@@ -72,13 +73,12 @@ export function RolesPage() {
       }
     }
     document.addEventListener("keydown", onKeyDown);
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
     return () => {
       document.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = previousOverflow;
     };
   }, [pendingOff, busyId]);
+
+  usePageScrollLock(Boolean(pendingOff));
 
   async function applyPermissionChange(role: Role, permissionId: string) {
     setError("");

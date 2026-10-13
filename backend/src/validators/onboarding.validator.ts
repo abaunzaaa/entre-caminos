@@ -83,11 +83,11 @@ const stringList = (allowed: readonly string[], aliases: Record<string, string> 
   });
 
 export const onboardingSaveSchema = z.object({
-  country: z.preprocess(emptyToUndefined, z.enum(ONBOARDING_COUNTRIES).optional()),
-  department: z.preprocess(emptyToUndefined, z.string().max(80).optional()),
-  city: z.preprocess(emptyToUndefined, z.string().max(80).optional()),
-  neighborhood: z.preprocess(emptyToNull, z.string().max(80).nullable().optional()),
-  addressReference: z.preprocess(emptyToNull, z.string().max(160).nullable().optional()),
+  country: z.preprocess(emptyToUndefined, z.enum(ONBOARDING_COUNTRIES, { message: "Selecciona un país válido." }).optional()),
+  department: z.preprocess(emptyToUndefined, z.string().max(80, "El departamento es demasiado largo").optional()),
+  city: z.preprocess(emptyToUndefined, z.string().max(80, "La ciudad es demasiado larga").optional()),
+  neighborhood: z.preprocess(emptyToNull, z.string().max(80, "El barrio es demasiado largo").nullable().optional()),
+  addressReference: z.preprocess(emptyToNull, z.string().max(160, "La dirección es demasiado larga").nullable().optional()),
   latitude: z.number().gte(-90).lte(90).nullable().optional(),
   longitude: z.number().gte(-180).lte(180).nullable().optional(),
   profileImageType: z.enum(["PHOTO", "AVATAR"]).optional(),
@@ -98,8 +98,17 @@ export const onboardingSaveSchema = z.object({
   music: stringList(ONBOARDING_MUSIC).optional(),
   budget: stringList(ONBOARDING_BUDGETS).optional(),
   climate: stringList(ONBOARDING_CLIMATES).optional(),
-  age: z.number().int().min(1).max(120).nullable().optional(),
-  gender: z.preprocess(emptyToNull, z.enum(PROFILE_GENDERS).nullable().optional()),
+  age: z
+    .number({ invalid_type_error: "Ingresa una edad válida entre 1 y 120 años." })
+    .int("Ingresa una edad válida entre 1 y 120 años.")
+    .min(1, "Ingresa una edad válida entre 1 y 120 años.")
+    .max(120, "Ingresa una edad válida entre 1 y 120 años.")
+    .nullable()
+    .optional(),
+  gender: z.preprocess(
+    emptyToNull,
+    z.enum(PROFILE_GENDERS, { message: "Selecciona un género válido." }).nullable().optional(),
+  ),
   completed: z.boolean().optional(),
 });
 

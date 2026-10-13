@@ -528,6 +528,7 @@ export async function deleteMyAccount(userId: string) {
 
   await prisma.$transaction([
     prisma.experienceFavorite.deleteMany({ where: { userId } }),
+    prisma.experienceVisit.deleteMany({ where: { userId } }),
     prisma.favoriteCollection.deleteMany({ where: { userId } }),
     prisma.experienceVisitorReview.deleteMany({ where: { userId } }),
     prisma.notification.deleteMany({ where: { userId } }),

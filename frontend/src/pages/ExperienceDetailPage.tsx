@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ExperienceEditorialView } from "../components/admin/ExperienceEditorialView";
+import { VisitLockedDialog, VisitMarkedDialog } from "../components/experiences/VisitReviewDialogs";
 import { useGuide } from "../components/guide/GuideContext";
 import { useAuth } from "../hooks/useAuth";
 import { useFavoriteToggle } from "../hooks/useFavoriteToggle";
+import { useVisitedToggle } from "../hooks/useVisitedToggle";
 import { getNearbyExperiences, getPublicExperience, recordExperienceView } from "../services/catalog.service";
 import type { Experience } from "../types";
+import { EXPERIENCE_DETAIL_SECTIONS, scrollToExperienceSection } from "../utils/experience-detail-sections";
 import "../styles/admin-ui.css";
 import "../styles/admin-access.css";
 import "../styles/experience-editorial-gallery.css";
@@ -17,15 +20,39 @@ import "../styles/explorer.css";
 export function ExperienceDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const guide = useGuide();
   const [experience, setExperience] = useState<Experience | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [visitWelcomeOpen, setVisitWelcomeOpen] = useState(false);
+  const [visitLockOpen, setVisitLockOpen] = useState(false);
+  const [composeRequest, setComposeRequest] = useState(0);
   const favorite = useFavoriteToggle(id ?? "", {
     loginRedirectTo: id ? `/explorar/${id}` : "/explorar",
     experienceTitle: experience?.title,
   });
+  const visited = useVisitedToggle(id ?? "", {
+    loginRedirectTo: id ? `/explorar/${id}` : "/explorar",
+    onMarkedVisited: () => setVisitWelcomeOpen(true),
+    onUnvisitBlocked: () => setVisitLockOpen(true),
+  });
+
+  const openReviewComposer = useCallback(() => {
+    setComposeRequest((value) => value + 1);
+    window.setTimeout(() => scrollToExperienceSection(EXPERIENCE_DETAIL_SECTIONS.reviews), 40);
+  }, []);
+
+  useEffect(() => {
+    if (!id || !user || !visited.visited || searchParams.get("calificar") !== "1") {
+      return;
+    }
+    openReviewComposer();
+    const next = new URLSearchParams(searchParams);
+    next.delete("calificar");
+    setSearchParams(next, { replace: true });
+  }, [id, openReviewComposer, searchParams, setSearchParams, user, visited.visited]);
 
   const fetchNearby = useCallback(async () => getNearbyExperiences(), []);
 
@@ -98,6 +125,10 @@ export function ExperienceDetailPage() {
         favoriteOn={favorite.favorited}
         favoriteBusy={favorite.busy}
         onFavoriteToggle={favorite.toggle}
+        visitedOn={visited.visited}
+        visitedBusy={visited.busy}
+        onVisitedToggle={visited.toggle}
+        reviewComposeRequest={composeRequest}
         nearbyHref={(nearbyId) => `/explorar/${nearbyId}`}
         fetchNearby={fetchNearby}
         onConsultAi={() => {
@@ -107,6 +138,26 @@ export function ExperienceDetailPage() {
           }
           guide.setCatalogFocus(experience);
           guide.openGuide({ experience, view: "chat", expanded: true });
+        }}
+      />
+      <VisitMarkedDialog
+        open={visitWelcomeOpen}
+        onLater={() => setVisitWelcomeOpen(false)}
+        onRate={() => {
+          setVisitWelcomeOpen(false);
+          openReviewComposer();
+        }}
+      />
+      <VisitLockedDialog
+        open={visitLockOpen}
+        onClose={() => setVisitLockOpen(false)}
+        onViewReview={() => {
+          setVisitLockOpen(false);
+          window.setTimeout(() => {
+            const own = document.getElementById(EXPERIENCE_DETAIL_SECTIONS.ownReview);
+            scrollToExperienceSection(own ? EXPERIENCE_DETAIL_SECTIONS.ownReview : EXPERIENCE_DETAIL_SECTIONS.reviews);
+            own?.focus();
+          }, 40);
         }}
       />
     </div>

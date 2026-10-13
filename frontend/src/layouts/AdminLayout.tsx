@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Outlet, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { Menu } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
+import { usePageScrollLock } from "../hooks/usePageScrollLock";
 import { peekSessionExpired } from "../services/api";
 import {
   ADMIN_NAV_ITEMS,
@@ -99,14 +100,13 @@ export function AdminLayout() {
         setMobileOpen(false);
       }
     };
-    const previousOverflow = document.body.style.overflow;
     document.addEventListener("keydown", onKeyDown);
-    document.body.style.overflow = "hidden";
     return () => {
       document.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = previousOverflow;
     };
   }, [mobileOpen]);
+
+  usePageScrollLock(mobileOpen);
 
   if (loading) {
     return (
