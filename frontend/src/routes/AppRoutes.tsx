@@ -19,6 +19,8 @@ import { ExplorerBlankPage } from "../pages/ExplorerBlankPage";
 import { ExperienceDetailPage } from "../pages/ExperienceDetailPage";
 import { FavoritesPage } from "../pages/FavoritesPage";
 import { ProfilePage } from "../pages/ProfilePage";
+import { MisCaminosPage } from "../pages/MisCaminosPage";
+import { BitacoraPage } from "../pages/BitacoraPage";
 import { DashboardPage } from "../pages/admin/DashboardPage";
 import { AdminProfilePage } from "../pages/admin/AdminProfilePage";
 import { AdminProfileViewPage } from "../pages/admin/AdminProfileViewPage";
@@ -47,6 +49,8 @@ const PAGE_TITLES: Record<string, string> = {
   "/onboarding/preferencias": "Personaliza tu experiencia | Entre Caminos",
   "/onboarding/listo": "Personaliza tu experiencia | Entre Caminos",
   "/perfil": "Tu perfil | Entre Caminos",
+  "/mis-caminos": "Mis caminos | Entre Caminos",
+  "/mis-caminos/bitacora": "Mi bitácora | Entre Caminos",
   "/perfil/editar": "Editar perfil | Entre Caminos",
   "/admin/perfil": "Tu perfil | Entre Caminos",
   "/admin/perfil/editar": "Editar perfil | Entre Caminos",
@@ -131,6 +135,10 @@ export function AppRoutes() {
           </Route>
           <Route element={<PublicLayout />}>
             <Route path="/explorar" element={<ExplorePage />} />
+            <Route element={<ProtectedRoute />}>
+              <Route path="/mis-caminos" element={<MisCaminosPage />} />
+              <Route path="/mis-caminos/bitacora" element={<BitacoraPage />} />
+            </Route>
             <Route path="/explorar/:id" element={<ExperienceDetailPage />} />
             <Route path="/favoritos" element={<FavoritesPage />} />
             <Route path="/mapa" element={<ExplorerBlankPage title="MAPA" />} />

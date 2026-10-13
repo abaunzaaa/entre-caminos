@@ -11,6 +11,7 @@ import {
   refreshAccessToken,
   setStoredUser,
   subscribeSessionLoss,
+  consumeOAuthHandoff,
   syncRememberFromLocation,
 } from "../services/api";
 import {
@@ -71,6 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
 
     syncRememberFromLocation();
+    consumeOAuthHandoff();
     restoreSession()
       .then((profile) => {
         if (cancelled) {

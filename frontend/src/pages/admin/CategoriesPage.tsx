@@ -340,10 +340,11 @@ export function CategoriesPage() {
       return;
     }
 
-    const list = node.querySelector<HTMLElement>(".dash-team-board__people");
+    const directory = node;
+    const list = directory.querySelector<HTMLElement>(".dash-team-board__people");
 
     function applyViewportHeight() {
-      const cards = node.querySelectorAll<HTMLElement>(".dash-cats-card");
+      const cards = directory.querySelectorAll<HTMLElement>(".dash-cats-card");
       const first = cards[0];
       const last = cards[CATEGORY_DIRECTORY_PAGE_SIZE - 1];
       if (!first || !last) {
@@ -351,8 +352,8 @@ export function CategoriesPage() {
       }
       const height = Math.ceil(last.getBoundingClientRect().bottom - first.getBoundingClientRect().top);
       const next = `${height}px`;
-      if (node.style.getPropertyValue("--team-list-max") !== next) {
-        node.style.setProperty("--team-list-max", next);
+      if (directory.style.getPropertyValue("--team-list-max") !== next) {
+        directory.style.setProperty("--team-list-max", next);
       }
     }
 

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { Camera, LogOut, Building2, UserRound } from "lucide-react";
+import { BookOpen, KeyRound, LogOut, Building2, UserRound } from "lucide-react";
 import { AuthKeyIcon } from "../auth/AuthKeyIcon";
 import { Button } from "../ui/Button";
 import { useAuth } from "../../hooks/useAuth";
@@ -122,13 +122,6 @@ export function AdminUserMenu({
     setPhotoDialog(null);
     setPendingPhoto(null);
     setPhotoError("");
-  }
-
-  function openPhotoDialog() {
-    setOpen(false);
-    setPhotoError("");
-    setPendingPhoto(null);
-    setPhotoDialog("choose");
   }
 
   function pickPhoto() {
@@ -391,6 +384,32 @@ export function AdminUserMenu({
             {isOrgAdmin ? <Building2 size={18} strokeWidth={1.7} /> : <UserRound size={18} strokeWidth={1.7} />}
             {profileLabel}
           </button>
+          <button
+            type="button"
+            className="admin-usermenu__item"
+            role="menuitem"
+            onClick={() => {
+              setOpen(false);
+              navigate("/mis-caminos");
+            }}
+          >
+            <BookOpen size={18} strokeWidth={1.7} />
+            Mis caminos
+          </button>
+          {isExplorerUser || isOrgAdmin ? (
+            <button
+              type="button"
+              className="admin-usermenu__item"
+              role="menuitem"
+              onClick={() => {
+                setOpen(false);
+                navigate("/cambiar-contrasena");
+              }}
+            >
+              <KeyRound size={18} strokeWidth={1.7} />
+              Cambiar contraseña
+            </button>
+          ) : null}
           <button
             type="button"
             className="admin-usermenu__item admin-usermenu__item--logout"

@@ -215,7 +215,7 @@ export function AdminLayout() {
         items={visibleLinks}
         onToggle={toggleSidebar}
         onCloseMobile={() => setMobileOpen(false)}
-        onHoverExpandChange={(expanded) => {
+        onHoverExpandChange={(expanded: boolean) => {
           if (window.matchMedia("(max-width: 900px)").matches) {
             return;
           }

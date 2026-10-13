@@ -11,6 +11,8 @@ import { visitRouter } from "./visit.routes.js";
 import { visitorReviewRouter } from "./visitor-review.routes.js";
 import { uploadRouter } from "./upload.routes.js";
 import { assistantRouter } from "./assistant.routes.js";
+import { journeyRouter } from "./journey.routes.js";
+import { bitacoraRouter } from "./bitacora.routes.js";
 
 export const apiRouter = Router();
 
@@ -26,4 +28,6 @@ apiRouter.use("/favorites", favoriteRouter);
 apiRouter.use("/visits", visitRouter);
 apiRouter.use("/uploads", uploadRouter);
 apiRouter.use("/assistant", assistantRouter);
+apiRouter.use("/journeys", journeyRouter);
+apiRouter.use("/bitacora", bitacoraRouter);
 apiRouter.use(assistantRouter);

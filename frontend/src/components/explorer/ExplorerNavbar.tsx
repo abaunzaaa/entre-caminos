@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import {
+  BookOpen,
   Compass,
   Heart,
   LogOut,
@@ -31,10 +32,10 @@ const NAV_LINKS: Array<{
   { to: "/visitados", label: "Visitados", icon: MapPinned, end: true },
 ];
 
-const EXPLORER_SHELL_PATHS = new Set(["/favoritos", "/mapa", "/plan-con-amigos", "/visitados", "/perfil"]);
+const EXPLORER_SHELL_PATHS = new Set(["/favoritos", "/mapa", "/plan-con-amigos", "/visitados", "/perfil", "/mis-caminos"]);
 
 export function isExplorerShellPath(pathname: string) {
-  return pathname.startsWith("/explorar") || pathname === "/perfil" || EXPLORER_SHELL_PATHS.has(pathname);
+  return pathname.startsWith("/explorar") || pathname === "/perfil" || pathname.startsWith("/mis-caminos") || EXPLORER_SHELL_PATHS.has(pathname);
 }
 
 export function ExplorerNavbar() {
@@ -167,6 +168,13 @@ export function ExplorerNavbar() {
                   <span>Perfil</span>
                 </NavLink>
               ) : null}
+              <NavLink
+                to="/mis-caminos"
+                className={({ isActive }) => `explorer-nav__drawer-link${isActive ? " is-active" : ""}`}
+              >
+                <BookOpen size={18} strokeWidth={1.8} aria-hidden="true" />
+                <span>Mis caminos</span>
+              </NavLink>
               <button
                 type="button"
                 className="explorer-nav__drawer-link"

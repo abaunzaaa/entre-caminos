@@ -1,0 +1,1036 @@
+.bita {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  min-height: 100dvh;
+  overflow: hidden;
+  padding-top: calc(var(--explorer-nav-height, 4.75rem) + 10px);
+  color: #1c332e;
+  font-family: Poppins, Nunito, system-ui, sans-serif;
+}
+
+.bita-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(244, 247, 240, 0.2), rgba(214, 226, 204, 0.16)),
+    url("/mis-caminos/fondos/junio.jpg") center 78% / cover no-repeat;
+  filter: blur(1.25px);
+  transform: scale(1.02);
+  z-index: 0;
+}
+
+.bita-head,
+.bita-toolbar,
+.bita-props,
+.bita-banner,
+.bita-workspace {
+  position: relative;
+  z-index: 1;
+}
+
+.bita-head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  flex: 0 0 auto;
+  padding: 6px 22px 0;
+}
+
+.bita-head h1 {
+  margin: 0;
+  color: #1c332e;
+  font-family: Poppins, Nunito, system-ui, sans-serif;
+  font-size: clamp(1.28rem, 2.1vw, 1.85rem);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+}
+
+.bita-head p {
+  margin: 2px 0 0;
+  color: #5c6b62;
+  font-size: 0.92rem;
+  font-weight: 400;
+  line-height: 1.35;
+}
+
+.bita-back,
+.bita-toolbar button,
+.bita-props button,
+.bita-library button,
+.bita-turn__btn,
+.bita-skip,
+.bita-dialog button,
+.bita-welcome button {
+  font: inherit;
+}
+
+.bita-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin: 0 0 2px -4px;
+  border: 0;
+  background: transparent;
+  color: #3d4f45;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.bita-toolbar,
+.bita-props {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+  margin: 8px 16px 0;
+  padding: 5px 8px;
+  border: 1px solid rgba(90, 80, 64, 0.08);
+  border-radius: 999px;
+  background: rgba(255, 252, 247, 0.94);
+  box-shadow: 0 4px 14px rgba(40, 52, 34, 0.06);
+}
+
+.bita-toolbar svg,
+.bita-rail svg,
+.bita-props svg {
+  stroke-width: 1.6;
+}
+
+.bita-props {
+  margin-top: 8px;
+}
+
+.bita-toolbar button,
+.bita-props button,
+.bita-library__add,
+.bita-text-presets button,
+.bita-templates button,
+.bita-swatch,
+.bita-dialog button,
+.bita-welcome__go {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #1c332e;
+  padding: 6px 10px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.bita-toolbar button:hover,
+.bita-props button:hover,
+.bita-library__add:hover,
+.bita-rail button:hover {
+  background: rgba(84, 104, 72, 0.1);
+}
+
+.bita-toolbar button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.bita-save {
+  background: #1c332e !important;
+  color: #f7f3ea !important;
+  padding-inline: 14px !important;
+}
+
+.bita-save:hover {
+  background: #243f38 !important;
+}
+
+.bita-zoom {
+  min-width: 2.8rem;
+  color: #3d4f45;
+  font-size: 0.78rem;
+  font-weight: 500;
+  text-align: center;
+}
+
+.bita-toolbar__gap {
+  flex: 1;
+}
+
+.bita-status {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #6b746f;
+  padding-right: 8px;
+}
+
+.bita-status.is-error {
+  color: #8d4b4b;
+}
+
+.bita-status.is-saved {
+  color: #3d4a38;
+}
+
+.bita-banner {
+  margin: 8px 28px 0;
+  color: #5c4a3a;
+  font-size: 14px;
+}
+
+.bita-workspace {
+  display: grid;
+  grid-template-columns: 78px minmax(0, 1fr) 292px;
+  gap: 12px;
+  align-items: stretch;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 10px 14px 12px;
+}
+
+.bita-rail {
+  display: flex;
+  flex-direction: column;
+  align-self: start;
+  gap: 4px;
+  padding: 8px 6px;
+  border: 1px solid rgba(90, 80, 64, 0.06);
+  border-radius: 18px;
+  background: rgba(255, 252, 247, 0.94);
+}
+
+.bita-rail button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: #3c4a3e;
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  padding: 8px 4px;
+  cursor: pointer;
+}
+
+.bita-rail button.is-active {
+  background: #e4eee3;
+  color: #1c332e;
+}
+
+.bita-stage {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  perspective: 2400px;
+  padding: 4px 20px 0 2px;
+}
+
+.bita-book-slot {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.bita-book {
+  position: relative;
+  width: calc(100% * var(--zoom, 1));
+  height: calc((100% - 4.6rem) * var(--zoom, 1));
+  max-width: 100%;
+  max-height: calc(100% - 4.6rem);
+  margin: 0 auto;
+  perspective: 2200px;
+  padding: 18px 26px 22px 16px;
+  border-radius: 7px 14px 14px 7px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 18%),
+    linear-gradient(90deg, #243028 0 12px, #3d4c36 12px 18px, #314232 18px calc(100% - 12px), #243028 calc(100% - 12px));
+  box-shadow:
+    0 2px 0 #efe6d4,
+    0 5px 0 #e5d9c5,
+    0 8px 0 #dacdb6,
+    6px 3px 0 #efe6d4,
+    10px 6px 0 #e4d8c4,
+    14px 9px 0 #d9ccb6,
+    0 22px 36px rgba(28, 40, 24, 0.22);
+}
+
+.bita-book::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  top: 18px;
+  right: 8px;
+  bottom: 14px;
+  width: 10px;
+  border-radius: 0 4px 4px 0;
+  background: linear-gradient(90deg, #f6f0e4 0 3px, #e7dcc8 3px 6px, #f4ecde 6px);
+  pointer-events: none;
+}
+
+.bita-book.is-mobile {
+  width: min(100%, calc(100% * var(--zoom, 1)));
+  height: auto;
+  aspect-ratio: 0.74;
+  max-width: min(100%, 520px);
+  max-height: none;
+  margin: 0 auto;
+  border-radius: 8px 12px 12px 8px;
+}
+
+.bita-spread {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  height: 100%;
+  border-radius: 3px 7px 7px 3px;
+  background: #f3eadc;
+  box-shadow:
+    inset 0 0 0 1px rgba(120, 96, 64, 0.08),
+    5px 0 0 #f6f0e4,
+    9px 0 0 #e7dcc8,
+    13px 1px 0 #ddd0b8,
+    0 5px 0 #f6f0e4,
+    0 9px 0 #e5d9c4;
+  transform-style: preserve-3d;
+}
+
+.bita-paper.is-cream,
+.bita-paper.is-warm,
+.bita-paper.is-beige {
+  background-image: radial-gradient(rgba(120, 96, 70, 0.045) 0.4px, transparent 0.45px);
+  background-size: 7px 7px;
+}
+
+.bita-book.is-mobile .bita-spread {
+  grid-template-columns: 1fr;
+}
+
+.bita-sheet,
+.bita-paper {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+}
+
+.bita-paper {
+  container-type: size;
+  overflow: hidden;
+  border-radius: 2px 6px 6px 2px;
+  box-shadow: inset 0 0 0 1px rgba(120, 96, 64, 0.06);
+}
+
+.bita-paper.is-active {
+  box-shadow: inset 0 0 0 1px rgba(90, 110, 74, 0.28);
+}
+
+.bita-paper.is-cream { background-color: #f4efe4; }
+.bita-paper.is-warm { background-color: #fbf7f1; }
+.bita-paper.is-beige { background-color: #efe4d2; }
+.bita-paper.is-sage { background: #e7efe4; }
+.bita-paper.is-texture {
+  background-color: #f3ecdf;
+  background-image: radial-gradient(rgba(120, 96, 70, 0.08) 0.6px, transparent 0.6px);
+  background-size: 7px 7px;
+}
+.bita-paper.is-lined {
+  background-color: #f7f2e8;
+  background-image: repeating-linear-gradient(transparent, transparent 27px, rgba(150, 126, 96, 0.18) 28px);
+}
+.bita-paper.is-grid {
+  background-color: #f7f3ea;
+  background-image:
+    linear-gradient(rgba(150, 140, 120, 0.16) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(150, 140, 120, 0.16) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+.bita-spread > .bita-sheet:first-child .bita-paper,
+.bita-spread > .bita-paper:first-child {
+  box-shadow: inset -26px 0 32px rgba(80, 54, 30, 0.08);
+}
+
+.bita-spread > .bita-sheet:nth-child(2) .bita-paper,
+.bita-spread > .bita-paper:nth-child(2) {
+  box-shadow: inset 26px 0 32px rgba(80, 54, 30, 0.08);
+}
+
+.bita-spine {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 36px;
+  transform: translateX(-50%);
+  background:
+    linear-gradient(90deg, rgba(70, 48, 28, 0.2) 0%, rgba(255, 248, 236, 0.08) 38%, rgba(255, 252, 246, 0.72) 50%, rgba(70, 48, 28, 0.22) 100%);
+  pointer-events: none;
+  z-index: 4;
+}
+
+.bita-book.is-mobile .bita-spine {
+  display: none;
+}
+
+.bita-folio {
+  position: absolute;
+  z-index: 6;
+  right: 12px;
+  bottom: 8px;
+  color: rgba(90, 74, 58, 0.45);
+  font-family: Poppins, Nunito, system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  pointer-events: none;
+}
+
+.bita-el {
+  position: absolute;
+  touch-action: none;
+  user-select: none;
+}
+
+.bita-el.is-selected {
+  outline: 1px solid rgba(78, 93, 66, 0.7);
+  outline-offset: 3px;
+}
+
+.bita-handle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border: 1px solid #5c6848;
+  border-radius: 50%;
+  background: #fffaf3;
+  padding: 0;
+  cursor: nwse-resize;
+}
+
+.bita-handle.is-nw { top: -6px; left: -6px; }
+.bita-handle.is-ne { top: -6px; right: -6px; cursor: nesw-resize; }
+.bita-handle.is-sw { bottom: -6px; left: -6px; cursor: nesw-resize; }
+.bita-handle.is-se { bottom: -6px; right: -6px; }
+.bita-handle.is-rotate {
+  top: 8px;
+  left: 50%;
+  margin-left: -6px;
+  cursor: grab;
+  background: #5c6848;
+}
+
+.bita-polaroid {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  box-shadow: 0 8px 16px rgba(60, 48, 30, 0.12);
+  padding: 7% 7% 4%;
+}
+
+.bita-polaroid.is-none {
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+}
+
+.bita-polaroid.is-cream { background: #f3ead7; }
+.bita-polaroid.is-wide { padding: 5% 5% 3%; }
+
+.bita-polaroid__shot {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  background: #e7e0d4;
+}
+
+.bita-polaroid__shot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform-origin: center;
+}
+
+.bita-photo__empty {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  color: #8a7b68;
+  font-family: "Caveat", cursive;
+  font-size: 22px;
+}
+
+.bita-polaroid__caption {
+  min-height: 16%;
+  padding-top: 4%;
+  text-align: center;
+  color: #5c5146;
+  font-family: "Caveat", cursive;
+  font-size: 18px;
+}
+
+.bita-sticker {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  filter: drop-shadow(0 4px 6px rgba(40, 32, 20, 0.12));
+}
+
+.bita-text {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  white-space: pre-wrap;
+  background: transparent;
+  border: 0;
+  resize: none;
+  padding: 0;
+}
+
+.bita-font-playfair { font-family: "Playfair Display", Georgia, serif; }
+.bita-font-inter { font-family: Inter, system-ui, sans-serif; }
+.bita-font-cormorant { font-family: "Cormorant Garamond", Georgia, serif; }
+.bita-font-vibes { font-family: "Great Vibes", cursive; }
+.bita-font-allura { font-family: Allura, cursive; }
+.bita-font-caveat { font-family: Caveat, cursive; }
+.bita-font-special { font-family: "Special Elite", monospace; }
+.bita-font-nunito { font-family: Nunito, system-ui, sans-serif; }
+
+.bita-leaf {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  transform-style: preserve-3d;
+  transition: transform 0.72s ease;
+  z-index: 5;
+}
+
+.bita-book.is-mobile .bita-leaf { width: 100%; }
+.bita-leaf.is-next { right: 0; transform-origin: left center; }
+.bita-leaf.is-prev { left: 0; transform-origin: right center; }
+.bita-leaf.is-next.is-run { transform: rotateY(-180deg); }
+.bita-leaf.is-prev.is-run { transform: rotateY(180deg); }
+
+.bita-leaf__face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  overflow: hidden;
+  background: #f4efe4;
+  box-shadow: 0 0 24px rgba(40, 30, 20, 0.16);
+}
+
+.bita-leaf__face.is-back { transform: rotateY(180deg); }
+
+.bita-turn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 10px;
+  margin-top: 10px;
+  color: #1c332e;
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+.bita-turn__btn,
+.bita-turn__add,
+.bita-turn__label {
+  border: 1px solid rgba(90, 80, 64, 0.1);
+  background: rgba(255, 252, 247, 0.94);
+  color: #1c332e;
+  box-shadow: 0 2px 8px rgba(40, 52, 34, 0.06);
+}
+
+.bita-turn__btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.bita-turn__label {
+  min-width: 4.6rem;
+  padding: 7px 12px;
+  border-radius: 999px;
+  text-align: center;
+}
+
+.bita-turn__add {
+  border-radius: 999px;
+  padding: 8px 14px;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.bita-turn__add:hover,
+.bita-turn__btn:hover:not(:disabled) {
+  background: #fff;
+}
+
+.bita-turn__btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.bita-cover {
+  position: absolute;
+  z-index: 8;
+  inset: 0 0 48px;
+  border: 0;
+  border-radius: 6px 18px 18px 6px;
+  background:
+    linear-gradient(90deg, #243028 0 18px, #314232 18px);
+  color: #f4efe4;
+  box-shadow: 0 22px 40px rgba(36, 46, 28, 0.28);
+  cursor: pointer;
+  transform-origin: left center;
+  transition: transform 0.9s ease;
+}
+
+.bita-cover span {
+  display: block;
+  font-family: Poppins, Nunito, system-ui, sans-serif;
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.bita-cover small {
+  display: block;
+  margin-top: 8px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+.bita-cover.is-leaving {
+  transform: rotateY(-155deg);
+}
+
+.bita-skip {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  z-index: 9;
+  border: 0;
+  background: transparent;
+  color: #2d3b31;
+  cursor: pointer;
+}
+
+.bita-welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 24px;
+  text-align: center;
+}
+
+.bita-welcome p {
+  margin: 0 0 14px;
+  max-width: 16rem;
+  color: #3d4f45;
+  font-family: Poppins, Nunito, system-ui, sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.bita-welcome__go {
+  background: #1c332e !important;
+  color: #f7f3ea !important;
+}
+
+.bita-welcome ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  width: min(280px, 100%);
+}
+
+.bita-welcome li button {
+  width: 100%;
+  border: 0;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.45);
+  text-align: left;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+
+.bita-welcome li strong,
+.bita-welcome li span {
+  display: block;
+}
+
+.bita-welcome li span {
+  color: #6d6458;
+  font-size: 12px;
+}
+
+.bita-blank-note {
+  margin: 0;
+  padding: 28px;
+  color: #8a7d6c;
+  font-family: "Caveat", cursive;
+  font-size: 24px;
+}
+
+.bita-panel {
+  height: 100%;
+  max-height: 100%;
+  min-height: 0;
+  overflow: auto;
+  border: 1px solid rgba(90, 80, 64, 0.08);
+  border-radius: 18px;
+  background: rgba(255, 250, 246, 0.96);
+  box-shadow: 0 8px 18px rgba(40, 52, 34, 0.05);
+  padding: 14px 12px;
+}
+
+.bita-library h2 {
+  margin: 0 0 10px;
+  color: #1c332e;
+  font-family: Poppins, Nunito, system-ui, sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.bita-library input[type="text"],
+.bita-library input:not([type="range"]),
+.bita-props input:not([type="range"]),
+.bita-props select,
+.bita-props textarea,
+.bita-library textarea {
+  width: 100%;
+  border: 1px solid rgba(90, 80, 64, 0.18);
+  border-radius: 8px;
+  background: #fffaf3;
+  color: #243027;
+  font: inherit;
+  padding: 6px 8px;
+}
+
+.bita-library > input {
+  margin-bottom: 8px;
+}
+
+.bita-chips,
+.bita-papers,
+.bita-text-presets,
+.bita-templates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.bita-chips button,
+.bita-templates button,
+.bita-text-presets button,
+.bita-swatch {
+  border-radius: 999px;
+  background: #efe8dc;
+  font-size: 11px;
+  padding: 5px 8px;
+}
+
+.bita-chips button.is-active,
+.bita-props button.is-on {
+  background: #dfe8d8;
+}
+
+.bita-swatch {
+  width: 100%;
+  justify-content: flex-start;
+  min-height: 42px;
+}
+
+.bita-swatch.is-cream { background: #f4efe4; }
+.bita-swatch.is-warm { background: #fbf7f1; }
+.bita-swatch.is-beige { background: #efe4d2; }
+.bita-swatch.is-sage { background: #e7efe4; }
+.bita-swatch.is-texture { background: #f3ecdf; }
+.bita-swatch.is-lined { background: repeating-linear-gradient(#f7f2e8, #f7f2e8 10px, #e6dccb 11px); }
+.bita-swatch.is-grid { background: #f7f3ea; }
+
+.bita-stickers,
+.bita-photos,
+.bita-pages {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.bita-stickers {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.bita-stickers button,
+.bita-photos button {
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: #fff;
+  padding: 6px;
+  cursor: pointer;
+}
+
+.bita-stickers button:hover,
+.bita-stickers button:focus-visible {
+  border-color: rgba(61, 76, 54, 0.18);
+  background: #f7f3ea;
+}
+
+.bita-stickers img,
+.bita-photos img {
+  display: block;
+  width: 100%;
+  height: 96px;
+  object-fit: contain;
+}
+
+.bita-photos {
+  display: grid;
+  gap: 8px;
+}
+
+.bita-photos li {
+  position: relative;
+}
+
+.bita-photos li > button:last-child {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  border-radius: 50%;
+  background: rgba(255, 250, 243, 0.92);
+}
+
+.bita-pages li {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-bottom: 6px;
+}
+
+.bita-pages li.is-active {
+  background: #e7efe2;
+  border-radius: 10px;
+}
+
+.bita-pages button,
+.bita-photos button {
+  font: inherit;
+  cursor: pointer;
+}
+
+.bita-muted {
+  color: #6d6458;
+  font-size: 14px;
+}
+
+.bita-colors {
+  display: flex;
+  gap: 4px;
+}
+
+.bita-colors button {
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+.bita-props label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: #5c564c;
+}
+
+.bita-file {
+  display: none;
+}
+
+.bita-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  background: rgba(36, 42, 32, 0.28);
+}
+
+.bita-dialog__card {
+  width: min(420px, calc(100% - 32px));
+  padding: 22px;
+  border-radius: 16px;
+  background: #f7f3ea;
+}
+
+.bita-dialog__card h2 {
+  margin: 0 0 8px;
+  color: #1c332e;
+  font-family: Poppins, Nunito, system-ui, sans-serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.bita-dialog__card div {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.bita-dialog button.is-danger {
+  background: #8d4b4b;
+  color: white;
+  border-radius: 999px;
+  padding: 8px 12px;
+}
+
+.bita:not(.is-ready) .bita-toolbar,
+.bita:not(.is-ready) .bita-rail,
+.bita:not(.is-ready) .bita-panel,
+.bita:not(.is-ready) .bita-props,
+.bita:not(.is-ready) .bita-turn {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.bita.is-ready .bita-toolbar,
+.bita.is-ready .bita-rail,
+.bita.is-ready .bita-panel,
+.bita.is-ready .bita-props,
+.bita.is-ready .bita-turn {
+  animation: bita-in 0.45s ease;
+}
+
+@keyframes bita-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (max-width: 1180px) {
+  .bita-workspace {
+    grid-template-columns: 72px minmax(0, 1fr) 240px;
+  }
+
+  .bita-stickers img {
+    height: 84px;
+  }
+}
+
+@media (max-width: 900px) {
+  .bita {
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+
+  .bita-head {
+    padding: 8px 16px 0;
+  }
+
+  .bita-workspace {
+    grid-template-columns: 1fr;
+    height: auto;
+    padding-bottom: 96px;
+  }
+
+  .bita-stage,
+  .bita-book-slot {
+    height: auto;
+  }
+
+  .bita-book.is-mobile {
+    width: min(100%, 460px);
+    height: auto;
+    max-height: none;
+  }
+
+  .bita-turn {
+    position: sticky;
+    bottom: 72px;
+    z-index: 6;
+    flex-wrap: wrap;
+    width: fit-content;
+    max-width: calc(100% - 24px);
+    margin: 10px auto 0;
+    padding: 4px;
+    border-radius: 999px;
+    background: rgba(255, 252, 247, 0.92);
+  }
+
+  .bita-rail {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    order: 3;
+    flex-direction: row;
+    align-self: stretch;
+    overflow: auto;
+    padding-right: 12px;
+  }
+
+  .bita-panel {
+    order: 2;
+    height: auto;
+    max-height: 280px;
+  }
+
+  .bita-toolbar,
+  .bita-props {
+    margin-inline: 12px;
+    border-radius: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bita-cover,
+  .bita-leaf,
+  .bita-toolbar,
+  .bita-rail,
+  .bita-panel,
+  .bita-props,
+  .bita-turn {
+    transition: none;
+    animation: none;
+  }
+}

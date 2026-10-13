@@ -131,6 +131,14 @@ export async function persistProfileImage(file: Express.Multer.File): Promise<St
   return persistImage(file, "entre-caminos/profiles");
 }
 
+export async function persistJourneyPhoto(file: Express.Multer.File): Promise<StoredImage> {
+  return persistImage(file, "entre-caminos/journeys");
+}
+
+export async function persistBitacoraPhoto(file: Express.Multer.File): Promise<StoredImage> {
+  return persistImage(file, "entre-caminos/bitacora");
+}
+
 export async function persistReviewImage(file: Express.Multer.File): Promise<StoredImage> {
   return persistImage(file, "entre-caminos/reviews");
 }
