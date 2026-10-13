@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, Camera, KeyRound, LogOut, Building2, UserRound } from "lucide-react";
+import { BookOpen, KeyRound, LogOut, Building2, UserRound } from "lucide-react";
 import { AuthKeyIcon } from "../auth/AuthKeyIcon";
 import { Button } from "../ui/Button";
 import { useAuth } from "../../hooks/useAuth";
@@ -122,13 +122,6 @@ export function AdminUserMenu({
     setPhotoDialog(null);
     setPendingPhoto(null);
     setPhotoError("");
-  }
-
-  function openPhotoDialog() {
-    setOpen(false);
-    setPhotoError("");
-    setPendingPhoto(null);
-    setPhotoDialog("choose");
   }
 
   function pickPhoto() {

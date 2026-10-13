@@ -44,5 +44,5 @@ export function canDeleteExperience(
   if (status === "PUBLISHED") {
     return false;
   }
-  return canReviewExperiences(hasPermission) || status !== "PUBLISHED";
+  return canReviewExperiences(hasPermission) || status === "DRAFT" || status === "PENDING" || status === "REJECTED" || status === "ARCHIVED";
 }

@@ -92,7 +92,7 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 
 export function AvatarConfigurator({ config, tab, onTabChange, onChange }: AvatarConfiguratorProps) {
   const [live, setLive] = useState(false);
-  const liveTimer = useRef<ReturnType<typeof window.setTimeout> | undefined>(undefined);
+  const liveTimer = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     return () => window.clearTimeout(liveTimer.current);

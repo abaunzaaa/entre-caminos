@@ -237,7 +237,7 @@ export function OnboardingSelect(props: OnboardingSelectProps) {
   }, [open, onOpenChange, searchable, visible, activeIndex, multiple, selectedValues]);
 
   function choose(nextValue: string) {
-    if (multiple) {
+    if (props.multiple) {
       const current = props.value;
       if (current.includes(nextValue)) {
         props.onChange(current.filter((item) => item !== nextValue));
