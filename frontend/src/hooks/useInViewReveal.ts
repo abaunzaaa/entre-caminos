@@ -8,6 +8,8 @@ type UseInViewRevealOptions = {
   enterRatio?: number;
   /** Leave only when visibility drops to this or below (hysteresis). */
   leaveRatio?: number;
+  /** Play the entrance once. Later scrolls do not hide or restart it. */
+  once?: boolean;
   immediate?: boolean;
 };
 
@@ -23,6 +25,7 @@ export function useInViewReveal<T extends HTMLElement = HTMLElement>(
     rootMargin = "0px 0px -15% 0px",
     enterRatio = 0.22,
     leaveRatio = 0.06,
+    once = false,
     immediate = false,
   } = options;
 
@@ -55,9 +58,10 @@ export function useInViewReveal<T extends HTMLElement = HTMLElement>(
         const ratio = entry.intersectionRatio;
         if (ratio >= enterRatio) {
           setInView(true);
+          if (once) observer.disconnect();
           return;
         }
-        if (ratio <= leaveRatio) {
+        if (!once && ratio <= leaveRatio) {
           setInView(false);
         }
       },
@@ -70,7 +74,7 @@ export function useInViewReveal<T extends HTMLElement = HTMLElement>(
 
     observer.observe(node);
     return () => observer.disconnect();
-  }, [enterRatio, immediate, leaveRatio, node, root, rootMargin]);
+  }, [enterRatio, immediate, leaveRatio, node, once, root, rootMargin]);
 
   return { ref, inView };
 }

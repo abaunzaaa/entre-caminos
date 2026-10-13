@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import {
+  BookOpen,
   Compass,
-  Route,
   Heart,
   LogOut,
   Map,
@@ -168,7 +168,7 @@ export function ExplorerNavbar() {
                 to="/mis-caminos"
                 className={({ isActive }) => `explorer-nav__drawer-link${isActive ? " is-active" : ""}`}
               >
-                <Route size={18} strokeWidth={1.8} aria-hidden="true" />
+                <BookOpen size={18} strokeWidth={1.8} aria-hidden="true" />
                 <span>Mis caminos</span>
               </NavLink>
               <button

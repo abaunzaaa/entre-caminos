@@ -77,7 +77,8 @@ export function MisCaminosPage() {
   const scaleTimers = useRef<Map<string, number>>(new Map());
   const pendingScales = useRef<Map<string, number>>(new Map());
   const clearSeed = useCallback(() => setSeed(null), []);
-  const { ref: heroRef, inView: heroInView } = useInViewReveal<HTMLDivElement>({ enterRatio: 0.08, leaveRatio: 0.02 });
+  const { ref: heroRef, inView: heroInView } = useInViewReveal<HTMLDivElement>({ rootMargin: "0px", enterRatio: 0.12, leaveRatio: 0 });
+  const { ref: closeRef, inView: closeInView } = useInViewReveal<HTMLDivElement>({ rootMargin: "0px", enterRatio: 0.16, leaveRatio: 0 });
 
   useEffect(() => {
     let active = true;
@@ -382,10 +383,10 @@ export function MisCaminosPage() {
               </figure>
             </div>
             <div className="caminos-hero__copy">
-              <img className="caminos-hero__mark explorer-reveal explorer-reveal--soft" src="/mis-caminos/cartas.png" alt="" style={{ "--reveal-delay": "220ms" } as CSSProperties} />
+              <img className="caminos-hero__mark explorer-reveal explorer-reveal--soft" src="/mis-caminos/cartas-lazo.png" alt="" width={700} height={598} style={{ "--reveal-delay": "200ms" } as CSSProperties} />
               <h1 className="explorer-reveal explorer-reveal--title" style={{ "--reveal-delay": "300ms" } as CSSProperties}>Mis caminos</h1>
-              <p className="caminos-hero__lead explorer-reveal explorer-reveal--soft" style={{ "--reveal-delay": "380ms" } as CSSProperties}>Un espacio para tus planes y recuerdos</p>
-              <button type="button" className="tourist-hero__cta explorer-reveal explorer-reveal--soft" style={{ "--reveal-delay": "460ms" } as CSSProperties} onClick={() => openCalendar()}>
+              <p className="caminos-hero__lead explorer-reveal explorer-reveal--soft" style={{ "--reveal-delay": "400ms" } as CSSProperties}>Un espacio para tus planes y recuerdos</p>
+              <button type="button" className="tourist-hero__cta explorer-reveal explorer-reveal--soft" style={{ "--reveal-delay": "500ms" } as CSSProperties} onClick={() => openCalendar()}>
                 Ver mi calendario
               </button>
             </div>
@@ -425,7 +426,7 @@ export function MisCaminosPage() {
           />
         ) : null}
       </div>
-      <div className="caminos-close">
+      <div ref={closeRef} className={`caminos-close${closeInView ? " is-revealed" : ""}`}>
         <img className="caminos-close__dove caminos-close__dove--left" src={palomaLeft} alt="" aria-hidden="true" decoding="async" />
         <img className="caminos-close__dove caminos-close__dove--right" src={palomaRight} alt="" aria-hidden="true" decoding="async" />
         <ExplorerUserFooter />

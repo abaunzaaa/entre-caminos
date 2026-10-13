@@ -424,6 +424,154 @@ function Dropdown({
   );
 }
 
+const TIME_HOURS = Array.from({ length: 24 }, (_, index) => String(index).padStart(2, "0"));
+const TIME_MINUTES = Array.from({ length: 60 }, (_, index) => String(index).padStart(2, "0"));
+
+function centerTimeOption(list: HTMLUListElement | null) {
+  const selected = list?.querySelector<HTMLElement>('[aria-selected="true"]');
+  if (!list || !selected) {
+    return;
+  }
+  list.scrollTop = selected.offsetTop - list.clientHeight / 2 + selected.offsetHeight / 2;
+}
+
+function TimePicker({
+  value,
+  onChange,
+  variant = "inline",
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  variant?: "inline" | "field";
+}) {
+  const [open, setOpen] = useState(false);
+  const [box, setBox] = useState<{ left: number; top: number; listHeight: number } | null>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const hourListRef = useRef<HTMLUListElement>(null);
+  const minuteListRef = useRef<HTMLUListElement>(null);
+  const [hour = "09", minute = "00"] = value.split(":");
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+    const place = () => {
+      const rect = triggerRef.current?.getBoundingClientRect();
+      if (!rect) {
+        return;
+      }
+      const menuWidth = 196;
+      const preferRight = variant === "inline";
+      const rawLeft = preferRight ? rect.right - menuWidth : rect.left;
+      const left = Math.max(12, Math.min(window.innerWidth - menuWidth - 12, rawLeft));
+      const below = window.innerHeight - rect.bottom - 16;
+      const listHeight = Math.max(148, Math.min(220, below - 36));
+      setBox({ left, top: rect.bottom + 6, listHeight });
+    };
+    const away = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (!triggerRef.current?.contains(target) && !menuRef.current?.contains(target)) {
+        setOpen(false);
+      }
+    };
+    const key = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.stopPropagation();
+        setOpen(false);
+        triggerRef.current?.focus();
+      }
+    };
+    place();
+    const frame = window.requestAnimationFrame(place);
+    window.addEventListener("resize", place);
+    window.addEventListener("scroll", place, true);
+    document.addEventListener("pointerdown", away);
+    window.addEventListener("keydown", key, true);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("resize", place);
+      window.removeEventListener("scroll", place, true);
+      document.removeEventListener("pointerdown", away);
+      window.removeEventListener("keydown", key, true);
+    };
+  }, [open, variant]);
+
+  useLayoutEffect(() => {
+    if (!open || !box) {
+      return;
+    }
+    centerTimeOption(hourListRef.current);
+    centerTimeOption(minuteListRef.current);
+  }, [open, box, hour, minute]);
+
+  return (
+    <div className={`caminos-time is-${variant}${open ? " is-open" : ""}`}>
+      <button
+        ref={triggerRef}
+        type="button"
+        className="caminos-time__trigger"
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        aria-label={`Hora ${hour}:${minute}`}
+        onClick={() => setOpen((state) => !state)}
+      >
+        {variant === "inline" ? <Clock size={12} strokeWidth={1.5} aria-hidden="true" /> : null}
+        <span>{`${hour}:${minute}`}</span>
+        {variant === "field" ? <ChevronDown size={14} strokeWidth={1.6} aria-hidden="true" /> : null}
+      </button>
+      {open ? (
+        <div
+          ref={menuRef}
+          className="caminos-select__menu caminos-time__menu"
+          role="dialog"
+          aria-label="Elegir hora"
+          style={box ? { left: box.left, top: box.top } : { left: 0, top: 0, visibility: "hidden" }}
+        >
+          <div className="caminos-time__col">
+            <span>Hora</span>
+            <ul ref={hourListRef} role="listbox" aria-label="Hora" style={box ? { maxHeight: box.listHeight } : undefined}>
+              {TIME_HOURS.map((item) => (
+                <li key={item} role="none">
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={item === hour}
+                    className={item === hour ? "is-selected" : ""}
+                    onClick={() => onChange(`${item}:${minute}`)}
+                  >
+                    <span>{item}</span>
+                    {item === hour ? <Check size={13} strokeWidth={1.8} aria-hidden="true" /> : null}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="caminos-time__col">
+            <span>Min</span>
+            <ul ref={minuteListRef} role="listbox" aria-label="Minutos" style={box ? { maxHeight: box.listHeight } : undefined}>
+              {TIME_MINUTES.map((item) => (
+                <li key={item} role="none">
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={item === minute}
+                    className={item === minute ? "is-selected" : ""}
+                    onClick={() => onChange(`${hour}:${item}`)}
+                  >
+                    <span>{item}</span>
+                    {item === minute ? <Check size={13} strokeWidth={1.8} aria-hidden="true" /> : null}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function MonthPicker({
   year,
   month,
@@ -1494,10 +1642,9 @@ export function JourneyCalendar({
               <p className="caminos-studio__date">
                 <CalendarDays size={13} strokeWidth={1.5} aria-hidden="true" />
                 <span>{longDay(selected)}</span>
-                <label htmlFor="caminos-time">
+                <label>
                   <span className="caminos-sr">Hora</span>
-                  <Clock size={12} strokeWidth={1.5} aria-hidden="true" />
-                  <input id="caminos-time" type="time" value={time} onChange={(event) => setTime(event.target.value)} />
+                  <TimePicker value={time} onChange={setTime} />
                 </label>
               </p>
             </header>
@@ -1693,7 +1840,7 @@ export function JourneyCalendar({
                 <input type="date" value={selected} onChange={(event) => { if (event.target.value) setSelected(event.target.value); }} required />
               </label>
               <label>Hora
-                <input type="time" value={time} onChange={(event) => setTime(event.target.value)} />
+                <TimePicker variant="field" value={time} onChange={setTime} />
               </label>
               {formError ? <p className="caminos-error">{formError}</p> : null}
               <div className="caminos-inline">

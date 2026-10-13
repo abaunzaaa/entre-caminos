@@ -1,11 +1,12 @@
-import type { CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useInViewReveal } from "../../hooks/useInViewReveal";
 import { bogotaDay, ticketDate } from "../../utils/journey-dates";
 import { mediaUrl } from "../../utils/media";
 import type { JourneyExperience, JourneyPlan } from "../../services/journey.service";
+import { selectUpcomingPlans } from "./next-plans";
 
-const LIMIT = 3;
 const MAX_RANGE_MINUTES = 16 * 60;
 
 function clock(date: Date) {
@@ -49,38 +50,34 @@ export function JourneyNextPlans({
   loading: boolean;
   onOpenDay: (day: string) => void;
 }) {
-  const { ref, inView } = useInViewReveal<HTMLDivElement>({ enterRatio: 0.12, leaveRatio: 0.02 });
-  const now = Date.now();
-  const upcoming = plans
-    .filter((plan) => new Date(plan.plannedAt).getTime() >= now)
-    .sort((left, right) => new Date(left.plannedAt).getTime() - new Date(right.plannedAt).getTime());
-  const items = upcoming.slice(0, LIMIT);
-  const rest = upcoming.length - items.length;
+  const { ref, inView } = useInViewReveal<HTMLDivElement>({ rootMargin: "0px", enterRatio: 0.14, leaveRatio: 0 });
+  const [page, setPage] = useState(0);
+  const selection = selectUpcomingPlans(plans, Date.now(), page);
+  const { items, showPager, pageCount } = selection;
 
   return (
     <div ref={ref} className={`caminos-plans__col explorer-reveal-scope${inView ? " is-revealed" : ""}`}>
-      <header className="caminos-plans__head">
-        <h2 id="caminos-plans-title" className="explorer-reveal explorer-reveal--title">Próximos planes</h2>
-        <p className="caminos-plans__lead explorer-reveal explorer-reveal--soft" style={delay(110)}>
-          Experiencias que ya hacen parte de tu camino.
-        </p>
-      </header>
+      <h2 id="caminos-plans-title" className="explorer-recs__column-title caminos-plans__title explorer-reveal explorer-reveal--title">Próximos planes</h2>
+      <p className="explorer-recs__column-lead caminos-plans__lead explorer-reveal explorer-reveal--soft" style={delay(100)}>
+        Experiencias que ya hacen parte de tu camino.
+      </p>
 
+      <div className="caminos-plans__body">
       {loading ? null : items.length === 0 ? (
-        <div className="caminos-plans__empty explorer-reveal explorer-reveal--card" style={delay(220)}>
-          <p>Aún no hay fechas esperándote.</p>
+        <div className="caminos-plans__empty explorer-reveal explorer-reveal--card" style={delay(200)}>
+          <p>Aún no tienes próximos planes.</p>
           <span>Elige una experiencia y dale un lugar en tu calendario.</span>
           <Link to="/explorar" className="tourist-hero__cta">Explorar experiencias</Link>
         </div>
       ) : (
         <>
-          <ul className="caminos-plans__list">
+          <ul key={selection.page} className="caminos-plans__list">
             {items.map((plan, index) => {
               const date = ticketDate(plan.plannedAt);
               const when = schedule(plan);
               const text = brief(plan.experience);
               return (
-                <li key={plan.id} className="explorer-reveal explorer-reveal--card" style={delay(220 + index * 120)}>
+                <li key={plan.id} className="explorer-reveal explorer-reveal--card" style={delay(200 + index * 85)}>
                   <button
                     type="button"
                     className="caminos-pass"
@@ -107,13 +104,20 @@ export function JourneyNextPlans({
               );
             })}
           </ul>
-          {rest > 0 ? (
-            <p className="caminos-plans__more explorer-reveal explorer-reveal--soft" style={delay(220 + items.length * 120)}>
-              {rest === 1 ? "Tienes 1 plan más en tu calendario." : `Tienes ${rest} planes más en tu calendario.`}
-            </p>
+          {showPager ? (
+            <nav className="caminos-plans__pager" aria-label="Páginas de próximos planes">
+              <button type="button" aria-label="Planes anteriores" disabled={selection.page === 0} onClick={() => setPage(selection.page - 1)}>
+                <ChevronLeft size={13} strokeWidth={1.6} aria-hidden="true" />
+              </button>
+              <span>{selection.page + 1} / {pageCount}</span>
+              <button type="button" aria-label="Planes siguientes" disabled={selection.page >= pageCount - 1} onClick={() => setPage(selection.page + 1)}>
+                <ChevronRight size={13} strokeWidth={1.6} aria-hidden="true" />
+              </button>
+            </nav>
           ) : null}
         </>
       )}
+      </div>
     </div>
   );
 }

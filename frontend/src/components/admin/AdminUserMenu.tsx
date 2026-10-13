@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { Camera, KeyRound, LogOut, Building2, Route, UserRound } from "lucide-react";
+import { BookOpen, Camera, KeyRound, LogOut, Building2, UserRound } from "lucide-react";
 import { AuthKeyIcon } from "../auth/AuthKeyIcon";
 import { Button } from "../ui/Button";
 import { useAuth } from "../../hooks/useAuth";
@@ -400,7 +400,7 @@ export function AdminUserMenu({
               navigate("/mis-caminos");
             }}
           >
-            <Route size={18} strokeWidth={1.7} />
+            <BookOpen size={18} strokeWidth={1.7} />
             Mis caminos
           </button>
           {isExplorerUser || isOrgAdmin ? (
