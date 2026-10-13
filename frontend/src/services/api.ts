@@ -214,6 +214,31 @@ function isUnauthorized(error: AxiosError) {
   return error.response?.status === 401;
 }
 
+const REFRESH_SKEW_MS = 45_000;
+
+function refreshFailureStatus(error: unknown) {
+  return axios.isAxiosError(error) ? error.response?.status : undefined;
+}
+
+function sessionRejected(status: number | undefined) {
+  return status === 401 || status === 403;
+}
+
+async function requestRefresh() {
+  const { data } = await api.post("/auth/refresh", undefined, { skipAuthRefresh: true });
+  const token = data?.data?.accessToken as string | undefined;
+  if (!token) {
+    throw new Error("missing access token");
+  }
+  syncRememberFromLocation();
+  setAccessToken(token);
+  const user = data?.data?.user as PublicUser | undefined;
+  if (user) {
+    setStoredUser(user);
+  }
+  return token;
+}
+
 export async function refreshAccessToken(_options?: { silent?: boolean }) {
   if (peekSessionExpired()) {
     return null;
@@ -244,17 +269,44 @@ export async function refreshAccessToken(_options?: { silent?: boolean }) {
         const unauthorized = axios.isAxiosError(error) && error.response?.status === 401;
         if (!unauthorized) {
           return null;
+    const hadToken = Boolean(getAccessToken());
+    refreshInFlight = (async () => {
+      try {
+        return await requestRefresh();
+      } catch (error) {
+        const status = refreshFailureStatus(error);
+        if (!sessionRejected(status)) {
+          try {
+            return await requestRefresh();
+          } catch (retryError) {
+            if (hadToken && sessionRejected(refreshFailureStatus(retryError))) {
+              markSessionExpired();
+            }
+            return null;
+          }
         }
         if (hadToken) {
           markSessionExpired();
         }
         return null;
-      })
-      .finally(() => {
-        refreshInFlight = null;
-      });
+      }
+    })().finally(() => {
+      refreshInFlight = null;
+    });
   }
   return refreshInFlight;
+}
+
+export async function ensureFreshAccessToken() {
+  if (peekSessionExpired()) {
+    return null;
+  }
+  const token = getAccessToken();
+  const expiry = getAccessTokenExpiry(token);
+  if (token && (!expiry || expiry - Date.now() > REFRESH_SKEW_MS)) {
+    return token;
+  }
+  return refreshAccessToken();
 }
 
 api.interceptors.request.use((config: RetryConfig) => {
@@ -283,6 +335,9 @@ api.interceptors.response.use(
     original._retry = true;
     const token = await refreshAccessToken();
     if (!token) {
+      if (!peekSessionExpired() && getAccessToken()) {
+        return Promise.reject(new Error("auth-refresh-unavailable"));
+      }
       return Promise.reject(error);
     }
 

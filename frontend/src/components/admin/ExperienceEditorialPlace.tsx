@@ -57,11 +57,13 @@ export function ExperienceEditorialPlace({
   latitude,
   longitude,
   hasPoint,
+  sectionId,
 }: {
   experience: Experience;
   latitude: number | null;
   longitude: number | null;
   hasPoint: boolean;
+  sectionId?: string;
 }) {
   const parsed = parseStoredLocation(experience.location || "");
   const municipality = parsed.municipality;
@@ -95,7 +97,11 @@ export function ExperienceEditorialPlace({
   const note = destinationNote(municipality, department, category, experience.title);
 
   return (
-    <section className="dash-exps-place" aria-label="Mapa de la experiencia">
+    <section
+      id={sectionId}
+      className={`dash-exps-place${sectionId ? " experience-detail-target" : ""}`}
+      aria-label="Mapa de la experiencia"
+    >
       <header className="dash-exps-place__intro">
         <img className="dash-exps-place__bloom" src={mapaIcon} alt="" />
         <h2 className="dash-exps-place__title">El destino</h2>

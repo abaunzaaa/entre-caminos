@@ -3,6 +3,7 @@ import { calculateFeaturedScore, FEATURED_RECENT_ACTIVITY_DAYS, isWithinFeatured
 import { prisma } from "../database/prisma.js";
 import { listApprovedCategoryNames } from "./category.service.js";
 import { toPublicOrganizationProfile } from "./organization-profile.service.js";
+import { ratingNumber, reviewScore, roundRating } from "./review-score.js";
 import { recentGuideHistory } from "../utils/guide-history.js";
 
 const GUIDE_CANDIDATE_LIMIT = 16;
@@ -361,11 +362,9 @@ async function publicScores(ids: string[]) {
   const [views, favorites, reviews, recentViews, recentFavorites, recentReviews] = await Promise.all([
     prisma.experienceDetailView.groupBy({ by: ["experienceId"], where, _count: { _all: true } }),
     prisma.experienceFavorite.groupBy({ by: ["experienceId"], where, _count: { _all: true } }),
-    prisma.experienceVisitorReview.groupBy({
-      by: ["experienceId"],
+    prisma.experienceVisitorReview.findMany({
       where,
-      _count: { _all: true },
-      _avg: { rating: true },
+      select: { experienceId: true, rating: true, organizationRating: true, valueRating: true },
     }),
     prisma.experienceDetailView.groupBy({ by: ["experienceId"], where: recentWhere, _count: { _all: true } }),
     prisma.experienceFavorite.groupBy({ by: ["experienceId"], where: recentWhere, _count: { _all: true } }),
@@ -378,7 +377,13 @@ async function publicScores(ids: string[]) {
   const recentViewMap = countOf(recentViews);
   const recentFavoriteMap = countOf(recentFavorites);
   const recentReviewMap = countOf(recentReviews);
-  const reviewMap = new Map(reviews.map((row) => [row.experienceId, row]));
+  const reviewMap = new Map<string, { sum: number; count: number }>();
+  for (const row of reviews) {
+    const bucket = reviewMap.get(row.experienceId) ?? { sum: 0, count: 0 };
+    bucket.sum += reviewScore(ratingNumber(row.rating), row.organizationRating, row.valueRating);
+    bucket.count += 1;
+    reviewMap.set(row.experienceId, bucket);
+  }
   for (const id of ids) {
     const review = reviewMap.get(id);
     scores.set(
@@ -386,8 +391,8 @@ async function publicScores(ids: string[]) {
       calculateFeaturedScore({
         visits: viewMap.get(id) ?? 0,
         favorites: favoriteMap.get(id) ?? 0,
-        reviews: review?._count._all ?? 0,
-        rating: review?._avg.rating ?? 0,
+        reviews: review?.count ?? 0,
+        rating: review ? (roundRating(review.sum / review.count) ?? 0) : 0,
         recentActivity: (recentViewMap.get(id) ?? 0) + (recentFavoriteMap.get(id) ?? 0) + (recentReviewMap.get(id) ?? 0),
       }),
     );

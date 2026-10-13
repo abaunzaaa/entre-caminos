@@ -14,7 +14,9 @@ import {
 } from "lucide-react";
 import { AdminNotifications } from "../admin/AdminNotifications";
 import { AdminUserMenu } from "../admin/AdminUserMenu";
+import brandLogo from "../../assets/logo.png";
 import { useAuth } from "../../hooks/useAuth";
+import { EXPERIENCE_DETAIL_SECTIONS } from "../../utils/experience-detail-sections";
 import "../../styles/admin-topbar.css";
 
 const NAV_LINKS: Array<{
@@ -76,7 +78,8 @@ export function ExplorerNavbar() {
       return;
     }
     const frame = window.requestAnimationFrame(() => {
-      target.scrollIntoView({ behavior: "smooth", block: "start" });
+      const sectionJump = (Object.values(EXPERIENCE_DETAIL_SECTIONS) as string[]).includes(id);
+      target.scrollIntoView({ behavior: sectionJump ? "auto" : "smooth", block: "start" });
     });
     return () => window.cancelAnimationFrame(frame);
   }, [hash, pathname]);
@@ -89,8 +92,9 @@ export function ExplorerNavbar() {
       className={`explorer-nav${isExplorer ? " explorer-nav--light" : " explorer-nav--dark"}${scrolled ? " is-scrolled" : ""}${menuOpen ? " is-open" : ""}${entered ? " is-entered" : ""}`}
     >
       <div className="explorer-nav__inner">
-        <Link to="/explorar" className="explorer-nav__brand">
-          Entre caminos
+        <Link to="/explorar" className="explorer-nav__brand" aria-label="Entre Caminos, ir al inicio">
+          <img src={brandLogo} alt="" className="explorer-nav__logo" draggable={false} />
+          <span className="explorer-nav__wordmark">Entre Caminos</span>
         </Link>
 
         <nav className="explorer-nav__links" aria-label="Navegación del explorador">

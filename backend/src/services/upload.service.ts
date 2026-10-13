@@ -137,6 +137,8 @@ export async function persistJourneyPhoto(file: Express.Multer.File): Promise<St
 
 export async function persistBitacoraPhoto(file: Express.Multer.File): Promise<StoredImage> {
   return persistImage(file, "entre-caminos/bitacora");
+export async function persistReviewImage(file: Express.Multer.File): Promise<StoredImage> {
+  return persistImage(file, "entre-caminos/reviews");
 }
 
 async function persistImage(file: Express.Multer.File, folder?: string): Promise<StoredImage> {
@@ -206,5 +208,6 @@ export async function destroyStoredImage(publicId: string | null | undefined) {
   await fetch(`https://api.cloudinary.com/v1_1/${env.CLOUDINARY_CLOUD_NAME}/image/destroy`, {
     method: "POST",
     body: form,
+    signal: AbortSignal.timeout(8_000),
   }).catch(() => undefined);
 }
