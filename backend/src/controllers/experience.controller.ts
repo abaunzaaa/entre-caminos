@@ -94,6 +94,12 @@ export async function featured(_req: Request, res: Response) {
   });
 }
 
+export async function listStamps(_req: Request, res: Response) {
+  preventStaleRead(res);
+  const stamps = await experienceService.listPublishedStamps();
+  return res.json({ success: true, data: { stamps } });
+}
+
 export async function getPublic(req: Request, res: Response) {
   preventStaleRead(res);
   const experience = await experienceService.getPublishedExperience(req.params.id);

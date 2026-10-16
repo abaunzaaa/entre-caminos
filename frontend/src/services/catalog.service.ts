@@ -138,6 +138,25 @@ export async function getMapPreviewExperiences() {
   return data.data.experiences;
 }
 
+export type ExperienceStampCard = {
+  id: string;
+  title: string;
+  description?: string | null;
+  stampImageUrl: string;
+  location?: string | null;
+  municipality?: string | null;
+  department?: string | null;
+  category?: string | null;
+  duration?: string | null;
+  durationValue?: number | null;
+  durationUnit?: "MINUTES" | "HOURS" | "DAYS" | null;
+};
+
+export async function listExperienceStamps() {
+  const { data } = await api.get<ApiResponse<{ stamps: ExperienceStampCard[] }>>("/experiences/stamps");
+  return data.data.stamps;
+}
+
 export async function getNearbyExperiences() {
   const { data } = await api.get<ApiResponse<{ experiences: Experience[] }>>("/experiences", {
     params: { view: "nearby" },

@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { ArrowLeft, ArrowRight, X } from "lucide-react";
 import { uploadStampImage } from "../../services/catalog.service";
 import { getApiErrorMessage } from "../../utils/api-error";
-import { mediaUrl } from "../../utils/media";
+import { stampUrl } from "../../utils/media";
 import stampExamples from "../../assets/stamp-examples.jpg";
 import "../../styles/experience-stamp.css";
 
@@ -177,7 +177,7 @@ export function ExperienceStampField({ value, disabled, onChange, onError }: Exp
       >
         {value ? (
           <span className="dash-exps-stamp__preview">
-            <img src={mediaUrl(value)} alt="" />
+            <img src={stampUrl(value)} alt="" />
           </span>
         ) : (
           <StampOutline />
@@ -225,7 +225,7 @@ export function ExperienceStampField({ value, disabled, onChange, onError }: Exp
                       </p>
                       {preview ? (
                         <div className="dash-stamp-modal__preview-wrap">
-                          <img src={mediaUrl(preview)} alt="" />
+                          <img src={stampUrl(preview)} alt="" />
                         </div>
                       ) : (
                         <label
