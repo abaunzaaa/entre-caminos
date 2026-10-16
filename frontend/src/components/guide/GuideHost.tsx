@@ -616,6 +616,10 @@ export function GuideHost() {
     </form>
   );
 
+  if (pathname === "/mis-caminos/bitacora") {
+    return null;
+  }
+
   return (
     <>
       {createPortal(

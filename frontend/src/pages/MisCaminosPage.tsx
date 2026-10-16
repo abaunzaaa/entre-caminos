@@ -63,6 +63,8 @@ export function MisCaminosPage() {
   const navigate = useNavigate();
   const [section, setSection] = useState<Section>("calendario");
   const [loading, setLoading] = useState(true);
+  const [journeyReady, setJourneyReady] = useState(false);
+  const [loadNonce, setLoadNonce] = useState(0);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [theme, setTheme] = useState<JourneyTheme>("olive");
@@ -82,6 +84,8 @@ export function MisCaminosPage() {
 
   useEffect(() => {
     let active = true;
+    setLoading(true);
+    setError("");
     void loadJourney()
       .then((bundle) => {
         if (!active) {
@@ -91,10 +95,11 @@ export function MisCaminosPage() {
         setPlans(bundle.plans);
         setDecorations(bundle.decorations);
         setMemories(bundle.memories);
+        setJourneyReady(true);
       })
       .catch((reason) => {
         if (active) {
-          setError(getApiErrorMessage(reason, "No pudimos abrir Mis caminos."));
+          setError(getApiErrorMessage(reason, "No pudimos abrir tu calendario."));
         }
       })
       .finally(() => {
@@ -105,7 +110,7 @@ export function MisCaminosPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [loadNonce]);
 
   useEffect(() => {
     let active = true;
@@ -396,16 +401,20 @@ export function MisCaminosPage() {
 
         <section className="caminos-plans" aria-labelledby="caminos-plans-title">
           <div className="caminos-plans__inner">
-            <JourneyNextPlans plans={plans} loading={loading} onOpenDay={(day) => openCalendar(day)} />
+            <JourneyNextPlans plans={plans} loading={loading || !journeyReady} onOpenDay={(day) => openCalendar(day)} />
             <JourneyKeepsake photos={keepsakes} onOpen={() => navigate("/mis-caminos/bitacora")} />
           </div>
         </section>
       </section>
 
       <div className="caminos-wrap caminos-panel" id="caminos-panel">
-        {error ? <p className="caminos-error" role="alert">{error}</p> : null}
+        {error && !journeyReady ? (
+          <div className="caminos-loadfail">
+            <p className="caminos-error" role="alert">{error}</p>
+            <button type="button" onClick={() => setLoadNonce((value) => value + 1)}>Reintentar</button>
+          </div>
+        ) : error ? <p className="caminos-error" role="alert">{error}</p> : null}
         {notice ? <p className="caminos-saved" role="status">{notice}</p> : null}
-        {loading ? <p className="caminos-loading">Abriendo tu planner…</p> : null}
 
         {!loading && section === "proximas" ? (
           <JourneyUpcoming plans={plans} onUpdatePlan={updatePlan} onDeletePlan={removePlan} />
@@ -442,14 +451,22 @@ export function MisCaminosPage() {
             aria-labelledby="caminos-calendar-title"
             tabIndex={-1}
           >
-            {loading ? (
-              <>
+            {loading && !journeyReady ? (
+              <div className="caminos-cal-wait">
                 <button type="button" className="caminos-calhead__close caminos-planner__dismiss" onClick={() => setCalendarOpen(false)} aria-label="Cerrar calendario">×</button>
+                <span className="caminos-loading__spin" aria-hidden="true" />
                 <p className="caminos-loading">Abriendo tu calendario…</p>
-              </>
+              </div>
             ) : null}
-            {error ? <p className="caminos-error" role="alert">{error}</p> : null}
-            {!loading ? (
+            {!loading && !journeyReady ? (
+              <div className="caminos-cal-wait">
+                <button type="button" className="caminos-calhead__close caminos-planner__dismiss" onClick={() => setCalendarOpen(false)} aria-label="Cerrar calendario">×</button>
+                <p className="caminos-error" role="alert">{error || "No pudimos abrir tu calendario."}</p>
+                <button type="button" onClick={() => setLoadNonce((value) => value + 1)}>Reintentar</button>
+              </div>
+            ) : null}
+            {error && journeyReady ? <p className="caminos-error" role="alert">{error}</p> : null}
+            {journeyReady ? (
               <JourneyCalendar
                 plans={plans}
                 decorations={decorations}

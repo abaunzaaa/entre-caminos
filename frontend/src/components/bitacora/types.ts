@@ -1,9 +1,28 @@
 export type PaperId = "cream" | "warm" | "beige" | "sage" | "texture" | "lined" | "grid";
 export type FrameId = "none" | "polaroid" | "wide" | "cream";
-export type FontId = "playfair" | "inter" | "cormorant" | "vibes" | "allura" | "caveat" | "special" | "nunito";
+export type FontId =
+  | "inter"
+  | "poppins"
+  | "montserrat"
+  | "lato"
+  | "playfair"
+  | "cormorant"
+  | "baskerville"
+  | "dmserif"
+  | "caveat"
+  | "dancing"
+  | "patrick"
+  | "sacramento"
+  | "vibes"
+  | "allura"
+  | "quicksand"
+  | "nunito"
+  | "raleway"
+  | "special";
+export type FontGroup = "moderna" | "editorial" | "manuscrita" | "delicada";
 export type TextAlign = "left" | "center" | "right";
 export type TextWeight = 400 | 500 | 600 | 700;
-export type ToolId = "photos" | "stickers" | "text" | "papers" | "elements" | "pages";
+export type ToolId = "photos" | "stickers" | "text" | "papers" | "templates" | "pages";
 export type TemplateId = "blank" | "hero" | "collage" | "polaroids" | "note" | "diary";
 
 export type PhotoProps = {
@@ -64,8 +83,8 @@ export type BitacoraBundle = {
 export const PAGE_ASPECT = 0.72;
 
 export const PAPERS: Array<{ id: PaperId; label: string }> = [
-  { id: "cream", label: "Crema clásico" },
-  { id: "warm", label: "Blanco cálido" },
+  { id: "warm", label: "Blanco" },
+  { id: "cream", label: "Crema" },
   { id: "beige", label: "Beige" },
   { id: "sage", label: "Verde suave" },
   { id: "texture", label: "Textura" },
@@ -73,15 +92,32 @@ export const PAPERS: Array<{ id: PaperId; label: string }> = [
   { id: "grid", label: "Cuadrícula" },
 ];
 
-export const FONTS: Array<{ id: FontId; label: string; sample: string }> = [
-  { id: "playfair", label: "Editorial", sample: "Playfair" },
-  { id: "cormorant", label: "Serif", sample: "Cormorant" },
-  { id: "inter", label: "Moderna", sample: "Inter" },
-  { id: "nunito", label: "Cercana", sample: "Nunito" },
-  { id: "vibes", label: "Manuscrita", sample: "Vibes" },
-  { id: "allura", label: "Firma", sample: "Allura" },
-  { id: "caveat", label: "Diario", sample: "Caveat" },
-  { id: "special", label: "Máquina", sample: "Elite" },
+export const FONT_GROUPS: Array<{ id: FontGroup; label: string }> = [
+  { id: "moderna", label: "Modernas" },
+  { id: "editorial", label: "Editoriales" },
+  { id: "manuscrita", label: "Manuscritas" },
+  { id: "delicada", label: "Delicadas" },
+];
+
+export const FONTS: Array<{ id: FontId; label: string; group: FontGroup }> = [
+  { id: "inter", label: "Inter", group: "moderna" },
+  { id: "poppins", label: "Poppins", group: "moderna" },
+  { id: "montserrat", label: "Montserrat", group: "moderna" },
+  { id: "lato", label: "Lato", group: "moderna" },
+  { id: "playfair", label: "Playfair Display", group: "editorial" },
+  { id: "cormorant", label: "Cormorant Garamond", group: "editorial" },
+  { id: "baskerville", label: "Libre Baskerville", group: "editorial" },
+  { id: "dmserif", label: "DM Serif Display", group: "editorial" },
+  { id: "caveat", label: "Caveat", group: "manuscrita" },
+  { id: "dancing", label: "Dancing Script", group: "manuscrita" },
+  { id: "patrick", label: "Patrick Hand", group: "manuscrita" },
+  { id: "sacramento", label: "Sacramento", group: "manuscrita" },
+  { id: "vibes", label: "Great Vibes", group: "manuscrita" },
+  { id: "allura", label: "Allura", group: "manuscrita" },
+  { id: "quicksand", label: "Quicksand", group: "delicada" },
+  { id: "nunito", label: "Nunito", group: "delicada" },
+  { id: "raleway", label: "Raleway", group: "delicada" },
+  { id: "special", label: "Special Elite", group: "delicada" },
 ];
 
 export const TEXT_COLORS = ["#2c2824", "#3d4a38", "#6d5344", "#8d4b4b", "#1e3d36", "#8a7048", "#355c7d"];

@@ -1,7 +1,7 @@
 import { emptyPhoto, makeText, uid, type PageDoc, type PaperId, type TemplateId } from "./types";
 
 const PAPER: Record<TemplateId, PaperId> = {
-  blank: "cream",
+  blank: "warm",
   hero: "cream",
   collage: "warm",
   polaroids: "beige",
@@ -15,6 +15,21 @@ export function createPage(template: TemplateId): PageDoc {
     background: PAPER[template],
     experienceId: null,
     elements: elementsFor(template),
+  };
+}
+
+export function templateSketch(template: TemplateId) {
+  return {
+    paper: PAPER[template],
+    items: elementsFor(template).map((element) => ({
+      type: element.type === "photo" ? ("photo" as const) : ("text" as const),
+      x: element.x,
+      y: element.y,
+      w: element.w,
+      h: element.h,
+      rotation: element.rotation,
+      frame: element.type === "photo" ? element.props.frame : undefined,
+    })),
   };
 }
 
