@@ -1,7 +1,26 @@
 import { z } from "zod";
 
 export const BITACORA_PAPERS = ["cream", "warm", "beige", "sage", "texture", "lined", "grid"] as const;
-export const BITACORA_FONTS = ["playfair", "inter", "cormorant", "vibes", "allura", "caveat", "special", "nunito"] as const;
+export const BITACORA_FONTS = [
+  "inter",
+  "poppins",
+  "montserrat",
+  "lato",
+  "playfair",
+  "cormorant",
+  "baskerville",
+  "dmserif",
+  "caveat",
+  "dancing",
+  "patrick",
+  "sacramento",
+  "vibes",
+  "allura",
+  "quicksand",
+  "nunito",
+  "raleway",
+  "special",
+] as const;
 export const BITACORA_FRAMES = ["none", "polaroid", "wide", "cream"] as const;
 
 const stickerId = z.string().regex(/^(viaje|papel|line|pastel)-[a-z0-9-]{1,40}$/, "Ese sticker no está disponible.");

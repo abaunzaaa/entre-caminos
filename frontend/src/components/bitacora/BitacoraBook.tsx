@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { PageCanvas } from "./PageCanvas";
+import { PageCanvas, type BitacoraDrop } from "./PageCanvas";
 import type { BitElement, PageDoc, TemplateId } from "./types";
 
 type Flip = { dir: 1 | -1; from: number; to: number; run: boolean };
@@ -22,6 +22,9 @@ export function BitacoraBook({
   onEdit,
   onText,
   onCreate,
+  onPlace,
+  onCarry,
+  adjusting,
 }: {
   pages: PageDoc[];
   cursor: number;
@@ -40,6 +43,9 @@ export function BitacoraBook({
   onEdit: (id: string) => void;
   onText: (pageId: string, element: BitElement, text: string) => void;
   onCreate: (template: TemplateId) => void;
+  onPlace: (pageId: string, payload: BitacoraDrop, point: { x: number; y: number }, elementId: string | null) => void;
+  onCarry: (element: BitElement, pageId: string) => void;
+  adjusting: boolean;
 }) {
   const step = mobile ? 1 : 2;
   const [flip, setFlip] = useState<Flip | null>(null);
@@ -138,6 +144,9 @@ export function BitacoraBook({
             onEdit={onEdit}
             onText={onText}
             onCreate={onCreate}
+            onPlace={onPlace}
+            onCarry={onCarry}
+            adjusting={adjusting}
           />
           {showRight ? (
             <Sheet
@@ -156,6 +165,9 @@ export function BitacoraBook({
               onEdit={onEdit}
               onText={onText}
               onCreate={onCreate}
+              onPlace={onPlace}
+              onCarry={onCarry}
+              adjusting={adjusting}
             />
           ) : null}
           {flip ? (
@@ -164,10 +176,10 @@ export function BitacoraBook({
               onTransitionEnd={onLeafEnd}
             >
               <div className="bita-leaf__face is-front">
-                <Sheet page={pages[leafFrontIndex] ?? null} pageNumber={null} interactive={false} selectedId={null} editingId={null} active={false} welcome={false} onSelect={onSelect} onActivate={onActivate} onBegin={onBegin} onLive={onLive} onEnd={onEnd} onEdit={onEdit} onText={onText} onCreate={onCreate} />
+                <Sheet page={pages[leafFrontIndex] ?? null} pageNumber={null} interactive={false} selectedId={null} editingId={null} active={false} welcome={false} onSelect={onSelect} onActivate={onActivate} onBegin={onBegin} onLive={onLive} onEnd={onEnd} onEdit={onEdit} onText={onText} onCreate={onCreate} onPlace={onPlace} onCarry={onCarry} adjusting={false} />
               </div>
               <div className="bita-leaf__face is-back">
-                <Sheet page={pages[leafBackIndex] ?? null} pageNumber={null} interactive={false} selectedId={null} editingId={null} active={false} welcome={false} onSelect={onSelect} onActivate={onActivate} onBegin={onBegin} onLive={onLive} onEnd={onEnd} onEdit={onEdit} onText={onText} onCreate={onCreate} />
+                <Sheet page={pages[leafBackIndex] ?? null} pageNumber={null} interactive={false} selectedId={null} editingId={null} active={false} welcome={false} onSelect={onSelect} onActivate={onActivate} onBegin={onBegin} onLive={onLive} onEnd={onEnd} onEdit={onEdit} onText={onText} onCreate={onCreate} onPlace={onPlace} onCarry={onCarry} adjusting={false} />
               </div>
             </div>
           ) : null}
@@ -208,6 +220,9 @@ function Sheet({
   onEdit,
   onText,
   onCreate,
+  onPlace,
+  onCarry,
+  adjusting,
 }: {
   page: PageDoc | null;
   pageNumber: number | null;
@@ -224,6 +239,9 @@ function Sheet({
   onEdit: (id: string) => void;
   onText: (pageId: string, element: BitElement, text: string) => void;
   onCreate: (template: TemplateId) => void;
+  onPlace: (pageId: string, payload: BitacoraDrop, point: { x: number; y: number }, elementId: string | null) => void;
+  onCarry: (element: BitElement, pageId: string) => void;
+  adjusting: boolean;
 }) {
   if (!page) {
     return (
@@ -248,6 +266,9 @@ function Sheet({
         onEnd={onEnd}
         onEdit={onEdit}
         onText={(element, text) => onText(page.id, element, text)}
+        onPlace={(payload, at, elementId) => onPlace(page.id, payload, at, elementId)}
+        onCarry={onCarry}
+        adjusting={adjusting && selectedId !== null}
       />
     </div>
   );

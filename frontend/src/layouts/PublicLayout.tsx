@@ -14,14 +14,15 @@ export function PublicLayout() {
   const { user, isAdmin, logout } = useAuth();
   const { pathname } = useLocation();
   const isExplorer = isExplorerShellPath(pathname);
+  const isBitacora = pathname === "/mis-caminos/bitacora";
   const showClosing = EXPLORER_CLOSING_PATHS.has(pathname);
 
   if (isExplorer) {
     return (
       <div
-        className={`explorer-page explorer-page--shell min-h-screen text-ink${showClosing ? " explorer-page--closing" : ""}`}
+        className={`explorer-page explorer-page--shell min-h-screen text-ink${showClosing ? " explorer-page--closing" : ""}${isBitacora ? " explorer-page--studio" : ""}`}
       >
-        <ExplorerNavbar />
+        {isBitacora ? null : <ExplorerNavbar />}
         {showClosing ? (
           <ExplorerPageClosing>
             <Outlet />
