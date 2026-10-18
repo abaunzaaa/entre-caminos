@@ -223,6 +223,7 @@ export async function listPublicNearbySources() {
 
 const nearbyMapSelect = {
   ...publicPlaceSelect,
+  idealFor: true,
   category: { select: { name: true } },
   experienceCategories: {
     orderBy: { position: "asc" as const },
@@ -298,6 +299,7 @@ export async function listExperiencesNear(input: { latitude: number; longitude: 
       description: match.item.description,
       categoryId: match.item.categoryId,
       categoryNames,
+      idealFor: match.item.idealFor ?? [],
       price: match.item.price.toString(),
       currency: match.item.currency,
       location: match.item.location,

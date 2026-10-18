@@ -159,10 +159,10 @@
 
 .explorer-map-share {
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 0.55rem;
-  margin-top: 0.75rem;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.7rem;
 }
 
 .explorer-map-share__status {
@@ -224,9 +224,29 @@
 }
 
 .explorer-map-share__action:disabled,
-.explorer-map-share__stop:disabled {
+.explorer-map-share__stop:disabled,
+.explorer-map-share__trash:disabled {
   cursor: progress;
   opacity: 0.7;
+}
+
+.explorer-map-share__trash {
+  display: inline-grid;
+  width: 2.15rem;
+  height: 2.15rem;
+  place-items: center;
+  padding: 0;
+  border: 1px solid rgba(41, 73, 66, 0.14);
+  border-radius: 999px;
+  background: #ffffff;
+  color: #6b746f;
+  cursor: pointer;
+}
+
+.explorer-map-share__trash:hover {
+  background: #f4f7f5;
+  border-color: rgba(41, 73, 66, 0.28);
+  color: #294942;
 }
 
 .explorer-map-place {
@@ -241,8 +261,33 @@
 
 .explorer-map-place strong {
   color: #1c332e;
-  font-size: 0.92rem;
+  font-size: 1.15rem;
   font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.explorer-map-count {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  margin: 0.85rem 0 0;
+}
+
+.explorer-map-count strong {
+  color: #1c332e;
+  font-family: Poppins, Nunito, system-ui, sans-serif;
+  font-size: 1.85rem;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.explorer-map-count span {
+  color: #6b746f;
+  font-family: Poppins, Nunito, system-ui, sans-serif;
+  font-size: 0.95rem;
+  font-weight: 400;
 }
 
 .explorer-map-page__body {
@@ -308,27 +353,24 @@
 .explorer-map-page__list {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  margin: 0;
+  gap: 0.75rem;
+  margin: 0.15rem 0 0;
   padding: 0 0 0.4rem;
   list-style: none;
 }
 
 .explorer-map-card {
-  display: grid;
-  grid-template-columns: 4.15rem minmax(0, 1fr);
-  gap: 0.75rem;
-  align-items: center;
+  position: relative;
+  display: flex;
+  flex-direction: column;
   width: 100%;
-  padding: 0.45rem;
+  padding: 0 0 0.7rem;
+  overflow: hidden;
   border: 1px solid rgba(41, 73, 66, 0.1);
-  border-radius: 1rem;
+  border-radius: 1.05rem;
   background: #ffffff;
   color: inherit;
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-  box-shadow: 0 8px 18px rgba(28, 51, 46, 0.04);
+  box-shadow: 0 8px 18px rgba(28, 51, 46, 0.045);
   scroll-margin-top: 0.4rem;
   transition: border-color 180ms ease, box-shadow 180ms ease;
 }
@@ -344,61 +386,163 @@
   box-shadow: 0 10px 22px rgba(28, 51, 46, 0.08);
 }
 
-.explorer-map-card:focus-visible {
+.explorer-map-card__main {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.explorer-map-card__main:focus-visible,
+.explorer-map-card__fav:focus-visible,
+.explorer-map-card__detail:focus-visible {
   outline: 2px solid #294942;
   outline-offset: 2px;
 }
 
-.explorer-map-card img {
-  width: 4.15rem;
-  height: 4.15rem;
-  border-radius: 0.75rem;
-  object-fit: cover;
+.explorer-map-card__media {
+  display: block;
+  height: 8.6rem;
   background: #e8eee9;
 }
 
-.explorer-map-card__copy {
+.explorer-map-card__media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.explorer-map-card__fav {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.55rem;
+  display: inline-grid;
+  width: 1.9rem;
+  height: 1.9rem;
+  place-items: center;
+  padding: 0;
+  border: 1px solid rgba(41, 73, 66, 0.1);
+  border-radius: 999px;
+  background: #ffffff;
+  color: #294942;
+  box-shadow: 0 4px 12px rgba(28, 51, 46, 0.08);
+  cursor: pointer;
+}
+
+.explorer-map-card__fav:hover,
+.explorer-map-card__fav.is-saved {
+  color: #1c332e;
+}
+
+.explorer-map-card__fav:disabled {
+  cursor: progress;
+}
+
+.explorer-map-card__body {
   display: flex;
   min-width: 0;
   flex-direction: column;
+  padding: 0.7rem 0.8rem 0;
+}
+
+.explorer-map-card__price {
+  color: #1c332e;
+  font-family: Poppins, Nunito, system-ui, sans-serif;
+  font-size: 0.98rem;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 .explorer-map-card__title {
   display: -webkit-box;
   overflow: hidden;
+  margin-top: 0.2rem;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   color: #1c332e;
   font-family: Poppins, Nunito, system-ui, sans-serif;
-  font-size: 0.86rem;
+  font-size: 0.9rem;
   font-weight: 500;
   line-height: 1.3;
 }
 
 .explorer-map-card__place,
-.explorer-map-card__price {
+.explorer-map-card__meta,
+.explorer-map-card__rating {
   margin-top: 0.16rem;
-  color: #68736e;
   font-family: Poppins, Nunito, system-ui, sans-serif;
-  font-size: 0.72rem;
-  font-weight: 400;
+  font-size: 0.75rem;
   line-height: 1.35;
 }
 
-.explorer-map-card__meta {
-  margin-top: 0.16rem;
+.explorer-map-card__place,
+.explorer-map-card__meta,
+.explorer-map-card__rating.is-empty {
+  color: #68736e;
+}
+
+.explorer-map-card__rating:not(.is-empty) {
+  color: #294942;
+  font-weight: 600;
+}
+
+.explorer-map-card__detail {
+  align-self: flex-start;
+  margin: 0.45rem 0.8rem 0;
   color: #294942;
   font-family: Poppins, Nunito, system-ui, sans-serif;
-  font-size: 0.72rem;
-  line-height: 1.35;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.explorer-map-card__detail:hover {
+  color: #1c332e;
 }
 
 .explorer-map-tools {
   position: relative;
+  z-index: 6;
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem;
-  margin-top: 0.8rem;
+  margin-top: 0.7rem;
+}
+
+.explorer-map-name {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.55rem;
+  padding: 0.42rem 0.75rem;
+  border: 1px solid rgba(41, 73, 66, 0.12);
+  border-radius: 999px;
+  background: #ffffff;
+  color: #6e8f88;
+}
+
+.explorer-map-name input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: #1c332e;
+  font-family: Poppins, Nunito, system-ui, sans-serif;
+  font-size: 0.78rem;
+}
+
+.explorer-map-name input::placeholder {
+  color: #8a938e;
 }
 
 .explorer-map-tools__button,
@@ -892,7 +1036,7 @@
     bottom: 0.7rem;
     left: 0.7rem;
     z-index: 4;
-    max-height: min(48svh, 30rem);
+    max-height: min(68svh, 36rem);
     margin: 0;
     padding-top: 0.35rem;
     border-right: 0;

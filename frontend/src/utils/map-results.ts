@@ -5,8 +5,11 @@ export type MapDistanceBand = 5 | 10 | 25 | 50;
 export type MapRatingBand = 3 | 4;
 export type MapSort = "near" | "rating" | "price-asc" | "price-desc" | "recent";
 
+export const MAP_COMPANIONS = ["Solo", "En pareja", "Amigos", "Familia"] as const;
+
 export type MapFilters = {
   categories: string[];
+  companions: string[];
   price: MapPriceBand | null;
   distance: MapDistanceBand | null;
   rating: MapRatingBand | null;
@@ -14,6 +17,7 @@ export type MapFilters = {
 
 export const EMPTY_MAP_FILTERS: MapFilters = {
   categories: [],
+  companions: [],
   price: null,
   distance: null,
   rating: null,
@@ -84,12 +88,28 @@ function matchesPrice(experience: NearbyExperience, band: MapPriceBand) {
   return amount > 100_000;
 }
 
-export function applyMapResults(experiences: NearbyExperience[], filters: MapFilters, sort: MapSort) {
+export function applyMapResults(
+  experiences: NearbyExperience[],
+  filters: MapFilters,
+  sort: MapSort,
+  nameQuery = "",
+) {
   const selected = new Set(filters.categories.map(normalize));
+  const companions = new Set(filters.companions);
+  const needle = normalize(nameQuery.trim());
   const visible = experiences.filter((experience) => {
+    if (needle && !normalize(experience.title).includes(needle)) {
+      return false;
+    }
     if (selected.size) {
       const names = (experience.categoryNames ?? []).map(normalize);
       if (!names.some((name) => selected.has(name))) {
+        return false;
+      }
+    }
+    if (companions.size) {
+      const values = experience.idealFor ?? [];
+      if (!values.some((value) => companions.has(value))) {
         return false;
       }
     }
@@ -136,5 +156,11 @@ export function applyMapResults(experiences: NearbyExperience[], filters: MapFil
 }
 
 export function filtersAreActive(filters: MapFilters) {
-  return filters.categories.length > 0 || filters.price != null || filters.distance != null || filters.rating != null;
+  return (
+    filters.categories.length > 0 ||
+    filters.companions.length > 0 ||
+    filters.price != null ||
+    filters.distance != null ||
+    filters.rating != null
+  );
 }

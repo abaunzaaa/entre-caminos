@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { LocateFixed, Search, SlidersHorizontal } from "lucide-react";
+import { Heart, LocateFixed, Search, SlidersHorizontal, Trash2 } from "lucide-react";
 import {
   COLOMBIA_MAP_OVERVIEW,
   ExplorerNearbyMap,
@@ -10,7 +10,10 @@ import {
 import { experienceCoverUrl } from "../components/explorer/explorer-media";
 import { MapExperienceReviews } from "../components/explorer/MapExperienceReviews";
 import { useAuth } from "../hooks/useAuth";
+import { useFavoriteToggle } from "../hooks/useFavoriteToggle";
 import { getExperiencesNear, getPublicExperiences, type NearbyExperience } from "../services/catalog.service";
+import { listFavoriteIds } from "../services/favorites.service";
+import { onFavoritesChanged } from "../services/favorites-sync";
 import { saveSharedMapLocation } from "../services/onboarding.service";
 import { formatPrice } from "../utils/cn";
 import { mapCardPlace } from "../utils/experience-region";
@@ -19,6 +22,7 @@ import {
   categoryOptions,
   EMPTY_MAP_FILTERS,
   filtersAreActive,
+  MAP_COMPANIONS,
   type MapDistanceBand,
   type MapFilters,
   type MapPriceBand,
@@ -73,6 +77,79 @@ function resultsCount(count: number) {
   return count === 1 ? "1 experiencia encontrada" : `${count} experiencias encontradas`;
 }
 
+function resultsWord(count: number) {
+  return count === 1 ? "Experiencia" : "Experiencias";
+}
+
+function ratingLine(experience: NearbyExperience) {
+  if (experience.averageRating == null || !experience.reviewCount) {
+    return null;
+  }
+  const score = new Intl.NumberFormat("es-CO", {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  }).format(experience.averageRating);
+  const reviews = experience.reviewCount === 1 ? "1 reseña" : `${experience.reviewCount} reseñas`;
+  return `${score} · ${reviews}`;
+}
+
+function MapExplorerCard({
+  experience,
+  place,
+  distance,
+  imageUrl,
+  selected,
+  favorited,
+  onSelect,
+}: {
+  experience: NearbyExperience;
+  place: string;
+  distance: string;
+  imageUrl: string;
+  selected: boolean;
+  favorited: boolean;
+  onSelect: () => void;
+}) {
+  const { favorited: saved, busy, toggle } = useFavoriteToggle(experience.id, {
+    initialFavorited: favorited,
+    experienceTitle: experience.title,
+    loginRedirectTo: "/mapa",
+  });
+  const rating = ratingLine(experience);
+
+  return (
+    <article className={`explorer-map-card${selected ? " is-selected" : ""}`}>
+      <button type="button" className="explorer-map-card__main" aria-pressed={selected} onClick={onSelect}>
+        <span className="explorer-map-card__media">
+          <img src={imageUrl} alt="" />
+        </span>
+        <span className="explorer-map-card__body">
+          <span className="explorer-map-card__price">{formatPrice(experience.price, experience.currency)}</span>
+          <span className="explorer-map-card__title">{experience.title}</span>
+          {place ? <span className="explorer-map-card__place">{place}</span> : null}
+          {distance ? <span className="explorer-map-card__meta">{distance}</span> : null}
+          <span className={`explorer-map-card__rating${rating ? "" : " is-empty"}`}>
+            {rating ? `★ ${rating}` : "Sin reseñas"}
+          </span>
+        </span>
+      </button>
+      <button
+        type="button"
+        className={`explorer-map-card__fav${saved ? " is-saved" : ""}`}
+        aria-label={saved ? "Quitar de favoritos" : "Añadir a favoritos"}
+        aria-pressed={saved}
+        disabled={busy}
+        onClick={toggle}
+      >
+        <Heart size={15} strokeWidth={1.7} fill={saved ? "currentColor" : "none"} aria-hidden="true" />
+      </button>
+      <Link className="explorer-map-card__detail" to={`/explorar/${experience.id}`}>
+        Ver detalle
+      </Link>
+    </article>
+  );
+}
+
 export function MapPage() {
   const { user, loading: authLoading, refresh } = useAuth();
   const department = user?.profile?.department?.trim() ?? "";
@@ -106,6 +183,8 @@ export function MapPage() {
   const [filters, setFilters] = useState<MapFilters>(EMPTY_MAP_FILTERS);
   const [sort, setSort] = useState<MapSort>("near");
   const [menu, setMenu] = useState<"filters" | "sort" | null>(null);
+  const [nameQuery, setNameQuery] = useState("");
+  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(() => new Set());
   const searchRequest = useRef(0);
   const toolsRef = useRef<HTMLDivElement>(null);
   const pendingSelect = useRef<string | null>(null);
@@ -138,6 +217,33 @@ export function MapPage() {
     document.addEventListener("pointerdown", onPointerDown);
     return () => document.removeEventListener("pointerdown", onPointerDown);
   }, [menu]);
+
+  useEffect(() => {
+    if (!user) {
+      setFavoriteIds(new Set());
+      return;
+    }
+    let cancelled = false;
+    function loadFavorites() {
+      listFavoriteIds()
+        .then((ids) => {
+          if (!cancelled) {
+            setFavoriteIds(new Set(ids));
+          }
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setFavoriteIds(new Set());
+          }
+        });
+    }
+    loadFavorites();
+    const unsubscribe = onFavoritesChanged(loadFavorites);
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
+  }, [user?.id]);
 
   const personal = shared ?? approx;
   const active = explore ?? personal;
@@ -291,8 +397,8 @@ export function MapPage() {
   }, [query]);
 
   const visibleExperiences = useMemo(
-    () => applyMapResults(experiences, filters, active ? sort : sort === "near" ? "recent" : sort),
-    [active, experiences, filters, sort],
+    () => applyMapResults(experiences, filters, active ? sort : sort === "near" ? "recent" : sort, nameQuery),
+    [active, experiences, filters, nameQuery, sort],
   );
   const categories = useMemo(() => categoryOptions(experiences), [experiences]);
 
@@ -484,10 +590,17 @@ export function MapPage() {
       </div>
     );
   } else if (points.length === 0) {
-    experienceBody = filtersAreActive(filters) ? (
+    experienceBody = filtersAreActive(filters) || nameQuery.trim() ? (
       <div className="explorer-map-page__empty">
         <p className="explorer-map-page__empty-title">Ninguna experiencia coincide con estos filtros.</p>
-        <button type="button" className="explorer-map-tools__clear" onClick={() => setFilters(EMPTY_MAP_FILTERS)}>
+        <button
+          type="button"
+          className="explorer-map-tools__clear"
+          onClick={() => {
+            setFilters(EMPTY_MAP_FILTERS);
+            setNameQuery("");
+          }}
+        >
           Limpiar filtros
         </button>
       </div>
@@ -498,25 +611,22 @@ export function MapPage() {
     experienceBody = (
       <ul className="explorer-map-page__list">
         {points.map((point) => {
+          const experience = visibleExperiences.find((item) => item.id === point.id);
+          if (!experience) {
+            return null;
+          }
           const selected = point.id === selectedId;
           return (
             <li key={point.id} id={`nearby-${point.id}`}>
-              <button
-                type="button"
-                className={`explorer-map-card${selected ? " is-selected" : ""}`}
-                aria-pressed={selected}
-                onClick={() => selectFromList(point.id)}
-              >
-                <img src={point.imageUrl} alt="" />
-                <span className="explorer-map-card__copy">
-                  <span className="explorer-map-card__title">{point.title}</span>
-                  {point.place ? <span className="explorer-map-card__place">{point.place}</span> : null}
-                  <span className="explorer-map-card__meta">
-                    {Number.isFinite(point.distanceKm) ? `${formatDistance(point.distanceKm)} · ` : null}
-                    {point.priceLabel}
-                  </span>
-                </span>
-              </button>
+              <MapExplorerCard
+                experience={experience}
+                place={point.place}
+                distance={active && Number.isFinite(point.distanceKm) ? formatDistance(point.distanceKm) : ""}
+                imageUrl={experienceCoverUrl(experience, 640)}
+                selected={selected}
+                favorited={favoriteIds.has(point.id)}
+                onSelect={() => selectFromList(point.id)}
+              />
               {selected ? <MapExperienceReviews experienceId={point.id} /> : null}
             </li>
           );
@@ -532,6 +642,62 @@ export function MapPage() {
           <span className="explorer-map-page__handle" aria-hidden="true" />
           <div className="explorer-map-page__head">
             <h1 id="nearby-map-title">Mi ubicación</h1>
+            {explore ? (
+              <p className="explorer-map-place">
+                <span>Explorando</span>
+                <strong>{[explore.label, explore.detail].filter(Boolean).join(" · ")}</strong>
+              </p>
+            ) : profilePlace ? (
+              <p className="explorer-map-place">
+                <strong>{city && department ? `${city} · ${department}` : profilePlace}</strong>
+              </p>
+            ) : !authLoading ? (
+              <p className="explorer-map-search__note">
+                {user
+                  ? "Puedes buscar un lugar o compartir tu ubicación actual."
+                  : "Puedes buscar un municipio para explorar el mapa."}
+              </p>
+            ) : null}
+            {placeMiss && !explore && !shared ? (
+              <p className="explorer-map-search__note">No pudimos ubicar el municipio. Puedes buscarlo o compartir tu ubicación.</p>
+            ) : null}
+            <div className="explorer-map-share">
+              {user ? (
+                shared ? (
+                  <button type="button" className="explorer-map-share__stop" onClick={() => void stopSharing()} disabled={sharing}>
+                    <LocateFixed size={14} strokeWidth={1.7} aria-hidden="true" />
+                    {sharing ? "Guardando…" : "Dejar de compartir"}
+                  </button>
+                ) : (
+                  <button type="button" className="explorer-map-share__action" onClick={shareCurrentLocation} disabled={sharing}>
+                    <LocateFixed size={14} strokeWidth={1.7} aria-hidden="true" />
+                    {sharing ? "Compartiendo…" : "Compartir mi ubicación actual"}
+                  </button>
+                )
+              ) : (
+                <Link to="/login" className="explorer-map-share__action">
+                  <LocateFixed size={14} strokeWidth={1.7} aria-hidden="true" />
+                  Compartir mi ubicación actual
+                </Link>
+              )}
+              {user && shared ? (
+                <button
+                  type="button"
+                  className="explorer-map-share__trash"
+                  aria-label="Dejar de compartir mi ubicación"
+                  disabled={sharing}
+                  onClick={() => void stopSharing()}
+                >
+                  <Trash2 size={14} strokeWidth={1.7} aria-hidden="true" />
+                </button>
+              ) : null}
+            </div>
+            {shareError ? <p className="explorer-map-search__note">{shareError}</p> : null}
+            {explore && personal ? (
+              <button type="button" className="explorer-map-share__quiet" onClick={returnToPersonalPlace}>
+                Volver a mi zona
+              </button>
+            ) : null}
             <label className="explorer-map-search">
               <Search size={15} strokeWidth={1.7} aria-hidden="true" />
               <input
@@ -584,55 +750,11 @@ export function MapPage() {
                 ))}
               </ul>
             ) : null}
-            {user ? (
-              shared ? (
-                <div className="explorer-map-share">
-                  <p className="explorer-map-share__status">
-                    <LocateFixed size={15} strokeWidth={1.7} aria-hidden="true" />
-                    Ubicación actual compartida
-                  </p>
-                  <button type="button" className="explorer-map-share__stop" onClick={() => void stopSharing()} disabled={sharing}>
-                    <LocateFixed size={15} strokeWidth={1.7} aria-hidden="true" />
-                    {sharing ? "Guardando…" : "Dejar de compartir mi ubicación"}
-                  </button>
-                </div>
-              ) : (
-                <button type="button" className="explorer-map-share__action" onClick={shareCurrentLocation} disabled={sharing}>
-                  <LocateFixed size={15} strokeWidth={1.7} aria-hidden="true" />
-                  {sharing ? "Compartiendo…" : "Compartir mi ubicación actual"}
-                </button>
-              )
-            ) : (
-              <Link to="/login" className="explorer-map-share__action">
-                <LocateFixed size={15} strokeWidth={1.7} aria-hidden="true" />
-                Compartir mi ubicación actual
-              </Link>
-            )}
-            {shareError ? <p className="explorer-map-search__note">{shareError}</p> : null}
-            {explore ? (
-              <p className="explorer-map-place">
-                <span>Explorando</span>
-                <strong>{[explore.label, explore.detail].filter(Boolean).join(" · ")}</strong>
+            {active && !loading && !error ? (
+              <p className="explorer-map-count">
+                <strong>{points.length}</strong>
+                <span>{resultsWord(points.length)}</span>
               </p>
-            ) : profilePlace ? (
-              <p className="explorer-map-place">
-                <span>{shared ? "Ubicación actual" : "Mi ubicación"}</span>
-                <strong>{city && department ? `${city} · ${department}` : profilePlace}</strong>
-              </p>
-            ) : !authLoading ? (
-              <p className="explorer-map-search__note">
-                {user
-                  ? "Puedes buscar un lugar o compartir tu ubicación actual."
-                  : "Puedes buscar un municipio para explorar el mapa."}
-              </p>
-            ) : null}
-            {placeMiss && !explore && !shared ? (
-              <p className="explorer-map-search__note">No pudimos ubicar el municipio. Puedes buscarlo o compartir tu ubicación.</p>
-            ) : null}
-            {explore && personal ? (
-              <button type="button" className="explorer-map-share__quiet" onClick={returnToPersonalPlace}>
-                Volver a mi zona
-              </button>
             ) : null}
             <div className="explorer-map-tools" ref={toolsRef}>
               <button
@@ -695,6 +817,26 @@ export function MapPage() {
                           onChange={() => setFilters((current) => ({ ...current, price: value as MapPriceBand }))}
                         />
                         {label}
+                      </label>
+                    ))}
+                  </fieldset>
+                  <fieldset>
+                    <legend>Compañía</legend>
+                    {MAP_COMPANIONS.map((value) => (
+                      <label key={value}>
+                        <input
+                          type="checkbox"
+                          checked={filters.companions.includes(value)}
+                          onChange={() => {
+                            setFilters((current) => ({
+                              ...current,
+                              companions: current.companions.includes(value)
+                                ? current.companions.filter((item) => item !== value)
+                                : [...current.companions, value],
+                            }));
+                          }}
+                        />
+                        {value}
                       </label>
                     ))}
                   </fieldset>
@@ -765,6 +907,19 @@ export function MapPage() {
                 </div>
               ) : null}
             </div>
+            <label className="explorer-map-name">
+              <Search size={14} strokeWidth={1.7} aria-hidden="true" />
+              <input
+                type="search"
+                value={nameQuery}
+                placeholder="Buscar experiencia"
+                aria-label="Buscar experiencia"
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck={false}
+                onChange={(event) => setNameQuery(event.target.value)}
+              />
+            </label>
           </div>
           <div className="explorer-map-page__body" aria-live="polite">
             <h2 className="explorer-map-page__section">
