@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { Heart, LocateFixed, Search, SlidersHorizontal, Trash2 } from "lucide-react";
+import { ChevronDown, Heart, LocateFixed, Search, Trash2 } from "lucide-react";
 import {
   COLOMBIA_MAP_OVERVIEW,
   ExplorerNearbyMap,
@@ -23,10 +23,8 @@ import {
   EMPTY_MAP_FILTERS,
   filtersAreActive,
   MAP_COMPANIONS,
-  type MapDistanceBand,
   type MapFilters,
   type MapPriceBand,
-  type MapRatingBand,
   type MapSort,
 } from "../utils/map-results";
 import {
@@ -73,12 +71,16 @@ function formatDistance(km: number) {
   return `${new Intl.NumberFormat("es-CO", { minimumFractionDigits: digits, maximumFractionDigits: digits }).format(km)} km`;
 }
 
-function resultsCount(count: number) {
-  return count === 1 ? "1 experiencia encontrada" : `${count} experiencias encontradas`;
-}
-
 function resultsWord(count: number) {
   return count === 1 ? "Experiencia" : "Experiencias";
+}
+
+function contextTag(label?: string | null) {
+  const place = label?.trim() ?? "";
+  if (!place) {
+    return "Cerca de ti";
+  }
+  return place.length <= 22 ? `En ${place}` : "Explorando";
 }
 
 function ratingLine(experience: NearbyExperience) {
@@ -141,11 +143,8 @@ function MapExplorerCard({
         disabled={busy}
         onClick={toggle}
       >
-        <Heart size={15} strokeWidth={1.7} fill={saved ? "currentColor" : "none"} aria-hidden="true" />
+        <Heart size={12} strokeWidth={1.8} fill={saved ? "currentColor" : "none"} aria-hidden="true" />
       </button>
-      <Link className="explorer-map-card__detail" to={`/explorar/${experience.id}`}>
-        Ver detalle
-      </Link>
     </article>
   );
 }
@@ -181,8 +180,8 @@ export function MapPage() {
   const [shareError, setShareError] = useState("");
   const [experienceHits, setExperienceHits] = useState<ExperienceHit[]>([]);
   const [filters, setFilters] = useState<MapFilters>(EMPTY_MAP_FILTERS);
-  const [sort, setSort] = useState<MapSort>("near");
-  const [menu, setMenu] = useState<"filters" | "sort" | null>(null);
+  const [sort] = useState<MapSort>("near");
+  const [menu, setMenu] = useState<"category" | "price" | "company" | null>(null);
   const [nameQuery, setNameQuery] = useState("");
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(() => new Set());
   const searchRequest = useRef(0);
@@ -463,6 +462,7 @@ export function MapPage() {
   function returnToPersonalPlace() {
     setExplore(null);
     setQuery("");
+    setNameQuery("");
     setSuggestions([]);
     setSearchOpen(false);
     setSearchState("idle");
@@ -477,7 +477,8 @@ export function MapPage() {
       label: hit.title,
       detail: hit.place,
     });
-    setQuery(hit.title);
+    setQuery("");
+    setNameQuery("");
     setSuggestions([]);
     setExperienceHits([]);
     setSearchOpen(false);
@@ -487,7 +488,6 @@ export function MapPage() {
 
   async function choosePlace(suggestion: ColombiaPlaceSuggestion) {
     setSearchOpen(false);
-    setQuery(suggestion.label);
     setSearchState("loading");
     try {
       const match = await resolveColombiaPlace(suggestion);
@@ -501,6 +501,10 @@ export function MapPage() {
         label: suggestion.label,
         detail: suggestion.detail,
       });
+      setQuery("");
+      setNameQuery("");
+      setSuggestions([]);
+      setExperienceHits([]);
       setSelectedId(null);
       setSearchState("idle");
     } catch {
@@ -526,6 +530,7 @@ export function MapPage() {
             });
             setExplore(null);
             setQuery("");
+            setNameQuery("");
             setSuggestions([]);
             setSearchOpen(false);
             setSelectedId(null);
@@ -556,6 +561,7 @@ export function MapPage() {
       });
       setExplore(null);
       setQuery("");
+      setNameQuery("");
       setSuggestions([]);
       setSearchOpen(false);
       setSelectedId(null);
@@ -574,8 +580,8 @@ export function MapPage() {
     experienceBody = (
       <p className="explorer-map-page__status">
         {user
-          ? "Busca un lugar o comparte tu ubicación actual para ver experiencias cercanas."
-          : "Busca un municipio para ver experiencias en esa zona."}
+          ? "Busca una experiencia o comparte tu ubicación actual."
+          : "Busca una experiencia para ver el mapa en esa zona."}
       </p>
     );
   } else if (loading) {
@@ -596,12 +602,15 @@ export function MapPage() {
         <button
           type="button"
           className="explorer-map-tools__clear"
+          aria-label="Limpiar filtros"
+          title="Limpiar filtros"
           onClick={() => {
             setFilters(EMPTY_MAP_FILTERS);
+            setQuery("");
             setNameQuery("");
           }}
         >
-          Limpiar filtros
+          <Trash2 size={14} strokeWidth={1.8} aria-hidden="true" />
         </button>
       </div>
     ) : (
@@ -617,7 +626,7 @@ export function MapPage() {
           }
           const selected = point.id === selectedId;
           return (
-            <li key={point.id} id={`nearby-${point.id}`}>
+            <li key={point.id} id={`nearby-${point.id}`} className={selected ? "is-open" : undefined}>
               <MapExplorerCard
                 experience={experience}
                 place={point.place}
@@ -642,145 +651,186 @@ export function MapPage() {
           <span className="explorer-map-page__handle" aria-hidden="true" />
           <div className="explorer-map-page__head">
             <h1 id="nearby-map-title">Mi ubicación</h1>
-            {explore ? (
-              <p className="explorer-map-place">
-                <span>Explorando</span>
-                <strong>{[explore.label, explore.detail].filter(Boolean).join(" · ")}</strong>
-              </p>
-            ) : profilePlace ? (
-              <p className="explorer-map-place">
-                <strong>{city && department ? `${city} · ${department}` : profilePlace}</strong>
-              </p>
-            ) : !authLoading ? (
-              <p className="explorer-map-search__note">
-                {user
-                  ? "Puedes buscar un lugar o compartir tu ubicación actual."
-                  : "Puedes buscar un municipio para explorar el mapa."}
-              </p>
-            ) : null}
-            {placeMiss && !explore && !shared ? (
-              <p className="explorer-map-search__note">No pudimos ubicar el municipio. Puedes buscarlo o compartir tu ubicación.</p>
-            ) : null}
-            <div className="explorer-map-share">
-              {user ? (
-                shared ? (
-                  <button type="button" className="explorer-map-share__stop" onClick={() => void stopSharing()} disabled={sharing}>
-                    <LocateFixed size={14} strokeWidth={1.7} aria-hidden="true" />
-                    {sharing ? "Guardando…" : "Dejar de compartir"}
+            <div className="explorer-map-heading">
+              <div className="explorer-map-heading__copy">
+                {explore ? <span className="explorer-map-place__label">Explorando</span> : null}
+                <div className="explorer-map-heading__row">
+                  {explore ? (
+                    <p className="explorer-map-place">
+                      <strong>{[explore.label, explore.detail].filter(Boolean).join(" · ")}</strong>
+                    </p>
+                  ) : profilePlace ? (
+                    <p className="explorer-map-place">
+                      <strong>{city && department ? `${city} · ${department}` : profilePlace}</strong>
+                    </p>
+                  ) : !authLoading ? (
+                    <p className="explorer-map-search__note">
+                      {user
+                        ? "Comparte tu ubicación o busca una experiencia."
+                        : "Busca una experiencia para explorar el mapa."}
+                    </p>
+                  ) : (
+                    <span />
+                  )}
+                  <div className="explorer-map-share">
+                {user && shared ? (
+                  <span className="explorer-map-share__live" title="Ubicación actual" aria-label="Ubicación actual compartida">
+                    <LocateFixed size={15} strokeWidth={1.8} aria-hidden="true" />
+                  </span>
+                ) : user ? (
+                  <button
+                    type="button"
+                    className="explorer-map-share__action explorer-map-share__icon"
+                    aria-label="Compartir mi ubicación actual"
+                    title="Compartir mi ubicación actual"
+                    onClick={shareCurrentLocation}
+                    disabled={sharing}
+                  >
+                    <LocateFixed size={15} strokeWidth={1.8} aria-hidden="true" />
                   </button>
                 ) : (
-                  <button type="button" className="explorer-map-share__action" onClick={shareCurrentLocation} disabled={sharing}>
-                    <LocateFixed size={14} strokeWidth={1.7} aria-hidden="true" />
-                    {sharing ? "Compartiendo…" : "Compartir mi ubicación actual"}
+                  <Link
+                    to="/login"
+                    className="explorer-map-share__action explorer-map-share__icon"
+                    aria-label="Compartir mi ubicación actual"
+                    title="Compartir mi ubicación actual"
+                  >
+                    <LocateFixed size={15} strokeWidth={1.8} aria-hidden="true" />
+                  </Link>
+                )}
+                {user && shared ? (
+                  <button
+                    type="button"
+                    className="explorer-map-share__trash"
+                    aria-label="Dejar de compartir mi ubicación"
+                    title="Dejar de compartir mi ubicación"
+                    disabled={sharing}
+                    onClick={() => void stopSharing()}
+                  >
+                    <Trash2 size={14} strokeWidth={1.8} aria-hidden="true" />
                   </button>
-                )
-              ) : (
-                <Link to="/login" className="explorer-map-share__action">
-                  <LocateFixed size={14} strokeWidth={1.7} aria-hidden="true" />
-                  Compartir mi ubicación actual
-                </Link>
-              )}
-              {user && shared ? (
-                <button
-                  type="button"
-                  className="explorer-map-share__trash"
-                  aria-label="Dejar de compartir mi ubicación"
-                  disabled={sharing}
-                  onClick={() => void stopSharing()}
-                >
-                  <Trash2 size={14} strokeWidth={1.7} aria-hidden="true" />
-                </button>
-              ) : null}
+                ) : null}
+                  </div>
+                </div>
+                {explore && personal ? (
+                  <button type="button" className="explorer-map-share__quiet" onClick={returnToPersonalPlace}>
+                    Volver a mi zona
+                  </button>
+                ) : null}
+              </div>
             </div>
             {shareError ? <p className="explorer-map-search__note">{shareError}</p> : null}
-            {explore && personal ? (
-              <button type="button" className="explorer-map-share__quiet" onClick={returnToPersonalPlace}>
-                Volver a mi zona
-              </button>
-            ) : null}
-            <label className="explorer-map-search">
-              <Search size={15} strokeWidth={1.7} aria-hidden="true" />
-              <input
-                type="search"
-                value={query}
-                placeholder="Buscar municipio o lugar"
-                aria-label="Buscar municipio o lugar"
-                aria-expanded={searchOpen && (suggestions.length > 0 || experienceHits.length > 0)}
-                aria-controls="map-place-results"
-                autoComplete="off"
-                autoCorrect="off"
-                spellCheck={false}
-                onChange={(event) => {
-                  setQuery(event.target.value);
-                  setSearchState("idle");
-                }}
-                onFocus={() => {
-                  if (suggestions.length > 0 || experienceHits.length > 0) {
-                    setSearchOpen(true);
-                  }
-                }}
-              />
-            </label>
-            {searchState === "loading" ? <p className="explorer-map-search__note">Buscando…</p> : null}
-            {searchState === "empty" ? (
-              <p className="explorer-map-search__note">No encontramos ese lugar. El mapa sigue donde estaba.</p>
-            ) : null}
-            {searchState === "error" ? (
-              <p className="explorer-map-search__note">No pudimos buscar ahora. El mapa sigue donde estaba.</p>
-            ) : null}
-            {searchOpen && (suggestions.length > 0 || experienceHits.length > 0) ? (
-              <ul id="map-place-results" className="explorer-map-search__results" role="listbox">
-                {experienceHits.length > 0 ? <li className="explorer-map-search__group">Experiencias</li> : null}
-                {experienceHits.map((item) => (
-                  <li key={item.id}>
-                    <button type="button" role="option" onClick={() => chooseExperience(item)}>
-                      <strong>{item.title}</strong>
-                      {item.place ? <span>{item.place}</span> : null}
-                    </button>
-                  </li>
-                ))}
-                {suggestions.length > 0 ? <li className="explorer-map-search__group">Lugares</li> : null}
-                {suggestions.map((item) => (
-                  <li key={item.key}>
-                    <button type="button" role="option" onClick={() => void choosePlace(item)}>
-                      <strong>{item.label}</strong>
-                      {item.detail ? <span>{item.detail}</span> : null}
-                    </button>
-                  </li>
-                ))}
-              </ul>
+            {placeMiss && !explore && !shared ? (
+              <p className="explorer-map-search__note">No pudimos ubicar el municipio. Puedes buscar una experiencia o compartir tu ubicación.</p>
             ) : null}
             {active && !loading && !error ? (
               <p className="explorer-map-count">
                 <strong>{points.length}</strong>
-                <span>{resultsWord(points.length)}</span>
+                <span className="explorer-map-count__label">{resultsWord(points.length)}</span>
+                <span className="explorer-map-count__tag">{contextTag(explore?.label)}</span>
               </p>
             ) : null}
             <div className="explorer-map-tools" ref={toolsRef}>
-              <button
-                type="button"
-                className={`explorer-map-tools__button${filtersAreActive(filters) ? " is-active" : ""}`}
-                aria-expanded={menu === "filters"}
-                onClick={() => setMenu((current) => (current === "filters" ? null : "filters"))}
-              >
-                <SlidersHorizontal size={14} strokeWidth={1.7} aria-hidden="true" />
-                Filtros
-              </button>
-              <button
-                type="button"
-                className="explorer-map-tools__button"
-                aria-expanded={menu === "sort"}
-                onClick={() => setMenu((current) => (current === "sort" ? null : "sort"))}
-              >
-                Ordenar
-              </button>
-              {menu === "filters" ? (
-                <div className="explorer-map-tools__menu" role="dialog" aria-label="Filtros">
+              <div className="explorer-map-tools__top">
+                <label className="explorer-map-name">
+                  <Search size={13} strokeWidth={1.8} aria-hidden="true" />
+                  <input
+                    type="search"
+                    value={query}
+                    placeholder="Buscar experiencia"
+                    aria-label="Buscar experiencia"
+                    aria-expanded={searchOpen && (suggestions.length > 0 || experienceHits.length > 0)}
+                    aria-controls="map-place-results"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      setQuery(value);
+                      setNameQuery(value);
+                      setSearchState("idle");
+                    }}
+                    onFocus={() => {
+                      setMenu(null);
+                      if (suggestions.length > 0 || experienceHits.length > 0) {
+                        setSearchOpen(true);
+                      }
+                    }}
+                  />
+                </label>
+                <button
+                  type="button"
+                  className="explorer-map-tools__clear"
+                  aria-label="Limpiar filtros"
+                  title="Limpiar filtros"
+                  onClick={() => setFilters(EMPTY_MAP_FILTERS)}
+                >
+                  <Trash2 size={14} strokeWidth={1.8} aria-hidden="true" />
+                </button>
+              </div>
+              {searchState === "loading" ? <p className="explorer-map-search__note">Buscando…</p> : null}
+              {searchState === "empty" ? (
+                <p className="explorer-map-search__note">No encontramos ese lugar. El mapa sigue donde estaba.</p>
+              ) : null}
+              {searchState === "error" ? (
+                <p className="explorer-map-search__note">No pudimos buscar ahora. El mapa sigue donde estaba.</p>
+              ) : null}
+              {searchOpen && (suggestions.length > 0 || experienceHits.length > 0) ? (
+                <ul id="map-place-results" className="explorer-map-search__results" role="listbox">
+                  {experienceHits.length > 0 ? <li className="explorer-map-search__group">Experiencias</li> : null}
+                  {experienceHits.map((item) => (
+                    <li key={item.id}>
+                      <button type="button" role="option" onClick={() => chooseExperience(item)}>
+                        <strong>{item.title}</strong>
+                        {item.place ? <span>{item.place}</span> : null}
+                      </button>
+                    </li>
+                  ))}
+                  {suggestions.length > 0 ? <li className="explorer-map-search__group">Lugares</li> : null}
+                  {suggestions.map((item) => (
+                    <li key={item.key}>
+                      <button type="button" role="option" onClick={() => void choosePlace(item)}>
+                        <strong>{item.label}</strong>
+                        {item.detail ? <span>{item.detail}</span> : null}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+              <div className="explorer-map-tools__facets">
+                <button
+                  type="button"
+                  className={`explorer-map-tools__facet${filters.categories.length ? " is-active" : ""}`}
+                  aria-expanded={menu === "category"}
+                  onClick={() => setMenu((current) => (current === "category" ? null : "category"))}
+                >
+                  Categoría
+                  <ChevronDown size={12} strokeWidth={1.8} aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  className={`explorer-map-tools__facet${filters.price ? " is-active" : ""}`}
+                  aria-expanded={menu === "price"}
+                  onClick={() => setMenu((current) => (current === "price" ? null : "price"))}
+                >
+                  Precio
+                  <ChevronDown size={12} strokeWidth={1.8} aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  className={`explorer-map-tools__facet${filters.companions.length ? " is-active" : ""}`}
+                  aria-expanded={menu === "company"}
+                  onClick={() => setMenu((current) => (current === "company" ? null : "company"))}
+                >
+                  Compañía
+                  <ChevronDown size={12} strokeWidth={1.8} aria-hidden="true" />
+                </button>
+              </div>
+              {menu === "category" ? (
+                <div className="explorer-map-tools__menu" role="dialog" aria-label="Categoría">
                   <div className="explorer-map-tools__menu-body">
-                  {categories.length > 0 ? (
-                    <fieldset>
-                      <legend>Categoría</legend>
-                      {categories.map((name) => (
+                    {categories.length > 0 ? (
+                      categories.map((name) => (
                         <label key={name}>
                           <input
                             type="checkbox"
@@ -796,13 +846,16 @@ export function MapPage() {
                           />
                           {name}
                         </label>
-                      ))}
-                    </fieldset>
-                  ) : (
-                    <p>Las categorías aparecen cuando hay experiencias en esta zona.</p>
-                  )}
-                  <fieldset>
-                    <legend>Precio</legend>
+                      ))
+                    ) : (
+                      <p>Las categorías aparecen cuando hay experiencias en esta zona.</p>
+                    )}
+                  </div>
+                </div>
+              ) : null}
+              {menu === "price" ? (
+                <div className="explorer-map-tools__menu" role="dialog" aria-label="Precio">
+                  <div className="explorer-map-tools__menu-body">
                     {([
                       ["free", "Gratis"],
                       ["to50", "Hasta $50.000"],
@@ -819,9 +872,12 @@ export function MapPage() {
                         {label}
                       </label>
                     ))}
-                  </fieldset>
-                  <fieldset>
-                    <legend>Compañía</legend>
+                  </div>
+                </div>
+              ) : null}
+              {menu === "company" ? (
+                <div className="explorer-map-tools__menu" role="dialog" aria-label="Compañía">
+                  <div className="explorer-map-tools__menu-body">
                     {MAP_COMPANIONS.map((value) => (
                       <label key={value}>
                         <input
@@ -839,95 +895,15 @@ export function MapPage() {
                         {value}
                       </label>
                     ))}
-                  </fieldset>
-                  <fieldset>
-                    <legend>Distancia</legend>
-                    {([
-                      [5, "Hasta 5 km"],
-                      [10, "Hasta 10 km"],
-                      [25, "Hasta 25 km"],
-                      [50, "Hasta 50 km"],
-                    ] as const).map(([value, label]) => (
-                      <label key={value}>
-                        <input
-                          type="radio"
-                          name="map-distance"
-                          checked={filters.distance === value}
-                          onChange={() => setFilters((current) => ({ ...current, distance: value as MapDistanceBand }))}
-                        />
-                        {label}
-                      </label>
-                    ))}
-                  </fieldset>
-                  <fieldset>
-                    <legend>Valoración</legend>
-                    {([
-                      [4, "4 estrellas o más"],
-                      [3, "3 estrellas o más"],
-                    ] as const).map(([value, label]) => (
-                      <label key={value}>
-                        <input
-                          type="radio"
-                          name="map-rating"
-                          checked={filters.rating === value}
-                          onChange={() => setFilters((current) => ({ ...current, rating: value as MapRatingBand }))}
-                        />
-                        {label}
-                      </label>
-                    ))}
-                  </fieldset>
                   </div>
-                  <button type="button" className="explorer-map-tools__clear" onClick={() => setFilters(EMPTY_MAP_FILTERS)}>
-                    Limpiar filtros
-                  </button>
-                </div>
-              ) : null}
-              {menu === "sort" ? (
-                <div className="explorer-map-tools__menu is-sort" role="dialog" aria-label="Ordenar">
-                  {([
-                    ["near", "Más cercanas"],
-                    ["rating", "Mejor valoradas"],
-                    ["price-asc", "Menor precio"],
-                    ["price-desc", "Mayor precio"],
-                    ["recent", "Más recientes"],
-                  ] as const).map(([value, label]) => (
-                    <label key={value}>
-                      <input
-                        type="radio"
-                        name="map-sort"
-                        checked={sort === value}
-                        onChange={() => {
-                          setSort(value as MapSort);
-                          setMenu(null);
-                        }}
-                      />
-                      {label}
-                    </label>
-                  ))}
                 </div>
               ) : null}
             </div>
-            <label className="explorer-map-name">
-              <Search size={14} strokeWidth={1.7} aria-hidden="true" />
-              <input
-                type="search"
-                value={nameQuery}
-                placeholder="Buscar experiencia"
-                aria-label="Buscar experiencia"
-                autoComplete="off"
-                autoCorrect="off"
-                spellCheck={false}
-                onChange={(event) => setNameQuery(event.target.value)}
-              />
-            </label>
           </div>
           <div className="explorer-map-page__body" aria-live="polite">
             <h2 className="explorer-map-page__section">
               {explore ? `Experiencias en ${explore.label}` : "Experiencias cerca de ti"}
             </h2>
-            {active && !loading && !error ? (
-              <p className="explorer-map-page__status">{resultsCount(points.length)}</p>
-            ) : null}
             {experienceBody}
           </div>
         </aside>
