@@ -174,6 +174,58 @@
   font-size: 0.92rem;
 }
 
+.explorer-map-page__body.is-void {
+  display: flex;
+  flex-direction: column;
+}
+
+.explorer-map-page__body.is-void > .explorer-map-page__section {
+  flex: 0 0 auto;
+}
+
+.explorer-map-page__void {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 17.5rem;
+  margin: 0;
+  padding: 1.6rem 0.85rem 1.85rem;
+  background: transparent;
+  text-align: center;
+}
+
+.explorer-map-page__void img {
+  width: 2.55rem;
+  height: auto;
+  margin: 0 0 1.05rem;
+  pointer-events: none;
+  user-select: none;
+}
+
+.explorer-map-page__void > p {
+  max-width: 12.4rem;
+  margin: 0.85rem 0 0;
+  color: #6b746f;
+  font-family: Poppins, Nunito, system-ui, sans-serif;
+  font-size: 0.8rem;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.explorer-map-page__void > .explorer-map-page__void-title {
+  max-width: 15.25rem;
+  margin: 0;
+  color: #1c332e;
+  font-family: Poppins, Nunito, system-ui, sans-serif;
+  font-size: 0.98rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.35;
+}
+
 .explorer-map-search {
   display: flex;
   align-items: center;

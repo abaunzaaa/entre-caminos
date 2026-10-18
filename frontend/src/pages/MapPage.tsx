@@ -15,6 +15,7 @@ import { getExperiencesNear, getPublicExperiences, type NearbyExperience } from 
 import { listFavoriteIds } from "../services/favorites.service";
 import { onFavoritesChanged } from "../services/favorites-sync";
 import { saveSharedMapLocation } from "../services/onboarding.service";
+import mapaIcon from "../assets/mapa-icon.png";
 import { COLOMBIA_DEPARTMENTS, findMunicipality } from "../data/colombia-locations";
 import { formatPrice } from "../utils/cn";
 import { mapCardPlace, mapCardRegion } from "../utils/experience-region";
@@ -685,6 +686,7 @@ export function MapPage() {
   }
 
   let experienceBody = null;
+  let searchMiss = false;
   if (authLoading || waitingForPlace) {
     experienceBody = <p className="explorer-map-page__status">Preparando el mapa…</p>;
   } else if (!active && searchQuery.trim().length < 2) {
@@ -707,9 +709,11 @@ export function MapPage() {
       </div>
     );
   } else if (points.length === 0) {
-    experienceBody = searchQuery.trim() || filtersAreActive(filters) || exploringPlace ? (
-      <div className="explorer-map-page__empty explorer-map-page__empty--search">
-        <p className="explorer-map-page__empty-title">No encontramos experiencias relacionadas</p>
+    searchMiss = Boolean(searchQuery.trim() || filtersAreActive(filters) || exploringPlace);
+    experienceBody = searchMiss ? (
+      <div className="explorer-map-page__void">
+        <img src={mapaIcon} alt="" />
+        <p className="explorer-map-page__void-title">No encontramos experiencias relacionadas</p>
         <p>Prueba con otro nombre, municipio o lugar.</p>
       </div>
     ) : (
@@ -977,7 +981,7 @@ export function MapPage() {
               ) : null}
             </div>
           </div>
-          <div className="explorer-map-page__body" aria-live="polite">
+          <div className={`explorer-map-page__body${searchMiss ? " is-void" : ""}`} aria-live="polite">
             <h2 className="explorer-map-page__section">
               {exploringPlace && explore
                 ? `Experiencias en ${explore.municipality}`
