@@ -90,6 +90,7 @@ export const onboardingSaveSchema = z.object({
   addressReference: z.preprocess(emptyToNull, z.string().max(160, "La dirección es demasiado larga").nullable().optional()),
   latitude: z.number().gte(-90).lte(90).nullable().optional(),
   longitude: z.number().gte(-180).lte(180).nullable().optional(),
+  currentLocationShared: z.boolean().optional(),
   profileImageType: z.enum(["PHOTO", "AVATAR"]).optional(),
   avatarConfig: avatarConfigSchema.optional(),
   interests: stringList(ONBOARDING_INTERESTS, ONBOARDING_INTEREST_ALIASES).optional(),

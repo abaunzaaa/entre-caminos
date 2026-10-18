@@ -525,6 +525,7 @@ model UserProfile {
   addressReference      String?          @map("address_reference")
   latitude              Decimal?         @db.Decimal(10, 7)
   longitude             Decimal?         @db.Decimal(10, 7)
+  currentLocationShared Boolean          @default(false) @map("current_location_shared")
   profileImageUrl       String?          @map("profile_image_url")
   profileImagePublicId  String?          @map("profile_image_public_id")
   profileImageType      ProfileImageType @default(AVATAR) @map("profile_image_type")

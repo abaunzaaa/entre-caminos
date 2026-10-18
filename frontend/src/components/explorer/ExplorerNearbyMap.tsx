@@ -7,7 +7,8 @@ const MIN_ZOOM = 5;
 const MAX_ZOOM = 18;
 const OVERVIEW_ZOOM = 6;
 /** Vista general de Colombia. No representa la ubicación de una persona. */
-const OVERVIEW = { latitude: 4.570868, longitude: -74.297333 };
+export const COLOMBIA_MAP_OVERVIEW = { latitude: 4.570868, longitude: -74.297333, zoom: OVERVIEW_ZOOM };
+const OVERVIEW = COLOMBIA_MAP_OVERVIEW;
 
 export type ExplorerMapPoint = {
   id: string;
@@ -20,40 +21,31 @@ export type ExplorerMapPoint = {
   distanceKm: number;
 };
 
+export type ExplorerMapView = {
+  latitude: number;
+  longitude: number;
+  zoom: number;
+  token: number;
+};
+
 type ExplorerNearbyMapProps = {
   enabled: boolean;
-  userLocation: { latitude: number; longitude: number } | null;
+  preciseLocation: { latitude: number; longitude: number } | null;
+  view: ExplorerMapView;
+  canRecenter: boolean;
+  onRecenter: () => void;
   points: ExplorerMapPoint[];
   selectedId: string | null;
   focusToken: number;
   onSelect: (id: string | null) => void;
 };
 
-function samePoint(
-  left: { latitude: number; longitude: number },
-  right: { latitude: number; longitude: number },
-) {
-  return Math.abs(left.latitude - right.latitude) < 0.000001 && Math.abs(left.longitude - right.longitude) < 0.000001;
-}
-
-function homeZoomFor(points: ExplorerMapPoint[], width: number, height: number) {
-  const nearby = points.filter((point) => point.distanceKm <= 12);
-  if (!nearby.length || width < 40 || height < 40) {
-    return 13;
-  }
-  const farthest = Math.max(1.2, ...nearby.map((point) => point.distanceKm));
-  const radius = Math.max(1.6, farthest * 1.35);
-  const targetPx = Math.max(180, Math.min(width, height) * 0.42);
-  const zoom = Math.log2((156543.03392 * targetPx) / (radius * 1000));
-  if (!Number.isFinite(zoom)) {
-    return 13;
-  }
-  return Math.min(14, Math.max(12, Math.round(zoom)));
-}
-
 export function ExplorerNearbyMap({
   enabled,
-  userLocation,
+  preciseLocation,
+  view,
+  canRecenter,
+  onRecenter,
   points,
   selectedId,
   focusToken,
@@ -63,6 +55,7 @@ export function ExplorerNearbyMap({
   const onSelectRef = useRef(onSelect);
   const movedRef = useRef(false);
   const seenFocus = useRef(focusToken);
+  const seenView = useRef(0);
   const dragRef = useRef<{
     pointerId: number;
     startX: number;
@@ -73,8 +66,8 @@ export function ExplorerNearbyMap({
   onSelectRef.current = onSelect;
 
   const [size, setSize] = useState({ width: 0, height: 0 });
-  const [center, setCenter] = useState(userLocation ?? OVERVIEW);
-  const [zoom, setZoom] = useState(userLocation ? 13 : OVERVIEW_ZOOM);
+  const [center, setCenter] = useState({ latitude: OVERVIEW.latitude, longitude: OVERVIEW.longitude });
+  const [zoom, setZoom] = useState(OVERVIEW.zoom);
   const [grabbing, setGrabbing] = useState(false);
   const [broken, setBroken] = useState<Record<string, true>>({});
   const centerRef = useRef(center);
@@ -83,18 +76,14 @@ export function ExplorerNearbyMap({
   zoomRef.current = zoom;
 
   useEffect(() => {
-    if (!enabled || size.width < 20 || movedRef.current) {
+    if (!enabled || view.token === 0 || view.token === seenView.current) {
       return;
     }
-    if (userLocation) {
-      const nextZoom = homeZoomFor(points, size.width, size.height);
-      setCenter((current) => (samePoint(current, userLocation) ? current : userLocation));
-      setZoom((current) => (current === nextZoom ? current : nextZoom));
-      return;
-    }
-    setCenter((current) => (samePoint(current, OVERVIEW) ? current : OVERVIEW));
-    setZoom((current) => (current === OVERVIEW_ZOOM ? current : OVERVIEW_ZOOM));
-  }, [enabled, points, size.height, size.width, userLocation]);
+    seenView.current = view.token;
+    movedRef.current = true;
+    setCenter({ latitude: view.latitude, longitude: view.longitude });
+    setZoom(Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, view.zoom)));
+  }, [enabled, view]);
 
   useEffect(() => {
     if (focusToken === seenFocus.current) {
@@ -271,11 +260,10 @@ export function ExplorerNearbyMap({
   }
 
   function recenter() {
-    if (!userLocation) {
+    if (!canRecenter) {
       return;
     }
-    movedRef.current = true;
-    setCenter({ latitude: userLocation.latitude, longitude: userLocation.longitude });
+    onRecenter();
   }
 
   const selected = points.find((point) => point.id === selectedId) ?? null;
@@ -311,12 +299,12 @@ export function ExplorerNearbyMap({
               style={{ transform: `translate(${tile.left}px, ${tile.top}px)` }}
             />
           ))}
-          {userLocation ? (
+          {preciseLocation ? (
             <span
               className="explorer-nearby-map__user"
               role="img"
-              aria-label="Tu ubicación"
-              style={{ left: project(userLocation.latitude, userLocation.longitude).x, top: project(userLocation.latitude, userLocation.longitude).y }}
+              aria-label="Tu ubicación actual"
+              style={{ left: project(preciseLocation.latitude, preciseLocation.longitude).x, top: project(preciseLocation.latitude, preciseLocation.longitude).y }}
             >
               <span className="explorer-nearby-map__user-halo" />
               <span className="explorer-nearby-map__user-dot" />
@@ -392,8 +380,8 @@ export function ExplorerNearbyMap({
             <button type="button" aria-label="Alejar" onClick={() => changeZoom(-1)}>
               −
             </button>
-            {userLocation ? (
-              <button type="button" aria-label="Volver a tu ubicación" onClick={recenter}>
+            {canRecenter ? (
+              <button type="button" aria-label="Volver a tu zona" onClick={recenter}>
                 <LocateFixed size={16} strokeWidth={1.7} aria-hidden="true" />
               </button>
             ) : null}

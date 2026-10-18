@@ -25,6 +25,7 @@ export type UserOnboardingProfile = {
   addressReference: string | null;
   latitude: number | null;
   longitude: number | null;
+  currentLocationShared?: boolean;
   profileImageUrl: string | null;
   profileImagePublicId: string | null;
   profileImageType: ProfileImageType;

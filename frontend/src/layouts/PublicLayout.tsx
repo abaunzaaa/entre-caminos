@@ -8,7 +8,7 @@ import { useAuth } from "../hooks/useAuth";
 import { formatPersonName } from "../utils/person-name";
 import "../styles/explorer.css";
 
-const EXPLORER_CLOSING_PATHS = new Set(["/favoritos", "/mapa", "/plan-con-amigos", "/visitados"]);
+const EXPLORER_CLOSING_PATHS = new Set(["/favoritos", "/plan-con-amigos", "/visitados"]);
 
 export function PublicLayout() {
   const { user, isAdmin, logout } = useAuth();
@@ -20,7 +20,7 @@ export function PublicLayout() {
   if (isExplorer) {
     return (
       <div
-        className={`explorer-page explorer-page--shell min-h-screen text-ink${showClosing ? " explorer-page--closing" : ""}${isBitacora ? " explorer-page--studio" : ""}`}
+        className={`explorer-page explorer-page--shell min-h-screen text-ink${showClosing ? " explorer-page--closing" : ""}${pathname === "/mapa" ? " explorer-page--map" : ""}${isBitacora ? " explorer-page--studio" : ""}`}
       >
         {isBitacora ? null : <ExplorerNavbar />}
         {showClosing ? (
