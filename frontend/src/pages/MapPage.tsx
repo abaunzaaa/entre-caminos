@@ -577,10 +577,13 @@ export function MapPage() {
         title: experience.title,
         latitude,
         longitude,
-        imageUrl: experienceCoverUrl(experience, 160),
+        imageUrl: experienceCoverUrl(experience, 360),
         place: mapCardPlace(experience),
         priceLabel: formatPrice(experience.price, experience.currency),
         distanceKm: experience.distanceKm,
+        categoryName: experience.categoryNames?.find((name) => name.trim())?.trim() ?? "",
+        averageRating: experience.averageRating ?? null,
+        reviewCount: experience.reviewCount ?? 0,
       }];
     });
   }, [visibleExperiences]);

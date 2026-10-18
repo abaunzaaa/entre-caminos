@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { LocateFixed, X } from "lucide-react";
+import { Compass, Dumbbell, Landmark, LocateFixed, Palette, PartyPopper, Trees, Utensils, X, type LucideIcon } from "lucide-react";
 import { TILE_SIZE, latLngToWorld, worldToLatLng } from "../../utils/map-projection";
 
 const MIN_ZOOM = 5;
@@ -19,6 +19,9 @@ export type ExplorerMapPoint = {
   place: string;
   priceLabel: string;
   distanceKm: number;
+  categoryName: string;
+  averageRating: number | null;
+  reviewCount: number;
 };
 
 export type ExplorerMapView = {
@@ -39,6 +42,86 @@ type ExplorerNearbyMapProps = {
   focusToken: number;
   onSelect: (id: string | null) => void;
 };
+
+function foldCategory(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase("es");
+}
+
+const CATEGORY_MARKS: Array<{ match: (name: string) => boolean; Icon: LucideIcon }> = [
+  { match: (name) => name.includes("gastro") || name.includes("cafe"), Icon: Utensils },
+  { match: (name) => name.includes("naturaleza") || name.includes("aventura"), Icon: Trees },
+  { match: (name) => name.includes("bienestar") || name.includes("deport"), Icon: Dumbbell },
+  { match: (name) => name.includes("arte") || name.includes("creativ") || name.includes("artist") || name.includes("taller") || name.includes("foto") || name.includes("music") || name.includes("danza") || name.includes("literat"), Icon: Palette },
+  { match: (name) => name.includes("cultur") || name.includes("histor"), Icon: Landmark },
+  { match: (name) => name.includes("recre") || name.includes("nocturn"), Icon: PartyPopper },
+  { match: (name) => name.includes("turist") || name.includes("urbano") || name.includes("viaje"), Icon: Compass },
+];
+
+function categoryMark(name: string) {
+  const folded = foldCategory(name);
+  return CATEGORY_MARKS.find((item) => item.match(folded))?.Icon ?? Compass;
+}
+
+function popupRating(point: ExplorerMapPoint) {
+  if (point.averageRating == null || !point.reviewCount) {
+    return null;
+  }
+  const value = point.averageRating;
+  const tone = value >= 4.5 ? "high" : value >= 4 ? "good" : value >= 3 ? "mid" : "low";
+  const word = tone === "high" ? "Perfecto" : tone === "good" ? "Bueno" : tone === "mid" ? "Medio" : "Bajo";
+  const score = new Intl.NumberFormat("es-CO", {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  }).format(value);
+  return { tone, word, score, value };
+}
+
+function PopupStars({ value }: { value: number }) {
+  const shown = Math.round(value * 2) / 2;
+  return (
+    <span className="explorer-map-popup__stars" aria-hidden="true">
+      {[0, 1, 2, 3, 4].map((index) => {
+        const amount = Math.max(0, Math.min(1, shown - index));
+        return (
+          <span key={index} className="explorer-map-popup__star">
+            <span className="explorer-map-popup__star-base">★</span>
+            <span className="explorer-map-popup__star-fill" style={{ width: `${amount * 100}%` }}>★</span>
+          </span>
+        );
+      })}
+    </span>
+  );
+}
+
+function placePopup(
+  anchor: { x: number; y: number },
+  card: { width: number; height: number },
+  bounds: { left: number; top: number; right: number; bottom: number },
+) {
+  const tail = 8;
+  const gap = 3;
+  const maxLeft = Math.max(bounds.left, bounds.right - card.width);
+  const maxTop = Math.max(bounds.top, bounds.bottom - card.height);
+  const left = Math.min(Math.max(anchor.x - card.width / 2, bounds.left), maxLeft);
+  let top = anchor.y - card.height - tail - gap;
+  let pointing: "down" | "up" = "down";
+  if (top < bounds.top) {
+    const below = anchor.y + tail + gap;
+    if (below + card.height <= bounds.bottom) {
+      top = below;
+      pointing = "up";
+    } else {
+      top = Math.min(Math.max(top, bounds.top), maxTop);
+    }
+  } else if (top > maxTop) {
+    top = maxTop;
+  }
+  const tip = Math.min(Math.max(anchor.x - left, 16), Math.max(16, card.width - 16));
+  return { left, top, tip, pointing };
+}
 
 export function ExplorerNearbyMap({
   enabled,
@@ -70,6 +153,8 @@ export function ExplorerNearbyMap({
   const [zoom, setZoom] = useState(OVERVIEW.zoom);
   const [grabbing, setGrabbing] = useState(false);
   const [broken, setBroken] = useState<Record<string, true>>({});
+  const [popupSize, setPopupSize] = useState({ width: 300, height: 158 });
+  const popupRef = useRef<HTMLElement>(null);
   const centerRef = useRef(center);
   const zoomRef = useRef(zoom);
   centerRef.current = center;
@@ -271,13 +356,48 @@ export function ExplorerNearbyMap({
   const popupVisible = Boolean(
     selected &&
       selectedPos &&
-      selectedPos.x > -20 &&
-      selectedPos.y > -20 &&
-      selectedPos.x < size.width + 20 &&
-      selectedPos.y < size.height + 20,
+      selectedPos.x > -48 &&
+      selectedPos.y > -48 &&
+      selectedPos.x < size.width + 48 &&
+      selectedPos.y < size.height + 48,
   );
-  const popupBelow = Boolean(selectedPos && selectedPos.y < 132);
-  const popupLeft = selectedPos ? Math.min(Math.max(selectedPos.x, 132), Math.max(132, size.width - 132)) : 0;
+  const popupRatingView = selected ? popupRating(selected) : null;
+  const popupBounds = useMemo(() => {
+    const margin = 10;
+    const bounds = { left: margin, top: margin + 4, right: Math.max(margin + 180, size.width - 54), bottom: Math.max(margin + 140, size.height - margin) };
+    const map = viewportRef.current?.getBoundingClientRect();
+    const panel = document.querySelector(".explorer-map-page__panel");
+    if (map && panel instanceof HTMLElement) {
+      const panelRect = panel.getBoundingClientRect();
+      const overlapLeft = panelRect.right - map.left;
+      const overlapBottom = map.bottom - panelRect.top;
+      if (overlapLeft > 24 && overlapLeft < map.width * 0.8 && panelRect.top <= map.top + 12) {
+        bounds.left = Math.max(bounds.left, overlapLeft + 12);
+      }
+      if (overlapBottom > 24 && panelRect.top > map.top + 80) {
+        bounds.bottom = Math.min(bounds.bottom, size.height - overlapBottom - 12);
+      }
+    }
+    return bounds;
+  }, [size.height, size.width, popupVisible]);
+  const popupCard = {
+    width: Math.min(300, Math.max(220, popupBounds.right - popupBounds.left)),
+    height: popupSize.height,
+  };
+  const popupPlace = selectedPos
+    ? placePopup(selectedPos, popupCard, popupBounds)
+    : null;
+
+  useLayoutEffect(() => {
+    const node = popupRef.current;
+    if (!node) {
+      return;
+    }
+    const rect = node.getBoundingClientRect();
+    const width = Math.round(rect.width);
+    const height = Math.round(rect.height);
+    setPopupSize((current) => (current.width === width && current.height === height ? current : { width, height }));
+  }, [popupVisible, selectedId, popupCard.width, size.width, size.height]);
 
   return (
     <div className="explorer-nearby-map">
@@ -313,13 +433,14 @@ export function ExplorerNearbyMap({
           {points.map((point) => {
             const position = project(point.latitude, point.longitude);
             const active = point.id === selectedId;
+            const Mark = categoryMark(point.categoryName);
             return (
               <button
                 key={point.id}
                 type="button"
                 className={`explorer-nearby-map__pin${active ? " is-selected" : ""}${broken[point.id] ? " is-fallback" : ""}`}
                 style={{ left: position.x, top: position.y }}
-                aria-label={point.title}
+                aria-label={point.categoryName ? `${point.title}. ${point.categoryName}` : point.title}
                 aria-pressed={active}
                 onPointerDown={(event) => event.stopPropagation()}
                 onClick={(event) => {
@@ -327,44 +448,74 @@ export function ExplorerNearbyMap({
                   onSelect(point.id);
                 }}
               >
-                {broken[point.id] ? null : (
-                  <img
-                    src={point.imageUrl}
-                    alt=""
-                    draggable={false}
-                    onError={() => setBroken((current) => ({ ...current, [point.id]: true }))}
-                  />
-                )}
+                <span className="explorer-nearby-map__pin-photo">
+                  {broken[point.id] ? null : (
+                    <img
+                      src={point.imageUrl}
+                      alt=""
+                      draggable={false}
+                      onError={() => setBroken((current) => ({ ...current, [point.id]: true }))}
+                    />
+                  )}
+                </span>
+                <span className="explorer-nearby-map__pin-mark">
+                  <Mark size={11} strokeWidth={1.8} aria-hidden="true" />
+                </span>
               </button>
             );
           })}
-          {popupVisible && selected && selectedPos ? (
+          {popupVisible && selected && popupPlace ? (
             <article
-              className={`explorer-map-popup${popupBelow ? " is-below" : ""}`}
-              style={{ left: popupLeft, top: selectedPos.y }}
+              ref={popupRef}
+              className="explorer-map-popup"
+              style={{ left: popupPlace.left, top: popupPlace.top, width: popupCard.width }}
               onPointerDown={(event) => event.stopPropagation()}
             >
               <button type="button" className="explorer-map-popup__close" aria-label="Cerrar" onClick={() => onSelect(null)}>
-                <X size={14} strokeWidth={1.8} />
+                <X size={13} strokeWidth={1.8} />
               </button>
-              {broken[selected.id] ? (
-                <span className="explorer-map-popup__photo is-fallback" />
-              ) : (
-                <img
-                  className="explorer-map-popup__photo"
-                  src={selected.imageUrl}
-                  alt=""
-                  onError={() => setBroken((current) => ({ ...current, [selected.id]: true }))}
-                />
-              )}
+              <span className="explorer-map-popup__media">
+                {broken[selected.id] ? (
+                  <span className="explorer-map-popup__photo is-fallback" />
+                ) : (
+                  <img
+                    className="explorer-map-popup__photo"
+                    src={selected.imageUrl}
+                    alt=""
+                    onError={() => setBroken((current) => ({ ...current, [selected.id]: true }))}
+                  />
+                )}
+                <Link
+                  className="explorer-map-popup__link"
+                  to={`/explorar/${selected.id}`}
+                  onPointerDown={(event) => event.stopPropagation()}
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  Ver más
+                </Link>
+              </span>
               <div className="explorer-map-popup__copy">
+                <p className="explorer-map-popup__price">{selected.priceLabel}</p>
                 <h2 className="explorer-map-popup__title">{selected.title}</h2>
                 {selected.place ? <p className="explorer-map-popup__place">{selected.place}</p> : null}
-                <p className="explorer-map-popup__price">{selected.priceLabel}</p>
-                <Link className="explorer-map-popup__link" to={`/explorar/${selected.id}`}>
-                  Ver experiencia
-                </Link>
+                <p className={`explorer-map-popup__rating${popupRatingView ? ` is-${popupRatingView.tone}` : " is-empty"}`}>
+                  {popupRatingView ? (
+                    <>
+                      <span className="explorer-map-popup__score">
+                        <span className="explorer-map-popup__pill">{popupRatingView.score}</span>
+                        <span>{popupRatingView.word}</span>
+                      </span>
+                      <PopupStars value={popupRatingView.value} />
+                    </>
+                  ) : (
+                    "Sin reseñas"
+                  )}
+                </p>
               </div>
+              <span
+                className={`explorer-map-popup__tail${popupPlace.pointing === "up" ? " is-up" : ""}`}
+                style={{ left: popupPlace.tip }}
+              />
             </article>
           ) : null}
         </div>
