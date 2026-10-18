@@ -223,6 +223,9 @@ export async function listPublicNearbySources() {
 
 const nearbyMapSelect = {
   ...publicPlaceSelect,
+  isFeatured: true,
+  featuredFrom: true,
+  featuredUntil: true,
   idealFor: true,
   category: { select: { name: true } },
   experienceCategories: {
@@ -310,6 +313,9 @@ export async function listExperiencesNear(input: { latitude: number; longitude: 
       status: match.item.status,
       createdBy: match.item.createdBy,
       createdAt: asIso(match.item.createdAt),
+      isFeatured: match.item.isFeatured,
+      featuredFrom: match.item.featuredFrom ? asIso(match.item.featuredFrom) : null,
+      featuredUntil: match.item.featuredUntil ? asIso(match.item.featuredUntil) : null,
       locations: match.locations,
       distanceKm: match.distanceKm,
       averageRating: score && score.count > 0 ? roundRating(score.total / score.count) : null,

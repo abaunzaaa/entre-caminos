@@ -150,6 +150,9 @@ export type NearbyExperience = Experience & {
   categoryNames?: string[];
   averageRating?: number | null;
   reviewCount?: number;
+  isFeatured?: boolean;
+  featuredFrom?: string | null;
+  featuredUntil?: string | null;
 };
 
 export async function getExperiencesNear(latitude: number, longitude: number, radiusKm?: number) {

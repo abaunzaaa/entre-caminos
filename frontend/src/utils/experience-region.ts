@@ -67,3 +67,23 @@ export function mapCardPlace(experience: {
 
   return "";
 }
+
+/** Departamento y municipio reales de la experiencia, sin inventar una zona. */
+export function mapCardRegion(experience: {
+  location?: string | null;
+  locations?: Array<{ department?: string | null; municipality?: string | null }> | null;
+}) {
+  const stored = experience.locations?.find((item) => item.department?.trim() || item.municipality?.trim());
+  if (stored) {
+    return {
+      department: stored.department?.trim() ?? "",
+      municipality: stored.municipality?.trim() ?? "",
+    };
+  }
+  const place = mapCardPlace(experience);
+  const parts = place.split("·").map((part) => part.trim()).filter(Boolean);
+  if (parts.length >= 2) {
+    return { department: parts[0], municipality: parts[1] };
+  }
+  return { department: "", municipality: parts[0] ?? "" };
+}
