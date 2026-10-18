@@ -6,6 +6,7 @@ import type { AuthUser } from "../models/auth-user.js";
 import { ApiError } from "../utils/api-error.js";
 import { resolveExperienceDuration } from "../utils/experience-duration.js";
 import { searchBounds, selectNearbyExperiences } from "../utils/geo.js";
+import { ratingNumber, reviewScore, roundRating } from "./review-score.js";
 import {
   canMutateApprovedCatalog,
   canReviewExperiences,
@@ -222,6 +223,11 @@ export async function listPublicNearbySources() {
 
 const nearbyMapSelect = {
   ...publicPlaceSelect,
+  category: { select: { name: true } },
+  experienceCategories: {
+    orderBy: { position: "asc" as const },
+    select: { category: { select: { name: true } } },
+  },
   locations: {
     orderBy: { position: "asc" as const },
     select: {
@@ -262,24 +268,52 @@ export async function listExperiencesNear(input: { latitude: number; longitude: 
     orderBy: { createdAt: "desc" },
   });
 
-  return selectNearbyExperiences(rows, input, input.radiusKm).map((match) => ({
-    id: match.item.id,
-    title: match.item.title,
-    description: match.item.description,
-    categoryId: match.item.categoryId,
-    price: match.item.price.toString(),
-    currency: match.item.currency,
-    location: match.item.location,
-    latitude: match.latitude,
-    longitude: match.longitude,
-    imageUrl: match.item.imageUrl,
-    imageUrls: match.item.imageUrls,
-    status: match.item.status,
-    createdBy: match.item.createdBy,
-    createdAt: asIso(match.item.createdAt),
-    locations: match.locations,
-    distanceKm: match.distanceKm,
-  }));
+  const picked = selectNearbyExperiences(rows, input, input.radiusKm);
+  const ids = picked.map((match) => match.item.id);
+  const reviewRows = ids.length
+    ? await prisma.experienceVisitorReview.findMany({
+        where: { experienceId: { in: ids } },
+        select: { experienceId: true, rating: true, organizationRating: true, valueRating: true },
+      })
+    : [];
+  const scores = new Map<string, { total: number; count: number }>();
+  for (const row of reviewRows) {
+    const current = scores.get(row.experienceId) ?? { total: 0, count: 0 };
+    const organization = row.organizationRating == null ? null : ratingNumber(row.organizationRating);
+    const value = row.valueRating == null ? null : ratingNumber(row.valueRating);
+    current.total += reviewScore(ratingNumber(row.rating), organization, value);
+    current.count += 1;
+    scores.set(row.experienceId, current);
+  }
+
+  return picked.map((match) => {
+    const names = (match.item.experienceCategories ?? [])
+      .map((link) => link.category.name.trim())
+      .filter(Boolean);
+    const categoryNames = names.length ? [...new Set(names)] : match.item.category?.name.trim() ? [match.item.category.name.trim()] : [];
+    const score = scores.get(match.item.id);
+    return {
+      id: match.item.id,
+      title: match.item.title,
+      description: match.item.description,
+      categoryId: match.item.categoryId,
+      categoryNames,
+      price: match.item.price.toString(),
+      currency: match.item.currency,
+      location: match.item.location,
+      latitude: match.latitude,
+      longitude: match.longitude,
+      imageUrl: match.item.imageUrl,
+      imageUrls: match.item.imageUrls,
+      status: match.item.status,
+      createdBy: match.item.createdBy,
+      createdAt: asIso(match.item.createdAt),
+      locations: match.locations,
+      distanceKm: match.distanceKm,
+      averageRating: score && score.count > 0 ? roundRating(score.total / score.count) : null,
+      reviewCount: score?.count ?? 0,
+    };
+  });
 }
 
 export async function listAdminExperiences(
