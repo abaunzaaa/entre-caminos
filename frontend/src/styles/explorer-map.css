@@ -1383,6 +1383,7 @@
   background: transparent;
   box-shadow: none;
   overflow: visible;
+  line-height: 0;
   transform: translate(-50%, -100%);
   appearance: none;
   color: inherit;
@@ -1392,6 +1393,8 @@
 
 .explorer-nearby-map__pin-photo {
   display: block;
+  flex: 0 0 auto;
+  box-sizing: border-box;
   width: 2.7rem;
   height: 2.7rem;
   overflow: hidden;
@@ -1410,11 +1413,25 @@
   pointer-events: none;
 }
 
+.explorer-nearby-map__pin-tail {
+  display: block;
+  flex: 0 0 auto;
+  width: 12px;
+  height: 7px;
+  margin-top: -2px;
+  background: #ffffff;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  filter: drop-shadow(0 1px 1px rgba(28, 51, 46, 0.16));
+}
+
 .explorer-nearby-map__pin-mark {
+  position: static;
   display: grid;
+  flex: 0 0 auto;
+  box-sizing: border-box;
   width: 1.2rem;
   height: 1.2rem;
-  margin-top: 0.16rem;
+  margin-top: 0.28rem;
   place-items: center;
   border: 1.5px solid #ffffff;
   border-radius: 999px;
@@ -1435,13 +1452,10 @@
 }
 
 .explorer-nearby-map__pin.is-selected .explorer-nearby-map__pin-photo {
-  display: none;
+  box-shadow: 0 8px 18px rgba(28, 51, 46, 0.2);
 }
 
 .explorer-nearby-map__pin.is-selected .explorer-nearby-map__pin-mark {
-  width: 1.35rem;
-  height: 1.35rem;
-  margin-top: 0;
   background: #1c332e;
 }
 
@@ -1630,6 +1644,7 @@
 .explorer-map-popup__tail {
   position: absolute;
   bottom: -7px;
+  left: 50%;
   z-index: 1;
   width: 14px;
   height: 8px;

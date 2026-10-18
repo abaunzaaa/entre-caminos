@@ -102,14 +102,15 @@ function placePopup(
   bounds: { left: number; top: number; right: number; bottom: number },
 ) {
   const tail = 8;
-  const gap = 3;
+  const pinRise = 72;
+  const gap = 14;
   const maxLeft = Math.max(bounds.left, bounds.right - card.width);
   const maxTop = Math.max(bounds.top, bounds.bottom - card.height);
   const left = Math.min(Math.max(anchor.x - card.width / 2, bounds.left), maxLeft);
-  let top = anchor.y - card.height - tail - gap;
+  let top = anchor.y - pinRise - gap - tail - card.height;
   let pointing: "down" | "up" = "down";
   if (top < bounds.top) {
-    const below = anchor.y + tail + gap;
+    const below = anchor.y + gap + tail;
     if (below + card.height <= bounds.bottom) {
       top = below;
       pointing = "up";
@@ -119,8 +120,7 @@ function placePopup(
   } else if (top > maxTop) {
     top = maxTop;
   }
-  const tip = Math.min(Math.max(anchor.x - left, 16), Math.max(16, card.width - 16));
-  return { left, top, tip, pointing };
+  return { left, top, pointing };
 }
 
 export function ExplorerNearbyMap({
@@ -458,6 +458,7 @@ export function ExplorerNearbyMap({
                     />
                   )}
                 </span>
+                <span className="explorer-nearby-map__pin-tail" aria-hidden="true" />
                 <span className="explorer-nearby-map__pin-mark">
                   <Mark size={11} strokeWidth={1.8} aria-hidden="true" />
                 </span>
@@ -512,10 +513,7 @@ export function ExplorerNearbyMap({
                   )}
                 </p>
               </div>
-              <span
-                className={`explorer-map-popup__tail${popupPlace.pointing === "up" ? " is-up" : ""}`}
-                style={{ left: popupPlace.tip }}
-              />
+              <span className={`explorer-map-popup__tail${popupPlace.pointing === "up" ? " is-up" : ""}`} />
             </article>
           ) : null}
         </div>
