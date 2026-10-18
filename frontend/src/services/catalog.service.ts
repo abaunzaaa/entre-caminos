@@ -145,6 +145,22 @@ export async function getNearbyExperiences() {
   return data.data.experiences;
 }
 
+export type NearbyExperience = Experience & {
+  distanceKm: number;
+};
+
+export async function getExperiencesNear(latitude: number, longitude: number, radiusKm?: number) {
+  const { data } = await api.get<ApiResponse<{ experiences: NearbyExperience[]; radiusKm: number }>>("/experiences", {
+    params: {
+      view: "nearby",
+      latitude,
+      longitude,
+      ...(radiusKm != null ? { radiusKm } : {}),
+    },
+  });
+  return data.data;
+}
+
 export async function getPublicExperience(id: string) {
   const { data } = await api.get<ApiResponse<{ experience: Experience }>>(`/experiences/${id}`);
   return data.data.experience;

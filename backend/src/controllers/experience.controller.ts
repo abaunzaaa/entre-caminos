@@ -3,6 +3,8 @@ import type { Request, Response } from "express";
 import * as experienceService from "../services/experience.service.js";
 import { listCoverFeaturedExperiences, recordDetailView } from "../services/featured-experience.service.js";
 import { listPublicCatalogPage } from "../services/public-catalog.js";
+import { ApiError } from "../utils/api-error.js";
+import { isValidCoordinate, resolveRadiusKm } from "../utils/geo.js";
 import { parseLimitQuery, parseOffsetQuery } from "../utils/query.js";
 
 function queryText(value: unknown, max = 80) {
@@ -15,6 +17,18 @@ function queryText(value: unknown, max = 80) {
 
 function preventStaleRead(res: Response) {
   res.set("Cache-Control", "no-store");
+}
+
+function queryNumber(value: unknown) {
+  const raw = Array.isArray(value) ? value[0] : value;
+  if (typeof raw === "number" && Number.isFinite(raw)) {
+    return raw;
+  }
+  if (typeof raw !== "string" || raw.trim() === "") {
+    return null;
+  }
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) ? parsed : null;
 }
 
 function queryPage(value: unknown) {
@@ -61,6 +75,20 @@ export async function listPublic(req: Request, res: Response) {
     });
   }
   if (view === "nearby") {
+    const askedForPoint = req.query.latitude != null || req.query.longitude != null || req.query.radiusKm != null;
+    if (askedForPoint) {
+      const latitude = queryNumber(req.query.latitude);
+      const longitude = queryNumber(req.query.longitude);
+      if (latitude == null || longitude == null || !isValidCoordinate(latitude, longitude)) {
+        throw ApiError.unprocessable("Necesitamos una latitud y una longitud válidas para buscar experiencias cerca.");
+      }
+      const radiusKm = resolveRadiusKm(queryNumber(req.query.radiusKm));
+      const experiences = await experienceService.listExperiencesNear({ latitude, longitude, radiusKm });
+      return res.json({
+        success: true,
+        data: { experiences, radiusKm, total: experiences.length, hasMore: false },
+      });
+    }
     const experiences = await experienceService.listPublicNearbySources();
     return res.json({
       success: true,

@@ -5,6 +5,7 @@ import { prisma } from "../database/prisma.js";
 import type { AuthUser } from "../models/auth-user.js";
 import { ApiError } from "../utils/api-error.js";
 import { resolveExperienceDuration } from "../utils/experience-duration.js";
+import { searchBounds, selectNearbyExperiences } from "../utils/geo.js";
 import {
   canMutateApprovedCatalog,
   canReviewExperiences,
@@ -217,6 +218,68 @@ export async function listPublicNearbySources() {
     select: publicPlaceSelect,
     orderBy: { createdAt: "desc" },
   });
+}
+
+const nearbyMapSelect = {
+  ...publicPlaceSelect,
+  locations: {
+    orderBy: { position: "asc" as const },
+    select: {
+      department: true,
+      municipality: true,
+      latitude: true,
+      longitude: true,
+    },
+  },
+} as const;
+
+function asIso(value: Date | string) {
+  return value instanceof Date ? value.toISOString() : String(value);
+}
+
+/** Experiencias publicadas dentro del radio de un punto. El radio llega ya resuelto. */
+export async function listExperiencesNear(input: { latitude: number; longitude: number; radiusKm: number }) {
+  const box = searchBounds(input.latitude, input.longitude, input.radiusKm);
+  const rows = await prisma.experience.findMany({
+    where: {
+      status: "PUBLISHED",
+      OR: [
+        {
+          latitude: { gte: box.minLat, lte: box.maxLat },
+          longitude: { gte: box.minLng, lte: box.maxLng },
+        },
+        {
+          locations: {
+            some: {
+              latitude: { gte: box.minLat, lte: box.maxLat },
+              longitude: { gte: box.minLng, lte: box.maxLng },
+            },
+          },
+        },
+      ],
+    },
+    select: nearbyMapSelect,
+    orderBy: { createdAt: "desc" },
+  });
+
+  return selectNearbyExperiences(rows, input, input.radiusKm).map((match) => ({
+    id: match.item.id,
+    title: match.item.title,
+    description: match.item.description,
+    categoryId: match.item.categoryId,
+    price: match.item.price.toString(),
+    currency: match.item.currency,
+    location: match.item.location,
+    latitude: match.latitude,
+    longitude: match.longitude,
+    imageUrl: match.item.imageUrl,
+    imageUrls: match.item.imageUrls,
+    status: match.item.status,
+    createdBy: match.item.createdBy,
+    createdAt: asIso(match.item.createdAt),
+    locations: match.locations,
+    distanceKm: match.distanceKm,
+  }));
 }
 
 export async function listAdminExperiences(
