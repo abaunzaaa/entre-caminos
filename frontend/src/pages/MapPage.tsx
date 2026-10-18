@@ -11,10 +11,11 @@ import { experienceCoverUrl } from "../components/explorer/explorer-media";
 import { MapExperienceReviews } from "../components/explorer/MapExperienceReviews";
 import { useAuth } from "../hooks/useAuth";
 import { useFavoriteToggle } from "../hooks/useFavoriteToggle";
-import { getExperiencesNear, type NearbyExperience } from "../services/catalog.service";
+import { getExperiencesNear, getPublicExperiences, type NearbyExperience } from "../services/catalog.service";
 import { listFavoriteIds } from "../services/favorites.service";
 import { onFavoritesChanged } from "../services/favorites-sync";
 import { saveSharedMapLocation } from "../services/onboarding.service";
+import { COLOMBIA_DEPARTMENTS, findMunicipality } from "../data/colombia-locations";
 import { formatPrice } from "../utils/cn";
 import { mapCardPlace, mapCardRegion } from "../utils/experience-region";
 import {
@@ -44,6 +45,10 @@ type ExplorePlace = MapPoint & {
   municipality: string;
   department: string;
 };
+
+function isKnownMunicipality(label: string) {
+  return COLOMBIA_DEPARTMENTS.some((department) => Boolean(findMunicipality(department.name, label)));
+}
 
 function foldPlace(value: string) {
   return value
@@ -224,20 +229,19 @@ export function MapPage() {
   const [reloadKey, setReloadKey] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [focusToken, setFocusToken] = useState(0);
-  const [locationSearchQuery, setLocationSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [nameMatches, setNameMatches] = useState<NearbyExperience[]>([]);
   const [suggestions, setSuggestions] = useState<ColombiaPlaceSuggestion[]>([]);
-  const [searchState, setSearchState] = useState<"idle" | "loading" | "miss" | "error">("idle");
+  const [searchState, setSearchState] = useState<"idle" | "loading" | "error">("idle");
   const [searchOpen, setSearchOpen] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [shareError, setShareError] = useState("");
   const [filters, setFilters] = useState<MapFilters>(EMPTY_MAP_FILTERS);
   const [sort] = useState<MapSort>("near");
   const [menu, setMenu] = useState<"category" | "price" | "company" | null>(null);
-  const [nameQuery, setNameQuery] = useState("");
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(() => new Set());
   const searchRequest = useRef(0);
   const chosenPlaceQuery = useRef("");
-  const placeSearchRef = useRef<HTMLDivElement>(null);
   const toolsRef = useRef<HTMLDivElement>(null);
   const pendingSelect = useRef<string | null>(null);
   const pageRef = useRef<HTMLElement>(null);
@@ -266,7 +270,7 @@ export function MapPage() {
       if (menu && !toolsRef.current?.contains(target)) {
         setMenu(null);
       }
-      if (searchOpen && !placeSearchRef.current?.contains(target)) {
+      if (searchOpen && !toolsRef.current?.contains(target)) {
         setSearchOpen(false);
       }
     }
@@ -342,15 +346,28 @@ export function MapPage() {
     };
   }, [authLoading, city, department, shared, user]);
 
+  const nameFocus = useMemo(() => {
+    if (explore || searchQuery.trim().length < 2) {
+      return null;
+    }
+    const hit = nameMatches.find((item) => Number.isFinite(Number(item.latitude)) && Number.isFinite(Number(item.longitude)));
+    if (!hit) {
+      return null;
+    }
+    return { latitude: Number(hit.latitude), longitude: Number(hit.longitude) };
+  }, [explore, nameMatches, searchQuery]);
+
   const sourceKey = explore
     ? `explore:${explore.latitude.toFixed(5)},${explore.longitude.toFixed(5)}`
-    : waitingForPlace || authLoading
-      ? "pending"
-      : shared
-        ? `shared:${shared.latitude.toFixed(5)},${shared.longitude.toFixed(5)}`
-        : approx
-          ? `approx:${approx.latitude.toFixed(5)},${approx.longitude.toFixed(5)}`
-          : "overview";
+    : nameFocus
+      ? `name:${nameFocus.latitude.toFixed(5)},${nameFocus.longitude.toFixed(5)}`
+      : waitingForPlace || authLoading
+        ? "pending"
+        : shared
+          ? `shared:${shared.latitude.toFixed(5)},${shared.longitude.toFixed(5)}`
+          : approx
+            ? `approx:${approx.latitude.toFixed(5)},${approx.longitude.toFixed(5)}`
+            : "overview";
 
   if (sourceKey !== "pending" && sourceKey !== trackedView.key) {
     setTrackedView({ key: sourceKey, token: trackedView.token + 1 });
@@ -358,15 +375,15 @@ export function MapPage() {
   const viewToken = trackedView.token;
 
   const view = useMemo<ExplorerMapView>(() => {
-    const point = active ?? COLOMBIA_MAP_OVERVIEW;
-    const zoom = explore || shared ? 13 : approx && !explore ? 12 : COLOMBIA_MAP_OVERVIEW.zoom;
+    const point = explore ?? nameFocus ?? active ?? COLOMBIA_MAP_OVERVIEW;
+    const zoom = explore || nameFocus || shared ? 13 : approx && !explore ? 12 : COLOMBIA_MAP_OVERVIEW.zoom;
     return {
       latitude: point.latitude,
       longitude: point.longitude,
       zoom,
       token: viewToken,
     };
-  }, [active, approx, explore, shared, viewToken]);
+  }, [active, approx, explore, nameFocus, shared, viewToken]);
 
   useEffect(() => {
     if (authLoading || waitingForPlace || !active) {
@@ -400,12 +417,56 @@ export function MapPage() {
     };
   }, [active, authLoading, reloadKey, waitingForPlace]);
 
+  const exploringPlace = Boolean(explore && foldPlace(searchQuery) === foldPlace(explore.municipality));
+
   useEffect(() => {
-    const text = locationSearchQuery.trim();
+    const text = searchQuery.trim();
+    if (text.length < 2 || exploringPlace) {
+      setNameMatches([]);
+      return;
+    }
+    let cancelled = false;
+    getPublicExperiences({ q: text, page: 1, limit: 20 })
+      .then((data) => {
+        if (cancelled) {
+          return;
+        }
+        setNameMatches(data.experiences.flatMap((experience) => {
+          const latitude = Number(experience.latitude);
+          const longitude = Number(experience.longitude);
+          if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+            return [];
+          }
+          const linked = experience.experienceCategories?.map((item) => item.category.name).filter(Boolean) ?? [];
+          return [{
+            ...experience,
+            latitude,
+            longitude,
+            distanceKm: Number.POSITIVE_INFINITY,
+            categoryNames: linked.length ? linked : experience.category?.name ? [experience.category.name] : [],
+            idealFor: experience.idealFor ?? [],
+          }];
+        }));
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setNameMatches([]);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [exploringPlace, searchQuery]);
+
+  useEffect(() => {
+    const text = searchQuery.trim();
     if (text.length < 2) {
       setSuggestions([]);
       setSearchState("idle");
       setSearchOpen(false);
+      if (explore) {
+        setExplore(null);
+      }
       return;
     }
     if (foldPlace(text) === foldPlace(chosenPlaceQuery.current)) {
@@ -423,9 +484,15 @@ export function MapPage() {
           if (requestId !== searchRequest.current) {
             return;
           }
+          const exact = places.find((place) => foldPlace(place.label) === foldPlace(text) && isKnownMunicipality(place.label));
+          if (exact) {
+            void choosePlace(exact, text, requestId);
+            return;
+          }
           setSuggestions(places);
-          setSearchState(places.length ? "idle" : "miss");
+          setSearchState("idle");
           setSearchOpen(places.length > 0);
+          setExplore((current) => (current && foldPlace(current.municipality) !== foldPlace(text) ? null : current));
         })
         .catch(() => {
           if (requestId !== searchRequest.current) {
@@ -437,15 +504,25 @@ export function MapPage() {
         });
     }, 400);
     return () => window.clearTimeout(handle);
-  }, [locationSearchQuery]);
+  }, [searchQuery]);
 
-  const locatedExperiences = useMemo(
-    () => (explore ? experiences.filter((item) => matchesExploredMunicipality(item, explore)) : experiences),
-    [explore, experiences],
-  );
+  const locatedExperiences = useMemo(() => {
+    if (exploringPlace && explore) {
+      return experiences.filter((item) => matchesExploredMunicipality(item, explore));
+    }
+    if (searchQuery.trim().length >= 2) {
+      return nameMatches;
+    }
+    return experiences;
+  }, [explore, experiences, exploringPlace, nameMatches, searchQuery]);
   const visibleExperiences = useMemo(
-    () => applyMapResults(locatedExperiences, filters, active ? sort : sort === "near" ? "recent" : sort, nameQuery),
-    [active, filters, locatedExperiences, nameQuery, sort],
+    () => applyMapResults(
+      locatedExperiences,
+      filters,
+      active ? sort : sort === "near" ? "recent" : sort,
+      exploringPlace ? "" : searchQuery,
+    ),
+    [active, exploringPlace, filters, locatedExperiences, searchQuery, sort],
   );
   const categories = useMemo(() => categoryOptions(locatedExperiences), [locatedExperiences]);
 
@@ -510,7 +587,8 @@ export function MapPage() {
   function clearExploredPlace() {
     chosenPlaceQuery.current = "";
     setExplore(null);
-    setLocationSearchQuery("");
+    setSearchQuery("");
+    setNameMatches([]);
     setSuggestions([]);
     setSearchOpen(false);
     setSearchState("idle");
@@ -521,18 +599,22 @@ export function MapPage() {
     clearExploredPlace();
   }
 
-  async function choosePlace(suggestion: ColombiaPlaceSuggestion) {
+  async function choosePlace(suggestion: ColombiaPlaceSuggestion, shown = suggestion.label, requestId = searchRequest.current) {
     setSearchOpen(false);
-    setSearchState("loading");
+    setSuggestions([]);
+    chosenPlaceQuery.current = shown;
+    setSearchQuery(shown);
     const departmentName = suggestion.detail.split("·")[0]?.replace(/colombia/i, "").trim() ?? "";
     try {
       const match = await resolveColombiaPlace(suggestion);
-      if (!match) {
-        setSearchState("miss");
+      if (requestId !== searchRequest.current) {
         return;
       }
-      chosenPlaceQuery.current = suggestion.label;
-      setLocationSearchQuery(suggestion.label);
+      if (!match) {
+        chosenPlaceQuery.current = "";
+        setSearchState("idle");
+        return;
+      }
       setExplore({
         latitude: match.lat,
         longitude: match.lng,
@@ -541,11 +623,13 @@ export function MapPage() {
         municipality: suggestion.label,
         department: departmentName,
       });
-      setSuggestions([]);
       setSelectedId(null);
       setSearchState("idle");
     } catch {
-      setSearchState("error");
+      if (requestId === searchRequest.current) {
+        chosenPlaceQuery.current = "";
+        setSearchState("error");
+      }
     }
   }
 
@@ -603,7 +687,7 @@ export function MapPage() {
   let experienceBody = null;
   if (authLoading || waitingForPlace) {
     experienceBody = <p className="explorer-map-page__status">Preparando el mapa…</p>;
-  } else if (!active) {
+  } else if (!active && searchQuery.trim().length < 2) {
     experienceBody = (
       <p className="explorer-map-page__status">
         {user
@@ -611,7 +695,7 @@ export function MapPage() {
           : "Busca una experiencia para ver el mapa en esa zona."}
       </p>
     );
-  } else if (loading) {
+  } else if (loading && (exploringPlace || searchQuery.trim().length < 2)) {
     experienceBody = <p className="explorer-map-page__status">Buscando experiencias cercanas…</p>;
   } else if (error) {
     experienceBody = (
@@ -623,28 +707,14 @@ export function MapPage() {
       </div>
     );
   } else if (points.length === 0) {
-    experienceBody = filtersAreActive(filters) || nameQuery.trim() ? (
-      <div className="explorer-map-page__empty">
-        <p className="explorer-map-page__empty-title">Ninguna experiencia coincide con estos filtros.</p>
-        <button
-          type="button"
-          className="explorer-map-tools__clear"
-          aria-label="Limpiar filtros"
-          title="Limpiar filtros"
-          onClick={() => {
-            setFilters(EMPTY_MAP_FILTERS);
-            setNameQuery("");
-          }}
-        >
-          <Trash2 size={14} strokeWidth={1.8} aria-hidden="true" />
-        </button>
+    experienceBody = searchQuery.trim() || filtersAreActive(filters) || exploringPlace ? (
+      <div className="explorer-map-page__empty explorer-map-page__empty--search">
+        <p className="explorer-map-page__empty-title">No encontramos experiencias relacionadas</p>
+        <p>Prueba con otro nombre, municipio o lugar.</p>
       </div>
     ) : (
       <div className="explorer-map-page__empty explorer-map-page__empty--search">
-        <p className="explorer-map-page__empty-title">
-          {explore ? "No encontramos experiencias relacionadas con esta búsqueda." : "Aún no encontramos experiencias en esta zona."}
-        </p>
-        {explore ? <p>Prueba con otro municipio o explora otra zona.</p> : null}
+        <p className="explorer-map-page__empty-title">Aún no encontramos experiencias en esta zona.</p>
       </div>
     );
   } else {
@@ -739,52 +809,59 @@ export function MapPage() {
               <p className="explorer-map-search__note">No pudimos ubicar el municipio. Puedes buscar una experiencia o compartir tu ubicación.</p>
             ) : null}
             <hr className="explorer-map-rule" />
-            <div className="explorer-map-place-search" ref={placeSearchRef}>
-              <label className="explorer-map-place-search__field">
-                <Search size={13} strokeWidth={1.8} aria-hidden="true" />
-                <input
-                  type="search"
-                  value={locationSearchQuery}
-                  placeholder="Buscar municipio o lugar"
-                  aria-label="Buscar municipio o lugar"
-                  aria-expanded={searchOpen && suggestions.length > 0}
-                  aria-controls="map-place-results"
-                  autoComplete="off"
-                  autoCorrect="off"
-                  spellCheck={false}
-                  onChange={(event) => {
-                    chosenPlaceQuery.current = "";
-                    setLocationSearchQuery(event.target.value);
-                  }}
-                  onFocus={() => {
-                    setMenu(null);
-                    if (suggestions.length > 0) {
-                      setSearchOpen(true);
-                    }
-                  }}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" && suggestions[0]) {
-                      event.preventDefault();
-                      void choosePlace(suggestions[0]);
-                    }
-                  }}
-                />
-                {locationSearchQuery ? (
-                  <button
-                    type="button"
-                    className="explorer-map-place-search__clear"
-                    aria-label="Limpiar búsqueda de lugar"
-                    title="Limpiar búsqueda"
-                    onClick={clearExploredPlace}
-                  >
-                    <X size={14} strokeWidth={1.8} aria-hidden="true" />
-                  </button>
-                ) : null}
-              </label>
-              {searchState === "loading" ? <p className="explorer-map-search__note">Buscando lugar…</p> : null}
-              {searchState === "error" ? (
-                <p className="explorer-map-search__note">No pudimos buscar este lugar ahora. Puedes intentarlo de nuevo.</p>
-              ) : null}
+            <div className="explorer-map-tools" ref={toolsRef}>
+              <div className="explorer-map-tools__top">
+                <label className="explorer-map-name">
+                  <Search size={13} strokeWidth={1.8} aria-hidden="true" />
+                  <input
+                    type="search"
+                    value={searchQuery}
+                    placeholder="Buscar experiencia o lugar"
+                    aria-label="Buscar experiencia o lugar"
+                    aria-expanded={searchOpen && suggestions.length > 0}
+                    aria-controls="map-place-results"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    onChange={(event) => {
+                      chosenPlaceQuery.current = "";
+                      setSearchQuery(event.target.value);
+                    }}
+                    onFocus={() => {
+                      setMenu(null);
+                      if (suggestions.length > 0) {
+                        setSearchOpen(true);
+                      }
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" && suggestions[0]) {
+                        event.preventDefault();
+                        void choosePlace(suggestions[0], suggestions[0].label);
+                      }
+                    }}
+                  />
+                  {searchQuery ? (
+                    <button
+                      type="button"
+                      className="explorer-map-name__clear"
+                      aria-label="Limpiar búsqueda"
+                      title="Limpiar búsqueda"
+                      onClick={clearExploredPlace}
+                    >
+                      <X size={14} strokeWidth={1.8} aria-hidden="true" />
+                    </button>
+                  ) : null}
+                </label>
+                <button
+                  type="button"
+                  className="explorer-map-tools__clear"
+                  aria-label="Limpiar filtros"
+                  title="Limpiar filtros"
+                  onClick={() => setFilters(EMPTY_MAP_FILTERS)}
+                >
+                  <Trash2 size={14} strokeWidth={1.8} aria-hidden="true" />
+                </button>
+              </div>
               {searchOpen && suggestions.length > 0 ? (
                 <ul id="map-place-results" className="explorer-map-search__results" role="listbox">
                   {suggestions.map((item) => (
@@ -797,33 +874,6 @@ export function MapPage() {
                   ))}
                 </ul>
               ) : null}
-            </div>
-            <div className="explorer-map-tools" ref={toolsRef}>
-              <div className="explorer-map-tools__top">
-                <label className="explorer-map-name">
-                  <Search size={13} strokeWidth={1.8} aria-hidden="true" />
-                  <input
-                    type="search"
-                    value={nameQuery}
-                    placeholder="Buscar experiencia"
-                    aria-label="Buscar experiencia"
-                    autoComplete="off"
-                    autoCorrect="off"
-                    spellCheck={false}
-                    onChange={(event) => setNameQuery(event.target.value)}
-                    onFocus={() => setMenu(null)}
-                  />
-                </label>
-                <button
-                  type="button"
-                  className="explorer-map-tools__clear"
-                  aria-label="Limpiar filtros"
-                  title="Limpiar filtros"
-                  onClick={() => setFilters(EMPTY_MAP_FILTERS)}
-                >
-                  <Trash2 size={14} strokeWidth={1.8} aria-hidden="true" />
-                </button>
-              </div>
               <div className="explorer-map-tools__facets">
                 <button
                   type="button"
@@ -928,19 +978,17 @@ export function MapPage() {
             </div>
           </div>
           <div className="explorer-map-page__body" aria-live="polite">
-            {searchState === "miss" ? (
-              <div className="explorer-map-page__empty explorer-map-page__empty--search">
-                <p className="explorer-map-page__empty-title">No encontramos este lugar</p>
-                <p>Prueba con el nombre de un municipio o lugar diferente.</p>
-              </div>
-            ) : null}
             <h2 className="explorer-map-page__section">
-              {explore ? `Experiencias en ${explore.municipality}` : "Experiencias cerca de ti"}
+              {exploringPlace && explore
+                ? `Experiencias en ${explore.municipality}`
+                : searchQuery.trim()
+                  ? "Experiencias relacionadas"
+                  : "Experiencias cerca de ti"}
             </h2>
-            {points.length > 0 ? (
+            {!loading && points.length > 0 ? (
               <p className="explorer-map-result-count">
                 <strong>{points.length}</strong>
-                <span>{points.length === 1 ? "Experiencia" : "Experiencias"}</span>
+                <span>{points.length === 1 ? "experiencia encontrada" : "experiencias encontradas"}</span>
               </p>
             ) : null}
             {experienceBody}
