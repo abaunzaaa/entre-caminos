@@ -150,6 +150,8 @@ export type NearbyExperience = Experience & {
   categoryNames?: string[];
   averageRating?: number | null;
   reviewCount?: number;
+  visitCount?: number;
+  mostVisited?: boolean;
   isFeatured?: boolean;
   featuredFrom?: string | null;
   featuredUntil?: string | null;

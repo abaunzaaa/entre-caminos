@@ -56,11 +56,15 @@ export async function listPublic(req: Request, res: Response) {
       plan: queryText(req.query.plan),
       sort: req.query.sort === "oldest" ? "oldest" : "newest",
     });
+    const signals = await experienceService.mapCardSignals(data.experiences.map((item) => item.id));
     return res.json({
       success: true,
       data: {
         ...data,
-        experiences: data.experiences.map((item) => experienceService.toPublicExperiencePayload(item)),
+        experiences: data.experiences.map((item) => ({
+          ...experienceService.toPublicExperiencePayload(item),
+          ...signals.for(item.id),
+        })),
       },
     });
   }

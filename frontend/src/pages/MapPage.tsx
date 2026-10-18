@@ -8,7 +8,6 @@ import {
   type ExplorerMapView,
 } from "../components/explorer/ExplorerNearbyMap";
 import { experienceCoverUrl } from "../components/explorer/explorer-media";
-import { MapExperienceReviews } from "../components/explorer/MapExperienceReviews";
 import { useAuth } from "../hooks/useAuth";
 import { useFavoriteToggle } from "../hooks/useFavoriteToggle";
 import { getExperiencesNear, getPublicExperiences, type NearbyExperience } from "../services/catalog.service";
@@ -93,31 +92,25 @@ function formatDistance(km: number) {
   return `${new Intl.NumberFormat("es-CO", { minimumFractionDigits: digits, maximumFractionDigits: digits }).format(km)} km`;
 }
 
-const NEW_EXPERIENCE_MS = 30 * 24 * 60 * 60 * 1000;
+const NEW_EXPERIENCE_MS = 5 * 24 * 60 * 60 * 1000;
 
-function isPopularExperience(experience: NearbyExperience) {
-  if (experience.isFeatured !== true) {
-    return false;
+function publicationTime(experience: NearbyExperience) {
+  const reviewed = experience.reviewedAt ? new Date(experience.reviewedAt).getTime() : Number.NaN;
+  if (Number.isFinite(reviewed)) {
+    return reviewed;
   }
-  const now = Date.now();
-  const from = experience.featuredFrom ? new Date(experience.featuredFrom).getTime() : Number.NaN;
-  const until = experience.featuredUntil ? new Date(experience.featuredUntil).getTime() : Number.NaN;
-  if (Number.isFinite(from) && from > now) {
-    return false;
-  }
-  if (Number.isFinite(until) && until < now) {
-    return false;
-  }
-  return true;
+  const created = new Date(experience.createdAt).getTime();
+  return Number.isFinite(created) ? created : Number.NaN;
 }
 
 function cardBadge(experience: NearbyExperience) {
-  if (isPopularExperience(experience)) {
-    return "Popular";
-  }
-  const created = new Date(experience.createdAt).getTime();
-  if (Number.isFinite(created) && Date.now() - created <= NEW_EXPERIENCE_MS) {
+  const published = publicationTime(experience);
+  const now = Date.now();
+  if (Number.isFinite(published) && published <= now && now - published < NEW_EXPERIENCE_MS) {
     return "Nuevo";
+  }
+  if (experience.mostVisited) {
+    return "Popular";
   }
   return null;
 }
@@ -126,14 +119,31 @@ function ratingPresentation(experience: NearbyExperience) {
   if (experience.averageRating == null || !experience.reviewCount) {
     return null;
   }
-  const tone = experience.averageRating >= 4.5 ? "high" : experience.averageRating >= 3.5 ? "mid" : "low";
-  const word = tone === "high" ? "Perfecto" : tone === "mid" ? "Bueno" : "Malo";
+  const value = experience.averageRating;
+  const tone = value >= 4.5 ? "high" : value >= 4 ? "good" : value >= 3 ? "mid" : "low";
+  const word = tone === "high" ? "Perfecto" : tone === "good" ? "Bueno" : tone === "mid" ? "Medio" : "Bajo";
   const score = new Intl.NumberFormat("es-CO", {
     minimumFractionDigits: 1,
     maximumFractionDigits: 1,
-  }).format(experience.averageRating);
-  const reviews = experience.reviewCount === 1 ? "1 reseña" : `${experience.reviewCount} reseñas`;
-  return { tone, word, score, reviews };
+  }).format(value);
+  return { tone, word, score, value };
+}
+
+function StarMarks({ value }: { value: number }) {
+  const shown = Math.round(value * 2) / 2;
+  return (
+    <span className="explorer-map-card__stars" aria-hidden="true">
+      {[0, 1, 2, 3, 4].map((index) => {
+        const amount = Math.max(0, Math.min(1, shown - index));
+        return (
+          <span key={index} className="explorer-map-card__star">
+            <span className="explorer-map-card__star-base">★</span>
+            <span className="explorer-map-card__star-fill" style={{ width: `${amount * 100}%` }}>★</span>
+          </span>
+        );
+      })}
+    </span>
+  );
 }
 
 function MapExplorerCard({
@@ -177,18 +187,17 @@ function MapExplorerCard({
           <span className="explorer-map-card__meta" aria-hidden={distance ? undefined : true}>
             {distance || "\u00a0"}
           </span>
-          <span className={`explorer-map-card__rating${rating ? "" : " is-empty"}`}>
+          <span className={`explorer-map-card__rating${rating ? ` is-${rating.tone}` : " is-empty"}`}>
             {rating ? (
               <>
-                <span className={`explorer-map-card__score is-${rating.tone}`}>
-                  {rating.score} {rating.word}
+                <span className="explorer-map-card__score">
+                  <span className="explorer-map-card__pill">{rating.score}</span>
+                  <span className="explorer-map-card__word">{rating.word}</span>
                 </span>
-                <span className="explorer-map-card__stars">
-                  <span aria-hidden="true">★</span> {rating.score} · {rating.reviews}
-                </span>
+                <StarMarks value={rating.value} />
               </>
             ) : (
-              "Sin reseñas"
+              <span className="explorer-map-card__word">Sin reseñas</span>
             )}
           </span>
         </span>
@@ -731,7 +740,7 @@ export function MapPage() {
           }
           const selected = point.id === selectedId;
           return (
-            <li key={point.id} id={`nearby-${point.id}`} className={selected ? "is-open" : undefined}>
+            <li key={point.id} id={`nearby-${point.id}`}>
               <MapExplorerCard
                 experience={experience}
                 place={point.place}
@@ -741,7 +750,6 @@ export function MapPage() {
                 favorited={favoriteIds.has(point.id)}
                 onSelect={() => selectFromList(point.id)}
               />
-              {selected ? <MapExperienceReviews experienceId={point.id} /> : null}
             </li>
           );
         })}

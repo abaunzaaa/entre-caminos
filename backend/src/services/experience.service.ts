@@ -223,6 +223,7 @@ export async function listPublicNearbySources() {
 
 const nearbyMapSelect = {
   ...publicPlaceSelect,
+  reviewedAt: true,
   isFeatured: true,
   featuredFrom: true,
   featuredUntil: true,
@@ -245,6 +246,61 @@ const nearbyMapSelect = {
 
 function asIso(value: Date | string) {
   return value instanceof Date ? value.toISOString() : String(value);
+}
+
+/** Mismo tamaño que el cupo público de destacadas: las más vistas, no un umbral inventado. */
+const POPULAR_VISIT_GROUP = 5;
+
+function mostVisitedIds(rows: Array<{ experienceId: string; visits: number }>) {
+  const ranked = rows
+    .filter((row) => row.visits > 0)
+    .sort((left, right) => right.visits - left.visits || left.experienceId.localeCompare(right.experienceId));
+  const window = ranked.slice(0, POPULAR_VISIT_GROUP);
+  const edge = window.at(-1)?.visits ?? 0;
+  const tiedBeyond = ranked.slice(POPULAR_VISIT_GROUP).some((row) => row.visits === edge);
+  const chosen = tiedBeyond ? window.filter((row) => row.visits > edge) : window;
+  return new Set(chosen.map((row) => row.experienceId));
+}
+
+/** Visitas reales de ficha y promedio de reseñas para las tarjetas del mapa. */
+export async function mapCardSignals(ids: string[]) {
+  const unique = [...new Set(ids)];
+  const [reviewRows, viewRows] = await Promise.all([
+    unique.length
+      ? prisma.experienceVisitorReview.findMany({
+          where: { experienceId: { in: unique } },
+          select: { experienceId: true, rating: true, organizationRating: true, valueRating: true },
+        })
+      : Promise.resolve([]),
+    prisma.experienceDetailView.groupBy({
+      by: ["experienceId"],
+      where: { experience: { status: "PUBLISHED" } },
+      _count: { _all: true },
+    }),
+  ]);
+  const scores = new Map<string, { total: number; count: number }>();
+  for (const row of reviewRows) {
+    const current = scores.get(row.experienceId) ?? { total: 0, count: 0 };
+    const organization = row.organizationRating == null ? null : ratingNumber(row.organizationRating);
+    const value = row.valueRating == null ? null : ratingNumber(row.valueRating);
+    current.total += reviewScore(ratingNumber(row.rating), organization, value);
+    current.count += 1;
+    scores.set(row.experienceId, current);
+  }
+  const visits = viewRows.map((row) => ({ experienceId: row.experienceId, visits: row._count._all }));
+  const popular = mostVisitedIds(visits);
+  const counts = new Map(visits.map((row) => [row.experienceId, row.visits]));
+  return {
+    for(id: string) {
+      const score = scores.get(id);
+      return {
+        visitCount: counts.get(id) ?? 0,
+        mostVisited: popular.has(id),
+        averageRating: score && score.count > 0 ? roundRating(score.total / score.count) : null,
+        reviewCount: score?.count ?? 0,
+      };
+    },
+  };
 }
 
 /** Experiencias publicadas dentro del radio de un punto. El radio llega ya resuelto. */
@@ -273,29 +329,14 @@ export async function listExperiencesNear(input: { latitude: number; longitude: 
   });
 
   const picked = selectNearbyExperiences(rows, input, input.radiusKm);
-  const ids = picked.map((match) => match.item.id);
-  const reviewRows = ids.length
-    ? await prisma.experienceVisitorReview.findMany({
-        where: { experienceId: { in: ids } },
-        select: { experienceId: true, rating: true, organizationRating: true, valueRating: true },
-      })
-    : [];
-  const scores = new Map<string, { total: number; count: number }>();
-  for (const row of reviewRows) {
-    const current = scores.get(row.experienceId) ?? { total: 0, count: 0 };
-    const organization = row.organizationRating == null ? null : ratingNumber(row.organizationRating);
-    const value = row.valueRating == null ? null : ratingNumber(row.valueRating);
-    current.total += reviewScore(ratingNumber(row.rating), organization, value);
-    current.count += 1;
-    scores.set(row.experienceId, current);
-  }
+  const signals = await mapCardSignals(picked.map((match) => match.item.id));
 
   return picked.map((match) => {
     const names = (match.item.experienceCategories ?? [])
       .map((link) => link.category.name.trim())
       .filter(Boolean);
     const categoryNames = names.length ? [...new Set(names)] : match.item.category?.name.trim() ? [match.item.category.name.trim()] : [];
-    const score = scores.get(match.item.id);
+    const signal = signals.for(match.item.id);
     return {
       id: match.item.id,
       title: match.item.title,
@@ -313,13 +354,16 @@ export async function listExperiencesNear(input: { latitude: number; longitude: 
       status: match.item.status,
       createdBy: match.item.createdBy,
       createdAt: asIso(match.item.createdAt),
+      reviewedAt: match.item.reviewedAt ? asIso(match.item.reviewedAt) : null,
       isFeatured: match.item.isFeatured,
       featuredFrom: match.item.featuredFrom ? asIso(match.item.featuredFrom) : null,
       featuredUntil: match.item.featuredUntil ? asIso(match.item.featuredUntil) : null,
       locations: match.locations,
       distanceKm: match.distanceKm,
-      averageRating: score && score.count > 0 ? roundRating(score.total / score.count) : null,
-      reviewCount: score?.count ?? 0,
+      averageRating: signal.averageRating,
+      reviewCount: signal.reviewCount,
+      visitCount: signal.visitCount,
+      mostVisited: signal.mostVisited,
     };
   });
 }
