@@ -13,6 +13,13 @@
 .experience-detail-panel > .dash-exps-place,
 .experience-detail-panel > .experience-reviews {
   margin-top: 0;
+  background: #fbfbf8;
+}
+
+.experience-detail-panel > .dash-exps-dossier,
+.experience-detail-panel > .dash-exps-place,
+.experience-detail-panel > .experience-reviews {
+  padding-top: 2.15rem;
 }
 
 .experience-detail-panel {
@@ -40,58 +47,64 @@
 }
 
 .experience-detail-nav-slot {
-  position: sticky;
-  top: var(--explorer-nav-height, 4.75rem);
-  z-index: 6;
+  position: static;
+  z-index: auto;
   width: 100%;
   margin: 0;
-  padding: 0.95rem clamp(1.4rem, 5vw, 4.75rem) 0.2rem;
-  border-bottom: 1px solid rgba(41, 73, 66, 0.08);
-  background: rgba(251, 251, 248, 0.96);
-  backdrop-filter: blur(12px);
+  padding: 1.65rem clamp(1.4rem, 5vw, 4.75rem) 0.35rem;
+  border: 0;
+  background: #fbfbf8;
+  backdrop-filter: none;
 }
 
 .experience-detail-nav {
   display: flex;
-  flex-direction: row;
-  align-items: flex-end;
-  justify-content: center;
-  gap: clamp(1.35rem, 4vw, 3.25rem);
-  width: min(100%, 42rem);
-  margin: 0 auto;
-  padding: 0;
-}
-
-.experience-detail-nav__tab {
-  position: relative;
-  display: flex;
+  flex-flow: row nowrap;
   align-items: center;
   justify-content: center;
-  min-height: 0;
-  padding: 0.35rem 0.15rem 0.7rem;
+  gap: 0.4rem;
+  box-sizing: border-box;
+  width: min(100%, 38rem);
+  margin: 0 auto;
+  padding: 0.4rem;
   border: 0;
-  border-radius: 0;
-  background: transparent;
-  color: #6d7a74;
-  cursor: pointer;
+  border-radius: 1.15rem;
+  background: #e7eeeb;
   box-shadow: none;
 }
 
-.experience-detail-nav__tab:hover,
-.experience-detail-nav__tab.is-active {
+.experience-detail-nav__tab {
+  display: inline-flex;
+  flex: 1 1 0;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-width: 0;
+  min-height: 2.55rem;
+  padding: 0.55rem 1rem;
+  border: 0;
+  border-radius: 0.85rem;
   background: transparent;
+  color: #5f6b66;
+  cursor: pointer;
+  box-shadow: none;
+  transition: background-color 180ms ease, color 180ms ease;
+}
+
+.experience-detail-nav__tab:hover {
+  background: rgba(255, 255, 255, 0.46);
+  color: #1c332e;
+}
+
+.experience-detail-nav__tab.is-active,
+.experience-detail-nav__tab.is-active:hover {
+  border: 0;
+  background: #ffffff;
   color: #1c332e;
 }
 
 .experience-detail-nav__tab.is-active::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0.15rem;
-  height: 2px;
-  border-radius: 999px;
-  background: #294942;
+  content: none;
 }
 
 .experience-detail-nav__tab:focus-visible {
@@ -99,16 +112,19 @@
   outline-offset: 3px;
 }
 
+.experience-detail-nav__tab svg {
+  flex: 0 0 auto;
+}
+
 .experience-detail-nav__label {
-  writing-mode: horizontal-tb;
-  transform: none;
   font-family: Poppins, Nunito, system-ui, sans-serif;
-  font-size: 0.72rem;
+  font-size: 0.92rem;
   font-weight: 500;
-  letter-spacing: 0.14em;
-  line-height: 1.15;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
   text-align: center;
-  text-transform: uppercase;
+  text-transform: none;
+  white-space: nowrap;
 }
 
 .experience-reviews {
@@ -908,29 +924,33 @@
 
 @media (max-width: 640px) {
   .experience-detail-nav-slot {
+    padding-top: 1.25rem;
     padding-right: 0.85rem;
     padding-left: 0.85rem;
   }
 
   .experience-detail-nav {
-    justify-content: flex-start;
-    gap: 1.15rem;
+    justify-content: center;
+    gap: 0.28rem;
     width: 100%;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-
-  .experience-detail-nav::-webkit-scrollbar {
-    display: none;
+    padding: 0.32rem;
+    overflow: visible;
   }
 
   .experience-detail-nav__tab {
-    flex: 0 0 auto;
+    gap: 0.32rem;
+    min-height: 2.35rem;
+    padding: 0.42rem 0.45rem;
+  }
+
+  .experience-detail-nav__tab svg {
+    width: 15px;
+    height: 15px;
   }
 
   .experience-detail-nav__label {
-    font-size: 0.66rem;
-    letter-spacing: 0.1em;
+    font-size: 0.78rem;
+    letter-spacing: 0.01em;
   }
 }
 

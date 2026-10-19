@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { useLocation } from "react-router-dom";
-import { Heart } from "lucide-react";
+import { CircleHelp, Heart } from "lucide-react";
 import { VisitedCheckIcon } from "../icons/VisitedCheckIcon";
 import { ExperienceEditorialDossier, type ExperienceEditorialFact } from "./ExperienceEditorialDossier";
 import { ExperienceEditorialGallery } from "./ExperienceEditorialGallery";
@@ -414,24 +414,25 @@ export function ExperienceEditorialView({
         <h2 className="dash-exps-editorial__title">{experience.title}</h2>
         {locationByline ? <p className="dash-exps-editorial__byline">{locationByline}</p> : null}
         {showTouristActions ? (
-          <div className="dash-exps-editorial__actions">
+          <div className="dash-exps-editorial__actions experience-hero-actions">
             {onConsultAi ? (
               <button
                 type="button"
-                className="dash-exps-editorial__guide"
+                className="experience-hero-action"
                 aria-label="Pregúntale a tu guía"
-                title="Pregúntale a tu guía"
+                data-tooltip="Pregúntale a tu guía"
                 onClick={onConsultAi}
               >
-                Pregúntale a tu guía
+                <CircleHelp size={16} strokeWidth={1.75} aria-hidden="true" />
               </button>
             ) : null}
             {onVisitedToggle ? (
               <button
                 type="button"
-                className={`dash-exps-editorial__visited${isVisited ? " is-on" : ""}`}
+                className={`experience-hero-action${isVisited ? " is-on" : ""}`}
                 aria-pressed={isVisited}
-                aria-label={isVisited ? "Quitar de visitados" : "Marcar como visitado"}
+                aria-label={isVisited ? "Marcado como visitado" : "Marcar como visitado"}
+                data-tooltip={isVisited ? "Marcado como visitado" : "Marcar como visitado"}
                 disabled={visitedBusy}
                 onClick={() => {
                   if (!visitedBusy) {
@@ -439,15 +440,16 @@ export function ExperienceEditorialView({
                   }
                 }}
               >
-                <VisitedCheckIcon filled={isVisited} />
-                <span>{isVisited ? "Ya visité esta experiencia" : "Marcar como visitado"}</span>
+                <VisitedCheckIcon filled={isVisited} size={16} />
               </button>
             ) : null}
             {onFavoriteToggle ? (
               <button
                 type="button"
-                className={`dash-exps-editorial__favorite${isFavorite ? " is-on" : ""}`}
+                className={`experience-hero-action${isFavorite ? " is-on" : ""}`}
                 aria-pressed={isFavorite}
+                aria-label={isFavorite ? "Quitar de favoritos" : "Agregar a favoritos"}
+                data-tooltip={isFavorite ? "Quitar de favoritos" : "Agregar a favoritos"}
                 disabled={favoriteBusy}
                 onClick={() => {
                   if (!favoriteBusy) {
@@ -456,12 +458,11 @@ export function ExperienceEditorialView({
                 }}
               >
                 <Heart
-                  size={14}
-                  strokeWidth={1.8}
+                  size={16}
+                  strokeWidth={1.75}
                   fill={isFavorite ? "currentColor" : "none"}
                   aria-hidden="true"
                 />
-                <span>{isFavorite ? "En favoritos" : "Añadir a favoritos"}</span>
               </button>
             ) : null}
           </div>
@@ -530,6 +531,7 @@ export function ExperienceEditorialView({
         experience={view}
         hrefFor={nearbyHref}
         fetchPublished={fetchNearby}
+        limit={mode === "tourist" ? 4 : undefined}
       />
     </section>
   );

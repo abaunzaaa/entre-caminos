@@ -5494,7 +5494,7 @@ html:has(.tourist-editorial-shell) {
   box-sizing: border-box;
   margin-top: -4.5rem;
   padding-top: calc(var(--explorer-nav-height, 4.75rem) + 1.65rem);
-  padding-bottom: clamp(1.15rem, 2vh, 1.65rem);
+  padding-bottom: clamp(1.5rem, 2.6vh, 2.15rem);
 }
 
 .tourist-editorial-shell .dash-exps-editorial__hero {
@@ -5572,18 +5572,196 @@ html:has(.tourist-editorial-shell) {
 
 .tourist-editorial-shell .dash-exps-editorial__title {
   flex: 0 0 auto;
+  width: min(100%, 48rem);
   margin-top: 2.35rem;
+  margin-right: auto;
+  margin-left: auto;
+  font-size: clamp(1.5rem, 2.1vw, 1.75rem);
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  line-height: 1.28;
 }
 
 .tourist-editorial-shell .dash-exps-editorial__byline {
   flex: 0 0 auto;
-  margin-top: 0.7rem;
+  width: min(100%, 28rem);
+  margin-top: 0.75rem;
+  margin-right: auto;
+  margin-left: auto;
+  font-size: clamp(0.75rem, 1.05vw, 0.875rem);
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  line-height: 1.5;
+}
+
+.tourist-editorial-shell .dash-exps-place__title {
+  max-width: 28rem;
+  margin-right: auto;
+  margin-left: auto;
+  font-size: clamp(1.5rem, 2.1vw, 1.75rem);
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  line-height: 1.28;
+  text-wrap: pretty;
+}
+
+.tourist-editorial-shell .dash-exps-nearby__title {
+  width: max-content;
+  max-width: 100%;
+  margin-right: auto;
+  margin-left: auto;
+  font-size: clamp(1.15rem, 2.2vw, 1.75rem);
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  line-height: 1.28;
+  white-space: nowrap;
+}
+
+.tourist-editorial-shell .dash-exps-place__lead {
+  max-width: 28rem;
+  margin-top: 0.75rem;
+  font-size: clamp(0.75rem, 1.05vw, 0.875rem);
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  line-height: 1.5;
+}
+
+.tourist-editorial-shell .dash-exps-nearby__lead {
+  width: max-content;
+  max-width: 100%;
+  margin-top: 0.75rem;
+  margin-right: auto;
+  margin-left: auto;
+  font-size: clamp(0.62rem, 1.95vw, 0.875rem);
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.tourist-editorial-shell .dash-exps-nearby__grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 16.5rem));
+  justify-content: center;
+  align-items: stretch;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.tourist-editorial-shell .dash-exps-nearby__card {
+  height: 100%;
+  border-radius: 18px;
+}
+
+.tourist-editorial-shell .dash-exps-nearby__photo img {
+  aspect-ratio: 4 / 3;
+  min-height: 0;
+  height: auto;
+}
+
+.tourist-editorial-shell .dash-exps-nearby__glass {
+  right: 10px;
+  bottom: 10px;
+  min-height: 26px;
+  padding: 4px 12px;
+  font-size: 12px;
+}
+
+.tourist-editorial-shell .dash-exps-nearby__body {
+  gap: 0.35rem;
+  padding: 0.78rem 0.85rem 0.9rem;
+}
+
+.tourist-editorial-shell .dash-exps-nearby__name {
+  min-height: 2.6em;
+  font-size: 0.92rem;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.tourist-editorial-shell .dash-exps-nearby__place {
+  min-height: 1.4em;
+  font-size: 0.72rem;
 }
 
 .tourist-editorial-shell .dash-exps-editorial__actions {
   flex: 0 0 auto;
   margin-top: 1.15rem;
-  margin-bottom: auto;
+  margin-bottom: 0;
+}
+
+.tourist-editorial-shell .experience-hero-actions {
+  gap: 0.95rem;
+}
+
+.tourist-editorial-shell .experience-hero-action {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  margin: 0;
+  padding: 0;
+  border: 1px solid rgba(28, 51, 46, 0.14);
+  border-radius: 999px;
+  background: #ffffff;
+  color: #1c332e;
+  cursor: pointer;
+  box-shadow: none;
+  transition: background-color 180ms ease, border-color 180ms ease;
+}
+
+.tourist-editorial-shell .experience-hero-action:hover {
+  background: #f4f7f6;
+  border-color: rgba(28, 51, 46, 0.28);
+}
+
+.tourist-editorial-shell .experience-hero-action.is-on {
+  border-color: transparent;
+  background: #e7eeeb;
+  color: #1c332e;
+}
+
+.tourist-editorial-shell .experience-hero-action:focus-visible {
+  outline: 2px solid #294942;
+  outline-offset: 3px;
+}
+
+.tourist-editorial-shell .experience-hero-action:disabled {
+  cursor: wait;
+  opacity: 0.68;
+}
+
+.tourist-editorial-shell .experience-hero-action::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 0.45rem);
+  z-index: 3;
+  padding: 0.32rem 0.55rem;
+  border-radius: 0.45rem;
+  background: #1c332e;
+  color: #ffffff;
+  font-family: Poppins, Nunito, system-ui, sans-serif;
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+  white-space: nowrap;
+  text-transform: none;
+  pointer-events: none;
+  opacity: 0;
+  box-shadow: 0 6px 16px rgba(28, 51, 46, 0.12);
+  transform: translateX(-50%);
+  transition: opacity 160ms ease;
+}
+
+.tourist-editorial-shell .experience-hero-action:hover::after,
+.tourist-editorial-shell .experience-hero-action:focus-visible::after {
+  opacity: 1;
 }
 
 .tourist-editorial-shell .dash-exps-editorial__empty {
@@ -5619,6 +5797,19 @@ html:has(.tourist-editorial-shell) {
   .tourist-editorial-shell .dash-exps-nearby {
     padding-bottom: calc(2.2rem + 3.5rem);
   }
+
+  .tourist-editorial-shell .dash-exps-editorial__title,
+  .tourist-editorial-shell .dash-exps-place__title {
+    width: 100%;
+    max-width: 100%;
+    letter-spacing: 0.12em;
+  }
+}
+
+@media (max-width: 440px) {
+  .tourist-editorial-shell .dash-exps-nearby__lead {
+    letter-spacing: 0.02em;
+  }
 }
 
 @media (max-width: 1100px) {
@@ -5637,7 +5828,7 @@ html:has(.tourist-editorial-shell) {
   .tourist-editorial-shell.dash--exps-preview .dash-exps-editorial {
     margin-top: -4.5rem;
     padding-top: calc(var(--explorer-nav-height, 4.75rem) + 1.35rem);
-    padding-bottom: 1.15rem;
+    padding-bottom: 1.45rem;
   }
 
   .tourist-editorial-shell .dash-exps-editorial__track {
@@ -5661,7 +5852,7 @@ html:has(.tourist-editorial-shell) {
   .tourist-editorial-shell .dash-exps-editorial,
   .tourist-editorial-shell.dash--exps-preview .dash-exps-editorial {
     padding-top: calc(var(--explorer-nav-height, 4.75rem) + 1.15rem);
-    padding-bottom: 1rem;
+    padding-bottom: 1.28rem;
   }
 
   .tourist-editorial-shell .dash-exps-editorial__track {
