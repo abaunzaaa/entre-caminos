@@ -1,5 +1,6 @@
 import { NavLink, Link, useLocation } from "react-router-dom";
 import {
+  CircleHelp,
   Compass,
   LayoutDashboard,
   Sparkles,
@@ -64,6 +65,13 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     icon: Sparkles,
     permission: "experiences.manage",
     match: ["/admin/destacadas"],
+  },
+  {
+    to: "/admin/preguntas-frecuentes",
+    label: "Preguntas frecuentes",
+    icon: CircleHelp,
+    permission: null,
+    match: ["/admin/preguntas-frecuentes"],
   },
 ];
 

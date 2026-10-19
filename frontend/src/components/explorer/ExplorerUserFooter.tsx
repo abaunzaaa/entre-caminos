@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { Link } from "react-router-dom";
 import footerUser from "../../assets/footer-user.png";
 import brandLogo from "../../assets/logo.png";
 import { useInViewReveal } from "../../hooks/useInViewReveal";
@@ -41,6 +42,13 @@ export function ExplorerUserFooter() {
             >
               Elige un lugar, sal de la rutina y vive una nueva experiencia.
             </p>
+            <Link
+              to="/preguntas-frecuentes"
+              className="explorer-user-footer__faq explorer-reveal explorer-reveal--soft"
+              style={{ "--reveal-delay": "220ms" } as CSSProperties}
+            >
+              Preguntas frecuentes
+            </Link>
           </div>
         </div>
         <a

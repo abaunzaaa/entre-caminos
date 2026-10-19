@@ -9,6 +9,7 @@ export const NOTIFICATION_TYPES = {
   CATEGORY_PENDING: "CATEGORY_PENDING",
   CATEGORY_REJECTED: "CATEGORY_REJECTED",
   CATEGORY_APPROVED: "CATEGORY_APPROVED",
+  FAQ_RECEIVED: "FAQ_RECEIVED",
 } as const;
 
 type CreateNotificationInput = {
@@ -171,6 +172,28 @@ export async function notifyCategoryApproved(input: {
       entityId: input.categoryId,
     },
   ]);
+}
+
+export async function notifyFaqReceived(input: {
+  faqId: string;
+  subject: string;
+  excerpt: string;
+  authorName: string;
+}) {
+  const reviewerIds = await findSuperAdminIds();
+  const excerpt = input.excerpt.trim();
+  const preview = excerpt.length > 160 ? `${excerpt.slice(0, 157).trimEnd()}…` : excerpt;
+  await createNotifications(
+    reviewerIds.map((userId) => ({
+      userId,
+      type: NOTIFICATION_TYPES.FAQ_RECEIVED,
+      title: "Nueva pregunta recibida en Preguntas Frecuentes",
+      body: `Un usuario ha enviado una nueva pregunta.\nAsunto: ${input.subject}\nDe: ${input.authorName}${preview ? `\n${preview}` : ""}`,
+      link: "/admin/preguntas-frecuentes",
+      entity: "Faq",
+      entityId: input.faqId,
+    })),
+  );
 }
 
 export async function listNotifications(userId: string) {

@@ -5284,6 +5284,22 @@ button.fav-folder:focus-visible {
   line-height: 1.4;
 }
 
+.explorer-user-footer__faq {
+  margin-top: 0.42rem;
+  color: rgba(255, 255, 255, 0.88);
+  font-family: Poppins, Nunito, system-ui, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 400;
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+}
+
+.explorer-user-footer__faq:hover,
+.explorer-user-footer__faq:focus-visible {
+  color: #ffffff;
+}
+
 .explorer-user-footer__rates {
   position: absolute;
   z-index: 2;

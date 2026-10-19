@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import logoEntreCaminos from "../../assets/logo.png";
 import { ContactModal } from "../contact/ContactModal";
 import { HowItWorksModal } from "../how-it-works/HowItWorksModal";
@@ -51,6 +52,9 @@ export function LandingFooter({ variant = "public" }: LandingFooterProps) {
                     >
                       Contacto
                     </a>
+                  </li>
+                  <li>
+                    <Link to="/preguntas-frecuentes">Preguntas frecuentes</Link>
                   </li>
                 </ul>
               </div>

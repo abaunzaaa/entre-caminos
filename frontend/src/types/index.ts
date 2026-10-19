@@ -222,3 +222,52 @@ export type ApiResponse<T> = {
   data: T;
   error?: { code: string; message: string; details?: unknown };
 };
+
+export type FaqStatus = "PENDING" | "ANSWERED" | "PUBLISHED" | "HIDDEN" | "DISCARDED";
+export type FaqSource = "USER_SUBMISSION" | "ADMIN_CREATED";
+
+export type PublicFaq = {
+  id: string;
+  subject: string;
+  question: string;
+  answer: string;
+  publishedAt: string | null;
+};
+
+export type FaqPerson = {
+  id: string;
+  name: string;
+  email?: string;
+};
+
+export type AdminFaq = {
+  id: string;
+  subject: string;
+  question: string;
+  answer: string | null;
+  status: FaqStatus;
+  source: FaqSource;
+  publishedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  user: (FaqPerson & { email: string }) | null;
+  reviewedBy: FaqPerson | null;
+};
+
+export type FaqCounts = {
+  total: number;
+  pending: number;
+  answered: number;
+  published: number;
+  hidden: number;
+  discarded: number;
+};
+
+export type FaqList<T> = {
+  faqs: T[];
+  total: number;
+  page: number;
+  limit: number;
+  pageCount: number;
+  counts?: FaqCounts;
+};

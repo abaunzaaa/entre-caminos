@@ -1709,12 +1709,12 @@
 
 .profile-stamps__back-ring.is-gap {
   background: #f7f3ea;
-  transform: scale(0.972);
+  transform: scale(0.978);
 }
 
 .profile-stamps__back-ring.is-inner {
   background: #1c332e;
-  transform: scale(0.944);
+  transform: scale(0.956);
 }
 
 .profile-stamps__back-face {
@@ -1729,7 +1729,7 @@
   color: var(--profile-forest);
   text-align: center;
   cursor: pointer;
-  transform: scale(0.916);
+  transform: scale(0.934);
   container-type: inline-size;
 }
 

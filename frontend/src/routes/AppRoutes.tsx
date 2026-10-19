@@ -33,6 +33,8 @@ import { PermissionsPage } from "../pages/admin/PermissionsPage";
 import { CategoriesPage } from "../pages/admin/CategoriesPage";
 import { ExperiencesPage } from "../pages/admin/ExperiencesPage";
 import { FeaturedExperiencesPage } from "../pages/admin/FeaturedExperiencesPage";
+import { FaqsPage } from "../pages/admin/FaqsPage";
+import { FaqPage } from "../pages/FaqPage";
 import { ExperienceFormPage } from "../pages/admin/ExperienceFormPage";
 import { ExperiencePreviewPage } from "../pages/admin/ExperiencePreviewPage";
 import { GuideHost } from "../components/guide/GuideHost";
@@ -51,6 +53,8 @@ const PAGE_TITLES: Record<string, string> = {
   "/perfil": "Tu perfil | Entre Caminos",
   "/mis-caminos": "Mis caminos | Entre Caminos",
   "/mis-caminos/bitacora": "Mi bitácora | Entre Caminos",
+  "/preguntas-frecuentes": "Preguntas frecuentes | Entre Caminos",
+  "/admin/preguntas-frecuentes": "Preguntas frecuentes | Entre Caminos",
   "/perfil/editar": "Editar perfil | Entre Caminos",
   "/admin/perfil": "Tu perfil | Entre Caminos",
   "/admin/perfil/editar": "Editar perfil | Entre Caminos",
@@ -180,6 +184,7 @@ export function AppRoutes() {
             <Route path="experiences" element={<ExperiencesPage />} />
             <Route path="experiencias" element={<ExperiencesPage />} />
             <Route path="destacadas" element={<FeaturedExperiencesPage />} />
+            <Route path="preguntas-frecuentes" element={<FaqsPage />} />
             <Route path="experiencias/nueva" element={<ExperienceFormPage />} />
             <Route path="experiencias/:id/ver" element={<ExperiencePreviewPage />} />
             <Route path="experiencias/:id" element={<ExperienceFormPage />} />
@@ -188,6 +193,7 @@ export function AppRoutes() {
             <Route path="experiences/:id" element={<ExperienceFormPage />} />
           </Route>
         </Route>
+        <Route path="/preguntas-frecuentes" element={<FaqPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         <GuideHost />

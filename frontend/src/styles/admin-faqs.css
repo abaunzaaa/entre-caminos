@@ -1,0 +1,114 @@
+.dash--faqs {
+  position: relative;
+  background: #ffffff;
+}
+
+.dash-faq-summary {
+  max-width: 40rem;
+  margin: 0;
+  color: var(--admin-muted, #6b746f);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.dash-faq-card {
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.dash-faq-card__body {
+  min-width: 0;
+  flex: 1 1 220px;
+}
+
+.dash-faq-card__body h3 {
+  white-space: normal;
+}
+
+.dash-faq-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 2px;
+  margin-left: auto;
+}
+
+.dash-team-confirm__card.dash-faq-dialog {
+  width: min(100%, 640px);
+}
+
+.dash-faq-dialog .dash-team-confirm__scroll {
+  gap: 14px;
+}
+
+.dash-faq-kicker {
+  margin: 0 0 6px;
+  color: #8a968f;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.dash-faq-copy {
+  margin: 0 0 14px;
+  color: #1c332e;
+  font-size: 14.5px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+.dash-faq-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin: 0 0 16px;
+  color: #68736e;
+  font-size: 13px;
+}
+
+.dash-faq-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.dash-faq-choices button {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 12px;
+  background: #f3f6f4;
+  color: #68736e;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.dash-faq-choices button.is-selected {
+  background: #294942;
+  color: #ffffff;
+}
+
+.faq-admin-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 4px;
+  color: #1c332e;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.faq-admin-check input {
+  margin-top: 3px;
+  accent-color: #294942;
+}
+
+@media (max-width: 720px) {
+  .dash-faq-card__actions {
+    width: 100%;
+    margin-left: 0;
+    justify-content: flex-start;
+  }
+}

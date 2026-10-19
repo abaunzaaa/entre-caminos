@@ -51,6 +51,19 @@ enum ContactType {
   ALIADO
 }
 
+enum FaqStatus {
+  PENDING
+  ANSWERED
+  PUBLISHED
+  HIDDEN
+  DISCARDED
+}
+
+enum FaqSource {
+  USER_SUBMISSION
+  ADMIN_CREATED
+}
+
 model Role {
   id          String           @id @default(uuid())
   name        String           @unique
@@ -124,6 +137,8 @@ model User {
   journeyMemories          JourneyMemory[]
   bitacora                 Bitacora?
   bitacoraAssets           BitacoraAsset[]
+  faqsSubmitted            Faq[]                     @relation("FaqSubmittedBy")
+  faqsReviewed             Faq[]                     @relation("FaqReviewedBy")
 
   @@index([roleId])
   @@index([status])
@@ -632,6 +647,30 @@ model Contact {
   @@index([status])
   @@index([type])
   @@map("contacts")
+}
+
+/// Pregunta frecuente. La página pública solo muestra PUBLISHED con respuesta.
+model Faq {
+  id           String     @id @default(uuid())
+  subject      String
+  question     String
+  answer       String?
+  status       FaqStatus  @default(PENDING)
+  source       FaqSource
+  userId       String?    @map("user_id")
+  reviewedById String?    @map("reviewed_by_id")
+  publishedAt  DateTime?  @map("published_at")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  user       User? @relation("FaqSubmittedBy", fields: [userId], references: [id], onDelete: SetNull)
+  reviewedBy User? @relation("FaqReviewedBy", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([status, publishedAt])
+  @@index([createdAt])
+  @@index([source])
+  @@index([userId])
+  @@map("faqs")
 }
 
 /// Estilo del planner de un usuario. No guarda estampitas del pasaporte.
