@@ -192,7 +192,7 @@ function ReviewDetailModal({
                 {mood !== "Selecciona una calificación" ? <p className="experience-review-detail__mood">{mood}</p> : null}
                 {review.recommended != null ? (
                   <p className="experience-review-detail__recommend">
-                    {review.recommended ? "✓ La recomienda" : "✕ No la recomienda"}
+                    {review.recommended ? "La recomienda" : "No la recomienda"}
                   </p>
                 ) : null}
                 {own && onEdit && onDelete ? (
@@ -283,7 +283,7 @@ function ReviewCard({
       <Stars value={shown} />
       {mood !== "Selecciona una calificación" ? <p className="experience-reviews__quote-mood">{mood}</p> : null}
       {review.recommended != null ? (
-        <p className="experience-reviews__quote-recommend">{review.recommended ? "✓ La recomienda" : "✕ No la recomienda"}</p>
+        <p className="experience-reviews__quote-recommend">{review.recommended ? "La recomienda" : "No la recomienda"}</p>
       ) : null}
       <button type="button" className="experience-reviews__quote-more" onClick={() => setDetailOpen(true)}>
         Ver más →
