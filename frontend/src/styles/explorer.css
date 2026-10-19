@@ -1241,15 +1241,10 @@
   position: relative;
   z-index: 1;
   box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
   width: 100%;
   max-width: none;
-  min-height: calc(100vh - var(--explorer-nav-height, 4.75rem));
-  min-height: calc(100svh - var(--explorer-nav-height, 4.75rem));
   margin: 0;
-  padding: 5rem 1.25rem 4.75rem;
+  padding: 4.5rem 1.5rem 4.75rem;
   overflow: visible;
   scroll-margin-top: var(--explorer-nav-height, 4.75rem);
   background: #ffffff;
@@ -1292,7 +1287,7 @@
 #mapa .explorer-section__head {
   display: flex;
   justify-content: center;
-  margin-bottom: 2rem;
+  margin-bottom: 3.1rem;
   text-align: center;
 }
 
@@ -1307,7 +1302,7 @@
   display: block;
   width: 4rem;
   height: auto;
-  margin: 0 0 1.35rem;
+  margin: 0 0 0.85rem;
   pointer-events: none;
   user-select: none;
 }
@@ -1319,39 +1314,81 @@
   text-align: center;
 }
 
-#mapa .explorer-section__lead {
-  margin-top: 1.55rem;
+#mapa .explorer-discover-lead {
+  max-width: 44rem;
+  margin-top: 1.15rem;
+  color: #6b746f;
+  font-weight: 400;
+  letter-spacing: 0.12em;
 }
 
-#mapa .explorer-soft-grid {
-  align-self: center;
+#mapa .explorer-empty {
+  position: relative;
+  z-index: 1;
+  margin-top: 1.6rem;
+}
+
+.explorer-map-preview {
   width: min(100%, 76rem);
-  margin-inline: auto;
-  gap: 0.85rem;
+  margin: 0 auto;
 }
 
-#mapa .explorer-soft-card {
-  grid-template-columns: 3.5rem minmax(0, 1fr);
-  gap: 0.65rem;
-  padding: 0.5rem 0.6rem;
-  border-radius: 0.95rem;
+.explorer-map-preview__frame {
+  position: relative;
+  height: clamp(24rem, 62vh, 36rem);
+  overflow: hidden;
+  border-radius: 1.4rem;
+  background: #e7eeea;
+  box-shadow: 0 16px 36px rgba(28, 51, 46, 0.08);
 }
 
-#mapa .explorer-soft-card img {
-  width: 3.5rem;
-  height: 3.5rem;
-  border-radius: 0.7rem;
+.explorer-map-preview__actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.2rem;
 }
 
-#mapa .explorer-soft-card h3 {
-  font-size: 0.86rem;
-  line-height: 1.28;
-}
-
-#mapa .explorer-soft-card p {
-  margin-top: 0.18rem;
+.explorer-map-preview__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.42rem 1.15rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--explorer-forest, #1c332e);
+  color: #ffffff;
+  text-decoration: none;
+  font-family: Poppins, Nunito, system-ui, sans-serif;
   font-size: 0.72rem;
-  line-height: 1.35;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  line-height: 1.5;
+  box-shadow: 0 8px 20px rgba(28, 51, 46, 0.12);
+  transition: transform 220ms ease, background 220ms ease, box-shadow 220ms ease;
+}
+
+.explorer-map-preview__cta:hover {
+  transform: translateY(-1px);
+  background: var(--explorer-forest, #1c332e);
+  box-shadow: 0 12px 24px rgba(28, 51, 46, 0.16);
+}
+
+@media (max-width: 820px) {
+  .explorer-map-preview__frame {
+    height: clamp(20rem, 58vh, 28rem);
+  }
+}
+
+@media (max-width: 640px) {
+  #mapa.explorer-section {
+    padding: 3.25rem 0.9rem 3.5rem;
+  }
+
+  .explorer-map-preview__frame {
+    height: 22rem;
+    border-radius: 1.05rem;
+  }
 }
 
 .explorer-section__lead {
@@ -4817,35 +4854,25 @@ button.fav-folder:focus-visible {
 .explorer-recs__cta {
   display: inline-flex;
   align-items: center;
-  gap: 0.27rem;
-  padding: 0.48rem 1rem;
+  justify-content: center;
+  padding: 0.42rem 1.15rem;
   border-radius: 999px;
-  background: var(--explorer-forest-mid, #294942);
+  background: var(--explorer-forest, #1c332e);
   color: #ffffff;
   text-decoration: none;
   font-family: Poppins, Nunito, system-ui, sans-serif;
-  font-size: 0.8rem;
+  font-size: 0.72rem;
   font-weight: 500;
   letter-spacing: 0.04em;
-  box-shadow: 0 6px 14px rgba(28, 51, 46, 0.1);
-  transition:
-    transform 350ms ease,
-    background 350ms ease,
-    box-shadow 350ms ease;
-}
-
-.explorer-recs__cta svg {
-  transition: transform 350ms ease;
+  line-height: 1.5;
+  box-shadow: 0 8px 20px rgba(28, 51, 46, 0.12);
+  transition: transform 220ms ease, background 220ms ease, box-shadow 220ms ease;
 }
 
 .explorer-recs__cta:hover {
+  transform: translateY(-1px);
   background: var(--explorer-forest, #1c332e);
-  transform: translateY(-2px) scale(1.015);
-  box-shadow: 0 10px 18px rgba(28, 51, 46, 0.14);
-}
-
-.explorer-recs__cta:hover svg {
-  transform: translateX(3px);
+  box-shadow: 0 12px 24px rgba(28, 51, 46, 0.16);
 }
 
 .explorer-recs__tabs {

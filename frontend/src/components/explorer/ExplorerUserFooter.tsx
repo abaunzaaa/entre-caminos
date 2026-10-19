@@ -3,8 +3,8 @@ import footerUser from "../../assets/footer-user.png";
 import brandLogo from "../../assets/logo.png";
 import { useInViewReveal } from "../../hooks/useInViewReveal";
 
-export function ExplorerUserFooter() {
-  const { ref, inView } = useInViewReveal<HTMLElement>();
+export function ExplorerUserFooter({ once = false }: { once?: boolean }) {
+  const { ref, inView } = useInViewReveal<HTMLElement>({ once });
 
   return (
     <footer

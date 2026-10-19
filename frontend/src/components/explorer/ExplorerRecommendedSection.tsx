@@ -1,6 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState, type CSSProperties } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ArrowUpRight, MapPin } from "lucide-react";
+import { MapPin } from "lucide-react";
 import favVacia from "../../assets/fav-vacia.png";
 import { experienceGalleryUrls, municipalityLabel } from "./explorer-media";
 import { FavoriteFoldersGrid } from "./FavoriteFoldersGrid";
@@ -155,8 +155,8 @@ export function ExplorerRecommendedSection({ experiences }: ExplorerRecommendedS
   const tablistId = useId();
   const { user } = useAuth();
   const { pathname, key: locationKey } = useLocation();
-  const { ref: featuredRef, inView: featuredRevealed } = useInViewReveal<HTMLDivElement>();
-  const { ref: favoritesRef, inView: favoritesRevealed } = useInViewReveal<HTMLDivElement>();
+  const { ref: featuredRef, inView: featuredRevealed } = useInViewReveal<HTMLDivElement>({ once: true });
+  const { ref: favoritesRef, inView: favoritesRevealed } = useInViewReveal<HTMLDivElement>({ once: true });
   const [favoriteFolders, setFavoriteFolders] = useState(() => experiencesToFavoriteFolders([]));
 
   useEffect(() => {
@@ -269,7 +269,6 @@ export function ExplorerRecommendedSection({ experiences }: ExplorerRecommendedS
                       <span className="explorer-recs__price">{formatPrice(experience.price, experience.currency)}</span>
                       <Link to={`/explorar/${experience.id}`} className="explorer-recs__cta">
                         Ver experiencia
-                        <ArrowUpRight size={15} strokeWidth={2.15} aria-hidden="true" />
                       </Link>
                     </div>
                   </div>

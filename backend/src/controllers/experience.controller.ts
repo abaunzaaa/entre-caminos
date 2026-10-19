@@ -71,11 +71,16 @@ export async function listPublic(req: Request, res: Response) {
 
   const view = queryText(req.query.view, 16);
   if (view === "map") {
-    const take = parseLimitQuery(req.query.limit, 6) ?? 6;
+    const take = Math.min(parseLimitQuery(req.query.limit, 8) ?? 8, 10);
     const experiences = await experienceService.listPublicMapCards(take);
+    const signals = await experienceService.mapCardSignals(experiences.map((item) => item.id));
     return res.json({
       success: true,
-      data: { experiences, total: experiences.length, hasMore: false },
+      data: {
+        experiences: experiences.map((item) => ({ ...item, ...signals.for(item.id) })),
+        total: experiences.length,
+        hasMore: false,
+      },
     });
   }
   if (view === "nearby") {

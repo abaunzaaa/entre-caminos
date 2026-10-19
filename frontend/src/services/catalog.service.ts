@@ -131,9 +131,19 @@ export async function getPublicExperiences(options?: {
   };
 }
 
+export type MapPreviewExperience = Pick<
+  Experience,
+  "id" | "title" | "price" | "currency" | "location" | "latitude" | "longitude" | "imageUrl" | "imageUrls"
+> & {
+  categoryNames?: string[];
+  averageRating?: number | null;
+  reviewCount?: number;
+  locations?: Array<{ department?: string | null; municipality?: string | null }>;
+};
+
 export async function getMapPreviewExperiences() {
-  const { data } = await api.get<ApiResponse<{ experiences: Experience[] }>>("/experiences", {
-    params: { view: "map", limit: 6 },
+  const { data } = await api.get<ApiResponse<{ experiences: MapPreviewExperience[] }>>("/experiences", {
+    params: { view: "map", limit: 8 },
   });
   return data.data.experiences;
 }

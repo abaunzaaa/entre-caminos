@@ -202,14 +202,84 @@ export async function listPublicExperiences(opts?: { take?: number; skip?: numbe
   return { experiences, total };
 }
 
-/** Tarjetas del mapa: mismas 6 más recientes, sin perfil de organización ni categorías. */
+const mapPreviewSelect = {
+  ...publicPlaceSelect,
+  category: { select: { name: true } },
+  experienceCategories: {
+    orderBy: { position: "asc" as const },
+    select: { category: { select: { name: true } } },
+  },
+  locations: {
+    orderBy: { position: "asc" as const },
+    select: { department: true, municipality: true },
+  },
+} as const;
+
+function mapPreviewCategoryNames(row: {
+  category: { name: string } | null;
+  experienceCategories: Array<{ category: { name: string } }>;
+}) {
+  const names = row.experienceCategories.map((item) => item.category.name.trim()).filter(Boolean);
+  if (names.length) {
+    return [...new Set(names)];
+  }
+  const primary = row.category?.name.trim();
+  return primary ? [primary] : [];
+}
+
+/** Varias experiencias publicadas, repartidas por zona y categoría, para la vista previa del mapa. */
 export async function listPublicMapCards(take: number) {
-  return prisma.experience.findMany({
+  const pool = await prisma.experience.findMany({
     where: publicCatalogWhere,
-    select: publicPlaceSelect,
+    select: mapPreviewSelect,
     orderBy: { createdAt: "desc" },
-    take,
+    take: 80,
   });
+  const located = pool.flatMap((row) => {
+    if (row.latitude == null || row.longitude == null) {
+      return [];
+    }
+    const latitude = Number(row.latitude);
+    const longitude = Number(row.longitude);
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+      return [];
+    }
+    return [{ row, latitude, longitude, category: mapPreviewCategoryNames(row)[0] ?? "" }];
+  });
+  const chosen: typeof located = [];
+  const seenCategories = new Set<string>();
+  const apart = (item: (typeof located)[number], gap: number) =>
+    chosen.every((current) => Math.hypot(current.latitude - item.latitude, current.longitude - item.longitude) >= gap);
+
+  for (const item of located) {
+    if (chosen.length >= take || !item.category || seenCategories.has(item.category) || !apart(item, 0.12)) {
+      continue;
+    }
+    seenCategories.add(item.category);
+    chosen.push(item);
+  }
+  for (const gap of [0.12, 0.045]) {
+    for (const item of located) {
+      if (chosen.length >= take || chosen.some((current) => current.row.id === item.row.id) || !apart(item, gap)) {
+        continue;
+      }
+      chosen.push(item);
+    }
+  }
+
+  return chosen.map(({ row }) => ({
+    id: row.id,
+    title: row.title,
+    price: row.price,
+    currency: row.currency,
+    location: row.location,
+    latitude: row.latitude,
+    longitude: row.longitude,
+    imageUrl: row.imageUrl,
+    imageUrls: row.imageUrls,
+    locations: row.locations,
+    categoryNames: mapPreviewCategoryNames(row),
+  }));
 }
 
 /** Candidatos de “cercanas”: una fila por experiencia publicada, sin relaciones. */

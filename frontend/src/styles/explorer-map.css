@@ -1480,7 +1480,7 @@
 }
 
 .explorer-nearby-map__viewport {
-  overflow: hidden;
+  overflow: clip;
   touch-action: none;
   cursor: grab;
   user-select: none;
@@ -1884,6 +1884,12 @@
 
 .explorer-nearby-map__controls button:hover {
   background: #f4f7f5;
+}
+
+.explorer-nearby-map--preview .explorer-nearby-map__controls button {
+  width: 2.15rem;
+  height: 2.15rem;
+  font-size: 1.05rem;
 }
 
 .explorer-nearby-map__credit {

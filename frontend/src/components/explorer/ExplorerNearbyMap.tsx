@@ -46,6 +46,7 @@ type ExplorerNearbyMapProps = {
   selectedId: string | null;
   focusToken: number;
   onSelect: (id: string | null) => void;
+  variant?: "full" | "preview";
 };
 
 function foldCategory(value: string) {
@@ -137,6 +138,7 @@ export function ExplorerNearbyMap({
   selectedId,
   focusToken,
   onSelect,
+  variant = "full",
 }: ExplorerNearbyMapProps) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const onSelectRef = useRef(onSelect);
@@ -444,14 +446,14 @@ export function ExplorerNearbyMap({
   }, [popupVisible, selectedId, popupCard.width, size.width, size.height]);
 
   return (
-    <div className="explorer-nearby-map">
+    <div className={`explorer-nearby-map${variant === "preview" ? " explorer-nearby-map--preview" : ""}`}>
       {enabled ? (
         <div
           ref={viewportRef}
           className={`explorer-nearby-map__viewport${grabbing ? " is-grabbing" : ""}`}
           onPointerDown={onPointerDown}
           role="application"
-          aria-label="Mapa de experiencias cerca de ti"
+          aria-label={variant === "preview" ? "Vista previa del mapa de experiencias" : "Mapa de experiencias cerca de ti"}
         >
           {tiles.map((tile) => (
             <img
@@ -574,8 +576,12 @@ export function ExplorerNearbyMap({
               −
             </button>
             {home ? (
-              <button type="button" aria-label="Centrar en mi ubicación" onClick={recenter}>
-                <LocateFixed size={20} strokeWidth={1.7} aria-hidden="true" />
+              <button
+                type="button"
+                aria-label={variant === "preview" ? "Centrar mapa" : "Centrar en mi ubicación"}
+                onClick={recenter}
+              >
+                <LocateFixed size={variant === "preview" ? 15 : 20} strokeWidth={1.7} aria-hidden="true" />
               </button>
             ) : null}
           </div>
