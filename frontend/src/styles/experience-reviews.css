@@ -176,7 +176,7 @@
 }
 
 .experience-reviews__subtitle {
-  margin-top: 0.75rem;
+  margin-top: 0;
   margin-bottom: 0;
   color: #6b746f;
   font-family: inherit;
@@ -188,35 +188,27 @@
 }
 
 .experience-reviews__summary {
-  display: inline-flex;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  margin: 0.9rem 0 0;
-  color: #6b746f;
-  font-family: Poppins, Nunito, system-ui, sans-serif;
-  font-size: 0.95rem;
-  line-height: 1;
+  gap: 0.38rem;
+  margin: 1.15rem 0 0;
+  text-align: center;
 }
 
 .experience-reviews__score {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.28rem;
   color: #1c332e;
-}
-
-.experience-reviews__score strong {
-  font-size: 1.35rem;
+  font-size: 1.7rem;
   font-weight: 600;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
   line-height: 1;
 }
 
-.experience-reviews__score svg {
-  width: 0.95rem;
-  height: 0.95rem;
-  fill: #1c332e;
+.experience-reviews__count {
+  color: #8a938e;
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 1.3;
 }
 
 .experience-reviews__empty {

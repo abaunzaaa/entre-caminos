@@ -442,6 +442,7 @@ export function ExperienceEditorialDossier({
         className={`dash-exps-dossier dash-exps-dossier--balanced${sectionId ? " experience-detail-target" : ""}`}
         aria-label="Información de la experiencia"
       >
+        <p className="experience-detail-kicker">Información de la experiencia</p>
         <div className="dash-exps-dossier__stage" ref={stageRef}>
           <div className="dash-exps-dossier__story">
             <div className="dash-exps-dossier__facts">

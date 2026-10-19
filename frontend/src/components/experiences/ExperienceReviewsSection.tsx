@@ -19,7 +19,6 @@ import { sedeChoices } from "../../utils/experience-places";
 import { showFavoriteToast } from "../../services/favorites-sync";
 import { mediaUrl } from "../../utils/media";
 import { usePageScrollLock } from "../../hooks/usePageScrollLock";
-import reviewBloom from "../../assets/ilustracion-reseña.png";
 import { ReviewComposerModal, generalMood, type ReviewDraft, type ReviewModalMark } from "./ReviewComposerModal";
 
 const EMPTY_SUMMARY: VisitorReviewSummary = { averageRating: null, count: 0 };
@@ -493,19 +492,15 @@ export function ExperienceReviewsSection({
   return (
     <section className="experience-reviews experience-detail-target" aria-label="Reseñas">
       <header className="experience-reviews__intro">
-        <img className="experience-reviews__bloom" src={reviewBloom} alt="" />
-        <h2 className="experience-reviews__title">Reseñas</h2>
         <p className="experience-reviews__subtitle">Descubre opiniones compartidas por otros viajeros</p>
-        {summary.count > 0 ? (
-          <p className="experience-reviews__summary" aria-live="polite">
-            <span className="experience-reviews__score">
-              <strong>{summary.averageRating?.toFixed(1)}</strong>
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 2.7 14.7 8.2l6 .9-4.35 4.24 1.03 6L12 16.6 6.62 19.34l1.03-6L3.3 9.1l6-.9L12 2.7Z" />
-              </svg>
-            </span>
-            <span aria-hidden="true">·</span>
-            <span>
+        {summary.count > 0 && summary.averageRating != null ? (
+          <p
+            className="experience-reviews__summary"
+            aria-live="polite"
+            aria-label={`Calificación promedio ${scoreLabel(summary.averageRating)}, ${summary.count} ${summary.count === 1 ? "reseña" : "reseñas"}`}
+          >
+            <strong className="experience-reviews__score">{scoreLabel(summary.averageRating)}</strong>
+            <span className="experience-reviews__count">
               {summary.count} {summary.count === 1 ? "reseña" : "reseñas"}
             </span>
           </p>

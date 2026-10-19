@@ -157,11 +157,15 @@ export function ExperienceEditorialPlace({
       className={`dash-exps-place${sectionId ? " experience-detail-target" : ""}`}
       aria-label="Mapa de la experiencia"
     >
-      <header className="dash-exps-place__intro">
-        <img className="dash-exps-place__bloom" src={mapaIcon} alt="" />
-        <h2 className="dash-exps-place__title">El destino</h2>
-        <p className="dash-exps-place__lead">Conoce dónde ocurre esta experiencia</p>
-      </header>
+      {split ? (
+        <p className="experience-detail-kicker">Conoce dónde ocurre esta experiencia</p>
+      ) : (
+        <header className="dash-exps-place__intro">
+          <img className="dash-exps-place__bloom" src={mapaIcon} alt="" />
+          <h2 className="dash-exps-place__title">El destino</h2>
+          <p className="dash-exps-place__lead">Conoce dónde ocurre esta experiencia</p>
+        </header>
+      )}
 
       <article className={`dash-exps-place__postcard${split ? " dash-exps-place__postcard--split" : ""}`}>
         {split ? (

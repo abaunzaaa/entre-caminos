@@ -609,7 +609,36 @@
   flex-direction: column;
   align-items: stretch;
   justify-items: stretch;
-  gap: clamp(2.2rem, 4vw, 3.25rem);
+  gap: 0;
+}
+
+.experience-detail-kicker {
+  width: max-content;
+  max-width: 100%;
+  margin: 0 auto 1.75rem;
+  color: #6b746f;
+  font-family: inherit;
+  font-size: clamp(0.75rem, 1.05vw, 0.875rem);
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  line-height: 1.5;
+  text-align: center;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .experience-detail-kicker {
+    margin-bottom: 1.25rem;
+    letter-spacing: 0.08em;
+  }
+}
+
+@media (max-width: 460px) {
+  .experience-detail-kicker {
+    font-size: 0.72rem;
+    letter-spacing: 0;
+  }
 }
 
 .dash-exps-dossier--balanced .dash-exps-dossier__stage {
