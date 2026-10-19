@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { ArrowLeft, Star } from "lucide-react";
 import { listExperienceReviews, type VisitorReview, type VisitorReviewSummary } from "../../services/reviews.service";
-import { EXPERIENCE_DETAIL_SECTIONS } from "../../utils/experience-detail-sections";
+import { mediaUrl } from "../../utils/media";
 import { formatPersonName } from "../../utils/person-name";
 
 type ReviewsState = {
@@ -9,20 +9,25 @@ type ReviewsState = {
   reviews: VisitorReview[];
 };
 
-function starLabel(value: number) {
-  const shown = Math.round(value * 2) / 2;
-  return `${shown} de 5`;
+function formatScore(value: number) {
+  return new Intl.NumberFormat("es-CO", { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(value);
 }
 
-function Stars({ value }: { value: number }) {
+function reviewScore(review: VisitorReview) {
+  const value = Number.isFinite(review.score) ? review.score : review.rating;
+  return Number.isFinite(value) ? value : null;
+}
+
+function ReviewStars({ value }: { value: number }) {
   const shown = Math.round(value * 2) / 2;
   return (
-    <span className="explorer-map-reviews__stars" aria-label={starLabel(shown)}>
-      {Array.from({ length: 5 }, (_, index) => {
-        const fill = shown >= index + 1 ? "is-full" : shown >= index + 0.5 ? "is-half" : "is-empty";
+    <span className="explorer-map-reviews__stars" aria-label={`${formatScore(shown)} de 5`}>
+      {[0, 1, 2, 3, 4].map((index) => {
+        const amount = Math.max(0, Math.min(1, shown - index));
         return (
-          <span key={index} className={fill} aria-hidden="true">
-            ★
+          <span key={index} className="explorer-map-reviews__star" aria-hidden="true">
+            <span>★</span>
+            <span style={{ width: `${amount * 100}%` }}>★</span>
           </span>
         );
       })}
@@ -30,21 +35,37 @@ function Stars({ value }: { value: number }) {
   );
 }
 
-function reviewDate(value: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
-  return new Intl.DateTimeFormat("es-CO", { day: "numeric", month: "short", year: "numeric" }).format(date);
+function initials(name: string) {
+  const parts = formatPersonName(name).split(" ").filter(Boolean);
+  return parts.slice(0, 2).map((part) => part.charAt(0)).join("") || "EC";
 }
 
-function firstName(name: string) {
-  return formatPersonName(name).split(" ")[0] || "Viajero";
+function ReviewAvatar({ name, avatarUrl }: { name: string; avatarUrl: string | null }) {
+  const [failed, setFailed] = useState(false);
+  const source = avatarUrl?.trim() && !failed ? mediaUrl(avatarUrl, 128) : "";
+  return (
+    <span className="explorer-map-reviews__avatar" aria-hidden="true">
+      {source ? <img src={source} alt="" onError={() => setFailed(true)} /> : initials(name)}
+    </span>
+  );
 }
 
-export function MapExperienceReviews({ experienceId }: { experienceId: string }) {
+export function MapExperienceReviews({
+  experienceId,
+  title,
+  place,
+  imageUrl,
+  onBack,
+}: {
+  experienceId: string;
+  title: string;
+  place: string;
+  imageUrl: string;
+  onBack: () => void;
+}) {
   const [state, setState] = useState<ReviewsState | null>(null);
   const [error, setError] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -52,14 +73,9 @@ export function MapExperienceReviews({ experienceId }: { experienceId: string })
     setError(false);
     listExperienceReviews(experienceId)
       .then((data) => {
-        if (cancelled) {
-          return;
+        if (!cancelled) {
+          setState({ summary: data.summary, reviews: data.reviews });
         }
-        const ownIds = new Set(data.mine.map((review) => review.id));
-        setState({
-          summary: data.summary,
-          reviews: data.reviews.filter((review) => !ownIds.has(review.id)).slice(0, 3),
-        });
       })
       .catch(() => {
         if (!cancelled) {
@@ -69,46 +85,79 @@ export function MapExperienceReviews({ experienceId }: { experienceId: string })
     return () => {
       cancelled = true;
     };
-  }, [experienceId]);
+  }, [attempt, experienceId]);
 
-  if (error) {
-    return <p className="explorer-map-reviews__empty">No pudimos cargar las reseñas.</p>;
-  }
-  if (!state) {
-    return <p className="explorer-map-reviews__empty">Cargando reseñas…</p>;
-  }
+  const average = state?.summary.averageRating ?? null;
+  const count = state?.summary.count ?? 0;
+  const showSummary = average != null && count > 0;
 
-  const average = state.summary.averageRating;
   return (
-    <div className="explorer-map-reviews">
-      {average != null && state.summary.count > 0 ? (
-        <p className="explorer-map-reviews__score">
-          <Stars value={average} />
-          <span>
-            {new Intl.NumberFormat("es-CO", { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(average)}
-            {" · "}
-            {state.summary.count} {state.summary.count === 1 ? "reseña" : "reseñas"}
+    <section className="explorer-map-reviews" aria-label={`Reseñas de ${title}`}>
+      <button type="button" className="explorer-map-reviews__back" onClick={onBack}>
+        <ArrowLeft size={14} strokeWidth={1.8} aria-hidden="true" />
+        Volver a experiencias
+      </button>
+      <header className="explorer-map-reviews__experience">
+        <img src={imageUrl} alt="" />
+        <div>
+          <h2>{title}</h2>
+          {place ? <p>{place}</p> : null}
+          {showSummary ? (
+            <p className="explorer-map-reviews__summary">
+              <ReviewStars value={average} />
+              <strong>{formatScore(average)}</strong>
+              <span className="explorer-map-reviews__count">{count === 1 ? "1 reseña" : `${count} reseñas`}</span>
+            </p>
+          ) : null}
+        </div>
+      </header>
+      <h3 className="explorer-map-page__section">Reseñas</h3>
+      {error ? (
+        <div className="explorer-map-reviews__void">
+          <p className="explorer-map-reviews__void-title">No pudimos cargar las reseñas</p>
+          <p>Inténtalo de nuevo en un momento.</p>
+          <button type="button" onClick={() => setAttempt((value) => value + 1)}>
+            Intentar de nuevo
+          </button>
+        </div>
+      ) : !state ? (
+        <p className="explorer-map-reviews__loading">Cargando reseñas…</p>
+      ) : state.reviews.length === 0 ? (
+        <div className="explorer-map-reviews__void">
+          <span className="explorer-map-reviews__void-icon" aria-hidden="true">
+            <Star size={22} strokeWidth={1.6} />
           </span>
-        </p>
-      ) : null}
-      <p className="explorer-map-reviews__label">Reseñas</p>
-      {state.reviews.length === 0 ? (
-        <p className="explorer-map-reviews__empty">Aún no hay reseñas para esta experiencia.</p>
+          <p className="explorer-map-reviews__void-title">Aún no hay reseñas</p>
+          <p>Esta experiencia todavía no tiene reseñas de otros viajeros.</p>
+        </div>
       ) : (
         <ul>
-          {state.reviews.map((review) => (
-            <li key={review.id}>
-              <p className="explorer-map-reviews__person">
-                <Stars value={review.score || review.rating} />
-                <strong>{firstName(review.user.name)}</strong>
-                {reviewDate(review.createdAt) ? <span>{reviewDate(review.createdAt)}</span> : null}
-              </p>
-              {review.comment.trim() ? <p className="explorer-map-reviews__comment">{review.comment.trim()}</p> : null}
-            </li>
-          ))}
+          {state.reviews.map((review) => {
+            const score = reviewScore(review);
+            const comment = review.comment.trim();
+            const name = formatPersonName(review.user.name) || "Viajero";
+            return (
+              <li key={review.id}>
+                <article className="explorer-map-reviews__card">
+                  <div className="explorer-map-reviews__person">
+                    <ReviewAvatar name={review.user.name} avatarUrl={review.user.avatarUrl} />
+                    <div>
+                      <strong>{name}</strong>
+                      {score != null ? (
+                        <p>
+                          <ReviewStars value={score} />
+                          <span className="explorer-map-reviews__value">{formatScore(score)}</span>
+                        </p>
+                      ) : null}
+                    </div>
+                  </div>
+                  {comment ? <p className="explorer-map-reviews__comment">{comment}</p> : null}
+                </article>
+              </li>
+            );
+          })}
         </ul>
       )}
-      <Link to={`/explorar/${experienceId}#${EXPERIENCE_DETAIL_SECTIONS.reviews}`}>Ver experiencia</Link>
-    </div>
+    </section>
   );
 }

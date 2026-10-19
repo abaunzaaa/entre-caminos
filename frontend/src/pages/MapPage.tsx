@@ -8,6 +8,7 @@ import {
   type ExplorerMapView,
 } from "../components/explorer/ExplorerNearbyMap";
 import { experienceCoverUrl } from "../components/explorer/explorer-media";
+import { MapExperienceReviews } from "../components/explorer/MapExperienceReviews";
 import { useAuth } from "../hooks/useAuth";
 import { useFavoriteToggle } from "../hooks/useFavoriteToggle";
 import { getExperiencesNear, getPublicExperiences, type NearbyExperience } from "../services/catalog.service";
@@ -253,6 +254,7 @@ export function MapPage() {
   const searchRequest = useRef(0);
   const chosenPlaceQuery = useRef("");
   const toolsRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
   const pendingSelect = useRef<string | null>(null);
   const pageRef = useRef<HTMLElement>(null);
 
@@ -558,11 +560,7 @@ export function MapPage() {
   }, [loading, selectedId, visibleExperiences]);
 
   useEffect(() => {
-    if (!selectedId) {
-      return;
-    }
-    const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
-    document.getElementById(`nearby-${selectedId}`)?.scrollIntoView({ block: "nearest", behavior });
+    bodyRef.current?.scrollTo({ top: 0 });
   }, [selectedId]);
 
   const points = useMemo<ExplorerMapPoint[]>(() => {
@@ -588,14 +586,12 @@ export function MapPage() {
     });
   }, [visibleExperiences]);
 
-  const selectFromMap = useCallback((id: string | null) => {
+  const selectExperience = useCallback((id: string | null) => {
     setSelectedId(id);
+    if (id) {
+      setFocusToken((value) => value + 1);
+    }
   }, []);
-
-  function selectFromList(id: string) {
-    setSelectedId(id);
-    setFocusToken((value) => value + 1);
-  }
 
   function clearExploredPlace() {
     chosenPlaceQuery.current = "";
@@ -751,7 +747,7 @@ export function MapPage() {
                 imageUrl={experienceCoverUrl(experience, 640)}
                 selected={selected}
                 favorited={favoriteIds.has(point.id)}
-                onSelect={() => selectFromList(point.id)}
+                onSelect={() => selectExperience(point.id)}
               />
             </li>
           );
@@ -759,6 +755,8 @@ export function MapPage() {
       </ul>
     );
   }
+
+  const selectedPoint = selectedId ? points.find((point) => point.id === selectedId) ?? null : null;
 
   return (
     <main ref={pageRef} className="explorer-map-page" aria-labelledby="nearby-map-title">
@@ -992,21 +990,33 @@ export function MapPage() {
               ) : null}
             </div>
           </div>
-          <div className={`explorer-map-page__body${searchMiss ? " is-void" : ""}`} aria-live="polite">
-            <h2 className="explorer-map-page__section">
-              {exploringPlace && explore
-                ? `Experiencias en ${explore.municipality}`
-                : searchQuery.trim()
-                  ? "Experiencias relacionadas"
-                  : "Experiencias cerca de ti"}
-            </h2>
-            {!loading && points.length > 0 ? (
-              <p className="explorer-map-result-count">
-                <strong>{points.length}</strong>
-                <span>{points.length === 1 ? "experiencia encontrada" : "experiencias encontradas"}</span>
-              </p>
-            ) : null}
-            {experienceBody}
+          <div ref={bodyRef} className={`explorer-map-page__body${searchMiss && !selectedPoint ? " is-void" : ""}`} aria-live="polite">
+            {selectedPoint ? (
+              <MapExperienceReviews
+                experienceId={selectedPoint.id}
+                title={selectedPoint.title}
+                place={selectedPoint.place}
+                imageUrl={selectedPoint.imageUrl}
+                onBack={() => selectExperience(null)}
+              />
+            ) : (
+              <>
+                <h2 className="explorer-map-page__section">
+                  {exploringPlace && explore
+                    ? `Experiencias en ${explore.municipality}`
+                    : searchQuery.trim()
+                      ? "Experiencias relacionadas"
+                      : "Experiencias cerca de ti"}
+                </h2>
+                {!loading && points.length > 0 ? (
+                  <p className="explorer-map-result-count">
+                    <strong>{points.length}</strong>
+                    <span>{points.length === 1 ? "experiencia encontrada" : "experiencias encontradas"}</span>
+                  </p>
+                ) : null}
+                {experienceBody}
+              </>
+            )}
           </div>
         </aside>
         <div className="explorer-map-page__canvas">
@@ -1019,7 +1029,7 @@ export function MapPage() {
             points={active ? points : EMPTY_POINTS}
             selectedId={selectedId}
             focusToken={focusToken}
-            onSelect={selectFromMap}
+            onSelect={selectExperience}
           />
         </div>
       </div>
