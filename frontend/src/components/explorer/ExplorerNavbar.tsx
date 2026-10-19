@@ -73,6 +73,9 @@ export function ExplorerNavbar() {
       return;
     }
     const id = hash.replace("#", "");
+    if ((Object.values(EXPERIENCE_DETAIL_SECTIONS) as string[]).includes(id)) {
+      return;
+    }
     const target = document.getElementById(id);
     if (!target) {
       return;

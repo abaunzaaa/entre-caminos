@@ -279,14 +279,14 @@ export function ExplorePage() {
             style={{ "--reveal-delay": "0ms" } as CSSProperties}
           />
           <h2
-            className="explorer-discover-title explorer-reveal explorer-reveal--title"
+            className="explorer-discover-title explorer-block-title explorer-reveal explorer-reveal--title"
             id="explorer-discover-title"
             style={{ "--reveal-delay": "80ms" } as CSSProperties}
           >
             Descubre nuevas experiencias
           </h2>
           <p
-            className="explorer-discover-lead explorer-reveal explorer-reveal--soft"
+            className="explorer-discover-lead explorer-block-lead explorer-reveal explorer-reveal--soft"
             style={{ "--reveal-delay": "150ms" } as CSSProperties}
           >
             Encuentra lo que buscas
@@ -395,17 +395,17 @@ export function ExplorePage() {
               style={{ "--reveal-delay": "0ms" } as CSSProperties}
             />
             <h2
-              className="explorer-discover-title explorer-reveal explorer-reveal--title"
+              className="explorer-discover-title explorer-block-title explorer-reveal explorer-reveal--title"
               id="explorer-map-title"
               style={{ "--reveal-delay": "80ms" } as CSSProperties}
             >
               Mapa
             </h2>
             <p
-              className="explorer-discover-lead explorer-reveal explorer-reveal--soft"
+              className="explorer-discover-lead explorer-block-lead explorer-reveal explorer-reveal--soft"
               style={{ "--reveal-delay": "150ms" } as CSSProperties}
             >
-              Descubre experiencias cerca de ti y encuentra nuevos lugares para vivir
+              Descubre experiencias cerca de ti
             </p>
           </div>
         </div>

@@ -65,17 +65,17 @@ export function FavoritesPage() {
         </div>
       ) : !user ? (
         <div className="favorites-library__status">
-          <h1 className="favorites-library__title" id="favorites-page-title">
+          <h1 className="favorites-library__title explorer-block-title" id="favorites-page-title">
             Favoritos
           </h1>
-          <p className="favorites-library__lead">Inicia sesión para guardar y ver tus favoritos</p>
+          <p className="favorites-library__lead explorer-block-lead">Inicia sesión para guardar y ver tus favoritos</p>
           <Link to="/login" className="explorer-empty__cta">
             Acceder
           </Link>
         </div>
       ) : error ? (
         <div className="favorites-library__status">
-          <h1 className="favorites-library__title" id="favorites-page-title">
+          <h1 className="favorites-library__title explorer-block-title" id="favorites-page-title">
             Favoritos
           </h1>
           <p className="favorites-library__status-text">{error}</p>

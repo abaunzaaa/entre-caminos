@@ -5,6 +5,29 @@
   width: 100%;
 }
 
+.tourist-editorial-shell .experience-detail-anchor {
+  margin-top: -22px;
+}
+
+.experience-detail-panel > .dash-exps-dossier,
+.experience-detail-panel > .dash-exps-place,
+.experience-detail-panel > .experience-reviews {
+  margin-top: 0;
+}
+
+.experience-detail-panel {
+  animation: experience-detail-panel-in 220ms ease;
+}
+
+@keyframes experience-detail-panel-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .experience-detail-anchor__main {
   display: flex;
   flex-direction: column;
@@ -912,8 +935,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .experience-detail-nav__tab {
+  .experience-detail-nav__tab,
+  .experience-detail-panel {
     transition: none;
+    animation: none;
   }
 }
 

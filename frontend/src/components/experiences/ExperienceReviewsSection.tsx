@@ -14,7 +14,7 @@ import {
   type VisitorReviewSummary,
 } from "../../services/reviews.service";
 import { getApiErrorMessage } from "../../utils/api-error";
-import { EXPERIENCE_DETAIL_SECTIONS, scrollToExperienceSection } from "../../utils/experience-detail-sections";
+import { EXPERIENCE_DETAIL_SECTIONS } from "../../utils/experience-detail-sections";
 import { sedeChoices } from "../../utils/experience-places";
 import { showFavoriteToast } from "../../services/favorites-sync";
 import { mediaUrl } from "../../utils/media";
@@ -516,7 +516,6 @@ export function ExperienceReviewsSection({
       setEditingId(mineRef.current[0]?.id ?? null);
       setComposer("edit");
     }
-    scrollToExperienceSection(EXPERIENCE_DETAIL_SECTIONS.reviews);
   }, [composeRequest]);
 
   function openComposer(mode: "create" | "edit", reviewId?: string) {
@@ -596,11 +595,7 @@ export function ExperienceReviewsSection({
   const canCompose = Boolean(user && visited && openSedes.length > 0);
 
   return (
-    <section
-      id={EXPERIENCE_DETAIL_SECTIONS.reviews}
-      className="experience-reviews experience-detail-target"
-      aria-label="Reseñas y calificaciones"
-    >
+    <section className="experience-reviews experience-detail-target" aria-label="Reseñas y calificaciones">
       <header className="experience-reviews__intro">
         <img className="experience-reviews__bloom" src={reviewBloom} alt="" />
         <h2 className="dash-exps-place__title">Reseñas y calificaciones</h2>

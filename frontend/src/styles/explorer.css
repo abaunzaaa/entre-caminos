@@ -1314,14 +1314,6 @@
   text-align: center;
 }
 
-#mapa .explorer-discover-lead {
-  max-width: 44rem;
-  margin-top: 1.15rem;
-  color: #6b746f;
-  font-weight: 400;
-  letter-spacing: 0.12em;
-}
-
 #mapa .explorer-empty {
   position: relative;
   z-index: 1;
@@ -3104,6 +3096,40 @@ a.fav-folder {
   line-height: 1.5;
   text-align: center;
   text-transform: uppercase;
+}
+
+.explorer-block-title {
+  font-size: clamp(1.5rem, 2.1vw, 1.75rem);
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  line-height: 1.28;
+}
+
+.explorer-block-lead {
+  margin-top: 0.75rem;
+  font-size: clamp(0.75rem, 1.05vw, 0.875rem);
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  line-height: 1.5;
+}
+
+#descubrir .explorer-block-title,
+#mapa .explorer-block-title,
+.favorites-library__title.explorer-block-title {
+  font-size: clamp(1.5rem, 2.1vw, 1.75rem);
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  line-height: 1.28;
+}
+
+#descubrir .explorer-block-lead,
+#mapa .explorer-block-lead,
+.favorites-library__lead.explorer-block-lead {
+  margin-top: 0.75rem;
+  font-size: clamp(0.75rem, 1.05vw, 0.875rem);
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  line-height: 1.5;
 }
 
 .favorites-strip__empty {
@@ -5228,6 +5254,11 @@ button.fav-folder:focus-visible {
   line-height: 1.4;
 }
 
+.explorer-user-footer-wrap {
+  position: relative;
+  width: 100%;
+}
+
 .explorer-user-footer {
   position: relative;
   z-index: 2;
@@ -5244,8 +5275,8 @@ button.fav-folder:focus-visible {
 
 .explorer-user-footer__dove {
   position: absolute;
-  z-index: 1;
-  top: 4.15rem;
+  z-index: 3;
+  bottom: calc(100% + clamp(0.85rem, 2.5vw, 1.6rem));
   display: block;
   width: clamp(2.35rem, 4vw, 3.25rem);
   height: auto;
@@ -5263,7 +5294,7 @@ button.fav-folder:focus-visible {
   right: clamp(0.85rem, 4.2vw, 2.75rem);
 }
 
-.explorer-user-footer.is-revealed .explorer-user-footer__dove {
+.explorer-user-footer-wrap.is-revealed .explorer-user-footer__dove {
   opacity: 0.62;
 }
 
@@ -5455,10 +5486,6 @@ html:has(.tourist-editorial-shell) {
   margin-right: 0;
 }
 
-/*
- * First detail section fills the visible viewport under the navbar so the next
- * (white) block is not visible until the user scrolls.
- */
 .tourist-editorial-shell .dash-exps-editorial,
 .tourist-editorial-shell.dash--exps-preview .dash-exps-editorial {
   display: flex;
@@ -5467,9 +5494,7 @@ html:has(.tourist-editorial-shell) {
   box-sizing: border-box;
   margin-top: -4.5rem;
   padding-top: calc(var(--explorer-nav-height, 4.75rem) + 1.65rem);
-  padding-bottom: clamp(2.25rem, 4vh, 3.25rem);
-  min-height: 100vh;
-  min-height: 100svh;
+  padding-bottom: clamp(1.15rem, 2vh, 1.65rem);
 }
 
 .tourist-editorial-shell .dash-exps-editorial__hero {
@@ -5612,9 +5637,7 @@ html:has(.tourist-editorial-shell) {
   .tourist-editorial-shell.dash--exps-preview .dash-exps-editorial {
     margin-top: -4.5rem;
     padding-top: calc(var(--explorer-nav-height, 4.75rem) + 1.35rem);
-    padding-bottom: 2.25rem;
-    min-height: 100vh;
-    min-height: 100svh;
+    padding-bottom: 1.15rem;
   }
 
   .tourist-editorial-shell .dash-exps-editorial__track {
@@ -5638,8 +5661,7 @@ html:has(.tourist-editorial-shell) {
   .tourist-editorial-shell .dash-exps-editorial,
   .tourist-editorial-shell.dash--exps-preview .dash-exps-editorial {
     padding-top: calc(var(--explorer-nav-height, 4.75rem) + 1.15rem);
-    padding-bottom: 2rem;
-    min-height: 100svh;
+    padding-bottom: 1rem;
   }
 
   .tourist-editorial-shell .dash-exps-editorial__track {
