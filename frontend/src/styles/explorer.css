@@ -4903,12 +4903,12 @@ button.fav-folder:focus-visible {
   writing-mode: vertical-rl;
   transform: rotate(180deg);
   font-family: Poppins, Nunito, system-ui, sans-serif;
-  font-size: 0.71rem;
-  font-weight: 500;
-  letter-spacing: 0.13em;
-  line-height: 1;
+  font-size: 0.6875rem;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  line-height: 1.15;
   text-align: center;
-  text-transform: uppercase;
+  text-transform: none;
   white-space: nowrap;
 }
 
@@ -5083,8 +5083,9 @@ button.fav-folder:focus-visible {
   .explorer-recs__tab-label {
     writing-mode: horizontal-tb;
     transform: none;
-    letter-spacing: 0.1em;
-    font-size: 0.64rem;
+    letter-spacing: 0.01em;
+    font-size: 0.6875rem;
+    font-weight: 400;
   }
 }
 
