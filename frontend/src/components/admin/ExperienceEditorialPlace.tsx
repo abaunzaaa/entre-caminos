@@ -109,6 +109,7 @@ export function ExperienceEditorialPlace({
           longitude={longitude}
           zoom={15}
           interactive={false}
+          explore={split}
         />
       </div>
       <aside className="dash-exps-place__glass">
@@ -121,8 +122,13 @@ export function ExperienceEditorialPlace({
         <p className="dash-exps-place__glass-title">{experience.title}</p>
         {address ? <p className="dash-exps-place__glass-address">{address}</p> : null}
         {mapsHref ? (
-          <a className="dash-exps-place__maps" href={mapsHref} target="_blank" rel="noopener noreferrer">
-            Abrir ubicación →
+          <a
+            className={split ? "explorer-map-preview__cta" : "dash-exps-place__maps"}
+            href={mapsHref}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            ABRIR UBICACIÓN →
           </a>
         ) : null}
       </aside>

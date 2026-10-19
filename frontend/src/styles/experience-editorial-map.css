@@ -87,8 +87,14 @@
   animation: dash-exps-place-pulse 2.8s ease-in-out infinite;
 }
 
-.dash-exps-place .dash-exps-map__zoom {
-  z-index: 5;
+.dash-exps-place .dash-exps-map.is-grabbing,
+.dash-exps-place .dash-exps-map.is-grabbing .dash-exps-map__viewport,
+.dash-exps-place .dash-exps-map.is-grabbing .dash-exps-map__pin {
+  cursor: grabbing;
+}
+
+.dash-exps-place__postcard--split .explorer-map-preview__cta {
+  margin-top: 0.9rem;
 }
 
 .dash-exps-place__glass {

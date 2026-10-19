@@ -6,6 +6,8 @@ type ExperienceLocationMapProps = {
   longitude: number | null;
   zoom?: number;
   interactive?: boolean;
+  /** Pan the camera around a fixed marker. Does not move the saved location. */
+  explore?: boolean;
   onChange?: (latitude: number, longitude: number) => void;
   onMoveEnd?: (latitude: number, longitude: number) => void;
 };
@@ -27,20 +29,25 @@ export function ExperienceLocationMap({
   longitude,
   zoom = 13,
   interactive = true,
+  explore = false,
   onChange,
   onMoveEnd,
 }: ExperienceLocationMapProps) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const onChangeRef = useRef(onChange);
   const onMoveEndRef = useRef(onMoveEnd);
+  const exploreRef = useRef(explore);
   const worldRef = useRef({ x: 0, y: 0 });
   const viewZoomRef = useRef(zoom);
   const draggingRef = useRef(false);
   onChangeRef.current = onChange;
   onMoveEndRef.current = onMoveEnd;
+  exploreRef.current = explore;
   const [size, setSize] = useState({ width: 0, height: 420 });
   const [viewZoom, setViewZoom] = useState(zoom);
   const [pinOffset, setPinOffset] = useState({ x: 0, y: 0 });
+  const [camera, setCamera] = useState<{ lat: number; lng: number } | null>(null);
+  const [grabbing, setGrabbing] = useState(false);
   const dragRef = useRef<{
     mode: "map" | "pin";
     pointerId: number;
@@ -52,9 +59,16 @@ export function ExperienceLocationMap({
 
   const lat = latitude ?? 4.570868;
   const lng = longitude ?? -74.297333;
-  const world = useMemo(() => latLngToWorld(lat, lng, viewZoom), [lat, lng, viewZoom]);
-  worldRef.current = world;
+  const cameraLat = explore && camera ? camera.lat : lat;
+  const cameraLng = explore && camera ? camera.lng : lng;
+  const centerWorld = useMemo(() => latLngToWorld(cameraLat, cameraLng, viewZoom), [cameraLat, cameraLng, viewZoom]);
+  const markerWorld = useMemo(() => latLngToWorld(lat, lng, viewZoom), [lat, lng, viewZoom]);
+  worldRef.current = centerWorld;
   viewZoomRef.current = viewZoom;
+
+  useEffect(() => {
+    setCamera(null);
+  }, [lat, lng]);
 
   useEffect(() => {
     if (draggingRef.current) {
@@ -86,8 +100,8 @@ export function ExperienceLocationMap({
     if (!size.width) {
       return [];
     }
-    const left = world.x - size.width / 2;
-    const top = world.y - size.height / 2;
+    const left = centerWorld.x - size.width / 2;
+    const top = centerWorld.y - size.height / 2;
     const x0 = Math.floor(left / TILE_SIZE);
     const y0 = Math.floor(top / TILE_SIZE);
     const x1 = Math.floor((left + size.width) / TILE_SIZE);
@@ -109,7 +123,7 @@ export function ExperienceLocationMap({
       }
     }
     return next;
-  }, [size.height, size.width, viewZoom, world.x, world.y]);
+  }, [centerWorld.x, centerWorld.y, size.height, size.width, viewZoom]);
 
   const emitPoint = useCallback((x: number, y: number, ended: boolean) => {
     const point = worldToLatLng(x, y, viewZoomRef.current);
@@ -129,6 +143,11 @@ export function ExperienceLocationMap({
     const dx = event.clientX - drag.startX;
     const dy = event.clientY - drag.startY;
     if (drag.mode === "map") {
+      if (exploreRef.current) {
+        const point = worldToLatLng(drag.originX - dx, drag.originY - dy, viewZoomRef.current);
+        setCamera({ lat: point.lat, lng: point.lng });
+        return;
+      }
       emitPoint(drag.originX - dx, drag.originY - dy, false);
       return;
     }
@@ -146,11 +165,12 @@ export function ExperienceLocationMap({
     if (drag.mode === "pin") {
       emitPoint(drag.originX + dx, drag.originY + dy, moved);
       setPinOffset({ x: 0, y: 0 });
-    } else if (moved) {
+    } else if (moved && !exploreRef.current) {
       emitPoint(drag.originX - dx, drag.originY - dy, true);
     }
     dragRef.current = null;
     draggingRef.current = false;
+    setGrabbing(false);
     window.removeEventListener("pointermove", onWindowPointerMove);
     window.removeEventListener("pointerup", onWindowPointerUp);
     window.removeEventListener("pointercancel", onWindowPointerUp);
@@ -163,6 +183,7 @@ export function ExperienceLocationMap({
     window.removeEventListener("pointerup", onWindowPointerUp);
     window.removeEventListener("pointercancel", onWindowPointerUp);
     draggingRef.current = true;
+    setGrabbing(true);
     dragRef.current = {
       mode,
       pointerId: event.pointerId,
@@ -189,12 +210,18 @@ export function ExperienceLocationMap({
     setViewZoom(nextZoom);
   }
 
+  const canPan = interactive || explore;
+  const markerShift = {
+    x: markerWorld.x - centerWorld.x + pinOffset.x,
+    y: markerWorld.y - centerWorld.y + pinOffset.y,
+  };
+
   return (
-    <div className={`dash-exps-map${interactive ? "" : " is-readonly"}`}>
+    <div className={`dash-exps-map${canPan ? "" : " is-readonly"}${grabbing ? " is-grabbing" : ""}`}>
       <div
         ref={viewportRef}
         className="dash-exps-map__viewport"
-        onPointerDown={interactive ? (event) => onPointerDown(event, "map") : undefined}
+        onPointerDown={canPan ? (event) => onPointerDown(event, "map") : undefined}
       >
         {tiles.map((tile) => (
           <img
@@ -206,8 +233,8 @@ export function ExperienceLocationMap({
             style={{ transform: `translate(${tile.left}px, ${tile.top}px)` }}
           />
         ))}
-        <div className="dash-exps-map__pin-wrap" style={{ transform: `translate(${pinOffset.x}px, ${pinOffset.y}px)` }}>
-          {interactive ? (
+        <div className="dash-exps-map__pin-wrap" style={{ transform: `translate(${markerShift.x}px, ${markerShift.y}px)` }}>
+          {interactive && !explore ? (
             <button
               type="button"
               className="dash-exps-map__pin"

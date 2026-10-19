@@ -17,7 +17,7 @@ export type ReviewModalMark = {
   kind: "logo" | "brand";
 };
 
-function generalMood(value: number) {
+export function generalMood(value: number) {
   if (value <= 0) {
     return "Selecciona una calificación";
   }
