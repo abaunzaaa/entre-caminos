@@ -58,12 +58,14 @@ export function ExperienceEditorialPlace({
   longitude,
   hasPoint,
   sectionId,
+  split = false,
 }: {
   experience: Experience;
   latitude: number | null;
   longitude: number | null;
   hasPoint: boolean;
   sectionId?: string;
+  split?: boolean;
 }) {
   const parsed = parseStoredLocation(experience.location || "");
   const municipality = parsed.municipality;
@@ -95,6 +97,53 @@ export function ExperienceEditorialPlace({
         : []),
   ];
   const note = destinationNote(municipality, department, category, experience.title);
+  const directions = experience.howToGetThere?.trim() ?? "";
+  const destination = [municipality, department].filter(Boolean).join(" · ");
+
+  const stage = hasPoint ? (
+    <div className="dash-exps-place__stage">
+      <div className="dash-exps-place__frame">
+        <ExperienceLocationMap
+          key={`${latitude ?? ""}-${longitude ?? ""}`}
+          latitude={latitude}
+          longitude={longitude}
+          zoom={15}
+          interactive={false}
+        />
+      </div>
+      <aside className="dash-exps-place__glass">
+        {place ? (
+          <p className="dash-exps-place__glass-place">
+            <MapPin size={13} strokeWidth={1.7} aria-hidden="true" />
+            <span>{place}</span>
+          </p>
+        ) : null}
+        <p className="dash-exps-place__glass-title">{experience.title}</p>
+        {address ? <p className="dash-exps-place__glass-address">{address}</p> : null}
+        {mapsHref ? (
+          <a className="dash-exps-place__maps" href={mapsHref} target="_blank" rel="noopener noreferrer">
+            Abrir ubicación →
+          </a>
+        ) : null}
+      </aside>
+    </div>
+  ) : (
+    <p className="dash-exps-place__empty">Ubicación en mapa pendiente de confirmar.</p>
+  );
+
+  const chipList = chips.length ? (
+    <ul className="dash-exps-place__chips">
+      {chips.map((chip) => {
+        const Icon = chip.icon;
+        return (
+          <li key={chip.label}>
+            <Icon size={13} strokeWidth={1.7} aria-hidden="true" />
+            <span>{chip.label}</span>
+          </li>
+        );
+      })}
+    </ul>
+  ) : null;
 
   return (
     <section
@@ -108,62 +157,39 @@ export function ExperienceEditorialPlace({
         <p className="dash-exps-place__lead">Conoce dónde ocurre esta experiencia</p>
       </header>
 
-      <article className="dash-exps-place__postcard">
-        {hasPoint ? (
-          <div className="dash-exps-place__stage">
-            <div className="dash-exps-place__frame">
-              <ExperienceLocationMap
-                key={`${latitude ?? ""}-${longitude ?? ""}`}
-                latitude={latitude}
-                longitude={longitude}
-                zoom={15}
-                interactive={false}
-              />
+      <article className={`dash-exps-place__postcard${split ? " dash-exps-place__postcard--split" : ""}`}>
+        {split ? (
+          <div className="dash-exps-place__split">
+            <div className="dash-exps-place__copy">
+              {destination ? <p className="dash-exps-place__destination">{destination}</p> : null}
+              {chipList}
+              {note ? <p className="dash-exps-place__note">{note}</p> : null}
+              {directions ? (
+                <div className="dash-exps-place__arrive">
+                  <span className="dash-exps-place__arrive-label">Cómo llegar</span>
+                  <p>{directions}</p>
+                </div>
+              ) : null}
             </div>
-            <aside className="dash-exps-place__glass">
-              {place ? (
-                <p className="dash-exps-place__glass-place">
-                  <MapPin size={13} strokeWidth={1.7} aria-hidden="true" />
-                  <span>{place}</span>
-                </p>
-              ) : null}
-              <p className="dash-exps-place__glass-title">{experience.title}</p>
-              {address ? <p className="dash-exps-place__glass-address">{address}</p> : null}
-              {mapsHref ? (
-                <a className="dash-exps-place__maps" href={mapsHref} target="_blank" rel="noopener noreferrer">
-                  Abrir ubicación →
-                </a>
-              ) : null}
-            </aside>
+            {stage}
           </div>
         ) : (
-          <p className="dash-exps-place__empty">Ubicación en mapa pendiente de confirmar.</p>
+          <>
+            {stage}
+            {chipList || note || directions ? (
+              <div className="dash-exps-place__extra">
+                {chipList}
+                {note ? <p className="dash-exps-place__note">{note}</p> : null}
+                {directions ? (
+                  <p className="dash-exps-place__note">
+                    <strong>Cómo llegar. </strong>
+                    {directions}
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
+          </>
         )}
-
-        {chips.length || note || experience.howToGetThere?.trim() ? (
-          <div className="dash-exps-place__extra">
-            {chips.length ? (
-              <ul className="dash-exps-place__chips">
-                {chips.map((chip) => {
-                  const Icon = chip.icon;
-                  return (
-                    <li key={chip.label}>
-                      <Icon size={13} strokeWidth={1.7} aria-hidden="true" />
-                      <span>{chip.label}</span>
-                    </li>
-                  );
-                })}
-              </ul>
-            ) : null}
-            {note ? <p className="dash-exps-place__note">{note}</p> : null}
-            {experience.howToGetThere?.trim() ? (
-              <p className="dash-exps-place__note">
-                <strong>Cómo llegar. </strong>
-                {experience.howToGetThere.trim()}
-              </p>
-            ) : null}
-          </div>
-        ) : null}
       </article>
     </section>
   );

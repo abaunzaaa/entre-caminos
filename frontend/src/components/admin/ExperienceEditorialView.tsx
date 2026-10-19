@@ -485,6 +485,7 @@ export function ExperienceEditorialView({
                   organization={organization}
                   placeFacts={placeFacts}
                   clampDescription
+                  balanced
                   sectionId={undefined}
                   places={
                     showPlaceTabs ? (
@@ -505,6 +506,7 @@ export function ExperienceEditorialView({
                   longitude={lng}
                   hasPoint={hasPoint}
                   sectionId={undefined}
+                  split
                 />
               ) : null}
               {activeTab === EXPERIENCE_DETAIL_SECTIONS.reviews ? (
