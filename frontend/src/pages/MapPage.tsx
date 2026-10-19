@@ -1010,8 +1010,7 @@ export function MapPage() {
                 </h2>
                 {!loading && points.length > 0 ? (
                   <p className="explorer-map-result-count">
-                    <strong>{points.length}</strong>
-                    <span>{points.length === 1 ? "experiencia encontrada" : "experiencias encontradas"}</span>
+                    {points.length === 1 ? "1 experiencia encontrada" : `${points.length} experiencias encontradas`}
                   </p>
                 ) : null}
                 {experienceBody}
@@ -1024,8 +1023,11 @@ export function MapPage() {
             enabled={!authLoading}
             preciseLocation={shared}
             view={view}
-            canRecenter={Boolean(personal)}
-            onRecenter={returnToPersonalPlace}
+            home={
+              personal
+                ? { latitude: personal.latitude, longitude: personal.longitude, zoom: shared ? 13 : 12 }
+                : null
+            }
             points={active ? points : EMPTY_POINTS}
             selectedId={selectedId}
             focusToken={focusToken}

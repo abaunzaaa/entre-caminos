@@ -35,6 +35,17 @@ function ReviewStars({ value }: { value: number }) {
   );
 }
 
+function previewComment(text: string, limit = 240) {
+  const clean = text.replace(/\s+/g, " ").trim();
+  if (clean.length <= limit) {
+    return clean;
+  }
+  const slice = clean.slice(0, limit);
+  const lastSpace = slice.lastIndexOf(" ");
+  const cut = lastSpace > limit * 0.55 ? slice.slice(0, lastSpace) : slice;
+  return `${cut.trimEnd()}...`;
+}
+
 function initials(name: string) {
   const parts = formatPersonName(name).split(" ").filter(Boolean);
   return parts.slice(0, 2).map((part) => part.charAt(0)).join("") || "EC";
@@ -47,6 +58,26 @@ function ReviewAvatar({ name, avatarUrl }: { name: string; avatarUrl: string | n
     <span className="explorer-map-reviews__avatar" aria-hidden="true">
       {source ? <img src={source} alt="" onError={() => setFailed(true)} /> : initials(name)}
     </span>
+  );
+}
+
+function ReviewCard({ review }: { review: VisitorReview }) {
+  const score = reviewScore(review);
+  const comment = previewComment(review.comment);
+  const name = formatPersonName(review.user.name) || "Viajero";
+
+  return (
+    <article className="explorer-map-reviews__card">
+      <ReviewAvatar name={review.user.name} avatarUrl={review.user.avatarUrl} />
+      <strong>{name}</strong>
+      {comment ? <p className="explorer-map-reviews__comment">{comment}</p> : null}
+      {score != null ? (
+        <p className="explorer-map-reviews__rating">
+          <ReviewStars value={score} />
+          <span className="explorer-map-reviews__value">{formatScore(score)}</span>
+        </p>
+      ) : null}
+    </article>
   );
 }
 
@@ -131,31 +162,12 @@ export function MapExperienceReviews({
           <p>Esta experiencia todavía no tiene reseñas de otros viajeros.</p>
         </div>
       ) : (
-        <ul>
-          {state.reviews.map((review) => {
-            const score = reviewScore(review);
-            const comment = review.comment.trim();
-            const name = formatPersonName(review.user.name) || "Viajero";
-            return (
-              <li key={review.id}>
-                <article className="explorer-map-reviews__card">
-                  <div className="explorer-map-reviews__person">
-                    <ReviewAvatar name={review.user.name} avatarUrl={review.user.avatarUrl} />
-                    <div>
-                      <strong>{name}</strong>
-                      {score != null ? (
-                        <p>
-                          <ReviewStars value={score} />
-                          <span className="explorer-map-reviews__value">{formatScore(score)}</span>
-                        </p>
-                      ) : null}
-                    </div>
-                  </div>
-                  {comment ? <p className="explorer-map-reviews__comment">{comment}</p> : null}
-                </article>
-              </li>
-            );
-          })}
+        <ul className="explorer-map-reviews__list">
+          {state.reviews.map((review) => (
+            <li key={review.id}>
+              <ReviewCard review={review} />
+            </li>
+          ))}
         </ul>
       )}
     </section>

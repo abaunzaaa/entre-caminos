@@ -31,12 +31,17 @@ export type ExplorerMapView = {
   token: number;
 };
 
+type ExplorerMapHome = {
+  latitude: number;
+  longitude: number;
+  zoom: number;
+};
+
 type ExplorerNearbyMapProps = {
   enabled: boolean;
   preciseLocation: { latitude: number; longitude: number } | null;
   view: ExplorerMapView;
-  canRecenter: boolean;
-  onRecenter: () => void;
+  home: ExplorerMapHome | null;
   points: ExplorerMapPoint[];
   selectedId: string | null;
   focusToken: number;
@@ -127,8 +132,7 @@ export function ExplorerNearbyMap({
   enabled,
   preciseLocation,
   view,
-  canRecenter,
-  onRecenter,
+  home,
   points,
   selectedId,
   focusToken,
@@ -157,6 +161,7 @@ export function ExplorerNearbyMap({
   const popupRef = useRef<HTMLElement>(null);
   const centerRef = useRef(center);
   const zoomRef = useRef(zoom);
+  const flyRef = useRef<number | null>(null);
   centerRef.current = center;
   zoomRef.current = zoom;
 
@@ -165,6 +170,10 @@ export function ExplorerNearbyMap({
       return;
     }
     seenView.current = view.token;
+    if (flyRef.current != null) {
+      cancelAnimationFrame(flyRef.current);
+      flyRef.current = null;
+    }
     movedRef.current = true;
     setCenter({ latitude: view.latitude, longitude: view.longitude });
     setZoom(Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, view.zoom)));
@@ -311,6 +320,9 @@ export function ExplorerNearbyMap({
 
   useEffect(() => {
     return () => {
+      if (flyRef.current != null) {
+        cancelAnimationFrame(flyRef.current);
+      }
       window.removeEventListener("pointermove", onWindowPointerMove);
       window.removeEventListener("pointerup", onWindowPointerUp);
       window.removeEventListener("pointercancel", onWindowPointerUp);
@@ -320,6 +332,10 @@ export function ExplorerNearbyMap({
   function onPointerDown(event: React.PointerEvent<HTMLDivElement>) {
     if (event.button !== 0) {
       return;
+    }
+    if (flyRef.current != null) {
+      cancelAnimationFrame(flyRef.current);
+      flyRef.current = null;
     }
     event.preventDefault();
     window.removeEventListener("pointermove", onWindowPointerMove);
@@ -345,10 +361,38 @@ export function ExplorerNearbyMap({
   }
 
   function recenter() {
-    if (!canRecenter) {
+    if (!home) {
       return;
     }
-    onRecenter();
+    if (flyRef.current != null) {
+      cancelAnimationFrame(flyRef.current);
+      flyRef.current = null;
+    }
+    movedRef.current = true;
+    const from = {
+      latitude: centerRef.current.latitude,
+      longitude: centerRef.current.longitude,
+      zoom: zoomRef.current,
+    };
+    const targetZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, home.zoom));
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) {
+      setCenter({ latitude: home.latitude, longitude: home.longitude });
+      setZoom(targetZoom);
+      return;
+    }
+    const started = performance.now();
+    const frame = (now: number) => {
+      const progress = Math.min(1, (now - started) / 560);
+      const eased = 1 - (1 - progress) ** 3;
+      setCenter({
+        latitude: from.latitude + (home.latitude - from.latitude) * eased,
+        longitude: from.longitude + (home.longitude - from.longitude) * eased,
+      });
+      setZoom(Math.round(from.zoom + (targetZoom - from.zoom) * eased));
+      flyRef.current = progress < 1 ? requestAnimationFrame(frame) : null;
+    };
+    flyRef.current = requestAnimationFrame(frame);
   }
 
   const selected = points.find((point) => point.id === selectedId) ?? null;
@@ -364,7 +408,7 @@ export function ExplorerNearbyMap({
   const popupRatingView = selected ? popupRating(selected) : null;
   const popupBounds = useMemo(() => {
     const margin = 10;
-    const bounds = { left: margin, top: margin + 4, right: Math.max(margin + 180, size.width - 54), bottom: Math.max(margin + 140, size.height - margin) };
+    const bounds = { left: margin, top: margin + 4, right: Math.max(margin + 180, size.width - 66), bottom: Math.max(margin + 140, size.height - margin) };
     const map = viewportRef.current?.getBoundingClientRect();
     const panel = document.querySelector(".explorer-map-page__panel");
     if (map && panel instanceof HTMLElement) {
@@ -529,9 +573,9 @@ export function ExplorerNearbyMap({
             <button type="button" aria-label="Alejar" onClick={() => changeZoom(-1)}>
               −
             </button>
-            {canRecenter ? (
-              <button type="button" aria-label="Volver a tu zona" onClick={recenter}>
-                <LocateFixed size={16} strokeWidth={1.7} aria-hidden="true" />
+            {home ? (
+              <button type="button" aria-label="Centrar en mi ubicación" onClick={recenter}>
+                <LocateFixed size={20} strokeWidth={1.7} aria-hidden="true" />
               </button>
             ) : null}
           </div>
