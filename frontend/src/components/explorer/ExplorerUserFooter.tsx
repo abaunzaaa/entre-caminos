@@ -1,9 +1,11 @@
 import type { CSSProperties } from "react";
 import footerUser from "../../assets/footer-user.png";
 import brandLogo from "../../assets/logo.png";
+import palomaLeft from "../../assets/paloma1.png";
+import palomaRight from "../../assets/paloma 2.png";
 import { useInViewReveal } from "../../hooks/useInViewReveal";
 
-export function ExplorerUserFooter({ once = false }: { once?: boolean }) {
+export function ExplorerUserFooter({ once = false, birds = false }: { once?: boolean; birds?: boolean }) {
   const { ref, inView } = useInViewReveal<HTMLElement>({ once });
 
   return (
@@ -18,6 +20,26 @@ export function ExplorerUserFooter({ once = false }: { once?: boolean }) {
           alt=""
           decoding="async"
         />
+        {birds ? (
+          <>
+            <img
+              className="explorer-user-footer__dove explorer-user-footer__dove--left explorer-reveal explorer-reveal--soft"
+              src={palomaLeft}
+              alt=""
+              aria-hidden="true"
+              decoding="async"
+              style={{ "--reveal-delay": "80ms" } as CSSProperties}
+            />
+            <img
+              className="explorer-user-footer__dove explorer-user-footer__dove--right explorer-reveal explorer-reveal--soft"
+              src={palomaRight}
+              alt=""
+              aria-hidden="true"
+              decoding="async"
+              style={{ "--reveal-delay": "160ms" } as CSSProperties}
+            />
+          </>
+        ) : null}
         <div className="explorer-user-footer__content">
           <div className="explorer-user-footer__cluster">
             <img

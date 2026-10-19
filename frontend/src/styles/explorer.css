@@ -5242,6 +5242,31 @@ button.fav-folder:focus-visible {
   border: 0;
 }
 
+.explorer-user-footer__dove {
+  position: absolute;
+  z-index: 1;
+  top: 4.15rem;
+  display: block;
+  width: clamp(2.35rem, 4vw, 3.25rem);
+  height: auto;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  filter: brightness(0) invert(0.82);
+}
+
+.explorer-user-footer__dove--left {
+  left: clamp(0.85rem, 4.2vw, 2.75rem);
+}
+
+.explorer-user-footer__dove--right {
+  right: clamp(0.85rem, 4.2vw, 2.75rem);
+}
+
+.explorer-user-footer.is-revealed .explorer-user-footer__dove {
+  opacity: 0.62;
+}
+
 .explorer-user-footer__image {
   display: block;
   position: absolute;

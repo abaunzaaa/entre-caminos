@@ -420,7 +420,7 @@ export function ExplorePage() {
         )}
       </section>
 
-      <ExplorerUserFooter once />
+      <ExplorerUserFooter once birds />
     </div>
   );
 }
