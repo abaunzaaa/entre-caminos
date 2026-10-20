@@ -9,12 +9,20 @@ import {
 } from "../validators/visitor-review.validator.js";
 import { ratingNumber, reviewScore, roundRating } from "./review-score.js";
 import { destroyStoredImage, persistReviewImage } from "./upload.service.js";
+import { normalizeAvatarConfig } from "../config/onboarding.js";
 import { assertPublishedExperience, isExperienceVisited } from "./visit.service.js";
 
 const reviewUserSelect = {
   id: true,
   name: true,
   avatarUrl: true,
+  profile: {
+    select: {
+      profileImageUrl: true,
+      profileImageType: true,
+      avatarConfig: true,
+    },
+  },
 } as const;
 
 const reviewInclude = {
@@ -209,6 +217,18 @@ async function storeReviewPhotos(files: Express.Multer.File[]) {
   }
 }
 
+function authorProfile(profile: ReviewRow["user"]["profile"]) {
+  if (!profile) {
+    return null;
+  }
+  const hasConfig = profile.profileImageType === "AVATAR" || profile.avatarConfig != null;
+  return {
+    profileImageUrl: profile.profileImageUrl,
+    profileImageType: profile.profileImageType,
+    avatarConfig: hasConfig ? normalizeAvatarConfig(profile.avatarConfig) : null,
+  };
+}
+
 function serializeReview(row: ReviewRow, labels: Map<string, string>) {
   const images = row.images ?? [];
   const rating = ratingNumber(row.rating);
@@ -236,6 +256,7 @@ function serializeReview(row: ReviewRow, labels: Map<string, string>) {
       id: row.user.id,
       name: row.user.name,
       avatarUrl: row.user.avatarUrl,
+      profile: authorProfile(row.user.profile),
     },
   };
 }
@@ -290,7 +311,17 @@ export async function listVisitorReviews(experienceId: string, viewerId?: string
 
 const mineReviewInclude = {
   ...reviewInclude,
-  experience: { select: { id: true, title: true } },
+  experience: {
+    select: {
+      id: true,
+      title: true,
+      imageUrl: true,
+      locations: {
+        orderBy: { position: "asc" as const },
+        select: { id: true, municipality: true, address: true, position: true },
+      },
+    },
+  },
 } as const;
 
 export async function listMyVisitorReviews(userId: string) {
@@ -299,20 +330,18 @@ export async function listMyVisitorReviews(userId: string) {
     orderBy: { createdAt: "desc" },
     include: mineReviewInclude,
   });
-  const experienceIds = [...new Set(reviews.map((review) => review.experienceId))];
-  const places = await Promise.all(experienceIds.map((experienceId) => sedesFor(experienceId)));
-  const labelsByExperience = new Map(experienceIds.map((experienceId, index) => [experienceId, sedeLabels(places[index] ?? [])]));
 
   return {
     reviews: reviews.map((review) => {
-      const labels = labelsByExperience.get(review.experienceId) ?? new Map<string, string>();
-      const rows = places[experienceIds.indexOf(review.experienceId)] ?? [];
+      const places = review.experience.locations;
+      const labels = sedeLabels(places);
       return {
         ...serializeReview(review, labels),
         experience: {
           id: review.experience.id,
           title: review.experience.title,
-          locations: rows.map((place) => ({
+          imageUrl: review.experience.imageUrl,
+          locations: places.map((place) => ({
             id: place.id,
             label: labels.get(place.id) ?? (place.municipality.trim() || "Sede"),
           })),

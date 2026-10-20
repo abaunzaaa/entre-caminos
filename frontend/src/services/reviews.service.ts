@@ -1,3 +1,4 @@
+import type { AvatarConfig, ProfileImageType } from "../types";
 import { api, ensureFreshAccessToken } from "./api";
 
 type ApiResponse<T> = { success: boolean; data: T };
@@ -30,6 +31,11 @@ export type VisitorReview = {
     id: string;
     name: string;
     avatarUrl: string | null;
+    profile: {
+      profileImageUrl: string | null;
+      profileImageType: ProfileImageType | null;
+      avatarConfig: AvatarConfig | null;
+    } | null;
   };
 };
 
@@ -68,6 +74,7 @@ export type MyVisitorReview = VisitorReview & {
   experience: {
     id: string;
     title: string;
+    imageUrl: string | null;
     locations: Array<{ id: string; label: string }>;
   };
 };

@@ -99,6 +99,7 @@ import { removeVisit } from "../../src/services/visit.service.js";
 import {
   createVisitorReview,
   deleteVisitorReview,
+  listMyVisitorReviews,
   listVisitorReviews,
   updateVisitorReview,
 } from "../../src/services/visitor-review.service.js";
@@ -188,15 +189,45 @@ function wireMocks() {
   });
 
   prismaMock.experienceVisitorReview.findMany.mockReset();
-  prismaMock.experienceVisitorReview.findMany.mockImplementation(async (args: { where: { experienceId: string }; select?: object }) => {
-    const rows = state.reviews
-      .filter((review) => review.experienceId === args.where.experienceId)
-      .sort((left, right) => right.createdAt.getTime() - left.createdAt.getTime());
-    if (args.select && !("user" in (args.select as object))) {
-      return rows;
-    }
-    return rows.map(attachLocation);
-  });
+  prismaMock.experienceVisitorReview.findMany.mockImplementation(
+    async (args: {
+      where?: { experienceId?: string; userId?: string };
+      select?: object;
+      include?: { experience?: unknown };
+    }) => {
+      const where = args.where ?? {};
+      const rows = state.reviews
+        .filter((review) => {
+          if (where.experienceId && review.experienceId !== where.experienceId) {
+            return false;
+          }
+          if (where.userId && review.userId !== where.userId) {
+            return false;
+          }
+          return true;
+        })
+        .sort((left, right) => right.createdAt.getTime() - left.createdAt.getTime());
+      if (args.select && !("user" in (args.select as object))) {
+        return rows;
+      }
+      return rows.map((row) => {
+        const located = { ...attachLocation(row), images: row.images ?? [] };
+        if (!args.include || !("experience" in args.include)) {
+          return located;
+        }
+        const places = state.locations.filter((place) => place.experienceId === row.experienceId);
+        return {
+          ...located,
+          experience: {
+            id: row.experienceId,
+            title: row.experienceId === "exp-2" ? "Otra ruta" : "Ruta gastronómica por Sabaneta y Envigado",
+            imageUrl: "https://cdn.example/cover.jpg",
+            locations: places,
+          },
+        };
+      });
+    },
+  );
 
   prismaMock.experienceVisitorReview.aggregate.mockReset();
   prismaMock.experienceVisitorReview.aggregate.mockImplementation(async (args: { where: { experienceId: string } }) => {
@@ -337,7 +368,12 @@ describe("HU-11 reseñas de visitantes", () => {
     expect(data.reviews[0]?.organizationRating).toBeNull();
     expect(data.reviews[0]?.valueRating).toBeNull();
     expect(data.reviews[0]?.recommended).toBeNull();
-    expect(data.reviews[0]?.user).toEqual({ id: "user-a", name: "Ana", avatarUrl: null });
+    expect(data.reviews[0]?.user).toEqual({
+      id: "user-a",
+      name: "Ana",
+      avatarUrl: null,
+      profile: null,
+    });
   });
 
   it("un usuario que no la visitó no puede crear reseña", async () => {
@@ -685,5 +721,82 @@ describe("HU-11 reseñas de visitantes", () => {
     await deleteVisitorReview("user-a", "exp-1", owned.id);
     await expect(removeVisit("user-a", "exp-1")).resolves.toEqual({ visited: false });
     expect(state.visits).toHaveLength(0);
+  });
+
+  it("lista solo las reseñas del usuario, de la más reciente a la más antigua", async () => {
+    const older = seedReview("user-a", "exp-1", 4, "Primera.");
+    older.createdAt = new Date("2026-10-01T12:00:00.000Z");
+    older.images = [{ id: "img-1", imageUrl: "https://cdn.example/foto.jpg", publicId: null, position: 0 }];
+    const newer = seedReview("user-a", "exp-2", 5, "Segunda.");
+    newer.createdAt = new Date("2026-10-09T12:00:00.000Z");
+    newer.locationId = null;
+    newer.recommended = true;
+    seedReview("user-b", "exp-1", 2, "De otra persona.");
+    state.locations.push({
+      id: "loc-2",
+      experienceId: "exp-2",
+      municipality: "Envigado",
+      address: "",
+      position: 0,
+    });
+
+    const locationQueries = prismaMock.experienceLocation.findMany.mock.calls.length;
+    const listed = await listMyVisitorReviews("user-a");
+
+    expect(prismaMock.experienceLocation.findMany.mock.calls.length).toBe(locationQueries);
+    expect(listed.reviews.map((review) => review.comment)).toEqual(["Segunda.", "Primera."]);
+    expect(listed.reviews[0]).toMatchObject({
+      location: null,
+      recommended: true,
+      experience: {
+        id: "exp-2",
+        title: "Otra ruta",
+        imageUrl: "https://cdn.example/cover.jpg",
+      },
+    });
+    expect(listed.reviews[1]).toMatchObject({
+      location: { id: "loc-1", label: "Sabaneta" },
+      images: [{ id: "img-1", imageUrl: "https://cdn.example/foto.jpg", position: 0 }],
+      experience: { id: "exp-1", title: "Ruta gastronómica por Sabaneta y Envigado" },
+    });
+    expect(listed.reviews.every((review) => review.user.id === "user-a")).toBe(true);
+  });
+
+  it("la reseña trae la foto o la muñeca del autor en la misma consulta", async () => {
+    const withPhoto = seedReview("user-a", "exp-1", 5, "Con foto.");
+    withPhoto.user = {
+      ...withPhoto.user,
+      avatarUrl: null,
+      profile: {
+        profileImageUrl: "https://cdn.example/ana.jpg",
+        profileImageType: "PHOTO",
+        avatarConfig: null,
+      },
+    };
+    const withDoll = seedReview("user-b", "exp-1", 4, "Con muñeca.");
+    withDoll.user = {
+      ...withDoll.user,
+      avatarUrl: "https://cdn.example/vieja.jpg",
+      profile: {
+        profileImageUrl: null,
+        profileImageType: "AVATAR",
+        avatarConfig: { skinTone: "sand", face: "round" },
+      },
+    };
+
+    const listed = await listVisitorReviews("exp-1");
+    const photo = listed.reviews.find((review) => review.user.id === "user-a");
+    const doll = listed.reviews.find((review) => review.user.id === "user-b");
+
+    expect(photo?.user.profile).toMatchObject({
+      profileImageUrl: "https://cdn.example/ana.jpg",
+      profileImageType: "PHOTO",
+      avatarConfig: null,
+    });
+    expect(doll?.user.avatarUrl).toBe("https://cdn.example/vieja.jpg");
+    expect(doll?.user.profile).toMatchObject({
+      profileImageType: "AVATAR",
+      avatarConfig: { skinTone: "sand", face: "round" },
+    });
   });
 });
