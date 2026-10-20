@@ -22,7 +22,6 @@ import {
 import encabezado from "../assets/encabezado.png";
 import { getPreferenceLabel } from "../data/onboarding";
 import { AvatarPreview } from "../components/onboarding/AvatarPreview";
-import { UnderConstruction } from "../components/explorer/UnderConstruction";
 import { ChangePasswordModal } from "../components/auth/ChangePasswordModal";
 import { DeleteAccountModal } from "../components/auth/DeleteAccountModal";
 import { EditProfileModal } from "../components/profile/EditProfileModal";

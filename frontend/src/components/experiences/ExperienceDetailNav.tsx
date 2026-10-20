@@ -7,9 +7,11 @@ const SECTIONS = [
   { id: EXPERIENCE_DETAIL_SECTIONS.reviews, label: "Reseñas", icon: Star },
 ] as const;
 
+type ExperienceDetailSectionId = (typeof SECTIONS)[number]["id"];
+
 type ExperienceDetailNavProps = {
   active: string;
-  onChange: (id: string) => void;
+  onChange: (id: ExperienceDetailSectionId) => void;
 };
 
 export function ExperienceDetailNav({ active, onChange }: ExperienceDetailNavProps) {
