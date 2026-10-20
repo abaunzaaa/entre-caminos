@@ -24,6 +24,50 @@ function digits(value: string, max: number) {
   return value.replace(/\D/g, "").slice(0, max);
 }
 
+function placeCaretAtEnd(input: HTMLInputElement) {
+  requestAnimationFrame(() => {
+    if (document.activeElement !== input) {
+      return;
+    }
+    const end = input.value.length;
+    input.setSelectionRange(end, end);
+  });
+}
+
+/** While typing, keep the digits captured in onChange if blur sees a shorter DOM value. */
+export function resolveClockDraft(domValue: string, draft: string, max = 2) {
+  const fromDom = digits(domValue, max);
+  const fromDraft = digits(draft, max);
+  if (fromDraft.length > fromDom.length && fromDraft.startsWith(fromDom)) {
+    return fromDraft;
+  }
+  return fromDom || fromDraft;
+}
+
+export function draftToAvailabilityTime(hour: string, minute: string, period: "am" | "pm") {
+  const hourValue = Number(hour);
+  const minuteValue = Number(minute);
+  if (!Number.isInteger(hourValue) || hourValue < 1 || hourValue > 12) {
+    return null;
+  }
+  if (!Number.isInteger(minuteValue) || minuteValue < 0 || minuteValue > 59) {
+    return null;
+  }
+  return to24Hour(hourValue, minuteValue, period);
+}
+
+/** Pads a finished part (1–12 or 0–59). Leaves an in-progress or out-of-range draft unchanged. */
+export function commitClockPart(raw: string, min: number, max: number) {
+  if (!raw.trim()) {
+    return "";
+  }
+  const value = Number(raw);
+  if (!Number.isInteger(value) || value < min || value > max) {
+    return raw;
+  }
+  return String(value).padStart(2, "0");
+}
+
 function PeriodField({
   value,
   onChange,
@@ -97,6 +141,8 @@ export function ExperienceTimesField({
   const hourRef = useRef<HTMLInputElement>(null);
   const minuteRef = useRef<HTMLInputElement>(null);
   const periodRef = useRef<HTMLButtonElement>(null);
+  const hourDraft = useRef("");
+  const minuteDraft = useRef("");
   const saved = normalizeTimesForSave(times);
 
   function onEnter(event: KeyboardEvent<HTMLInputElement>) {
@@ -107,12 +153,14 @@ export function ExperienceTimesField({
   }
 
   function addDraft() {
-    if (!hour.trim() || !minute.trim()) {
+    const hourRaw = hourDraft.current;
+    const minuteRaw = minuteDraft.current;
+    if (!hourRaw.trim() || !minuteRaw.trim()) {
       setNotice("Ingresa la hora y los minutos.");
       return;
     }
-    const hourValue = Number(hour);
-    const minuteValue = Number(minute);
+    const hourValue = Number(hourRaw);
+    const minuteValue = Number(minuteRaw);
     if (!Number.isInteger(hourValue) || hourValue < 1 || hourValue > 12) {
       setNotice("La hora va de 1 a 12.");
       return;
@@ -121,7 +169,10 @@ export function ExperienceTimesField({
       setNotice("Los minutos van de 00 a 59.");
       return;
     }
-    const value = to24Hour(hourValue, minuteValue, period);
+    const value = draftToAvailabilityTime(hourRaw, minuteRaw, period);
+    if (!value) {
+      return;
+    }
     if (saved.includes(value)) {
       setNotice("Ese horario ya está agregado.");
       return;
@@ -131,6 +182,8 @@ export function ExperienceTimesField({
       return;
     }
     onChange([...saved, value].sort());
+    hourDraft.current = "";
+    minuteDraft.current = "";
     setHour("");
     setMinute("");
     setNotice("");
@@ -152,17 +205,24 @@ export function ExperienceTimesField({
             aria-label="Hora"
             value={hour}
             onChange={(event) => {
-              const next = digits(event.target.value, 2);
+              const next = digits(event.currentTarget.value, 2);
+              hourDraft.current = next;
               setHour(next);
               setNotice("");
-              if (next.length === 2) {
-                minuteRef.current?.focus();
-              }
+              placeCaretAtEnd(event.currentTarget);
             }}
-            onBlur={() => {
-              if (hour !== "" && Number(hour) >= 1 && Number(hour) <= 12) {
-                setHour(String(Number(hour)).padStart(2, "0"));
+            onBlur={(event) => {
+              const raw = resolveClockDraft(event.currentTarget.value, hourDraft.current);
+              const value = Number(raw);
+              if (raw !== "" && (!Number.isInteger(value) || value < 1 || value > 12)) {
+                hourDraft.current = raw;
+                setHour(raw);
+                setNotice("La hora va de 1 a 12.");
+                return;
               }
+              const next = commitClockPart(raw, 1, 12);
+              hourDraft.current = next;
+              setHour(next);
             }}
             onKeyDown={onEnter}
           />
@@ -181,17 +241,24 @@ export function ExperienceTimesField({
             aria-label="Minutos"
             value={minute}
             onChange={(event) => {
-              const next = digits(event.target.value, 2);
+              const next = digits(event.currentTarget.value, 2);
+              minuteDraft.current = next;
               setMinute(next);
               setNotice("");
-              if (next.length === 2) {
-                periodRef.current?.focus();
-              }
+              placeCaretAtEnd(event.currentTarget);
             }}
-            onBlur={() => {
-              if (minute !== "" && Number(minute) >= 0 && Number(minute) <= 59) {
-                setMinute(String(Number(minute)).padStart(2, "0"));
+            onBlur={(event) => {
+              const raw = resolveClockDraft(event.currentTarget.value, minuteDraft.current);
+              const value = Number(raw);
+              if (raw !== "" && (!Number.isInteger(value) || value < 0 || value > 59)) {
+                minuteDraft.current = raw;
+                setMinute(raw);
+                setNotice("Los minutos van de 00 a 59.");
+                return;
               }
+              const next = commitClockPart(raw, 0, 59);
+              minuteDraft.current = next;
+              setMinute(next);
             }}
             onKeyDown={onEnter}
           />
