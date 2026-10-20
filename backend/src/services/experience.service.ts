@@ -202,6 +202,58 @@ export async function listPublicExperiences(opts?: { take?: number; skip?: numbe
   return { experiences, total };
 }
 
+/** Estampitas publicadas. No incluye experiencias sin ilustración. */
+export async function listPublishedStamps() {
+  const rows = await prisma.experience.findMany({
+    where: { status: "PUBLISHED", stampImageUrl: { not: null } },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      stampImageUrl: true,
+      location: true,
+      duration: true,
+      durationValue: true,
+      durationUnit: true,
+      category: { select: { name: true } },
+      experienceCategories: {
+        orderBy: { position: "asc" },
+        take: 1,
+        select: { category: { select: { name: true } } },
+      },
+      locations: {
+        orderBy: { position: "asc" },
+        take: 1,
+        select: { municipality: true, department: true },
+      },
+    },
+    orderBy: { title: "asc" },
+  });
+  return rows.flatMap((row) => {
+    const stampImageUrl = row.stampImageUrl?.trim() ?? "";
+    if (!stampImageUrl) {
+      return [];
+    }
+    const place = row.locations[0];
+    return [
+      {
+        id: row.id,
+        title: row.title,
+        description: row.description,
+        stampImageUrl,
+        location: row.location,
+        municipality: place?.municipality?.trim() || null,
+        department: place?.department?.trim() || null,
+        category: row.experienceCategories[0]?.category?.name?.trim() || row.category?.name?.trim() || null,
+        duration: row.duration,
+        durationValue: row.durationValue,
+        durationUnit: row.durationUnit,
+      },
+    ];
+  });
+}
+
+/** Tarjetas del mapa: mismas 6 más recientes, sin perfil de organización ni categorías. */
 const mapPreviewSelect = {
   ...publicPlaceSelect,
   category: { select: { name: true } },

@@ -72,6 +72,13 @@ export const CONTACT_KIND_LABELS = {
   ALIADO: "Aliado",
 } as const;
 
+export const FAQ_SUBJECT_MIN = 3;
+export const FAQ_SUBJECT_MAX = 120;
+export const FAQ_QUESTION_MIN = 10;
+export const FAQ_QUESTION_MAX = 2000;
+export const FAQ_ANSWER_MIN = 10;
+export const FAQ_ANSWER_MAX = 4000;
+
 export const CONTACT_MESSAGE_MAX = 2000;
 export const CONTACT_NAME_MAX = 80;
 export const CONTACT_COMPANY_MAX = 120;

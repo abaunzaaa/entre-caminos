@@ -11,6 +11,11 @@ function withCloudinaryTransform(url: string, width: number) {
   return url.replace("/upload/", `/upload/f_auto,q_auto:eco,c_limit,w_${width}/`);
 }
 
+/** URL original de una estampita. No aplica recorte ni compresión automática. */
+export function stampUrl(url?: string | null) {
+  return url?.trim() ?? "";
+}
+
 export function mediaUrl(url?: string | null, width = 960) {
   if (!url) {
     return PLACEHOLDER;

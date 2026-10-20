@@ -9,6 +9,7 @@ import * as featuredController from "../controllers/featured-experience.controll
 import * as roleController from "../controllers/role.controller.js";
 import { adminCategoryRouter } from "./category.routes.js";
 import { adminExperienceRouter } from "./experience.routes.js";
+import { adminFaqRouter } from "./faq.routes.js";
 import * as notificationController from "../controllers/notification.controller.js";
 import {
   assignPermissionsSchema,
@@ -170,3 +171,4 @@ adminRouter.patch("/notifications/:id/read", asyncHandler(notificationController
 
 adminRouter.use("/categories", adminCategoryRouter);
 adminRouter.use("/experiences", adminExperienceRouter);
+adminRouter.use("/faqs", roleMiddleware([ROLES.SUPER_ADMIN]), adminFaqRouter);

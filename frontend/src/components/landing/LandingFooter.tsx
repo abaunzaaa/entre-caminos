@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import logoEntreCaminos from "../../assets/logo.png";
+import { useFaqModal } from "../faq/FaqModalProvider";
 import { ContactModal } from "../contact/ContactModal";
 import { HowItWorksModal } from "../how-it-works/HowItWorksModal";
 import { TermsModal } from "../legal/TermsModal";
@@ -10,6 +12,7 @@ type LandingFooterProps = {
 };
 
 export function LandingFooter({ variant = "public" }: LandingFooterProps) {
+  const { openFaq } = useFaqModal();
   const [contactOpen, setContactOpen] = useState(false);
   const [howItWorksOpen, setHowItWorksOpen] = useState(false);
   const [legalDocument, setLegalDocument] = useState<"terms" | "privacy" | null>(null);
@@ -51,6 +54,20 @@ export function LandingFooter({ variant = "public" }: LandingFooterProps) {
                     >
                       Contacto
                     </a>
+                  </li>
+                  <li>
+                    <Link
+                      to="/preguntas-frecuentes"
+                      onClick={(event) => {
+                        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) {
+                          return;
+                        }
+                        event.preventDefault();
+                        openFaq();
+                      }}
+                    >
+                      Preguntas frecuentes
+                    </Link>
                   </li>
                 </ul>
               </div>

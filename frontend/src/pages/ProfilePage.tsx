@@ -29,8 +29,12 @@ import { EditProfileModal } from "../components/profile/EditProfileModal";
 import { ProfileImageModal } from "../components/profile/ProfileImageModal";
 import { ProfileReviews } from "../components/profile/ProfileReviews";
 import { useAuth } from "../hooks/useAuth";
+import { ProfileStampAlbum } from "../components/profile/ProfileStampAlbum";
+import { listExperienceStamps, type ExperienceStampCard } from "../services/catalog.service";
 import { listFavoriteExperiences } from "../services/favorites.service";
 import { onFavoritesChanged } from "../services/favorites-sync";
+import { listVisitedIds } from "../services/visits.service";
+import { onVisitedStatus } from "../services/visits-sync";
 import type { Experience, PublicUser } from "../types";
 import { mediaUrl } from "../utils/media";
 import { formatStoredPhone } from "../utils/profile-phone";
@@ -112,6 +116,12 @@ export function ProfilePage() {
   const [favorites, setFavorites] = useState<Experience[]>([]);
   const [favoritesLoading, setFavoritesLoading] = useState(true);
   const [favoritesError, setFavoritesError] = useState("");
+  const [stamps, setStamps] = useState<ExperienceStampCard[]>([]);
+  const [stampsLoading, setStampsLoading] = useState(true);
+  const [stampsError, setStampsError] = useState("");
+  const [visitedIds, setVisitedIds] = useState<string[]>([]);
+  const [visitedLoading, setVisitedLoading] = useState(true);
+  const [visitedError, setVisitedError] = useState(false);
 
   useEffect(() => {
     if (authLoading) {
@@ -157,6 +167,85 @@ export function ProfilePage() {
     };
   }, [user?.id, authLoading]);
 
+  useEffect(() => {
+    if (authLoading) {
+      return;
+    }
+    if (!user) {
+      setStamps([]);
+      setStampsLoading(false);
+      setStampsError("");
+      setVisitedIds([]);
+      setVisitedLoading(false);
+      setVisitedError(false);
+      return;
+    }
+
+    let cancelled = false;
+    function loadStamps() {
+      setStampsLoading(true);
+      setStampsError("");
+      listExperienceStamps()
+        .then((items) => {
+          if (!cancelled) {
+            setStamps(items);
+          }
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setStamps([]);
+            setStampsError("No pudimos cargar las estampitas. Intenta de nuevo.");
+          }
+        })
+        .finally(() => {
+          if (!cancelled) {
+            setStampsLoading(false);
+          }
+        });
+    }
+
+    function loadVisits() {
+      setVisitedLoading(true);
+      setVisitedError(false);
+      listVisitedIds()
+        .then((ids) => {
+          if (!cancelled) {
+            setVisitedIds(ids);
+          }
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setVisitedIds([]);
+            setVisitedError(true);
+          }
+        })
+        .finally(() => {
+          if (!cancelled) {
+            setVisitedLoading(false);
+          }
+        });
+    }
+
+    loadStamps();
+    loadVisits();
+    const unsubscribe = onVisitedStatus((experienceId, visited) => {
+      setVisitedIds((current) => {
+        const has = current.includes(experienceId);
+        if (visited && !has) {
+          return [experienceId, ...current];
+        }
+        if (!visited && has) {
+          return current.filter((id) => id !== experienceId);
+        }
+        return current;
+      });
+    });
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
+  }, [user?.id, authLoading]);
+
   const photoNode =
     form.profileImageType === "PHOTO" && photo ? (
       <img src={photo} alt={displayName} />
@@ -165,7 +254,12 @@ export function ProfilePage() {
     );
 
   const stats: Array<{ id: string; label: string; value: number | null; tab?: ProfileTab }> = [
-    { id: "visited", label: "Visitados", value: 0, tab: "estampitas" },
+    {
+      id: "visited",
+      label: "Visitados",
+      value: visitedError || visitedLoading ? null : visitedIds.length,
+      tab: "estampitas",
+    },
     { id: "reviews", label: "Reseñas", value: 0 },
     {
       id: "favorites",
@@ -373,9 +467,35 @@ export function ProfilePage() {
           {tab === "resenas" ? <ProfileReviews /> : null}
 
           {tab === "estampitas" ? (
-            <div className="profile-visited">
-              <UnderConstruction title="ESTAMPITAS" />
-            </div>
+            <ProfileStampAlbum
+              stamps={stamps}
+              visitedIds={visitedIds}
+              visitsKnown={!visitedError}
+              loading={stampsLoading || visitedLoading}
+              error={stampsError}
+              onRetry={() => {
+                setStampsLoading(true);
+                setVisitedLoading(true);
+                setStampsError("");
+                listExperienceStamps()
+                  .then((items) => setStamps(items))
+                  .catch(() => {
+                    setStamps([]);
+                    setStampsError("No pudimos cargar las estampitas. Intenta de nuevo.");
+                  })
+                  .finally(() => setStampsLoading(false));
+                listVisitedIds()
+                  .then((ids) => {
+                    setVisitedIds(ids);
+                    setVisitedError(false);
+                  })
+                  .catch(() => {
+                    setVisitedIds([]);
+                    setVisitedError(true);
+                  })
+                  .finally(() => setVisitedLoading(false));
+              }}
+            />
           ) : null}
         </div>
       </section>

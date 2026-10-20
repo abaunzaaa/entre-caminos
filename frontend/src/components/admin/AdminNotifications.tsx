@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, Check, Compass, Trash2, X } from "lucide-react";
+import { Bell, Check, CircleHelp, Compass, Trash2, X } from "lucide-react";
 import {
   getNotifications,
   markAllNotificationsRead,
@@ -88,11 +88,14 @@ function NotificationIcon({ type }: { type: string }) {
   if (type === "EXPERIENCE_REJECTED" || type === "CATEGORY_REJECTED") {
     return <X size={14} strokeWidth={1.8} />;
   }
+  if (type === "FAQ_RECEIVED") {
+    return <CircleHelp size={14} strokeWidth={1.75} />;
+  }
   return <Compass size={14} strokeWidth={1.7} />;
 }
 
 function NotificationDetails({ type, body }: { type: string; body: string }) {
-  if (type === "CATEGORY_PENDING" || type === "CATEGORY_REJECTED") {
+  if (type === "CATEGORY_PENDING" || type === "CATEGORY_REJECTED" || type === "FAQ_RECEIVED") {
     return <span className="admin-notify__body">{body}</span>;
   }
   const preview = notificationPreview(body);
@@ -173,6 +176,10 @@ export function AdminNotifications() {
       }
     }
     setOpen(false);
+    if (item.type === "FAQ_ANSWERED" && item.entityId) {
+      window.dispatchEvent(new CustomEvent("ec-faq-reply", { detail: item.entityId }));
+      return;
+    }
     if (item.link) {
       navigate(item.link);
     }

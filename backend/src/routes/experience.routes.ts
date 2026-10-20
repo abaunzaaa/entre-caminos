@@ -22,6 +22,7 @@ experienceRouter.get(
   optionalAuthMiddleware,
   asyncHandler(featuredController.recommendations),
 );
+experienceRouter.get("/stamps", asyncHandler(experienceController.listStamps));
 experienceRouter.get("/:id", asyncHandler(experienceController.getPublic));
 experienceRouter.post("/:id/view", asyncHandler(experienceController.recordView));
 

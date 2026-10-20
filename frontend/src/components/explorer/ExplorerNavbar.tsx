@@ -39,7 +39,7 @@ export function isExplorerShellPath(pathname: string) {
 }
 
 export function ExplorerNavbar() {
-  const { user, logout, isAdmin } = useAuth();
+  const { user, logout } = useAuth();
   const { pathname, hash } = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -120,7 +120,7 @@ export function ExplorerNavbar() {
         <div className="explorer-nav__actions">
           {user ? (
             <div className="explorer-nav__account admin-topbar__end">
-              {isAdmin ? <AdminNotifications /> : null}
+              <AdminNotifications />
               <AdminUserMenu user={user} showName />
             </div>
           ) : (

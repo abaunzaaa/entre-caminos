@@ -130,7 +130,8 @@ export function AdminLayout() {
       location.pathname === "/admin/permissions" ||
       location.pathname === "/admin/permisos" ||
       location.pathname === "/admin/administradores" ||
-      location.pathname === "/admin/administrators"
+      location.pathname === "/admin/administrators" ||
+      location.pathname === "/admin/preguntas-frecuentes"
     )
   ) {
     return <Navigate to="/admin" replace />;
@@ -138,7 +139,9 @@ export function AdminLayout() {
 
   const visibleLinks = ADMIN_NAV_ITEMS.filter((link) => {
     if (
-      (link.to === "/admin/roles" || link.to === "/admin/administradores") &&
+      (link.to === "/admin/roles" ||
+        link.to === "/admin/administradores" ||
+        link.to === "/admin/preguntas-frecuentes") &&
       user?.role !== "SUPER_ADMIN"
     ) {
       return false;
@@ -171,6 +174,7 @@ export function AdminLayout() {
   const isExperiencesList =
     location.pathname === "/admin/experiencias" || location.pathname === "/admin/experiences";
   const isFeaturedPage = location.pathname === "/admin/destacadas";
+  const isFaqsPage = location.pathname === "/admin/preguntas-frecuentes";
   const isExperienceStudio =
     !isExperiencesList &&
     (location.pathname.includes("/experiencias/") || location.pathname.includes("/experiences/"));
@@ -182,7 +186,8 @@ export function AdminLayout() {
     isCategoriesPage ||
     isExperiencesList ||
     isExperienceStudio ||
-    isFeaturedPage;
+    isFeaturedPage ||
+    isFaqsPage;
   const heading = useDashCanvas
     ? null
     : (titles[location.pathname] ??

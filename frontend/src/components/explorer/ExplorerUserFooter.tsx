@@ -1,6 +1,13 @@
 import type { CSSProperties } from "react";
+import { Link } from "react-router-dom";
 import footerUser from "../../assets/footer-user.png";
 import brandLogo from "../../assets/logo.png";
+import { useFaqModal } from "../faq/FaqModalProvider";
+import { useInViewReveal } from "../../hooks/useInViewReveal";
+
+export function ExplorerUserFooter() {
+  const { ref, inView } = useInViewReveal<HTMLElement>();
+  const { openFaq } = useFaqModal();
 import palomaLeft from "../../assets/paloma1.png";
 import palomaRight from "../../assets/paloma 2.png";
 import { useInViewReveal } from "../../hooks/useInViewReveal";
@@ -63,6 +70,20 @@ export function ExplorerUserFooter({ once = false, birds = false }: { once?: boo
             >
               Elige un lugar, sal de la rutina y vive una nueva experiencia.
             </p>
+            <Link
+              to="/preguntas-frecuentes"
+              className="explorer-user-footer__faq explorer-reveal explorer-reveal--soft"
+              style={{ "--reveal-delay": "220ms" } as CSSProperties}
+              onClick={(event) => {
+                if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) {
+                  return;
+                }
+                event.preventDefault();
+                openFaq();
+              }}
+            >
+              Preguntas frecuentes
+            </Link>
           </div>
         </div>
         <a
