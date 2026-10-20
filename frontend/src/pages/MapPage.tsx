@@ -832,6 +832,7 @@ export function MapPage() {
                     placeholder="Buscar experiencia o lugar"
                     aria-label="Buscar experiencia o lugar"
                     aria-expanded={searchOpen && suggestions.length > 0}
+                    aria-busy={searchState === "loading"}
                     aria-controls="map-place-results"
                     autoComplete="off"
                     autoCorrect="off"
@@ -886,6 +887,9 @@ export function MapPage() {
                     </li>
                   ))}
                 </ul>
+              ) : null}
+              {searchState === "error" ? (
+                <p className="explorer-map-search__note">No pudimos buscar ese lugar. Intenta de nuevo.</p>
               ) : null}
               <div className="explorer-map-tools__facets">
                 <button

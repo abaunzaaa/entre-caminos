@@ -148,7 +148,13 @@ function useFinePointer() {
   return fine;
 }
 
-function partitionBalancedFacts(facts: ExperienceEditorialFact[]) {
+function partitionBalancedFacts(facts: ExperienceEditorialFact[]): {
+  story: ExperienceEditorialFact[];
+  category: ExperienceEditorialFact | null;
+  environment: ExperienceEditorialFact | null;
+  ideal: ExperienceEditorialFact[];
+  right: ExperienceEditorialFact[];
+} {
   const story: ExperienceEditorialFact[] = [];
   const right: ExperienceEditorialFact[] = [];
   let category: ExperienceEditorialFact | null = null;
