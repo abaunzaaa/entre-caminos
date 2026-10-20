@@ -3,6 +3,15 @@ import type { ApiResponse, UserOnboardingProfile } from "../types";
 import type { OnboardingForm } from "../utils/onboarding";
 import { toOnboardingPayload } from "../utils/onboarding";
 
+export async function saveSharedMapLocation(input: {
+  latitude: number | null;
+  longitude: number | null;
+  currentLocationShared: boolean;
+}) {
+  const { data } = await api.patch<ApiResponse<{ profile: UserOnboardingProfile }>>("/auth/onboarding", input);
+  return data.data.profile;
+}
+
 export async function saveOnboardingProfile(form: OnboardingForm, completed = false) {
   const { data } = await api.patch<ApiResponse<{ profile: UserOnboardingProfile }>>(
     "/auth/onboarding",

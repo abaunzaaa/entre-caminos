@@ -5,10 +5,13 @@ export const EXPERIENCE_DETAIL_SECTIONS = {
   ownReview: "experiencia-resena-propia",
 } as const;
 
-export function scrollToExperienceSection(id: string) {
-  const node = document.getElementById(id);
-  if (!node) {
-    return;
+export function experienceDetailTabFromHash(hash: string) {
+  const id = hash.replace(/^#/, "");
+  if (id === EXPERIENCE_DETAIL_SECTIONS.reviews || id === EXPERIENCE_DETAIL_SECTIONS.ownReview) {
+    return EXPERIENCE_DETAIL_SECTIONS.reviews;
   }
-  node.scrollIntoView({ behavior: "auto", block: "start" });
+  if (id === EXPERIENCE_DETAIL_SECTIONS.location || id === EXPERIENCE_DETAIL_SECTIONS.info) {
+    return id;
+  }
+  return null;
 }

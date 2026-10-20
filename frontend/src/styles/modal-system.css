@@ -1,0 +1,440 @@
+/* Sistema visual de modales. Referencia: Editar perfil.
+   Solo diálogos. Los botones de página (Inicio, Mapa, Favoritos) no entran aquí.
+   !important gana a las hojas que cada modal importa después. */
+
+.auth-recovery-modal,
+.terms-modal__dialog,
+.how-it-works-modal__dialog,
+.contact-modal__dialog,
+.contact-success__dialog,
+.experience-description-modal__dialog,
+.experience-review-detail__dialog,
+.review-modal,
+.favorite-save-modal__panel,
+.dash-team-confirm__card,
+.dash-access-confirm__card,
+.admin-profile-photo__card,
+.dash-stamp-modal__face {
+  border-radius: 22px !important;
+  background: #ffffff !important;
+  box-shadow:
+    0 18px 50px rgba(24, 36, 32, 0.16),
+    0 2px 8px rgba(24, 36, 32, 0.06) !important;
+}
+
+.auth-recovery-modal .dash-profile__name,
+.auth-recovery-modal .auth-form__title,
+.terms-modal__title,
+.how-it-works-modal__title,
+.contact-modal__title,
+.contact-modal__thanks,
+.contact-success__title,
+.experience-description-modal__header h2,
+.review-modal__header h2,
+.favorite-save-modal__title,
+.favorites-delete-modal__question,
+.dash-team-confirm__title,
+.dash-access-confirm__title,
+.admin-profile-photo__title,
+.dash-stamp-modal__title {
+  color: #111111 !important;
+  font-size: clamp(22px, 2.1vw, 28px) !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.02em !important;
+  line-height: 1.15 !important;
+  text-transform: none !important;
+}
+
+.auth-recovery-modal .dash-profile__name,
+.auth-recovery-modal .auth-form__title,
+.terms-modal__header,
+.terms-modal__title,
+.terms-modal__kicker,
+.how-it-works-modal__kicker,
+.how-it-works-modal__title,
+.contact-modal__kicker,
+.contact-modal__title,
+.contact-success__title,
+.contact-success__text,
+.experience-description-modal__header,
+.experience-description-modal__header h2,
+.favorite-save-modal__head,
+.favorite-save-modal__title,
+.favorites-delete-modal__question,
+.favorites-delete-modal__note,
+.dash-team-confirm__title,
+.dash-team-confirm__lead,
+.dash-access-confirm__title,
+.dash-access-confirm__lead,
+.admin-profile-photo__title {
+  text-align: center !important;
+}
+
+.auth-recovery-modal .auth-form__lead,
+.auth-recovery-modal .dash-section__lead,
+.terms-modal__kicker,
+.terms-modal__intro,
+.how-it-works-modal__kicker,
+.how-it-works-modal__lead,
+.contact-modal__kicker,
+.contact-success__text,
+.dash-team-confirm__lead,
+.dash-access-confirm__lead,
+.favorites-delete-modal__note,
+.review-modal__hint,
+.admin-profile-photo__lead {
+  color: #6f706b !important;
+  font-size: 0.92rem !important;
+  font-weight: 400 !important;
+  letter-spacing: 0 !important;
+  line-height: 1.55 !important;
+  text-transform: none !important;
+}
+
+.auth-recovery-modal label,
+.contact-modal label,
+.review-modal label,
+.dash-team-confirm__card label,
+.dash-access-confirm__card label,
+.admin-profile-photo__card label,
+.dash-stamp-modal label {
+  font-size: 0.78rem !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.01em !important;
+  line-height: 1.4 !important;
+  text-align: left !important;
+  text-transform: none !important;
+}
+
+.experience-description-modal__body,
+.terms-modal__body,
+.how-it-works-modal__body,
+.review-modal__comment textarea,
+.auth-recovery-modal input,
+.auth-recovery-modal textarea,
+.auth-recovery-modal select,
+.contact-modal input,
+.contact-modal textarea,
+.contact-modal select,
+.review-modal input,
+.review-modal textarea,
+.dash-team-confirm__card input,
+.dash-team-confirm__card textarea,
+.dash-stamp-modal input,
+.dash-stamp-modal textarea {
+  font-size: 0.95rem !important;
+}
+
+.auth-recovery-modal input,
+.auth-recovery-modal textarea,
+.auth-recovery-modal select,
+.contact-modal input,
+.contact-modal textarea,
+.contact-modal select,
+.review-modal input,
+.review-modal textarea,
+.dash-team-confirm__card input,
+.dash-team-confirm__card textarea {
+  text-align: left !important;
+}
+
+.auth-recovery-modal [role="alert"],
+.contact-modal [role="alert"],
+.review-modal [role="alert"],
+.contact-success [role="alert"],
+.dash-team-confirm__card [role="alert"],
+.favorite-save-modal [role="alert"] {
+  color: #8b3a32 !important;
+  font-size: 0.8rem !important;
+  font-weight: 500 !important;
+  line-height: 1.45 !important;
+}
+
+.auth-recovery-modal .auth-key-icon,
+.dash-team-confirm__card .auth-key-icon,
+.dash-access-confirm__card .auth-key-icon,
+.contact-success__dialog .auth-key-icon,
+.experience-description-modal__key.auth-key-icon,
+.favorite-save-modal__panel .auth-key-icon {
+  display: block !important;
+  width: 3.15rem !important;
+  height: 3.65rem !important;
+  margin: 0 auto 0.7rem !important;
+}
+
+.auth-recovery-close,
+.terms-modal__close,
+.how-it-works-modal__close,
+.contact-modal__close,
+.contact-success__close,
+.experience-description-modal__close,
+.experience-review-detail__close,
+.review-modal__close,
+.favorite-save-modal__close,
+.admin-profile-photo__close,
+.dash-stamp-modal__close {
+  position: absolute !important;
+  top: 14px !important;
+  right: 14px !important;
+  z-index: 4 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+  width: 40px !important;
+  height: 40px !important;
+  min-width: 40px !important;
+  min-height: 40px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  background: rgba(232, 238, 233, 0.55) !important;
+  color: #294f43 !important;
+  font-size: 1.25rem !important;
+  font-weight: 400 !important;
+  line-height: 1 !important;
+  letter-spacing: 0 !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  transition: background 220ms ease, color 220ms ease !important;
+}
+
+.auth-recovery-close:hover,
+.auth-recovery-close:focus-visible,
+.terms-modal__close:hover,
+.terms-modal__close:focus-visible,
+.how-it-works-modal__close:hover,
+.how-it-works-modal__close:focus-visible,
+.contact-modal__close:hover,
+.contact-modal__close:focus-visible,
+.contact-success__close:hover,
+.contact-success__close:focus-visible,
+.experience-description-modal__close:hover,
+.experience-description-modal__close:focus-visible,
+.experience-review-detail__close:hover,
+.experience-review-detail__close:focus-visible,
+.review-modal__close:hover,
+.review-modal__close:focus-visible,
+.favorite-save-modal__close:hover,
+.favorite-save-modal__close:focus-visible,
+.admin-profile-photo__close:hover,
+.admin-profile-photo__close:focus-visible,
+.dash-stamp-modal__close:hover,
+.dash-stamp-modal__close:focus-visible {
+  background: #e2ebe6 !important;
+  color: #1c332e !important;
+  outline: none;
+}
+
+.auth-recovery-close svg,
+.contact-success__close svg,
+.review-modal__close svg,
+.favorite-save-modal__close svg,
+.admin-profile-photo__close svg,
+.dash-stamp-modal__close svg {
+  width: 16px !important;
+  height: 16px !important;
+}
+
+.auth-recovery-modal .tourist-hero__cta,
+.auth-recovery-modal .auth-submit,
+.contact-modal__submit.admin-cta,
+.contact-success__action.admin-cta,
+.contact-success__action.tourist-hero__cta,
+.review-modal__submit,
+.favorite-save-modal__primary,
+.dash-team-confirm__actions .admin-cta,
+.dash-access-confirm__actions .admin-cta,
+.dash-stamp-modal__submit,
+.admin-profile-photo__card .admin-cta {
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 34px !important;
+  min-height: 34px !important;
+  max-height: 34px !important;
+  padding: 0 1.05rem !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: #1c332e !important;
+  color: #ffffff !important;
+  font-family: Poppins, Nunito, system-ui, sans-serif !important;
+  font-size: 0.72rem !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.04em !important;
+  line-height: 1 !important;
+  text-transform: none !important;
+  box-shadow: 0 8px 20px rgba(28, 51, 46, 0.12) !important;
+  cursor: pointer;
+  transition: transform 220ms ease, background 220ms ease, box-shadow 220ms ease, opacity 220ms ease !important;
+}
+
+.auth-recovery-modal .tourist-hero__cta:hover:not(:disabled),
+.auth-recovery-modal .auth-submit:hover:not(:disabled),
+.contact-modal__submit.admin-cta:hover:not(:disabled),
+.contact-success__action.admin-cta:hover:not(:disabled),
+.contact-success__action.tourist-hero__cta:hover:not(:disabled),
+.review-modal__submit:hover:not(:disabled),
+.favorite-save-modal__primary:hover:not(:disabled),
+.dash-team-confirm__actions .admin-cta:hover:not(:disabled),
+.dash-access-confirm__actions .admin-cta:hover:not(:disabled),
+.dash-stamp-modal__submit:hover:not(:disabled),
+.admin-profile-photo__card .admin-cta:hover:not(:disabled) {
+  background: #1c332e !important;
+  box-shadow: 0 12px 24px rgba(28, 51, 46, 0.16) !important;
+  transform: translateY(-1px);
+}
+
+.auth-recovery-modal .profile-edit-modal__actions > button:not(.tourist-hero__cta),
+.auth-recovery-modal .profile-account-actions > button:not(.tourist-hero__cta),
+.contact-success__cancel,
+.review-modal__cancel,
+.favorite-save-modal__ghost,
+.dash-stamp-modal__ghost,
+.dash-team-confirm__actions .admin-cta-hover,
+.dash-access-confirm__actions .admin-cta-hover,
+.admin-profile-photo__card .admin-cta-hover {
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 34px !important;
+  min-height: 34px !important;
+  max-height: 34px !important;
+  padding: 0 1.05rem !important;
+  border: 1px solid rgba(28, 51, 46, 0.15) !important;
+  border-radius: 999px !important;
+  background: #ffffff !important;
+  color: #1c332e !important;
+  font-family: Poppins, Nunito, system-ui, sans-serif !important;
+  font-size: 0.72rem !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.04em !important;
+  line-height: 1 !important;
+  text-transform: none !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  transition: transform 220ms ease, background 220ms ease, border-color 220ms ease, opacity 220ms ease !important;
+}
+
+.auth-recovery-modal .profile-edit-modal__actions > button:not(.tourist-hero__cta):hover:not(:disabled),
+.auth-recovery-modal .profile-account-actions > button:not(.tourist-hero__cta):hover:not(:disabled),
+.contact-success__cancel:hover:not(:disabled),
+.review-modal__cancel:hover:not(:disabled),
+.favorite-save-modal__ghost:hover:not(:disabled),
+.dash-stamp-modal__ghost:hover:not(:disabled),
+.dash-team-confirm__actions .admin-cta-hover:hover:not(:disabled),
+.dash-access-confirm__actions .admin-cta-hover:hover:not(:disabled),
+.admin-profile-photo__card .admin-cta-hover:hover:not(:disabled) {
+  background: #f6f8f7 !important;
+  border-color: rgba(28, 51, 46, 0.28) !important;
+  color: #1c332e !important;
+  transform: translateY(-1px);
+}
+
+.profile-delete-modal .profile-account-actions .tourist-hero__cta,
+.favorites-delete-modal .favorite-save-modal__primary,
+.dash-team-confirm__danger,
+.dash-access-confirm__danger {
+  background: #8f2d2d !important;
+  border-color: #8f2d2d !important;
+  color: #ffffff !important;
+  box-shadow: 0 8px 20px rgba(143, 45, 45, 0.16) !important;
+}
+
+.profile-delete-modal .profile-account-actions .tourist-hero__cta:hover:not(:disabled),
+.favorites-delete-modal .favorite-save-modal__primary:hover:not(:disabled),
+.dash-team-confirm__danger:hover:not(:disabled),
+.dash-access-confirm__danger:hover:not(:disabled) {
+  background: #7a2626 !important;
+  border-color: #7a2626 !important;
+  color: #ffffff !important;
+  box-shadow: 0 12px 24px rgba(143, 45, 45, 0.2) !important;
+  transform: translateY(-1px);
+}
+
+.auth-recovery-modal .tourist-hero__cta:disabled,
+.auth-recovery-modal .auth-submit:disabled,
+.contact-modal__submit.admin-cta:disabled,
+.contact-success__action:disabled,
+.contact-success__cancel:disabled,
+.review-modal__submit:disabled,
+.review-modal__cancel:disabled,
+.favorite-save-modal__primary:disabled,
+.favorite-save-modal__ghost:disabled,
+.dash-team-confirm__actions button:disabled,
+.dash-access-confirm__actions button:disabled,
+.dash-stamp-modal__submit:disabled,
+.dash-stamp-modal__ghost:disabled {
+  opacity: 0.5 !important;
+  transform: none !important;
+  cursor: not-allowed;
+}
+
+.profile-edit-modal__actions,
+.profile-account-actions,
+.contact-success__actions,
+.review-modal__actions,
+.favorite-save-modal__actions,
+.dash-team-confirm__actions,
+.dash-access-confirm__actions,
+.dash-stamp-modal__preview-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+}
+
+.profile-edit-modal__footer {
+  padding: 0.7rem 1.35rem 0.9rem !important;
+}
+
+@media (max-width: 640px) {
+  .auth-recovery-modal .dash-profile__name,
+  .auth-recovery-modal .auth-form__title,
+  .terms-modal__title,
+  .how-it-works-modal__title,
+  .contact-modal__title,
+  .contact-success__title,
+  .experience-description-modal__header h2,
+  .review-modal__header h2,
+  .favorite-save-modal__title,
+  .dash-team-confirm__title,
+  .dash-access-confirm__title,
+  .admin-profile-photo__title {
+    white-space: normal !important;
+    overflow-wrap: break-word;
+  }
+
+  .profile-edit-modal__actions,
+  .profile-account-actions,
+  .contact-success__actions,
+  .review-modal__actions,
+  .favorite-save-modal__actions,
+  .dash-team-confirm__actions,
+  .dash-access-confirm__actions {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .profile-edit-modal__actions > button,
+  .profile-edit-modal__actions .tourist-hero__cta,
+  .profile-account-actions > button,
+  .profile-account-actions .tourist-hero__cta,
+  .contact-success__actions .contact-success__action,
+  .contact-success__actions .contact-success__cancel,
+  .review-modal__actions .review-modal__submit,
+  .review-modal__actions .review-modal__cancel,
+  .favorite-save-modal__actions .favorite-save-modal__primary,
+  .favorite-save-modal__actions .favorite-save-modal__ghost,
+  .dash-team-confirm__actions .admin-cta,
+  .dash-team-confirm__actions .admin-cta-hover,
+  .dash-access-confirm__actions .admin-cta,
+  .dash-access-confirm__actions .admin-cta-hover {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}

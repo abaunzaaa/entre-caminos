@@ -1,7 +1,7 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { ReviewPhotoStage, ReviewPhotoViewer } from "./ReviewPhotoStage";
 import { useAuth } from "../../hooks/useAuth";
 import {
   createExperienceReview,
@@ -14,13 +14,12 @@ import {
   type VisitorReviewSummary,
 } from "../../services/reviews.service";
 import { getApiErrorMessage } from "../../utils/api-error";
-import { EXPERIENCE_DETAIL_SECTIONS, scrollToExperienceSection } from "../../utils/experience-detail-sections";
+import { EXPERIENCE_DETAIL_SECTIONS } from "../../utils/experience-detail-sections";
 import { sedeChoices } from "../../utils/experience-places";
 import { showFavoriteToast } from "../../services/favorites-sync";
 import { mediaUrl } from "../../utils/media";
 import { usePageScrollLock } from "../../hooks/usePageScrollLock";
-import reviewBloom from "../../assets/ilustracion-reseña.png";
-import { ReviewComposerModal, type ReviewDraft, type ReviewModalMark } from "./ReviewComposerModal";
+import { ReviewComposerModal, generalMood, type ReviewDraft, type ReviewModalMark } from "./ReviewComposerModal";
 
 const EMPTY_SUMMARY: VisitorReviewSummary = { averageRating: null, count: 0 };
 const REVIEW_PUBLISHED = "Reseña publicada correctamente";
@@ -37,22 +36,6 @@ function reviewErrorMessage(err: unknown, fallback: string) {
     return fallback;
   }
   return message;
-}
-
-function reviewDateParts(value: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return null;
-  }
-  const month = new Intl.DateTimeFormat("es-CO", { month: "short" })
-    .format(date)
-    .replace(".", "")
-    .toUpperCase();
-  return {
-    month,
-    day: new Intl.DateTimeFormat("es-CO", { day: "2-digit" }).format(date),
-    year: String(date.getFullYear()),
-  };
 }
 
 function nameInitials(name: string) {
@@ -94,250 +77,181 @@ function Stars({ value }: { value: number }) {
 }
 
 const REVIEW_PAGE = 4;
-const REVIEW_PHOTO_PREVIEW = 2;
 
-function ReviewLightbox({
-  images,
-  index,
+function reviewScore(review: VisitorReview) {
+  const value = Number.isFinite(review.score) ? review.score : review.rating;
+  return Number.isFinite(value) ? value : review.rating;
+}
+
+function scoreLabel(value: number) {
+  return new Intl.NumberFormat("es-CO", { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(value);
+}
+
+function ReviewDetailModal({
+  review,
+  score,
+  experienceTitle,
+  own = false,
+  busy = false,
+  deleting = false,
+  onEdit,
+  onDelete,
   onClose,
-  onChange,
 }: {
-  images: NonNullable<VisitorReview["images"]>;
-  index: number;
+  review: VisitorReview;
+  score: number;
+  experienceTitle?: string;
+  own?: boolean;
+  busy?: boolean;
+  deleting?: boolean;
+  onEdit?: () => void;
+  onDelete?: () => void;
   onClose: () => void;
-  onChange: (index: number) => void;
 }) {
+  const titleId = useId();
   const closeRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const [avatarFailed, setAvatarFailed] = useState(false);
+  const [photoIndex, setPhotoIndex] = useState(0);
+  const [viewerIndex, setViewerIndex] = useState<number | null>(null);
+  const avatar = review.user.avatarUrl?.trim() && !avatarFailed ? mediaUrl(review.user.avatarUrl, 240) : "";
+  const images = [...(review.images ?? [])].sort((left, right) => left.position - right.position);
+  const galleryUrls = images.map((image) => mediaUrl(image.imageUrl, 1200));
+  const viewerUrls = images.map((image) => mediaUrl(image.imageUrl, 1600));
+  const mood = generalMood(score);
+  const comment = review.comment.trim();
+
+  const onCloseRef = useRef(onClose);
+  const viewerRef = useRef(viewerIndex);
+  onCloseRef.current = onClose;
+  viewerRef.current = viewerIndex;
 
   usePageScrollLock(true);
 
   useEffect(() => {
+    const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     closeRef.current?.focus();
-    const onKey = (event: KeyboardEvent) => {
+
+    function onKey(event: KeyboardEvent) {
+      if (viewerRef.current != null) return;
       if (event.key === "Escape") {
-        onClose();
-      } else if (event.key === "ArrowRight" && index < images.length - 1) {
-        onChange(index + 1);
-      } else if (event.key === "ArrowLeft" && index > 0) {
-        onChange(index - 1);
+        event.preventDefault();
+        onCloseRef.current();
+        return;
       }
-    };
+      if (event.key !== "Tab" || !dialogRef.current) {
+        return;
+      }
+      const focusable = [...dialogRef.current.querySelectorAll<HTMLElement>("button, [href], [tabindex]:not([tabindex='-1'])")].filter(
+        (node) => !node.hasAttribute("disabled"),
+      );
+      if (!focusable.length) {
+        return;
+      }
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+
     document.addEventListener("keydown", onKey);
     return () => {
       document.removeEventListener("keydown", onKey);
+      previous?.focus();
     };
-  }, [images.length, index, onChange, onClose]);
-
-  const image = images[index];
-  if (!image) {
-    return null;
-  }
+  }, []);
 
   return createPortal(
-    <div
-      className="experience-reviews__lightbox"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Foto de la reseña"
-      onMouseDown={onClose}
-    >
-      <button
-        ref={closeRef}
-        type="button"
-        className="experience-reviews__lightbox-close"
-        aria-label="Cerrar"
+    <div className="experience-review-detail" role="presentation" onMouseDown={onClose}>
+      <div
+        ref={dialogRef}
+        className="experience-review-detail__dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
         onMouseDown={(event) => event.stopPropagation()}
-        onClick={onClose}
       >
-        <X size={18} strokeWidth={1.75} />
-      </button>
-      {index > 0 ? (
-        <button
-          type="button"
-          className="experience-reviews__lightbox-nav is-prev"
-          aria-label="Foto anterior"
-          onMouseDown={(event) => event.stopPropagation()}
-          onClick={() => onChange(index - 1)}
-        >
-          <ChevronLeft size={22} strokeWidth={1.75} />
+        <button ref={closeRef} type="button" className="experience-review-detail__close" aria-label="Cerrar" onClick={onClose}>
+          ×
         </button>
-      ) : null}
-      <img src={mediaUrl(image.imageUrl, 1600)} alt="" onMouseDown={(event) => event.stopPropagation()} />
-      {index < images.length - 1 ? (
-        <button
-          type="button"
-          className="experience-reviews__lightbox-nav is-next"
-          aria-label="Foto siguiente"
-          onMouseDown={(event) => event.stopPropagation()}
-          onClick={() => onChange(index + 1)}
-        >
-          <ChevronRight size={22} strokeWidth={1.75} />
-        </button>
+        <div className="experience-review-detail__body">
+          <div className={`experience-review-detail__top${galleryUrls.length ? "" : " is-solo"}`}>
+            <div className="experience-review-detail__identity">
+              <span className="experience-reviews__avatar experience-reviews__avatar--detail" aria-hidden="true">
+                {avatar ? <img src={avatar} alt="" onError={() => setAvatarFailed(true)} /> : nameInitials(review.user.name)}
+              </span>
+              <div className="experience-review-detail__facts">
+                <h2 id={titleId} className="experience-review-detail__name">{review.user.name}</h2>
+                {experienceTitle ? <p className="experience-reviews__quote-recommend">{experienceTitle}</p> : null}
+                <p className="experience-review-detail__rate">
+                  <Stars value={score} />
+                  <span>{scoreLabel(score)}</span>
+                </p>
+                {mood !== "Selecciona una calificación" ? <p className="experience-review-detail__mood">{mood}</p> : null}
+                {review.recommended != null ? (
+                  <p className="experience-review-detail__recommend">
+                    {review.recommended ? "La recomienda" : "No la recomienda"}
+                  </p>
+                ) : null}
+                {own && onEdit && onDelete ? (
+                  <p className="experience-reviews__card-actions">
+                    <button type="button" onClick={onEdit} disabled={busy}>
+                      Editar
+                    </button>
+                    <span aria-hidden="true">·</span>
+                    <button type="button" onClick={onDelete} disabled={busy}>
+                      {deleting ? "Eliminando…" : "Eliminar"}
+                    </button>
+                  </p>
+                ) : null}
+              </div>
+            </div>
+            {galleryUrls.length ? (
+              <div className="experience-review-detail__media">
+                <ReviewPhotoStage
+                  urls={galleryUrls}
+                  index={photoIndex}
+                  onIndexChange={setPhotoIndex}
+                  onOpen={(next) => {
+                    setPhotoIndex(next);
+                    setViewerIndex(next);
+                  }}
+                />
+              </div>
+            ) : null}
+          </div>
+          {comment ? (
+            <div className="experience-review-detail__story">
+              <p className="experience-review-detail__kicker">Descripción</p>
+              <p className="experience-review-detail__comment">{review.comment}</p>
+            </div>
+          ) : null}
+        </div>
+      </div>
+      {viewerIndex != null && viewerUrls.length ? (
+        <ReviewPhotoViewer
+          urls={viewerUrls}
+          index={viewerIndex}
+          onIndexChange={(next) => {
+            setViewerIndex(next);
+            setPhotoIndex(next);
+          }}
+          onClose={() => setViewerIndex(null)}
+        />
       ) : null}
     </div>,
     document.body,
   );
 }
 
-function SedeLine({ label }: { label?: string | null }) {
-  if (!label) {
-    return null;
-  }
-  return <p className="experience-reviews__sede">Visitó · {label}</p>;
-}
-
-function RecommendMark({
-  recommended,
-  corner = false,
-}: {
-  recommended: boolean | null;
-  corner?: boolean;
-}) {
-  if (recommended == null) {
-    return null;
-  }
-  return (
-    <span className={`experience-reviews__chip${corner ? " is-corner" : ""}`}>
-      {recommended ? "La recomienda" : "No la recomienda"}
-    </span>
-  );
-}
-
-function ReviewPhotos({ images }: { images: VisitorReview["images"] }) {
-  const [start, setStart] = useState(0);
-  const [lightbox, setLightbox] = useState<number | null>(null);
-  if (!images?.length) {
-    return null;
-  }
-  const maxStart = Math.max(0, images.length - REVIEW_PHOTO_PREVIEW);
-  const safeStart = Math.min(start, maxStart);
-  const visible = images.slice(safeStart, safeStart + REVIEW_PHOTO_PREVIEW);
-  const canPrev = safeStart > 0;
-  const canNext = safeStart < maxStart;
-
-  return (
-    <div className={`experience-reviews__media${images.length === 1 ? " is-single" : ""}`}>
-      <div className="experience-reviews__media-frame">
-        {canPrev ? (
-          <button
-            type="button"
-            className="experience-reviews__media-nav is-prev"
-            aria-label="Fotos anteriores"
-            onClick={(event) => {
-              event.stopPropagation();
-              setStart((current) => Math.max(0, current - 1));
-            }}
-          >
-            <ChevronLeft size={15} strokeWidth={1.75} />
-          </button>
-        ) : null}
-        <div className="experience-reviews__media-strip">
-          {visible.map((image, index) => (
-            <button
-              key={image.id}
-              type="button"
-              className={`experience-reviews__media-item${index === 0 ? " is-primary" : " is-secondary"}`}
-              aria-label="Ver foto"
-              onClick={() => setLightbox(images.findIndex((item) => item.id === image.id))}
-            >
-              <img src={mediaUrl(image.imageUrl, 800)} alt="" />
-            </button>
-          ))}
-        </div>
-        {canNext ? (
-          <button
-            type="button"
-            className="experience-reviews__media-nav is-next"
-            aria-label="Más fotos"
-            onClick={(event) => {
-              event.stopPropagation();
-              setStart((current) => Math.min(maxStart, current + 1));
-            }}
-          >
-            <ChevronRight size={15} strokeWidth={1.75} />
-          </button>
-        ) : null}
-      </div>
-      {lightbox !== null ? (
-        <ReviewLightbox
-          images={images}
-          index={lightbox}
-          onClose={() => setLightbox(null)}
-          onChange={setLightbox}
-        />
-      ) : null}
-    </div>
-  );
-}
-
-function commentOverflows(node: HTMLParagraphElement) {
-  const width = node.clientWidth;
-  if (!width) {
-    return false;
-  }
-  const probe = node.cloneNode(true) as HTMLParagraphElement;
-  probe.style.position = "absolute";
-  probe.style.visibility = "hidden";
-  probe.style.pointerEvents = "none";
-  probe.style.height = "auto";
-  probe.style.maxHeight = "none";
-  probe.style.overflow = "visible";
-  probe.style.display = "block";
-  probe.style.webkitLineClamp = "unset";
-  probe.style.width = `${width}px`;
-  node.parentElement?.appendChild(probe);
-  const full = probe.getBoundingClientRect().height;
-  probe.remove();
-  const lineHeight = Number.parseFloat(getComputedStyle(node).lineHeight);
-  if (!Number.isFinite(lineHeight) || lineHeight <= 0) {
-    return false;
-  }
-  return full > lineHeight * 4 + 1;
-}
-
-function ReviewText({ text }: { text: string }) {
-  const ref = useRef<HTMLParagraphElement>(null);
-  const [open, setOpen] = useState(false);
-  const [canToggle, setCanToggle] = useState(false);
-
-  useLayoutEffect(() => {
-    const node = ref.current;
-    if (!node) {
-      return;
-    }
-    const update = () => {
-      const current = ref.current;
-      if (!current) {
-        return;
-      }
-      setCanToggle(commentOverflows(current));
-    };
-    update();
-    const observer = new ResizeObserver(update);
-    observer.observe(node);
-    const fonts = document.fonts?.ready.then(update);
-    return () => {
-      observer.disconnect();
-      void fonts;
-    };
-  }, [text, open]);
-
-  return (
-    <>
-      <p ref={ref} className={`experience-reviews__comment${open ? " is-open" : ""}`}>
-        {text}
-      </p>
-      {canToggle || open ? (
-        <button type="button" className="experience-reviews__more" onClick={() => setOpen((current) => !current)}>
-          {open ? "Ver menos" : "Ver más"}
-        </button>
-      ) : null}
-    </>
-  );
-}
-
-function ReviewCard({
+export function ReviewCard({
   review,
+  experienceTitle,
   own = false,
   anchor = false,
   busy = false,
@@ -346,6 +260,7 @@ function ReviewCard({
   onDelete,
 }: {
   review: VisitorReview;
+  experienceTitle?: string;
   own?: boolean;
   anchor?: boolean;
   busy?: boolean;
@@ -354,67 +269,54 @@ function ReviewCard({
   onDelete?: () => void;
 }) {
   const [avatarFailed, setAvatarFailed] = useState(false);
-  const avatar = review.user.avatarUrl?.trim() && !avatarFailed ? mediaUrl(review.user.avatarUrl, 128) : "";
-  const date = reviewDateParts(review.updatedAt || review.createdAt);
-  const photos = review.images ?? [];
-  const showMarks = Boolean(review.location?.label) || review.recommended != null;
-  const showRail = photos.length > 0 || showMarks;
+  const [detailOpen, setDetailOpen] = useState(false);
+  const avatar = review.user.avatarUrl?.trim() && !avatarFailed ? mediaUrl(review.user.avatarUrl, 240) : "";
+  const score = reviewScore(review);
+  const shown = Math.round(score * 2) / 2;
+  const mood = generalMood(shown);
 
   return (
     <article
       id={anchor ? EXPERIENCE_DETAIL_SECTIONS.ownReview : undefined}
-      className={`experience-reviews__card${own ? " is-own" : ""}${photos.length ? " has-media" : ""}${!photos.length && showMarks ? " has-marks" : ""}`}
+      className={`experience-reviews__quote${own ? " is-own" : ""}`}
       tabIndex={anchor ? -1 : undefined}
     >
-      <div className="experience-reviews__card-person">
-        <span className="experience-reviews__avatar" aria-hidden="true">
-          {avatar ? <img src={avatar} alt="" onError={() => setAvatarFailed(true)} /> : nameInitials(review.user.name)}
-        </span>
-      </div>
-
-      <div className="experience-reviews__card-identity">
-        {own ? <span className="experience-reviews__yours">Tu reseña</span> : null}
-        <strong>{review.user.name}</strong>
-        <Stars value={review.score ?? review.rating} />
-      </div>
-
-      <div className="experience-reviews__card-body">
-        <ReviewText text={review.comment} />
-        {own && onEdit && onDelete ? (
-          <p className="experience-reviews__card-actions">
-            <button type="button" onClick={onEdit} disabled={busy}>
-              Editar
-            </button>
-            <span aria-hidden="true">·</span>
-            <button type="button" onClick={onDelete} disabled={busy}>
-              {deleting ? "Eliminando…" : "Eliminar"}
-            </button>
-          </p>
-        ) : null}
-      </div>
-
-      {showRail ? (
-        <div className={`experience-reviews__stage${photos.length ? "" : " is-marks-only"}`}>
-          {showMarks ? (
-            <div className="experience-reviews__marks">
-              <SedeLine label={review.location?.label} />
-              <RecommendMark recommended={review.recommended} corner />
-            </div>
-          ) : null}
-          {photos.length ? (
-            <div className="experience-reviews__gallery">
-              <ReviewPhotos images={photos} />
-            </div>
-          ) : null}
-        </div>
+      <span className="experience-reviews__avatar" aria-hidden="true">
+        {avatar ? <img src={avatar} alt="" onError={() => setAvatarFailed(true)} /> : nameInitials(review.user.name)}
+      </span>
+      <strong className="experience-reviews__quote-name">{review.user.name}</strong>
+      {experienceTitle ? <p className="experience-reviews__quote-recommend">{experienceTitle}</p> : null}
+      <Stars value={shown} />
+      {mood !== "Selecciona una calificación" ? <p className="experience-reviews__quote-mood">{mood}</p> : null}
+      {review.recommended != null ? (
+        <p className="experience-reviews__quote-recommend">{review.recommended ? "La recomienda" : "No la recomienda"}</p>
       ) : null}
-
-      {date ? (
-        <time className="experience-reviews__card-date" dateTime={review.updatedAt || review.createdAt}>
-          <span className="experience-reviews__date-month">{date.month}</span>
-          <span className="experience-reviews__date-day">{date.day}</span>
-          <span className="experience-reviews__date-year">{date.year}</span>
-        </time>
+      <button type="button" className="experience-reviews__quote-more" onClick={() => setDetailOpen(true)}>
+        Ver más →
+      </button>
+      {own && onEdit && onDelete ? (
+        <p className="experience-reviews__card-actions">
+          <button type="button" onClick={onEdit} disabled={busy}>
+            Editar
+          </button>
+          <span aria-hidden="true">·</span>
+          <button type="button" onClick={onDelete} disabled={busy}>
+            {deleting ? "Eliminando…" : "Eliminar"}
+          </button>
+        </p>
+      ) : null}
+      {detailOpen ? (
+        <ReviewDetailModal
+          review={review}
+          score={shown}
+          experienceTitle={experienceTitle}
+          own={own}
+          busy={busy}
+          deleting={deleting}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onClose={() => setDetailOpen(false)}
+        />
       ) : null}
     </article>
   );
@@ -516,7 +418,6 @@ export function ExperienceReviewsSection({
       setEditingId(mineRef.current[0]?.id ?? null);
       setComposer("edit");
     }
-    scrollToExperienceSection(EXPERIENCE_DETAIL_SECTIONS.reviews);
   }, [composeRequest]);
 
   function openComposer(mode: "create" | "edit", reviewId?: string) {
@@ -596,27 +497,17 @@ export function ExperienceReviewsSection({
   const canCompose = Boolean(user && visited && openSedes.length > 0);
 
   return (
-    <section
-      id={EXPERIENCE_DETAIL_SECTIONS.reviews}
-      className="experience-reviews experience-detail-target"
-      aria-label="Reseñas y calificaciones"
-    >
+    <section className="experience-reviews experience-detail-target" aria-label="Reseñas">
       <header className="experience-reviews__intro">
-        <img className="experience-reviews__bloom" src={reviewBloom} alt="" />
-        <h2 className="dash-exps-place__title">Reseñas y calificaciones</h2>
-        <p className="dash-exps-place__lead experience-reviews__lead">
-          Descubre opiniones, calificaciones y experiencias compartidas por otros viajeros.
-        </p>
-        {summary.count > 0 ? (
-          <p className="experience-reviews__summary" aria-live="polite">
-            <span className="experience-reviews__score">
-              <strong>{summary.averageRating?.toFixed(1)}</strong>
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 2.7 14.7 8.2l6 .9-4.35 4.24 1.03 6L12 16.6 6.62 19.34l1.03-6L3.3 9.1l6-.9L12 2.7Z" />
-              </svg>
-            </span>
-            <span aria-hidden="true">·</span>
-            <span>
+        <p className="experience-reviews__subtitle">Descubre opiniones compartidas por otros viajeros</p>
+        {summary.count > 0 && summary.averageRating != null ? (
+          <p
+            className="experience-reviews__summary"
+            aria-live="polite"
+            aria-label={`Calificación promedio ${scoreLabel(summary.averageRating)}, ${summary.count} ${summary.count === 1 ? "reseña" : "reseñas"}`}
+          >
+            <strong className="experience-reviews__score">{scoreLabel(summary.averageRating)}</strong>
+            <span className="experience-reviews__count">
               {summary.count} {summary.count === 1 ? "reseña" : "reseñas"}
             </span>
           </p>
@@ -627,6 +518,10 @@ export function ExperienceReviewsSection({
       {error ? <p className="experience-reviews__note">{error}</p> : null}
 
       <div className="experience-reviews__own">
+        {!loading && !error && summary.count === 0 ? (
+          <p className="experience-reviews__empty">Aún no hay reseñas</p>
+        ) : null}
+
         {!user ? (
           <p className="experience-reviews__note">
             <button
@@ -645,17 +540,10 @@ export function ExperienceReviewsSection({
           <p className="experience-reviews__note">Marca esta experiencia como visitada para poder calificarla.</p>
         ) : null}
 
-        {canCompose ? (
-          <button type="button" className="experience-reviews__primary" onClick={() => openComposer("create")}>
+        {canCompose && !loading ? (
+          <button type="button" className="tourist-hero__cta" onClick={() => openComposer("create")}>
             Calificar experiencia
           </button>
-        ) : null}
-
-        {!loading && !error && summary.count === 0 ? (
-          <p className="experience-reviews__empty">
-            Aún no hay reseñas.
-            {canCompose ? " Sé la primera persona en compartir tu experiencia." : ""}
-          </p>
         ) : null}
       </div>
 

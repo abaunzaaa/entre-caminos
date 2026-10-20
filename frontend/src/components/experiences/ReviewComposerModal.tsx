@@ -4,6 +4,8 @@ import { MapPin, Plus, X } from "lucide-react";
 import { OnboardingSelect } from "../onboarding/OnboardingSelect";
 import "../../styles/onboarding.css";
 import brandLogo from "../../assets/logo.png";
+import marcoResena from "../../assets/marcoreseña.png";
+import { formatPersonName } from "../../utils/person-name";
 import { AvatarPreview } from "../onboarding/AvatarPreview";
 import { useAuth } from "../../hooks/useAuth";
 import type { VisitorReviewImage, VisitorReviewInput, VisitorReviewPhotos } from "../../services/reviews.service";
@@ -17,7 +19,7 @@ export type ReviewModalMark = {
   kind: "logo" | "brand";
 };
 
-function generalMood(value: number) {
+export function generalMood(value: number) {
   if (value <= 0) {
     return "Selecciona una calificación";
   }
@@ -157,22 +159,6 @@ function sameDraft(left: ReviewDraft, right: ReviewDraft) {
   );
 }
 
-function ReviewMark({ marks }: { marks: ReviewModalMark[] }) {
-  const chain = marks.length ? marks : [{ src: brandLogo, kind: "brand" as const }];
-  const [index, setIndex] = useState(0);
-  const current = chain[Math.min(index, chain.length - 1)];
-
-  return (
-    <span className={`review-modal__mark is-${current.kind}`} aria-hidden="true">
-      <img
-        src={current.src}
-        alt=""
-        onError={() => setIndex((value) => (value < chain.length - 1 ? value + 1 : value))}
-      />
-    </span>
-  );
-}
-
 function StarGlyph({ filled = false }: { filled?: boolean }) {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" className={filled ? "is-fill" : "is-base"}>
@@ -194,14 +180,12 @@ function FieldAlert({ id, message }: { id: string; message?: string }) {
 
 function ReviewCover({
   src,
-  marks,
   title,
   sede = null,
   sedeMode = "none",
   recommend = null,
 }: {
   src?: string | null;
-  marks: ReviewModalMark[];
   title: string;
   sede?: ReactNode;
   sedeMode?: "none" | "choose" | "set";
@@ -217,9 +201,14 @@ function ReviewCover({
         {sede}
       </div>
       <div className="review-modal__photo">
-        <ReviewMark marks={marks} />
         <div className={`review-modal__cover-frame${photo ? "" : " is-fallback"}`}>
-          <img src={photo || brandLogo} alt="" onError={() => setFailed(true)} />
+          <img
+            className="review-modal__cover-shot"
+            src={photo || brandLogo}
+            alt=""
+            onError={() => setFailed(true)}
+          />
+          <img className="review-modal__cover-marco" src={marcoResena} alt="" />
         </div>
       </div>
       {recommend ? <div className="review-modal__cover-recommend">{recommend}</div> : null}
@@ -307,11 +296,6 @@ function StarPicker({
           );
         })}
       </div>
-      {variant === "lead" ? (
-        <p className="review-modal__mood" aria-live="polite">
-          {generalMood(shown)}
-        </p>
-      ) : null}
       <FieldAlert id={`${fieldId}-error`} message={error} />
     </div>
   );
@@ -338,7 +322,6 @@ function ReviewerAvatar({
 export function ReviewComposerModal({
   mode,
   experienceTitle,
-  marks = [],
   coverUrl = null,
   initial = EMPTY_DRAFT,
   initialPhotos = [],
@@ -386,14 +369,10 @@ export function ReviewComposerModal({
   const bannerText = banner || error;
   const fieldErrorsRef = useRef(fieldErrors);
   fieldErrorsRef.current = fieldErrors;
-  const reviewerName = user?.name?.trim() || "";
+  const reviewerName = formatPersonName(user?.name?.trim() || "") || user?.name?.trim() || "";
   const reviewerAvatar = resolveAvatarUrl(user);
   const reviewerConfig =
     !reviewerAvatar && user?.profile?.profileImageType === "AVATAR" ? user.profile.avatarConfig : null;
-  const reviewerNote =
-    mode === "edit"
-      ? "Tu reseña es pública en Entre Caminos"
-      : "Tu reseña será pública en Entre Caminos";
   const requestCloseRef = useRef<() => void>(() => undefined);
   const confirmLeaveRef = useRef(false);
   confirmLeaveRef.current = confirmLeave;
@@ -572,6 +551,15 @@ export function ReviewComposerModal({
   return createPortal(
     <div className="review-modal-overlay" onMouseDown={requestClose}>
       <div className="review-modal-frame" inert={confirmLeave ? true : undefined} onMouseDown={(event) => event.stopPropagation()}>
+        <button
+          ref={closeRef}
+          type="button"
+          className="review-modal__close"
+          aria-label="Cerrar"
+          onClick={requestClose}
+        >
+          <X size={16} strokeWidth={1.75} />
+        </button>
         <div
           ref={dialogRef}
           className="review-modal"
@@ -582,7 +570,6 @@ export function ReviewComposerModal({
         <div className="review-modal__layout">
         <ReviewCover
           src={coverUrl}
-          marks={marks}
           title={experienceTitle}
           sedeMode={sedeLabel || placeName ? "set" : locations.length > 1 ? "choose" : "none"}
           sede={
@@ -615,81 +602,31 @@ export function ReviewComposerModal({
               </div>
             ) : null
           }
-          recommend={
-            <div
-              id="review-field-recommended"
-              className={`review-modal__criterion review-modal__recommend${fieldErrors.recommended ? " is-invalid" : ""}`}
-            >
-              <p id="review-recommend-label" className="dash-exps-dossier__kicker">
-                ¿Recomendarías esta experiencia?
-              </p>
-              <div
-                className="review-modal__chips"
-                role="group"
-                aria-labelledby="review-recommend-label"
-                aria-invalid={fieldErrors.recommended ? true : undefined}
-                aria-describedby={fieldErrors.recommended ? "review-field-recommended-error" : undefined}
-              >
-                <button
-                  type="button"
-                  className={draft.recommended === true ? "is-on" : ""}
-                  aria-pressed={draft.recommended === true}
-                  onClick={() => commitDraft({ ...draft, recommended: true })}
-                >
-                  Sí
-                </button>
-                <button
-                  type="button"
-                  className={draft.recommended === false ? "is-on" : ""}
-                  aria-pressed={draft.recommended === false}
-                  onClick={() => commitDraft({ ...draft, recommended: false })}
-                >
-                  No
-                </button>
-              </div>
-              <FieldAlert id="review-field-recommended-error" message={fieldErrors.recommended} />
-            </div>
-          }
         />
         <div className="review-modal__panel">
         <header className="review-modal__header">
-          <button
-            ref={closeRef}
-            type="button"
-            className="review-modal__close"
-            aria-label="Cerrar"
-            onClick={requestClose}
-          >
-            <X size={16} strokeWidth={1.75} />
-          </button>
-          <div className="review-modal__headline">
-            <h2 id={titleId}>¿Cómo fue tu experiencia?</h2>
-            <p className="review-modal__hint">Tu opinión ayuda a otros a elegir su próximo camino.</p>
-          </div>
-          {reviewerName ? (
-            <div className="review-modal__author">
-              <span className="review-modal__author-photo">
-                <ReviewerAvatar name={reviewerName} avatarUrl={reviewerAvatar} avatarConfig={reviewerConfig} />
-              </span>
-              <div className="review-modal__author-copy">
-                <strong>{reviewerName}</strong>
-                <p>{reviewerNote}</p>
-              </div>
+          <div className="review-modal__author">
+            <span className="review-modal__author-photo">
+              <ReviewerAvatar name={reviewerName || "Viajero"} avatarUrl={reviewerAvatar} avatarConfig={reviewerConfig} />
+            </span>
+            <div className="review-modal__author-copy">
+              <h2 id={titleId}>{reviewerName ? `Hola, ${reviewerName}` : "Hola"}</h2>
+              <p className="review-modal__prompt">¿Cómo fue tu experiencia?</p>
+              <p className="review-modal__hint">Tu reseña será pública</p>
             </div>
-          ) : null}
+          </div>
         </header>
 
         <div className="review-modal__body">
-          <div className="review-modal__ratings">
-            <StarPicker
-              variant="lead"
-              fieldId="review-field-rating"
-              label="Experiencia general"
-              value={draft.rating}
-              error={fieldErrors.rating}
-              onChange={(rating) => commitDraft({ ...draft, rating })}
-            />
-            <div className="review-modal__rating-side">
+          <div className="review-modal__scoreboard">
+            <div className="review-modal__score-row">
+              <StarPicker
+                fieldId="review-field-rating"
+                label="Experiencia general"
+                value={draft.rating}
+                error={fieldErrors.rating}
+                onChange={(rating) => commitDraft({ ...draft, rating })}
+              />
               <StarPicker
                 fieldId="review-field-organization"
                 label="Organización y atención"
@@ -697,6 +634,8 @@ export function ReviewComposerModal({
                 error={fieldErrors.organization}
                 onChange={(organizationRating) => commitDraft({ ...draft, organizationRating })}
               />
+            </div>
+            <div className="review-modal__score-row">
               <StarPicker
                 fieldId="review-field-value"
                 label="Relación calidad-precio"
@@ -704,9 +643,43 @@ export function ReviewComposerModal({
                 error={fieldErrors.value}
                 onChange={(valueRating) => commitDraft({ ...draft, valueRating })}
               />
+              <div
+                id="review-field-recommended"
+                className={`review-modal__criterion review-modal__recommend${fieldErrors.recommended ? " is-invalid" : ""}`}
+              >
+                <p id="review-recommend-label" className="dash-exps-dossier__kicker">
+                  ¿Recomendarías esta experiencia?
+                </p>
+                <div
+                  className="review-modal__chips"
+                  role="group"
+                  aria-labelledby="review-recommend-label"
+                  aria-invalid={fieldErrors.recommended ? true : undefined}
+                  aria-describedby={fieldErrors.recommended ? "review-field-recommended-error" : undefined}
+                >
+                  <button
+                    type="button"
+                    className={draft.recommended === true ? "is-on" : ""}
+                    aria-pressed={draft.recommended === true}
+                    onClick={() => commitDraft({ ...draft, recommended: true })}
+                  >
+                    Sí
+                  </button>
+                  <button
+                    type="button"
+                    className={draft.recommended === false ? "is-on" : ""}
+                    aria-pressed={draft.recommended === false}
+                    onClick={() => commitDraft({ ...draft, recommended: false })}
+                  >
+                    No
+                  </button>
+                </div>
+                <FieldAlert id="review-field-recommended-error" message={fieldErrors.recommended} />
+              </div>
             </div>
           </div>
 
+          <div className="review-modal__split">
           <label className="review-modal__comment" id="review-field-comment">
             <span className="dash-exps-dossier__kicker">Cuéntanos un poco más</span>
             <textarea
@@ -725,22 +698,28 @@ export function ReviewComposerModal({
 
           <div id="review-field-photos" className="review-modal__photos">
             <p className="dash-exps-dossier__kicker">Fotos de tu experiencia</p>
-            <p className="review-modal__photos-help">Puedes agregar hasta 5 fotos.</p>
-            <div className="review-modal__photos-row">
-              {photos.length < PHOTO_MAX ? (
-                <button type="button" className="review-modal__photo-add" onClick={() => photoInputRef.current?.click()}>
-                  <Plus size={16} strokeWidth={1.75} aria-hidden="true" />
-                  Agregar
-                </button>
-              ) : null}
-              {photos.map((photo) => (
-                <span key={photo.key} className="review-modal__photo-thumb">
-                  <img src={photo.kind === "local" ? photo.previewUrl : photo.url} alt="" />
-                  <button type="button" aria-label="Quitar foto" onClick={() => removePhoto(photo.key)}>
-                    <X size={12} strokeWidth={2} />
+            <div className="review-modal__photos-well">
+              <p className="review-modal__photos-help">Puedes agregar hasta 5 fotos.</p>
+              <div className="review-modal__photos-compose">
+                {photos.length < PHOTO_MAX ? (
+                  <button type="button" className="review-modal__photo-add" onClick={() => photoInputRef.current?.click()}>
+                    <Plus size={16} strokeWidth={1.75} aria-hidden="true" />
+                    Agregar
                   </button>
-                </span>
-              ))}
+                ) : null}
+              </div>
+              {photos.length ? (
+                <div className="review-modal__photos-row">
+                  {photos.map((photo) => (
+                    <span key={photo.key} className="review-modal__photo-thumb">
+                      <img src={photo.kind === "local" ? photo.previewUrl : photo.url} alt="" />
+                      <button type="button" aria-label="Quitar foto" onClick={() => removePhoto(photo.key)}>
+                        <X size={12} strokeWidth={2} />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              ) : null}
             </div>
             <input
               ref={photoInputRef}
@@ -751,6 +730,7 @@ export function ReviewComposerModal({
               onChange={(event) => addPhotos(event.target.files)}
             />
             <FieldAlert id="review-field-photos-error" message={photoNotice} />
+          </div>
           </div>
 
         </div>

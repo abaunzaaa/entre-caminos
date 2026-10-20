@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
-import { Link } from "react-router-dom";
 import { ExperienceCatalogCard } from "../components/admin/ExperienceCatalogCard";
 import { Pager } from "../components/ui/Pager";
 import {
@@ -7,92 +6,27 @@ import {
   ExplorerDiscoverFilters,
   type DiscoverFiltersState,
 } from "../components/explorer/ExplorerDiscoverFilters";
+import { ExplorerMapPreview } from "../components/explorer/ExplorerMapPreview";
 import { ExplorerRecommendedSection } from "../components/explorer/ExplorerRecommendedSection";
 import { ExplorerUserFooter } from "../components/explorer/ExplorerUserFooter";
 import { TouristHomeHero } from "../components/explorer/TouristHomeHero";
-import { experienceCoverUrl } from "../components/explorer/explorer-media";
 import { useGuide } from "../components/guide/GuideContext";
 import { useAuth } from "../hooks/useAuth";
 import { useInViewReveal } from "../hooks/useInViewReveal";
 import descubreIcon from "../assets/icon-descubre.png";
 import mapaIcon from "../assets/mapa-icon.png";
-import paloma1 from "../assets/paloma1.png";
-import paloma2 from "../assets/paloma 2.png";
 import { getCoverFeaturedExperiences, getMapPreviewExperiences, getPublicExperiences, getRecommendedExperiences } from "../services/catalog.service";
 import { listFavoriteIds } from "../services/favorites.service";
 import { onFavoritesChanged } from "../services/favorites-sync";
 import { listVisitedIds } from "../services/visits.service";
 import { onVisitsChanged } from "../services/visits-sync";
-import {
-  COLOMBIA_DEPARTMENTS,
-  findDepartment,
-  findMunicipality,
-  formatDepartmentMunicipality,
-} from "../data/colombia-locations";
+import type { MapPreviewExperience } from "../services/catalog.service";
 import type { Experience } from "../types";
 import "../styles/admin-ui.css";
 import "../styles/admin-access.css";
 import "../styles/explorer.css";
 
 const PAGE_SIZE = 8;
-const STREET_PLACE = /(?:calle|carrera|cra\.?|cll?\.?|avenida|av\.?|transversal|tv\.?|diagonal|dg\.?|vereda|km\b|#)/i;
-
-function joinPlace(department?: string | null, municipality?: string | null) {
-  const dept = department?.trim() || "";
-  const city = municipality?.trim() || "";
-  if (dept && city) {
-    return `${dept} · ${city}`;
-  }
-  return dept || city;
-}
-
-function mapCardPlace(experience: Experience) {
-  const stored = experience.locations?.find((item) => item.department?.trim() || item.municipality?.trim());
-  if (stored) {
-    return joinPlace(stored.department, stored.municipality);
-  }
-
-  const location = (experience.location ?? "").replace(/\([^)]*\)/g, " ").replace(/\s+,/g, ",").replace(/\s+/g, " ").trim();
-  const formatted = formatDepartmentMunicipality(location);
-  if (formatted) {
-    return formatted;
-  }
-
-  const parts = location
-    .split(",")
-    .map((part) => part.trim())
-    .filter((part) => part && !STREET_PLACE.test(part));
-  let department = "";
-  const cityParts: string[] = [];
-  for (const part of parts) {
-    const match = findDepartment(part);
-    if (match) {
-      department = match.name;
-    } else {
-      cityParts.push(part);
-    }
-  }
-
-  if (department) {
-    const city = cityParts.map((part) => findMunicipality(department, part)).find(Boolean) ?? "";
-    return joinPlace(department, city);
-  }
-
-  for (const part of cityParts) {
-    const matches = COLOMBIA_DEPARTMENTS.flatMap((item) => {
-      const city = findMunicipality(item.name, part);
-      return city ? [{ department: item.name, city }] : [];
-    });
-    if (matches.length === 1) {
-      return joinPlace(matches[0].department, matches[0].city);
-    }
-    if (matches.length > 1) {
-      return matches[0].city;
-    }
-  }
-
-  return "";
-}
 
 export function ExplorePage() {
   const { user } = useAuth();
@@ -102,7 +36,7 @@ export function ExplorePage() {
   const [coverFeatured, setCoverFeatured] = useState<Experience[]>([]);
   const [recommended, setRecommended] = useState<Experience[]>([]);
   const [recommendedLoading, setRecommendedLoading] = useState(true);
-  const [mapPreview, setMapPreview] = useState<Experience[]>([]);
+  const [mapPreview, setMapPreview] = useState<MapPreviewExperience[]>([]);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [cities, setCities] = useState<string[]>([]);
   const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
@@ -217,8 +151,8 @@ export function ExplorePage() {
     };
   }, []);
 
-  const { ref: discoverRef, inView: discoverRevealed } = useInViewReveal<HTMLElement>();
-  const { ref: mapRef, inView: mapRevealed } = useInViewReveal<HTMLElement>();
+  const { ref: discoverRef, inView: discoverRevealed } = useInViewReveal<HTMLElement>({ once: true });
+  const { ref: mapRef, inView: mapRevealed } = useInViewReveal<HTMLElement>({ once: true });
 
   useEffect(() => {
     if (!mapRevealed || mapLoaded) {
@@ -345,14 +279,14 @@ export function ExplorePage() {
             style={{ "--reveal-delay": "0ms" } as CSSProperties}
           />
           <h2
-            className="explorer-discover-title explorer-reveal explorer-reveal--title"
+            className="explorer-discover-title explorer-block-title explorer-reveal explorer-reveal--title"
             id="explorer-discover-title"
             style={{ "--reveal-delay": "80ms" } as CSSProperties}
           >
             Descubre nuevas experiencias
           </h2>
           <p
-            className="explorer-discover-lead explorer-reveal explorer-reveal--soft"
+            className="explorer-discover-lead explorer-block-lead explorer-reveal explorer-reveal--soft"
             style={{ "--reveal-delay": "150ms" } as CSSProperties}
           >
             Encuentra lo que buscas
@@ -461,70 +395,32 @@ export function ExplorePage() {
               style={{ "--reveal-delay": "0ms" } as CSSProperties}
             />
             <h2
-              className="explorer-discover-title explorer-reveal explorer-reveal--title"
+              className="explorer-discover-title explorer-block-title explorer-reveal explorer-reveal--title"
               id="explorer-map-title"
               style={{ "--reveal-delay": "80ms" } as CSSProperties}
             >
               Mapa
             </h2>
             <p
-              className="explorer-section__lead explorer-reveal explorer-reveal--soft"
+              className="explorer-discover-lead explorer-block-lead explorer-reveal explorer-reveal--soft"
               style={{ "--reveal-delay": "150ms" } as CSSProperties}
             >
-              Un mapa interactivo llegará pronto. Mientras tanto, revisa la ubicación de cada experiencia.
+              Descubre experiencias cerca de ti
             </p>
           </div>
         </div>
         {!mapLoaded ? (
           mapRevealed ? (
-            <p className="explorer-empty explorer-reveal" style={{ "--reveal-delay": "220ms" } as CSSProperties}>
+            <p className="explorer-empty explorer-reveal" style={{ "--reveal-delay": "150ms" } as CSSProperties}>
               Buscando ubicaciones…
             </p>
           ) : null
-        ) : mapPreview.length === 0 ? (
-          <p className="explorer-empty explorer-reveal" style={{ "--reveal-delay": "220ms" } as CSSProperties}>
-            Cuando haya experiencias publicadas, podrás ubicarlas aquí.
-          </p>
         ) : (
-          <div className="explorer-soft-grid">
-            {mapPreview.map((experience, index) => {
-              const place = mapCardPlace(experience);
-              return (
-                <Link
-                  key={experience.id}
-                  to={`/explorar/${experience.id}`}
-                  className="explorer-soft-card explorer-reveal explorer-reveal--card"
-                  style={{ "--reveal-delay": `${220 + index * 80}ms` } as CSSProperties}
-                >
-                  <img src={experienceCoverUrl(experience, 320)} alt="" loading="lazy" decoding="async" />
-                  <div>
-                    <h3>{experience.title}</h3>
-                    {place ? <p>{place}</p> : null}
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
+          <ExplorerMapPreview experiences={mapPreview} />
         )}
-        <img
-          className="explorer-map__dove explorer-map__dove--left explorer-reveal explorer-reveal--soft"
-          src={paloma1}
-          alt=""
-          aria-hidden="true"
-          decoding="async"
-          style={{ "--reveal-delay": "260ms" } as CSSProperties}
-        />
-        <img
-          className="explorer-map__dove explorer-map__dove--right explorer-reveal explorer-reveal--soft"
-          src={paloma2}
-          alt=""
-          aria-hidden="true"
-          decoding="async"
-          style={{ "--reveal-delay": "300ms" } as CSSProperties}
-        />
       </section>
 
-      <ExplorerUserFooter />
+      <ExplorerUserFooter once birds />
     </div>
   );
 }

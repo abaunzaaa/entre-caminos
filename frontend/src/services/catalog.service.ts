@@ -131,9 +131,19 @@ export async function getPublicExperiences(options?: {
   };
 }
 
+export type MapPreviewExperience = Pick<
+  Experience,
+  "id" | "title" | "price" | "currency" | "location" | "latitude" | "longitude" | "imageUrl" | "imageUrls"
+> & {
+  categoryNames?: string[];
+  averageRating?: number | null;
+  reviewCount?: number;
+  locations?: Array<{ department?: string | null; municipality?: string | null }>;
+};
+
 export async function getMapPreviewExperiences() {
-  const { data } = await api.get<ApiResponse<{ experiences: Experience[] }>>("/experiences", {
-    params: { view: "map", limit: 6 },
+  const { data } = await api.get<ApiResponse<{ experiences: MapPreviewExperience[] }>>("/experiences", {
+    params: { view: "map", limit: 8 },
   });
   return data.data.experiences;
 }
@@ -162,6 +172,30 @@ export async function getNearbyExperiences() {
     params: { view: "nearby" },
   });
   return data.data.experiences;
+}
+
+export type NearbyExperience = Experience & {
+  distanceKm: number;
+  categoryNames?: string[];
+  averageRating?: number | null;
+  reviewCount?: number;
+  visitCount?: number;
+  mostVisited?: boolean;
+  isFeatured?: boolean;
+  featuredFrom?: string | null;
+  featuredUntil?: string | null;
+};
+
+export async function getExperiencesNear(latitude: number, longitude: number, radiusKm?: number) {
+  const { data } = await api.get<ApiResponse<{ experiences: NearbyExperience[]; radiusKm: number }>>("/experiences", {
+    params: {
+      view: "nearby",
+      latitude,
+      longitude,
+      ...(radiusKm != null ? { radiusKm } : {}),
+    },
+  });
+  return data.data;
 }
 
 export async function getPublicExperience(id: string) {

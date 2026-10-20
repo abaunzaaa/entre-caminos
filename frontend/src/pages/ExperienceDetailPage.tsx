@@ -8,7 +8,6 @@ import { useFavoriteToggle } from "../hooks/useFavoriteToggle";
 import { useVisitedToggle } from "../hooks/useVisitedToggle";
 import { getNearbyExperiences, getPublicExperience, recordExperienceView } from "../services/catalog.service";
 import type { Experience } from "../types";
-import { EXPERIENCE_DETAIL_SECTIONS, scrollToExperienceSection } from "../utils/experience-detail-sections";
 import "../styles/admin-ui.css";
 import "../styles/admin-access.css";
 import "../styles/experience-editorial-gallery.css";
@@ -29,6 +28,7 @@ export function ExperienceDetailPage() {
   const [visitWelcomeOpen, setVisitWelcomeOpen] = useState(false);
   const [visitLockOpen, setVisitLockOpen] = useState(false);
   const [composeRequest, setComposeRequest] = useState(0);
+  const [reviewFocusRequest, setReviewFocusRequest] = useState(0);
   const favorite = useFavoriteToggle(id ?? "", {
     loginRedirectTo: id ? `/explorar/${id}` : "/explorar",
     experienceTitle: experience?.title,
@@ -41,7 +41,6 @@ export function ExperienceDetailPage() {
 
   const openReviewComposer = useCallback(() => {
     setComposeRequest((value) => value + 1);
-    window.setTimeout(() => scrollToExperienceSection(EXPERIENCE_DETAIL_SECTIONS.reviews), 40);
   }, []);
 
   useEffect(() => {
@@ -129,6 +128,7 @@ export function ExperienceDetailPage() {
         visitedBusy={visited.busy}
         onVisitedToggle={visited.toggle}
         reviewComposeRequest={composeRequest}
+        reviewFocusRequest={reviewFocusRequest}
         nearbyHref={(nearbyId) => `/explorar/${nearbyId}`}
         fetchNearby={fetchNearby}
         onConsultAi={() => {
@@ -153,11 +153,7 @@ export function ExperienceDetailPage() {
         onClose={() => setVisitLockOpen(false)}
         onViewReview={() => {
           setVisitLockOpen(false);
-          window.setTimeout(() => {
-            const own = document.getElementById(EXPERIENCE_DETAIL_SECTIONS.ownReview);
-            scrollToExperienceSection(own ? EXPERIENCE_DETAIL_SECTIONS.ownReview : EXPERIENCE_DETAIL_SECTIONS.reviews);
-            own?.focus();
-          }, 40);
+          setReviewFocusRequest((value) => value + 1);
         }}
       />
     </div>

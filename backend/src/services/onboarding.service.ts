@@ -27,6 +27,7 @@ const profileSelect = {
   addressReference: true,
   latitude: true,
   longitude: true,
+  currentLocationShared: true,
   profileImageUrl: true,
   profileImagePublicId: true,
   profileImageType: true,
@@ -46,11 +47,19 @@ const profileSelect = {
 
 const completingUsers = new Set<string>();
 
-function asNumber(value: Prisma.Decimal | null) {
+function asNumber(value: Prisma.Decimal | number | null | undefined) {
   if (value == null) {
     return null;
   }
-  return Number(value);
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
+function sameCoordinate(left: number | null, right: number | null) {
+  if (left == null || right == null) {
+    return left == null && right == null;
+  }
+  return Math.abs(left - right) < 0.00001;
 }
 
 function normalizeList(values: string[] | undefined, allowed: readonly string[], aliases: Record<string, string> = {}) {
@@ -82,6 +91,7 @@ export function serializeProfile(
     addressReference: profile.addressReference,
     latitude: asNumber(profile.latitude),
     longitude: asNumber(profile.longitude),
+    currentLocationShared: profile.currentLocationShared,
     profileImageUrl: profile.profileImageUrl,
     profileImagePublicId: profile.profileImagePublicId,
     profileImageType: profile.profileImageType,
@@ -165,6 +175,18 @@ export async function saveOnboarding(userId: string, input: OnboardingSaveInput)
 
     const nextLatitude = input.latitude === undefined ? current?.latitude : input.latitude;
     const nextLongitude = input.longitude === undefined ? current?.longitude : input.longitude;
+    const previousLatitude = asNumber(current?.latitude);
+    const previousLongitude = asNumber(current?.longitude);
+    const storedLatitude = asNumber(nextLatitude);
+    const storedLongitude = asNumber(nextLongitude);
+    const coordinatesChanged =
+      !sameCoordinate(storedLatitude, previousLatitude) || !sameCoordinate(storedLongitude, previousLongitude);
+    const currentLocationShared =
+      input.currentLocationShared === undefined
+        ? coordinatesChanged
+          ? false
+          : current?.currentLocationShared ?? false
+        : input.currentLocationShared;
     const avatarConfig = normalizeAvatarConfig(input.avatarConfig ?? current?.avatarConfig);
 
     const keepText = (incoming: string | null | undefined, previous: string | null | undefined) => {
@@ -186,6 +208,7 @@ export async function saveOnboarding(userId: string, input: OnboardingSaveInput)
       addressReference: keepText(input.addressReference, current?.addressReference),
       latitude: nextLatitude ?? null,
       longitude: nextLongitude ?? null,
+      currentLocationShared,
       profileImageType: input.profileImageType ?? current?.profileImageType ?? "AVATAR",
       avatarConfig: avatarConfig as Prisma.InputJsonValue,
       interests: interests ?? current?.interests ?? [],

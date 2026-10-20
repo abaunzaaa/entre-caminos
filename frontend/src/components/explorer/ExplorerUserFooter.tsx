@@ -8,13 +8,39 @@ import { useInViewReveal } from "../../hooks/useInViewReveal";
 export function ExplorerUserFooter() {
   const { ref, inView } = useInViewReveal<HTMLElement>();
   const { openFaq } = useFaqModal();
+import palomaLeft from "../../assets/paloma1.png";
+import palomaRight from "../../assets/paloma 2.png";
+import { useInViewReveal } from "../../hooks/useInViewReveal";
+
+export function ExplorerUserFooter({ once = false, birds = false }: { once?: boolean; birds?: boolean }) {
+  const { ref, inView } = useInViewReveal<HTMLElement>({ once });
 
   return (
-    <footer
+    <div
       ref={ref}
-      className={`explorer-user-footer explorer-reveal-scope${inView ? " is-revealed" : ""}`}
-      aria-labelledby="explorer-stories-title"
+      className={`explorer-user-footer-wrap explorer-reveal-scope${inView ? " is-revealed" : ""}`}
     >
+      {birds ? (
+        <>
+          <img
+            className="explorer-user-footer__dove explorer-user-footer__dove--left explorer-reveal explorer-reveal--soft"
+            src={palomaLeft}
+            alt=""
+            aria-hidden="true"
+            decoding="async"
+            style={{ "--reveal-delay": "80ms" } as CSSProperties}
+          />
+          <img
+            className="explorer-user-footer__dove explorer-user-footer__dove--right explorer-reveal explorer-reveal--soft"
+            src={palomaRight}
+            alt=""
+            aria-hidden="true"
+            decoding="async"
+            style={{ "--reveal-delay": "160ms" } as CSSProperties}
+          />
+        </>
+      ) : null}
+      <footer className="explorer-user-footer" aria-labelledby="explorer-stories-title">
         <img
           className="explorer-user-footer__image"
           src={footerUser}
@@ -69,5 +95,6 @@ export function ExplorerUserFooter() {
           Rates by ExchangeRate-API
         </a>
       </footer>
+    </div>
   );
 }

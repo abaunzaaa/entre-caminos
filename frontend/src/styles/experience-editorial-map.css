@@ -87,8 +87,14 @@
   animation: dash-exps-place-pulse 2.8s ease-in-out infinite;
 }
 
-.dash-exps-place .dash-exps-map__zoom {
-  z-index: 5;
+.dash-exps-place .dash-exps-map.is-grabbing,
+.dash-exps-place .dash-exps-map.is-grabbing .dash-exps-map__viewport,
+.dash-exps-place .dash-exps-map.is-grabbing .dash-exps-map__pin {
+  cursor: grabbing;
+}
+
+.dash-exps-place__postcard--split .explorer-map-preview__cta {
+  margin-top: 0.9rem;
 }
 
 .dash-exps-place__glass {
@@ -278,5 +284,108 @@
 @media (prefers-reduced-motion: reduce) {
   .dash-exps-place .dash-exps-map__halo {
     animation: none;
+  }
+}
+
+.dash-exps-place__postcard--split .dash-exps-place__split {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  align-items: center;
+  gap: clamp(1.35rem, 2.4vw, 2.35rem);
+}
+
+.dash-exps-place__postcard--split .dash-exps-place__copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.dash-exps-place__postcard--split .dash-exps-place__destination {
+  margin: 0 0 1.05rem;
+  color: #1c332e;
+  font-size: 1.2rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1.35;
+}
+
+.dash-exps-place__postcard--split .dash-exps-place__chips {
+  justify-content: flex-start;
+}
+
+.dash-exps-place__postcard--split .dash-exps-place__note {
+  max-width: 34rem;
+  margin: 1rem 0 0;
+  text-align: left;
+}
+
+.dash-exps-place__postcard--split .dash-exps-place__arrive {
+  width: 100%;
+  max-width: 34rem;
+  margin-top: 1.25rem;
+  padding-top: 1.15rem;
+  border-top: 1px solid rgba(28, 51, 46, 0.08);
+}
+
+.dash-exps-place__postcard--split .dash-exps-place__arrive-label {
+  display: block;
+  margin: 0 0 0.55rem;
+  color: #8a938e;
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.dash-exps-place__postcard--split .dash-exps-place__arrive p {
+  margin: 0;
+  color: #5c6661;
+  font-size: 0.86rem;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  line-height: 1.7;
+}
+
+.dash-exps-place__postcard--split .dash-exps-place__stage {
+  min-width: 0;
+}
+
+.dash-exps-place__postcard--split .dash-exps-place__frame,
+.dash-exps-place__postcard--split .dash-exps-place__frame .dash-exps-map,
+.dash-exps-place__postcard--split .dash-exps-place__frame .dash-exps-mapwrap {
+  height: 21rem;
+  min-height: 21rem;
+  max-height: 21rem;
+}
+
+.dash-exps-place__postcard--split .dash-exps-place__glass {
+  left: 0.85rem;
+  bottom: 0.85rem;
+  width: min(16.5rem, calc(100% - 4.75rem));
+}
+
+@media (max-width: 980px) {
+  .dash-exps-place__postcard--split .dash-exps-place__split {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: stretch;
+    gap: 1.35rem;
+  }
+
+  .dash-exps-place__postcard--split .dash-exps-place__frame,
+  .dash-exps-place__postcard--split .dash-exps-place__frame .dash-exps-map,
+  .dash-exps-place__postcard--split .dash-exps-place__frame .dash-exps-mapwrap {
+    height: 18.5rem;
+    min-height: 18.5rem;
+    max-height: 18.5rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .dash-exps-place__postcard--split .dash-exps-place__glass {
+    left: 0.7rem;
+    bottom: 0.7rem;
+    width: calc(100% - 1.4rem);
   }
 }

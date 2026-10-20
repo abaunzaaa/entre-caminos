@@ -761,7 +761,7 @@ export function FavoritesLibrary({ experiences }: FavoritesLibraryProps) {
   if (!groups.length) {
     return (
       <div className="favorites-library__empty" aria-live="polite">
-        <h1 className="favorites-library__title favorites-library__title--empty" id="favorites-page-title">
+        <h1 className="favorites-library__title favorites-library__title--empty explorer-block-title" id="favorites-page-title">
           Favoritos
         </h1>
         <span
@@ -789,10 +789,10 @@ export function FavoritesLibrary({ experiences }: FavoritesLibraryProps) {
               role="img"
               aria-hidden="true"
             />
-            <h1 className="favorites-library__title" id="favorites-page-title">
+            <h1 className="favorites-library__title explorer-block-title" id="favorites-page-title">
               Favoritos
             </h1>
-            <p className="favorites-library__lead">Tus experiencias guardadas</p>
+            <p className="favorites-library__lead explorer-block-lead">Tus experiencias guardadas</p>
             <label className="favorites-library__search">
               <Search size={15} strokeWidth={1.8} aria-hidden="true" />
               <input

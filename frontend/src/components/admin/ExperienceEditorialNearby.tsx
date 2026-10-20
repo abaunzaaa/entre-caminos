@@ -42,7 +42,7 @@ function distanceKm(from: Experience, to: Experience) {
   return 2 * 6371 * Math.asin(Math.min(1, Math.sqrt(a)));
 }
 
-function pickNearbyExperiences(current: Experience, list: Experience[]) {
+function pickNearbyExperiences(current: Experience, list: Experience[], limit = NEARBY_LIMIT) {
   const currentPlace = parseStoredLocation(current.location || "");
   const currentMunicipality = normalizePlace(currentPlace.municipality);
   const currentDepartment = normalizePlace(currentPlace.department);
@@ -76,7 +76,7 @@ function pickNearbyExperiences(current: Experience, list: Experience[]) {
       }
       return left.item.title.localeCompare(right.item.title, "es");
     })
-    .slice(0, NEARBY_LIMIT)
+    .slice(0, limit)
     .map((entry) => entry.item);
 }
 
@@ -85,11 +85,13 @@ export function ExperienceEditorialNearby({
   footer,
   hrefFor = (id) => `/admin/experiencias/${id}/ver`,
   fetchPublished,
+  limit = NEARBY_LIMIT,
 }: {
   experience: Experience;
   footer?: ReactNode;
   hrefFor?: (id: string) => string;
   fetchPublished?: () => Promise<Experience[]>;
+  limit?: number;
 }) {
   const [nearby, setNearby] = useState<Experience[]>([]);
   const [loaded, setLoaded] = useState(false);
@@ -104,7 +106,7 @@ export function ExperienceEditorialNearby({
           return;
         }
         const catalog = Array.isArray(list) ? list : [];
-        setNearby(pickNearbyExperiences(experience, catalog));
+        setNearby(pickNearbyExperiences(experience, catalog, limit));
         setLoaded(true);
       })
       .catch(() => {
@@ -116,7 +118,7 @@ export function ExperienceEditorialNearby({
     return () => {
       active = false;
     };
-  }, [experience.id, experience.location, experience.latitude, experience.longitude, fetchPublished]);
+  }, [experience.id, experience.location, experience.latitude, experience.longitude, fetchPublished, limit]);
 
   if (!loaded || (!nearby.length && !footer)) {
     return null;

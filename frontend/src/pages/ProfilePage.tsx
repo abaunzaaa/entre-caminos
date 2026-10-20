@@ -27,6 +27,7 @@ import { ChangePasswordModal } from "../components/auth/ChangePasswordModal";
 import { DeleteAccountModal } from "../components/auth/DeleteAccountModal";
 import { EditProfileModal } from "../components/profile/EditProfileModal";
 import { ProfileImageModal } from "../components/profile/ProfileImageModal";
+import { ProfileReviews } from "../components/profile/ProfileReviews";
 import { useAuth } from "../hooks/useAuth";
 import { ProfileStampAlbum } from "../components/profile/ProfileStampAlbum";
 import { listExperienceStamps, type ExperienceStampCard } from "../services/catalog.service";
@@ -463,11 +464,7 @@ export function ProfilePage() {
             </div>
           ) : null}
 
-          {tab === "resenas" ? (
-            <div className="profile-reviews">
-              <UnderConstruction title="RESEÑAS" />
-            </div>
-          ) : null}
+          {tab === "resenas" ? <ProfileReviews /> : null}
 
           {tab === "estampitas" ? (
             <ProfileStampAlbum

@@ -288,6 +288,40 @@ export async function listVisitorReviews(experienceId: string, viewerId?: string
   };
 }
 
+const mineReviewInclude = {
+  ...reviewInclude,
+  experience: { select: { id: true, title: true } },
+} as const;
+
+export async function listMyVisitorReviews(userId: string) {
+  const reviews = await prisma.experienceVisitorReview.findMany({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
+    include: mineReviewInclude,
+  });
+  const experienceIds = [...new Set(reviews.map((review) => review.experienceId))];
+  const places = await Promise.all(experienceIds.map((experienceId) => sedesFor(experienceId)));
+  const labelsByExperience = new Map(experienceIds.map((experienceId, index) => [experienceId, sedeLabels(places[index] ?? [])]));
+
+  return {
+    reviews: reviews.map((review) => {
+      const labels = labelsByExperience.get(review.experienceId) ?? new Map<string, string>();
+      const rows = places[experienceIds.indexOf(review.experienceId)] ?? [];
+      return {
+        ...serializeReview(review, labels),
+        experience: {
+          id: review.experience.id,
+          title: review.experience.title,
+          locations: rows.map((place) => ({
+            id: place.id,
+            label: labels.get(place.id) ?? (place.municipality.trim() || "Sede"),
+          })),
+        },
+      };
+    }),
+  };
+}
+
 export async function createVisitorReview(
   userId: string,
   experienceId: string,

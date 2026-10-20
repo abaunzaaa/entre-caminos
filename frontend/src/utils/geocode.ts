@@ -589,3 +589,127 @@ export async function reverseGeocodeColombia(lat: number, lng: number): Promise<
     });
   }
 }
+
+const ARCGIS_SUGGEST = "https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/suggest";
+const ARCGIS_FIND = "https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates";
+
+export type ColombiaPlaceSuggestion = {
+  key: string;
+  label: string;
+  detail: string;
+  query: string;
+};
+
+const municipalityCache = new Map<string, GeocodeMatch | null>();
+const suggestionCache = new Map<string, ColombiaPlaceSuggestion[]>();
+
+function placeParts(text: string) {
+  const parts = text
+    .split(",")
+    .map((part) => part.trim())
+    .filter((part) => part && !/^(col|colombia)$/i.test(part));
+  return {
+    label: parts[0] || text.trim(),
+    detail: parts.slice(1).join(" · "),
+  };
+}
+
+function matchFromCandidate(candidate: ArcGisCandidate | undefined): GeocodeMatch | null {
+  const latitude = Number(candidate?.location?.y);
+  const longitude = Number(candidate?.location?.x);
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+    return null;
+  }
+  if (Math.abs(latitude) < 0.000001 && Math.abs(longitude) < 0.000001) {
+    return null;
+  }
+  const label = candidate?.attributes?.LongLabel || candidate?.address || "";
+  return { lat: latitude, lng: longitude, label };
+}
+
+export async function geocodeMunicipality(municipality: string, department?: string | null): Promise<GeocodeMatch | null> {
+  const city = municipality.trim();
+  const region = department?.trim() ?? "";
+  if (!city) {
+    return null;
+  }
+  const cacheKey = `${city.toLocaleLowerCase("es")}|${region.toLocaleLowerCase("es")}`;
+  if (municipalityCache.has(cacheKey)) {
+    return municipalityCache.get(cacheKey) ?? null;
+  }
+  const singleLine = [city, region, "Colombia"].filter(Boolean).join(", ");
+  try {
+    const url = new URL(ARCGIS_FIND);
+    url.searchParams.set("f", "json");
+    url.searchParams.set("singleLine", singleLine);
+    url.searchParams.set("countryCode", "COL");
+    url.searchParams.set("maxLocations", "1");
+    url.searchParams.set("outFields", "LongLabel,City,Region,Score");
+    const response = await fetch(url.toString());
+    if (!response.ok) {
+      return null;
+    }
+    const data = (await response.json()) as { candidates?: ArcGisCandidate[] };
+    const match = matchFromCandidate(data.candidates?.[0]);
+    municipalityCache.set(cacheKey, match);
+    return match;
+  } catch {
+    return null;
+  }
+}
+
+export async function searchColombiaPlaces(text: string): Promise<ColombiaPlaceSuggestion[]> {
+  const query = text.replace(/\s+/g, " ").trim();
+  if (query.length < 2) {
+    return [];
+  }
+  const cacheKey = query.toLocaleLowerCase("es");
+  const cached = suggestionCache.get(cacheKey);
+  if (cached) {
+    return cached;
+  }
+  const url = new URL(ARCGIS_SUGGEST);
+  url.searchParams.set("f", "json");
+  url.searchParams.set("text", query);
+  url.searchParams.set("countryCode", "COL");
+  url.searchParams.set("maxSuggestions", "6");
+  const response = await fetch(url.toString());
+  if (!response.ok) {
+    throw new Error("No pudimos buscar lugares.");
+  }
+  const data = (await response.json()) as {
+    suggestions?: Array<{ text?: string; magicKey?: string; isCollection?: boolean }>;
+  };
+  const places = (data.suggestions ?? []).flatMap((item) => {
+    const suggestionText = item.text?.trim() ?? "";
+    const magicKey = item.magicKey?.trim() ?? "";
+    if (!suggestionText || !magicKey || item.isCollection) {
+      return [];
+    }
+    const parts = placeParts(suggestionText);
+    return [{
+      key: magicKey,
+      label: parts.label,
+      detail: parts.detail,
+      query: suggestionText,
+    }];
+  });
+  suggestionCache.set(cacheKey, places);
+  return places;
+}
+
+export async function resolveColombiaPlace(suggestion: ColombiaPlaceSuggestion): Promise<GeocodeMatch | null> {
+  const url = new URL(ARCGIS_FIND);
+  url.searchParams.set("f", "json");
+  url.searchParams.set("singleLine", suggestion.query);
+  url.searchParams.set("magicKey", suggestion.key);
+  url.searchParams.set("countryCode", "COL");
+  url.searchParams.set("maxLocations", "1");
+  url.searchParams.set("outFields", "LongLabel,City,Region");
+  const response = await fetch(url.toString());
+  if (!response.ok) {
+    throw new Error("No pudimos ubicar ese lugar.");
+  }
+  const data = (await response.json()) as { candidates?: ArcGisCandidate[] };
+  return matchFromCandidate(data.candidates?.[0]);
+}

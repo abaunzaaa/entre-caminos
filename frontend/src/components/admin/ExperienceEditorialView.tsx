@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
-import { Heart } from "lucide-react";
+import { useLocation } from "react-router-dom";
+import { CircleHelp, Heart } from "lucide-react";
 import { VisitedCheckIcon } from "../icons/VisitedCheckIcon";
 import { ExperienceEditorialDossier, type ExperienceEditorialFact } from "./ExperienceEditorialDossier";
 import { ExperienceEditorialGallery } from "./ExperienceEditorialGallery";
@@ -10,7 +11,7 @@ import { ExperienceDetailNav } from "../experiences/ExperienceDetailNav";
 import brandLogo from "../../assets/logo.png";
 import { ExperienceReviewsSection } from "../experiences/ExperienceReviewsSection";
 import type { ReviewModalMark } from "../experiences/ReviewComposerModal";
-import { EXPERIENCE_DETAIL_SECTIONS } from "../../utils/experience-detail-sections";
+import { EXPERIENCE_DETAIL_SECTIONS, experienceDetailTabFromHash } from "../../utils/experience-detail-sections";
 import { COMPANY_OPTIONS, PLACE_OPTIONS, type OnboardingOption } from "../../data/onboarding";
 import { formatDepartmentMunicipality } from "../../data/colombia-locations";
 import { formatPrice } from "../../utils/cn";
@@ -166,6 +167,7 @@ export type ExperienceEditorialViewProps = {
   fetchNearby?: () => Promise<Experience[]>;
   onConsultAi?: () => void;
   reviewComposeRequest?: number;
+  reviewFocusRequest?: number;
 };
 
 export function buildExperienceEditorialFacts(
@@ -295,7 +297,9 @@ export function ExperienceEditorialView({
   fetchNearby,
   onConsultAi,
   reviewComposeRequest = 0,
+  reviewFocusRequest = 0,
 }: ExperienceEditorialViewProps) {
+  const { hash } = useLocation();
   const isFavorite = favoriteOn;
   const isVisited = visitedOn;
   const places = useMemo(() => placesFromExperience(experience), [experience]);
@@ -319,7 +323,35 @@ export function ExperienceEditorialView({
   const placeFacts = showPlaceTabs ? detailFacts.filter((fact) => PLACE_FACT_LABELS.has(fact.label)) : [];
   const showTouristActions = mode === "tourist" && (onConsultAi || onFavoriteToggle || onVisitedToggle);
   const sectionIds = mode === "tourist" ? EXPERIENCE_DETAIL_SECTIONS : null;
-  const editorialBody = (
+  const [activeTab, setActiveTab] = useState(
+    () => experienceDetailTabFromHash(hash) ?? EXPERIENCE_DETAIL_SECTIONS.info,
+  );
+
+  useEffect(() => {
+    const next = experienceDetailTabFromHash(hash);
+    if (next) {
+      setActiveTab(next);
+    }
+  }, [hash]);
+
+  useEffect(() => {
+    if (reviewComposeRequest > 0) {
+      setActiveTab(EXPERIENCE_DETAIL_SECTIONS.reviews);
+    }
+  }, [reviewComposeRequest]);
+
+  useEffect(() => {
+    if (reviewFocusRequest <= 0) {
+      return;
+    }
+    setActiveTab(EXPERIENCE_DETAIL_SECTIONS.reviews);
+    const timer = window.setTimeout(() => {
+      document.getElementById(EXPERIENCE_DETAIL_SECTIONS.ownReview)?.focus({ preventScroll: true });
+    }, 40);
+    return () => window.clearTimeout(timer);
+  }, [reviewFocusRequest]);
+
+  const informationPanel = (
     <>
       <ExperienceEditorialDossier
         photoUrl={mainPhoto}
@@ -382,24 +414,25 @@ export function ExperienceEditorialView({
         <h2 className="dash-exps-editorial__title">{experience.title}</h2>
         {locationByline ? <p className="dash-exps-editorial__byline">{locationByline}</p> : null}
         {showTouristActions ? (
-          <div className="dash-exps-editorial__actions">
+          <div className="dash-exps-editorial__actions experience-hero-actions">
             {onConsultAi ? (
               <button
                 type="button"
-                className="dash-exps-editorial__guide"
+                className="experience-hero-action"
                 aria-label="Pregúntale a tu guía"
-                title="Pregúntale a tu guía"
+                data-tooltip="Pregúntale a tu guía"
                 onClick={onConsultAi}
               >
-                Pregúntale a tu guía
+                <CircleHelp size={16} strokeWidth={1.75} aria-hidden="true" />
               </button>
             ) : null}
             {onVisitedToggle ? (
               <button
                 type="button"
-                className={`dash-exps-editorial__visited${isVisited ? " is-on" : ""}`}
+                className={`experience-hero-action${isVisited ? " is-on" : ""}`}
                 aria-pressed={isVisited}
-                aria-label={isVisited ? "Quitar de visitados" : "Marcar como visitado"}
+                aria-label={isVisited ? "Marcado como visitado" : "Marcar como visitado"}
+                data-tooltip={isVisited ? "Marcado como visitado" : "Marcar como visitado"}
                 disabled={visitedBusy}
                 onClick={() => {
                   if (!visitedBusy) {
@@ -407,15 +440,16 @@ export function ExperienceEditorialView({
                   }
                 }}
               >
-                <VisitedCheckIcon filled={isVisited} />
-                <span>{isVisited ? "Ya visité esta experiencia" : "Marcar como visitado"}</span>
+                <VisitedCheckIcon filled={isVisited} size={16} />
               </button>
             ) : null}
             {onFavoriteToggle ? (
               <button
                 type="button"
-                className={`dash-exps-editorial__favorite${isFavorite ? " is-on" : ""}`}
+                className={`experience-hero-action${isFavorite ? " is-on" : ""}`}
                 aria-pressed={isFavorite}
+                aria-label={isFavorite ? "Quitar de favoritos" : "Agregar a favoritos"}
+                data-tooltip={isFavorite ? "Quitar de favoritos" : "Agregar a favoritos"}
                 disabled={favoriteBusy}
                 onClick={() => {
                   if (!favoriteBusy) {
@@ -424,12 +458,11 @@ export function ExperienceEditorialView({
                 }}
               >
                 <Heart
-                  size={14}
-                  strokeWidth={1.8}
+                  size={16}
+                  strokeWidth={1.75}
                   fill={isFavorite ? "currentColor" : "none"}
                   aria-hidden="true"
                 />
-                <span>{isFavorite ? "En favoritos" : "Añadir a favoritos"}</span>
               </button>
             ) : null}
           </div>
@@ -439,18 +472,68 @@ export function ExperienceEditorialView({
       {mode === "tourist" ? (
         <div className="experience-detail-anchor">
           <div className="experience-detail-nav-slot">
-            <ExperienceDetailNav />
+            <ExperienceDetailNav active={activeTab} onChange={setActiveTab} />
           </div>
-          <div className="experience-detail-anchor__main">{editorialBody}</div>
+          <div className="experience-detail-anchor__main">
+            <div key={activeTab} className="experience-detail-panel" id="experience-detail-panel" role="tabpanel">
+              {activeTab === EXPERIENCE_DETAIL_SECTIONS.info ? (
+                <ExperienceEditorialDossier
+                  photoUrl={mainPhoto}
+                  photoLabel={experience.title}
+                  noteFacts={noteFacts}
+                  facts={generalFacts}
+                  organization={organization}
+                  placeFacts={placeFacts}
+                  clampDescription
+                  balanced
+                  sectionId={undefined}
+                  places={
+                    showPlaceTabs ? (
+                      <ExperiencePlaceTabs
+                        label="Disponible en"
+                        tabs={places.map((place, index) => placeTabLabel(place, index, places))}
+                        active={activePlace}
+                        onSelect={setPlaceIndex}
+                      />
+                    ) : null
+                  }
+                />
+              ) : null}
+              {activeTab === EXPERIENCE_DETAIL_SECTIONS.location ? (
+                <ExperienceEditorialPlace
+                  experience={view}
+                  latitude={lat}
+                  longitude={lng}
+                  hasPoint={hasPoint}
+                  sectionId={undefined}
+                  split
+                />
+              ) : null}
+              {activeTab === EXPERIENCE_DETAIL_SECTIONS.reviews ? (
+                <ExperienceReviewsSection
+                  experienceId={experience.id}
+                  experienceTitle={experience.title}
+                  marks={reviewModalMarks(organization)}
+                  coverUrl={mainPhoto}
+                  visited={isVisited}
+                  composeRequest={reviewComposeRequest}
+                  locations={places.flatMap((place) =>
+                    place.id ? [{ id: place.id, municipality: place.municipality, address: place.address }] : [],
+                  )}
+                />
+              ) : null}
+            </div>
+          </div>
         </div>
       ) : (
-        editorialBody
+        informationPanel
       )}
 
       <ExperienceEditorialNearby
         experience={view}
         hrefFor={nearbyHref}
         fetchPublished={fetchNearby}
+        limit={mode === "tourist" ? 4 : undefined}
       />
     </section>
   );

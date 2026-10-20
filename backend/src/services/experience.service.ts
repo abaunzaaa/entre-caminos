@@ -5,6 +5,8 @@ import { prisma } from "../database/prisma.js";
 import type { AuthUser } from "../models/auth-user.js";
 import { ApiError } from "../utils/api-error.js";
 import { resolveExperienceDuration } from "../utils/experience-duration.js";
+import { searchBounds, selectNearbyExperiences } from "../utils/geo.js";
+import { ratingNumber, reviewScore, roundRating } from "./review-score.js";
 import {
   canMutateApprovedCatalog,
   canReviewExperiences,
@@ -252,13 +254,84 @@ export async function listPublishedStamps() {
 }
 
 /** Tarjetas del mapa: mismas 6 más recientes, sin perfil de organización ni categorías. */
+const mapPreviewSelect = {
+  ...publicPlaceSelect,
+  category: { select: { name: true } },
+  experienceCategories: {
+    orderBy: { position: "asc" as const },
+    select: { category: { select: { name: true } } },
+  },
+  locations: {
+    orderBy: { position: "asc" as const },
+    select: { department: true, municipality: true },
+  },
+} as const;
+
+function mapPreviewCategoryNames(row: {
+  category: { name: string } | null;
+  experienceCategories: Array<{ category: { name: string } }>;
+}) {
+  const names = row.experienceCategories.map((item) => item.category.name.trim()).filter(Boolean);
+  if (names.length) {
+    return [...new Set(names)];
+  }
+  const primary = row.category?.name.trim();
+  return primary ? [primary] : [];
+}
+
+/** Varias experiencias publicadas, repartidas por zona y categoría, para la vista previa del mapa. */
 export async function listPublicMapCards(take: number) {
-  return prisma.experience.findMany({
+  const pool = await prisma.experience.findMany({
     where: publicCatalogWhere,
-    select: publicPlaceSelect,
+    select: mapPreviewSelect,
     orderBy: { createdAt: "desc" },
-    take,
+    take: 80,
   });
+  const located = pool.flatMap((row) => {
+    if (row.latitude == null || row.longitude == null) {
+      return [];
+    }
+    const latitude = Number(row.latitude);
+    const longitude = Number(row.longitude);
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+      return [];
+    }
+    return [{ row, latitude, longitude, category: mapPreviewCategoryNames(row)[0] ?? "" }];
+  });
+  const chosen: typeof located = [];
+  const seenCategories = new Set<string>();
+  const apart = (item: (typeof located)[number], gap: number) =>
+    chosen.every((current) => Math.hypot(current.latitude - item.latitude, current.longitude - item.longitude) >= gap);
+
+  for (const item of located) {
+    if (chosen.length >= take || !item.category || seenCategories.has(item.category) || !apart(item, 0.12)) {
+      continue;
+    }
+    seenCategories.add(item.category);
+    chosen.push(item);
+  }
+  for (const gap of [0.12, 0.045]) {
+    for (const item of located) {
+      if (chosen.length >= take || chosen.some((current) => current.row.id === item.row.id) || !apart(item, gap)) {
+        continue;
+      }
+      chosen.push(item);
+    }
+  }
+
+  return chosen.map(({ row }) => ({
+    id: row.id,
+    title: row.title,
+    price: row.price,
+    currency: row.currency,
+    location: row.location,
+    latitude: row.latitude,
+    longitude: row.longitude,
+    imageUrl: row.imageUrl,
+    imageUrls: row.imageUrls,
+    locations: row.locations,
+    categoryNames: mapPreviewCategoryNames(row),
+  }));
 }
 
 /** Candidatos de “cercanas”: una fila por experiencia publicada, sin relaciones. */
@@ -267,6 +340,153 @@ export async function listPublicNearbySources() {
     where: publicCatalogWhere,
     select: publicPlaceSelect,
     orderBy: { createdAt: "desc" },
+  });
+}
+
+const nearbyMapSelect = {
+  ...publicPlaceSelect,
+  reviewedAt: true,
+  isFeatured: true,
+  featuredFrom: true,
+  featuredUntil: true,
+  idealFor: true,
+  category: { select: { name: true } },
+  experienceCategories: {
+    orderBy: { position: "asc" as const },
+    select: { category: { select: { name: true } } },
+  },
+  locations: {
+    orderBy: { position: "asc" as const },
+    select: {
+      department: true,
+      municipality: true,
+      latitude: true,
+      longitude: true,
+    },
+  },
+} as const;
+
+function asIso(value: Date | string) {
+  return value instanceof Date ? value.toISOString() : String(value);
+}
+
+/** Mismo tamaño que el cupo público de destacadas: las más vistas, no un umbral inventado. */
+const POPULAR_VISIT_GROUP = 5;
+
+function mostVisitedIds(rows: Array<{ experienceId: string; visits: number }>) {
+  const ranked = rows
+    .filter((row) => row.visits > 0)
+    .sort((left, right) => right.visits - left.visits || left.experienceId.localeCompare(right.experienceId));
+  const window = ranked.slice(0, POPULAR_VISIT_GROUP);
+  const edge = window.at(-1)?.visits ?? 0;
+  const tiedBeyond = ranked.slice(POPULAR_VISIT_GROUP).some((row) => row.visits === edge);
+  const chosen = tiedBeyond ? window.filter((row) => row.visits > edge) : window;
+  return new Set(chosen.map((row) => row.experienceId));
+}
+
+/** Visitas reales de ficha y promedio de reseñas para las tarjetas del mapa. */
+export async function mapCardSignals(ids: string[]) {
+  const unique = [...new Set(ids)];
+  const [reviewRows, viewRows] = await Promise.all([
+    unique.length
+      ? prisma.experienceVisitorReview.findMany({
+          where: { experienceId: { in: unique } },
+          select: { experienceId: true, rating: true, organizationRating: true, valueRating: true },
+        })
+      : Promise.resolve([]),
+    prisma.experienceDetailView.groupBy({
+      by: ["experienceId"],
+      where: { experience: { status: "PUBLISHED" } },
+      _count: { _all: true },
+    }),
+  ]);
+  const scores = new Map<string, { total: number; count: number }>();
+  for (const row of reviewRows) {
+    const current = scores.get(row.experienceId) ?? { total: 0, count: 0 };
+    const organization = row.organizationRating == null ? null : ratingNumber(row.organizationRating);
+    const value = row.valueRating == null ? null : ratingNumber(row.valueRating);
+    current.total += reviewScore(ratingNumber(row.rating), organization, value);
+    current.count += 1;
+    scores.set(row.experienceId, current);
+  }
+  const visits = viewRows.map((row) => ({ experienceId: row.experienceId, visits: row._count._all }));
+  const popular = mostVisitedIds(visits);
+  const counts = new Map(visits.map((row) => [row.experienceId, row.visits]));
+  return {
+    for(id: string) {
+      const score = scores.get(id);
+      return {
+        visitCount: counts.get(id) ?? 0,
+        mostVisited: popular.has(id),
+        averageRating: score && score.count > 0 ? roundRating(score.total / score.count) : null,
+        reviewCount: score?.count ?? 0,
+      };
+    },
+  };
+}
+
+/** Experiencias publicadas dentro del radio de un punto. El radio llega ya resuelto. */
+export async function listExperiencesNear(input: { latitude: number; longitude: number; radiusKm: number }) {
+  const box = searchBounds(input.latitude, input.longitude, input.radiusKm);
+  const rows = await prisma.experience.findMany({
+    where: {
+      status: "PUBLISHED",
+      OR: [
+        {
+          latitude: { gte: box.minLat, lte: box.maxLat },
+          longitude: { gte: box.minLng, lte: box.maxLng },
+        },
+        {
+          locations: {
+            some: {
+              latitude: { gte: box.minLat, lte: box.maxLat },
+              longitude: { gte: box.minLng, lte: box.maxLng },
+            },
+          },
+        },
+      ],
+    },
+    select: nearbyMapSelect,
+    orderBy: { createdAt: "desc" },
+  });
+
+  const picked = selectNearbyExperiences(rows, input, input.radiusKm);
+  const signals = await mapCardSignals(picked.map((match) => match.item.id));
+
+  return picked.map((match) => {
+    const names = (match.item.experienceCategories ?? [])
+      .map((link) => link.category.name.trim())
+      .filter(Boolean);
+    const categoryNames = names.length ? [...new Set(names)] : match.item.category?.name.trim() ? [match.item.category.name.trim()] : [];
+    const signal = signals.for(match.item.id);
+    return {
+      id: match.item.id,
+      title: match.item.title,
+      description: match.item.description,
+      categoryId: match.item.categoryId,
+      categoryNames,
+      idealFor: match.item.idealFor ?? [],
+      price: match.item.price.toString(),
+      currency: match.item.currency,
+      location: match.item.location,
+      latitude: match.latitude,
+      longitude: match.longitude,
+      imageUrl: match.item.imageUrl,
+      imageUrls: match.item.imageUrls,
+      status: match.item.status,
+      createdBy: match.item.createdBy,
+      createdAt: asIso(match.item.createdAt),
+      reviewedAt: match.item.reviewedAt ? asIso(match.item.reviewedAt) : null,
+      isFeatured: match.item.isFeatured,
+      featuredFrom: match.item.featuredFrom ? asIso(match.item.featuredFrom) : null,
+      featuredUntil: match.item.featuredUntil ? asIso(match.item.featuredUntil) : null,
+      locations: match.locations,
+      distanceKm: match.distanceKm,
+      averageRating: signal.averageRating,
+      reviewCount: signal.reviewCount,
+      visitCount: signal.visitCount,
+      mostVisited: signal.mostVisited,
+    };
   });
 }
 

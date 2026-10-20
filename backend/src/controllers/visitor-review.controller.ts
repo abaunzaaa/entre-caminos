@@ -6,6 +6,11 @@ export async function list(req: Request, res: Response) {
   return res.json({ success: true, data });
 }
 
+export async function listMine(req: Request, res: Response) {
+  const data = await visitorReviewService.listMyVisitorReviews(req.user!.id);
+  return res.json({ success: true, data });
+}
+
 function reviewFiles(req: Request) {
   return Array.isArray(req.files) ? req.files : [];
 }

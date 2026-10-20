@@ -16,6 +16,7 @@ import { OnboardingLayout } from "../components/onboarding/OnboardingLayout";
 import { OnboardingPage } from "../pages/onboarding/OnboardingPage";
 import { ExplorePage } from "../pages/ExplorePage";
 import { ExplorerBlankPage } from "../pages/ExplorerBlankPage";
+import { MapPage } from "../pages/MapPage";
 import { ExperienceDetailPage } from "../pages/ExperienceDetailPage";
 import { FavoritesPage } from "../pages/FavoritesPage";
 import { ProfilePage } from "../pages/ProfilePage";
@@ -51,6 +52,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/onboarding": "Personaliza tu experiencia | Entre Caminos",
   "/onboarding/preferencias": "Personaliza tu experiencia | Entre Caminos",
   "/onboarding/listo": "Personaliza tu experiencia | Entre Caminos",
+  "/mapa": "Mapa | Entre Caminos",
   "/perfil": "Tu perfil | Entre Caminos",
   "/mis-caminos": "Mis caminos | Entre Caminos",
   "/mis-caminos/bitacora": "Mi bitácora | Entre Caminos",
@@ -147,7 +149,7 @@ export function AppRoutes() {
             </Route>
             <Route path="/explorar/:id" element={<ExperienceDetailPage />} />
             <Route path="/favoritos" element={<FavoritesPage />} />
-            <Route path="/mapa" element={<ExplorerBlankPage title="MAPA" />} />
+            <Route path="/mapa" element={<MapPage />} />
             <Route path="/plan-con-amigos" element={<ExplorerBlankPage title="PLAN CON AMIGOS" />} />
             <Route path="/visitados" element={<ExplorerBlankPage title="VISITADOS" />} />
           </Route>
