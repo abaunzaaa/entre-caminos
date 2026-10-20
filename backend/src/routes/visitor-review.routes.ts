@@ -31,6 +31,12 @@ function reviewImages(req: Request, res: Response, next: NextFunction) {
 export const visitorReviewRouter = Router();
 
 visitorReviewRouter.get(
+  "/reviews/mine",
+  authMiddleware,
+  asyncHandler(visitorReviewController.listMine),
+);
+
+visitorReviewRouter.get(
   "/:experienceId/reviews",
   optionalAuthMiddleware,
   asyncHandler(visitorReviewController.list),

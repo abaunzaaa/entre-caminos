@@ -90,6 +90,7 @@ function scoreLabel(value: number) {
 function ReviewDetailModal({
   review,
   score,
+  experienceTitle,
   own = false,
   busy = false,
   deleting = false,
@@ -99,6 +100,7 @@ function ReviewDetailModal({
 }: {
   review: VisitorReview;
   score: number;
+  experienceTitle?: string;
   own?: boolean;
   busy?: boolean;
   deleting?: boolean;
@@ -185,6 +187,7 @@ function ReviewDetailModal({
               </span>
               <div className="experience-review-detail__facts">
                 <h2 id={titleId} className="experience-review-detail__name">{review.user.name}</h2>
+                {experienceTitle ? <p className="experience-reviews__quote-recommend">{experienceTitle}</p> : null}
                 <p className="experience-review-detail__rate">
                   <Stars value={score} />
                   <span>{scoreLabel(score)}</span>
@@ -246,8 +249,9 @@ function ReviewDetailModal({
   );
 }
 
-function ReviewCard({
+export function ReviewCard({
   review,
+  experienceTitle,
   own = false,
   anchor = false,
   busy = false,
@@ -256,6 +260,7 @@ function ReviewCard({
   onDelete,
 }: {
   review: VisitorReview;
+  experienceTitle?: string;
   own?: boolean;
   anchor?: boolean;
   busy?: boolean;
@@ -280,6 +285,7 @@ function ReviewCard({
         {avatar ? <img src={avatar} alt="" onError={() => setAvatarFailed(true)} /> : nameInitials(review.user.name)}
       </span>
       <strong className="experience-reviews__quote-name">{review.user.name}</strong>
+      {experienceTitle ? <p className="experience-reviews__quote-recommend">{experienceTitle}</p> : null}
       <Stars value={shown} />
       {mood !== "Selecciona una calificación" ? <p className="experience-reviews__quote-mood">{mood}</p> : null}
       {review.recommended != null ? (
@@ -303,6 +309,7 @@ function ReviewCard({
         <ReviewDetailModal
           review={review}
           score={shown}
+          experienceTitle={experienceTitle}
           own={own}
           busy={busy}
           deleting={deleting}
@@ -511,6 +518,10 @@ export function ExperienceReviewsSection({
       {error ? <p className="experience-reviews__note">{error}</p> : null}
 
       <div className="experience-reviews__own">
+        {!loading && !error && summary.count === 0 ? (
+          <p className="experience-reviews__empty">Aún no hay reseñas</p>
+        ) : null}
+
         {!user ? (
           <p className="experience-reviews__note">
             <button
@@ -530,16 +541,9 @@ export function ExperienceReviewsSection({
         ) : null}
 
         {canCompose && !loading ? (
-          <button type="button" className="experience-reviews__primary" onClick={() => openComposer("create")}>
+          <button type="button" className="tourist-hero__cta" onClick={() => openComposer("create")}>
             Calificar experiencia
           </button>
-        ) : null}
-
-        {!loading && !error && summary.count === 0 ? (
-          <p className="experience-reviews__empty">
-            Aún no hay reseñas.
-            {canCompose ? " Sé la primera persona en compartir tu experiencia." : ""}
-          </p>
         ) : null}
       </div>
 

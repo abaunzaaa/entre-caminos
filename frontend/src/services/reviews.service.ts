@@ -64,6 +64,20 @@ export function listExperienceReviews(experienceId: string) {
     .then((response) => response.data.data);
 }
 
+export type MyVisitorReview = VisitorReview & {
+  experience: {
+    id: string;
+    title: string;
+    locations: Array<{ id: string; label: string }>;
+  };
+};
+
+export function listMyReviews() {
+  return api
+    .get<ApiResponse<{ reviews: MyVisitorReview[] }>>("/experiences/reviews/mine")
+    .then((response) => response.data.data);
+}
+
 function reviewForm(input: VisitorReviewInput, photos: VisitorReviewPhotos) {
   const form = new FormData();
   form.append("rating", String(input.rating));
