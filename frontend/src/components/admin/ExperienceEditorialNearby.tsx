@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, type MouseEvent, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { MapPin } from "lucide-react";
 import { parseStoredLocation } from "../../data/colombia-locations";
@@ -139,7 +139,15 @@ export function ExperienceEditorialNearby({
               const itemPlace = parseStoredLocation(item.location || "");
               const caption = [itemPlace.municipality, itemPlace.department].filter(Boolean).join(" · ");
               return (
-                <Link key={item.id} className="dash-exps-nearby__card" to={hrefFor(item.id)}>
+                <Link
+                  key={item.id}
+                  className="dash-exps-nearby__card"
+                  to={{ pathname: hrefFor(item.id), search: "", hash: "" }}
+                  onMouseDown={(event) => event.stopPropagation()}
+                  onClick={(event: MouseEvent<HTMLAnchorElement>) => {
+                    event.stopPropagation();
+                  }}
+                >
                   <span className="dash-exps-nearby__photo">
                     <img src={photo} alt="" loading="lazy" decoding="async" />
                     <span className="dash-exps-nearby__glass">Ver</span>
