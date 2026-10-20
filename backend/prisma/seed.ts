@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { PERMISSIONS, ROLE_PERMISSION_MAP, ROLES } from "../src/config/constants.js";
+import { FAQ_SEED } from "../src/services/faq-catalog.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(here, "../../.env") });
@@ -88,8 +89,36 @@ export async function seedCore() {
   return { admin: admins[0] };
 }
 
+/** No sobrescribe preguntas ya editadas. Solo crea las que falten, identificadas por seedKey. */
+export async function seedFaqs() {
+  for (const category of FAQ_SEED) {
+    const row = await prisma.faqCategory.upsert({
+      where: { slug: category.slug },
+      update: { name: category.name, sortOrder: category.sortOrder },
+      create: { name: category.name, slug: category.slug, sortOrder: category.sortOrder },
+    });
+    for (const item of category.items) {
+      await prisma.faq.upsert({
+        where: { seedKey: item.seedKey },
+        update: {},
+        create: {
+          seedKey: item.seedKey,
+          subject: category.name,
+          question: item.question,
+          answer: item.answer,
+          status: "PUBLISHED",
+          source: "ADMIN_CREATED",
+          categoryId: row.id,
+          publishedAt: new Date(),
+        },
+      });
+    }
+  }
+}
+
 async function main() {
   await seedCore();
+  await seedFaqs();
   console.log("Semilla de Entre Caminos lista.");
   console.log("SUPER_ADMIN (contraseña: SEED_ADMIN_PASSWORD de tu .env local):");
   console.log("  angie.diaz@entrecaminos.com");

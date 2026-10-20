@@ -1,4 +1,5 @@
 import type { FaqSource, FaqStatus, Prisma } from "@prisma/client";
+import { FAQ_SUBJECT_MAX } from "../config/constants.js";
 import { prisma } from "../database/prisma.js";
 import { ApiError } from "../utils/api-error.js";
 import { logger } from "../utils/logger.js";
@@ -9,7 +10,8 @@ import {
   resolveFaqPublication,
   statusAfterUnpublish,
 } from "./faq-rules.js";
-import { notifyFaqReceived } from "./notification.service.js";
+import { faqCategorySlug } from "./faq-catalog.js";
+import { notifyFaqAnswered, notifyFaqReceived } from "./notification.service.js";
 import type {
   AdminFaqCreateInput,
   AdminFaqListQuery,
@@ -18,9 +20,12 @@ import type {
   SubmitFaqInput,
 } from "../validators/faq.validator.js";
 
+const categorySelect = { select: { id: true, name: true, slug: true } } satisfies Prisma.FaqCategoryDefaultArgs;
+
 const adminFaqInclude = {
   user: { select: { id: true, name: true, email: true } },
   reviewedBy: { select: { id: true, name: true } },
+  category: categorySelect,
 } satisfies Prisma.FaqInclude;
 
 const publicFaqSelect = {
@@ -29,12 +34,30 @@ const publicFaqSelect = {
   question: true,
   answer: true,
   publishedAt: true,
+  category: categorySelect,
 } satisfies Prisma.FaqSelect;
 
-function visibleWhere(): Prisma.FaqWhereInput {
-  return {
-    AND: [{ status: FAQ_STATUS.PUBLISHED }, { answer: { not: null } }, { NOT: { answer: "" } }],
-  };
+function visibleWhere(categorySlug = ""): Prisma.FaqWhereInput {
+  const filters: Prisma.FaqWhereInput[] = [
+    { status: FAQ_STATUS.PUBLISHED },
+    { answer: { not: null } },
+    { NOT: { answer: "" } },
+  ];
+  if (categorySlug) {
+    filters.push({ category: { slug: categorySlug } });
+  }
+  return { AND: filters };
+}
+
+async function assertCategory(categoryId: string | null | undefined) {
+  if (categoryId == null) {
+    return categoryId;
+  }
+  const category = await prisma.faqCategory.findUnique({ where: { id: categoryId }, select: { id: true } });
+  if (!category) {
+    throw ApiError.unprocessable("Esa categoría de preguntas no existe.");
+  }
+  return category.id;
 }
 
 function pageMeta(total: number, page: number, limit: number) {
@@ -59,12 +82,15 @@ function applyPublication(status: FaqStatusName, answer: string | null, publishe
   return resolved;
 }
 
-export async function listPublicFaqs(input: { q: string; page: number; limit: number }) {
+const publicOrder = [{ category: { sortOrder: "asc" as const } }, { publishedAt: "desc" as const }, { createdAt: "desc" as const }];
+
+export async function listPublicFaqs(input: { q: string; category: string; page: number; limit: number }) {
   const query = input.q.trim();
+  const category = input.category.trim().toLowerCase();
   const where: Prisma.FaqWhereInput = query
     ? {
         AND: [
-          visibleWhere(),
+          visibleWhere(category),
           {
             OR: [
               { subject: { contains: query, mode: "insensitive" } },
@@ -74,25 +100,45 @@ export async function listPublicFaqs(input: { q: string; page: number; limit: nu
           },
         ],
       }
-    : visibleWhere();
+    : visibleWhere(category);
 
-  const total = await prisma.faq.count({ where });
-  const { pageCount, current, skip } = pageMeta(total, input.page, input.limit);
-  const faqs = await prisma.faq.findMany({
-    where,
-    select: publicFaqSelect,
-    orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
-    skip,
-    take: input.limit,
-  });
+  const requestedPage = Math.max(1, input.page);
+  const skip = (requestedPage - 1) * input.limit;
+  const [total, rows, categories] = await Promise.all([
+    prisma.faq.count({ where }),
+    prisma.faq.findMany({
+      where,
+      select: publicFaqSelect,
+      orderBy: publicOrder,
+      skip,
+      take: input.limit,
+    }),
+    prisma.faqCategory.findMany({
+      where: { faqs: { some: visibleWhere() } },
+      orderBy: { sortOrder: "asc" },
+      select: { id: true, name: true, slug: true },
+    }),
+  ]);
+  const { pageCount, current } = pageMeta(total, requestedPage, input.limit);
+  const faqs =
+    current === requestedPage
+      ? rows
+      : await prisma.faq.findMany({
+          where,
+          select: publicFaqSelect,
+          orderBy: publicOrder,
+          skip: (current - 1) * input.limit,
+          take: input.limit,
+        });
 
-  return { faqs, total, page: current, limit: input.limit, pageCount };
+  return { faqs, categories, total, page: current, limit: input.limit, pageCount };
 }
 
 export async function submitFaq(userId: string, authorName: string, input: SubmitFaqInput) {
+  const subject = input.question.replace(/\s+/g, " ").trim().slice(0, FAQ_SUBJECT_MAX);
   const faq = await prisma.faq.create({
     data: {
-      subject: input.subject,
+      subject,
       question: input.question,
       answer: null,
       status: FAQ_STATUS.PENDING,
@@ -101,6 +147,7 @@ export async function submitFaq(userId: string, authorName: string, input: Submi
     },
   });
 
+  let notified = false;
   try {
     await notifyFaqReceived({
       faqId: faq.id,
@@ -108,6 +155,7 @@ export async function submitFaq(userId: string, authorName: string, input: Submi
       excerpt: faq.question,
       authorName,
     });
+    notified = true;
   } catch (error) {
     logger.error("No se pudo notificar la pregunta frecuente", {
       faqId: faq.id,
@@ -129,6 +177,7 @@ export async function submitFaq(userId: string, authorName: string, input: Submi
     subject: faq.subject,
     status: faq.status,
     createdAt: faq.createdAt,
+    notified,
   };
 }
 
@@ -143,6 +192,9 @@ export async function listAdminFaqs(query: AdminFaqListQuery) {
   }
   if (query.source) {
     where.source = query.source;
+  }
+  if (query.categoryId) {
+    where.categoryId = query.categoryId;
   }
   const text = query.q?.trim();
   if (text) {
@@ -159,9 +211,13 @@ export async function listAdminFaqs(query: AdminFaqListQuery) {
   const limit = query.limit ?? 8;
   const order = query.sort === "oldest" ? "asc" : "desc";
 
-  const [total, grouped] = await Promise.all([
+  const [total, grouped, categories] = await Promise.all([
     prisma.faq.count({ where }),
     prisma.faq.groupBy({ by: ["status"], _count: { _all: true } }),
+    prisma.faqCategory.findMany({
+      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+      select: { id: true, name: true, slug: true },
+    }),
   ]);
   const { pageCount, current, skip } = pageMeta(total, page, limit);
   const faqs = await prisma.faq.findMany({
@@ -183,16 +239,70 @@ export async function listAdminFaqs(query: AdminFaqListQuery) {
     if (group.status === "DISCARDED") counts.discarded = amount;
   }
 
-  return { faqs, total, page: current, limit, pageCount, counts };
+  return { faqs, categories, total, page: current, limit, pageCount, counts };
+}
+
+export async function createFaqCategory(name: string) {
+  const clean = name.trim().replace(/\s+/g, " ");
+  if (clean.length < 2 || clean.length > 40) {
+    throw ApiError.unprocessable("El nombre de la categoría debe tener entre 2 y 40 caracteres.");
+  }
+  const slug = faqCategorySlug(clean);
+  const existing = await prisma.faqCategory.findUnique({ where: { slug } });
+  if (existing) {
+    return existing;
+  }
+  const last = await prisma.faqCategory.aggregate({ _max: { sortOrder: true } });
+  return prisma.faqCategory.create({
+    data: { name: clean, slug, sortOrder: (last._max.sortOrder ?? 0) + 1 },
+    select: { id: true, name: true, slug: true },
+  });
 }
 
 export async function getAdminFaq(id: string) {
   return requireFaq(id);
 }
 
+export async function getOwnAnsweredFaq(userId: string, id: string) {
+  const faq = await prisma.faq.findFirst({
+    where: { id, userId },
+    select: { id: true, question: true, answer: true, updatedAt: true },
+  });
+  if (!faq?.answer?.trim()) {
+    throw ApiError.notFound("No encontramos la respuesta de esa pregunta.");
+  }
+  return {
+    id: faq.id,
+    question: faq.question,
+    answer: faq.answer,
+    answeredAt: faq.updatedAt,
+  };
+}
+
+async function notifyAuthorIfNewAnswer(
+  existing: { id: string; userId: string | null; answer: string | null },
+  nextAnswer: string,
+) {
+  const previous = existing.answer?.trim() ?? "";
+  const next = nextAnswer.trim();
+  if (!existing.userId || !next || previous === next) {
+    return false;
+  }
+  try {
+    return await notifyFaqAnswered({ userId: existing.userId, faqId: existing.id });
+  } catch (error) {
+    logger.error("No se pudo avisar al autor de la respuesta", {
+      faqId: existing.id,
+      message: error instanceof Error ? error.message : "unknown",
+    });
+    return false;
+  }
+}
+
 export async function createAdminFaq(actorId: string, input: AdminFaqCreateInput) {
   const answer = input.answer ?? null;
   const publication = applyPublication(input.status, answer, null);
+  const categoryId = await assertCategory(input.categoryId ?? null);
   const faq = await prisma.faq.create({
     data: {
       subject: input.subject,
@@ -200,6 +310,7 @@ export async function createAdminFaq(actorId: string, input: AdminFaqCreateInput
       answer,
       status: publication.status,
       source: "ADMIN_CREATED",
+      categoryId,
       reviewedById: actorId,
       publishedAt: publication.publishedAt,
     },
@@ -212,8 +323,12 @@ export async function createAdminFaq(actorId: string, input: AdminFaqCreateInput
 export async function updateAdminFaq(actorId: string, id: string, input: AdminFaqUpdateInput) {
   const existing = await requireFaq(id);
   const answer = input.answer === undefined ? existing.answer : input.answer;
-  const status = (input.status ?? existing.status) as FaqStatusName;
+  let status = (input.status ?? existing.status) as FaqStatusName;
+  if (status === FAQ_STATUS.PENDING && typeof answer === "string" && answer.trim()) {
+    status = FAQ_STATUS.ANSWERED;
+  }
   const publication = applyPublication(status, answer, existing.publishedAt);
+  const categoryId = input.categoryId === undefined ? undefined : await assertCategory(input.categoryId);
   const faq = await prisma.faq.update({
     where: { id },
     data: {
@@ -223,10 +338,14 @@ export async function updateAdminFaq(actorId: string, id: string, input: AdminFa
       status: publication.status,
       publishedAt: publication.publishedAt,
       reviewedById: actorId,
+      ...(categoryId !== undefined ? { categoryId } : {}),
     },
     include: adminFaqInclude,
   });
   await recordAudit({ userId: actorId, action: "FAQ_UPDATE", entity: "Faq", entityId: faq.id });
+  if (typeof answer === "string") {
+    await notifyAuthorIfNewAnswer(existing, answer);
+  }
   return faq;
 }
 
@@ -234,6 +353,7 @@ export async function answerFaq(actorId: string, id: string, input: AnswerFaqInp
   const existing = await requireFaq(id);
   const status: FaqStatusName = input.publish ? FAQ_STATUS.PUBLISHED : FAQ_STATUS.ANSWERED;
   const publication = applyPublication(status, input.answer, existing.publishedAt);
+  const categoryId = input.categoryId === undefined ? undefined : await assertCategory(input.categoryId);
   const faq = await prisma.faq.update({
     where: { id },
     data: {
@@ -241,11 +361,13 @@ export async function answerFaq(actorId: string, id: string, input: AnswerFaqInp
       status: publication.status,
       publishedAt: publication.publishedAt,
       reviewedById: actorId,
+      ...(categoryId !== undefined ? { categoryId } : {}),
     },
     include: adminFaqInclude,
   });
   await recordAudit({ userId: actorId, action: "FAQ_ANSWER", entity: "Faq", entityId: faq.id });
-  return faq;
+  const notified = await notifyAuthorIfNewAnswer(existing, input.answer);
+  return { faq, notified };
 }
 
 async function changeStatus(actorId: string, id: string, status: FaqStatusName, action: string) {

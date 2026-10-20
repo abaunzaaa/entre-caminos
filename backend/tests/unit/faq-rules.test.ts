@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { faqCategorySlug } from "../../src/services/faq-catalog.js";
 import { hasFaqAnswer, isPubliclyVisibleFaq, resolveFaqPublication, statusAfterUnpublish } from "../../src/services/faq-rules.js";
 import { sanitizeMultiline, sanitizePlainText } from "../../src/utils/plain-text.js";
 
@@ -32,5 +33,11 @@ describe("FAQ — visibilidad y texto", () => {
   it("la sanitización quita HTML y espacios vacíos", () => {
     expect(sanitizePlainText("  <b>Hola</b>   camino  ")).toBe("Hola camino");
     expect(sanitizeMultiline("Linea\n\n\n<script>alert(1)</script>  dos")).toBe("Linea\n\nalert(1) dos");
+  });
+
+  it("el slug de categoría es estable y no usa las categorías de experiencias", () => {
+    expect(faqCategorySlug("Mi cuenta")).toBe("mi-cuenta");
+    expect(faqCategorySlug("  Mis caminos  ")).toBe("mis-caminos");
+    expect(faqCategorySlug("Ayuda")).toBe("ayuda");
   });
 });

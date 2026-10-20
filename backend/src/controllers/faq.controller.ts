@@ -29,8 +29,9 @@ export async function listPublic(req: Request, res: Response) {
   res.set("Cache-Control", "no-store");
   const data = await faqService.listPublicFaqs({
     q: queryText(req.query.q),
+    category: queryText(req.query.category, 40).toLowerCase(),
     page: queryPage(req.query.page),
-    limit: parseLimitQuery(req.query.limit, 20) ?? 6,
+    limit: parseLimitQuery(req.query.limit, 5) ?? 5,
   });
   return res.json({ success: true, data });
 }
@@ -54,6 +55,11 @@ export async function getAdmin(req: Request, res: Response) {
   return res.json({ success: true, data: { faq } });
 }
 
+export async function createCategory(req: Request, res: Response) {
+  const category = await faqService.createFaqCategory(req.body.name);
+  return res.status(201).json({ success: true, data: { category } });
+}
+
 export async function create(req: Request, res: Response) {
   const faq = await faqService.createAdminFaq(req.user!.id, req.body as AdminFaqCreateInput);
   return res.status(201).json({ success: true, data: { faq } });
@@ -65,7 +71,12 @@ export async function update(req: Request, res: Response) {
 }
 
 export async function answer(req: Request, res: Response) {
-  const faq = await faqService.answerFaq(req.user!.id, req.params.id, req.body as AnswerFaqInput);
+  const result = await faqService.answerFaq(req.user!.id, req.params.id, req.body as AnswerFaqInput);
+  return res.json({ success: true, data: result });
+}
+
+export async function ownAnswer(req: Request, res: Response) {
+  const faq = await faqService.getOwnAnsweredFaq(req.user!.id, req.params.id);
   return res.json({ success: true, data: { faq } });
 }
 

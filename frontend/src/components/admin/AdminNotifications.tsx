@@ -176,6 +176,10 @@ export function AdminNotifications() {
       }
     }
     setOpen(false);
+    if (item.type === "FAQ_ANSWERED" && item.entityId) {
+      window.dispatchEvent(new CustomEvent("ec-faq-reply", { detail: item.entityId }));
+      return;
+    }
     if (item.link) {
       navigate(item.link);
     }

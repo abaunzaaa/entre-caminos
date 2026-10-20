@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { AdminNotifications } from "../components/admin/AdminNotifications";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { formatPersonName } from "../utils/person-name";
@@ -284,7 +285,10 @@ export function LandingPage() {
           </Link>
           <div className="landing-hero__links landing-hero__links--right">
             {user ? (
-              <Link to={isAdmin ? "/admin" : "/explorar"}>{isAdmin ? "Panel" : formatPersonName(user.name) || user.name}</Link>
+              <span className="landing-hero__account">
+                <AdminNotifications />
+                <Link to={isAdmin ? "/admin" : "/explorar"}>{isAdmin ? "Panel" : formatPersonName(user.name) || user.name}</Link>
+              </span>
             ) : (
               <>
                 <Link to="/login">ACCEDER</Link>

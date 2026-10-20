@@ -62,6 +62,23 @@
   justify-content: flex-end;
 }
 
+.landing-hero__account {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.landing-hero__account .admin-topbar__icon-btn {
+  width: 36px;
+  height: 36px;
+  background: rgba(255, 255, 255, 0.94);
+  color: #1c332e;
+}
+
+.landing-hero__account .admin-notify__panel {
+  z-index: 20;
+}
+
 .landing-hero__links a {
   color: #ffffff;
   background: none;

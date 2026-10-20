@@ -2,10 +2,12 @@ import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import footerUser from "../../assets/footer-user.png";
 import brandLogo from "../../assets/logo.png";
+import { useFaqModal } from "../faq/FaqModalProvider";
 import { useInViewReveal } from "../../hooks/useInViewReveal";
 
 export function ExplorerUserFooter() {
   const { ref, inView } = useInViewReveal<HTMLElement>();
+  const { openFaq } = useFaqModal();
 
   return (
     <footer
@@ -46,6 +48,13 @@ export function ExplorerUserFooter() {
               to="/preguntas-frecuentes"
               className="explorer-user-footer__faq explorer-reveal explorer-reveal--soft"
               style={{ "--reveal-delay": "220ms" } as CSSProperties}
+              onClick={(event) => {
+                if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) {
+                  return;
+                }
+                event.preventDefault();
+                openFaq();
+              }}
             >
               Preguntas frecuentes
             </Link>

@@ -3,6 +3,65 @@
   background: #ffffff;
 }
 
+.dash--faqs .dash-profile {
+  overflow: visible;
+  padding: 22px 28px;
+}
+
+.dash--faqs .dash-profile__top {
+  min-height: 112px;
+}
+
+.dash--faqs .dash-profile__identity {
+  position: relative;
+  z-index: 2;
+}
+
+.dash--faqs .dash-profile__row span {
+  overflow: visible;
+  text-overflow: unset;
+  white-space: normal;
+}
+
+.dash-faq-create {
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.dash--faqs .dash-access-hero__art {
+  left: 50%;
+  right: auto;
+  bottom: -20px;
+  top: auto;
+  translate: -50% 0;
+  width: auto;
+  max-width: 100%;
+  height: 124px;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  object-fit: contain;
+  object-position: center bottom;
+}
+
+@media (max-width: 900px) {
+  .dash--faqs .dash-profile {
+    padding: 20px;
+  }
+
+  .dash--faqs .dash-access-hero__art {
+    right: auto;
+    bottom: -16px;
+    height: 120px;
+  }
+}
+
+@media (max-width: 640px) {
+  .dash-faq-create {
+    margin-left: 0;
+  }
+}
+
 .dash-faq-summary {
   max-width: 40rem;
   margin: 0;
@@ -33,8 +92,66 @@
   margin-left: auto;
 }
 
+.dash-faq-confirm {
+  z-index: 120;
+  overflow: auto;
+  place-items: safe center;
+}
+
 .dash-team-confirm__card.dash-faq-dialog {
-  width: min(100%, 640px);
+  width: min(100%, 680px);
+  max-height: min(44rem, calc(100dvh - 48px));
+  margin: auto;
+}
+
+.dash-faq-dialog__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.dash-faq-dialog__close {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 999px;
+  background: #f3f6f4;
+  color: #1c332e;
+  cursor: pointer;
+}
+
+.dash-faq-dialog__close:hover,
+.dash-faq-dialog__close:focus-visible {
+  background: #e7f0ec;
+}
+
+.dash-faq-context {
+  margin-top: 14px;
+  padding: 14px 16px 12px;
+  border: 1px solid rgba(28, 51, 46, 0.08);
+  border-radius: 16px;
+  background: #f6f7f6;
+}
+
+.dash-faq-context__label {
+  margin: 0 0 6px;
+  color: #8a968f;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.dash-faq-context__question {
+  margin: 0 0 10px;
+  color: #1c332e;
+  font-size: 15.5px;
+  font-weight: 500;
+  line-height: 1.45;
 }
 
 .dash-faq-dialog .dash-team-confirm__scroll {
@@ -58,13 +175,110 @@
   white-space: pre-wrap;
 }
 
-.dash-faq-meta {
+.dash-faq-facts {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 16px;
+  min-width: 0;
+}
+
+.dash-faq-facts__row {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 14px;
-  margin: 0 0 16px;
+  align-items: center;
+  gap: 8px 12px;
+  min-width: 0;
   color: #68736e;
   font-size: 13px;
+  line-height: 1.4;
+}
+
+.dash-faq-facts__row .admin-status {
+  align-items: center;
+  min-height: 28px;
+  padding: 0 12px;
+  line-height: 1;
+}
+
+.dash-faq-facts__strong {
+  color: #1c332e;
+  font-weight: 500;
+}
+
+.dash-faq-facts__email {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.dash-faq-picker {
+  position: relative;
+  margin-bottom: 10px;
+}
+
+.dash-faq-picker__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid rgba(41, 73, 66, 0.16);
+  border-radius: 12px;
+  background: #fff;
+  color: #1c332e;
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.dash-faq-picker__menu {
+  position: static;
+  display: none;
+  max-height: 180px;
+  margin-top: 6px;
+  overflow: auto;
+}
+
+.dash-faq-picker__menu.is-open {
+  display: grid;
+}
+
+.contact-success.faq-admin-sent {
+  z-index: 100010;
+}
+
+.contact-success.faq-admin-sent .contact-success__dialog {
+  width: min(34rem, 100%);
+  padding: 1.85rem 2.15rem 1.55rem;
+}
+
+.contact-success.faq-admin-sent .contact-success__title {
+  max-width: 20.5rem;
+  margin-top: 0.15rem;
+  font-size: clamp(1.5rem, 2vw, 1.72rem);
+  line-height: 1.22;
+}
+
+.contact-success.faq-admin-sent .contact-success__text {
+  max-width: 28rem;
+  margin-top: 0.85rem;
+}
+
+.contact-success.faq-admin-sent .contact-success__action {
+  min-width: 9.5rem;
+}
+
+@media (max-width: 640px) {
+  .contact-success.faq-admin-sent .contact-success__dialog {
+    padding: 1.7rem 1.25rem 1.35rem;
+  }
+
+  .contact-success.faq-admin-sent .contact-success__title {
+    max-width: 16.5rem;
+    font-size: 1.42rem;
+  }
 }
 
 .dash-faq-choices {
@@ -103,6 +317,19 @@
 .faq-admin-check input {
   margin-top: 3px;
   accent-color: #294942;
+}
+
+.dash-faq-select {
+  width: 100%;
+  min-height: 42px;
+  margin-bottom: 10px;
+  padding: 0 12px;
+  border: 1px solid rgba(41, 73, 66, 0.14);
+  border-radius: 12px;
+  background: #ffffff;
+  color: #1c332e;
+  font: inherit;
+  font-size: 14px;
 }
 
 @media (max-width: 720px) {

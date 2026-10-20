@@ -10,6 +10,7 @@ export const NOTIFICATION_TYPES = {
   CATEGORY_REJECTED: "CATEGORY_REJECTED",
   CATEGORY_APPROVED: "CATEGORY_APPROVED",
   FAQ_RECEIVED: "FAQ_RECEIVED",
+  FAQ_ANSWERED: "FAQ_ANSWERED",
 } as const;
 
 type CreateNotificationInput = {
@@ -174,6 +175,27 @@ export async function notifyCategoryApproved(input: {
   ]);
 }
 
+export async function notifyFaqAnswered(input: { userId: string; faqId: string }) {
+  const recipient = await prisma.user.findFirst({
+    where: { id: input.userId, ...livingUserWhere, status: "ACTIVE" },
+    select: { id: true },
+  });
+  if (!recipient) {
+    return false;
+  }
+  await createNotifications([
+    {
+      userId: recipient.id,
+      type: NOTIFICATION_TYPES.FAQ_ANSWERED,
+      title: "¡Tu pregunta fue respondida!",
+      body: "Nuestro equipo ya respondió tu pregunta. Puedes consultar la respuesta aquí.",
+      entity: "Faq",
+      entityId: input.faqId,
+    },
+  ]);
+  return true;
+}
+
 export async function notifyFaqReceived(input: {
   faqId: string;
   subject: string;
@@ -187,9 +209,9 @@ export async function notifyFaqReceived(input: {
     reviewerIds.map((userId) => ({
       userId,
       type: NOTIFICATION_TYPES.FAQ_RECEIVED,
-      title: "Nueva pregunta recibida en Preguntas Frecuentes",
-      body: `Un usuario ha enviado una nueva pregunta.\nAsunto: ${input.subject}\nDe: ${input.authorName}${preview ? `\n${preview}` : ""}`,
-      link: "/admin/preguntas-frecuentes",
+      title: "Nueva pregunta recibida",
+      body: `Un usuario ha enviado una pregunta frecuente para revisión.${preview ? `\n${preview}` : ""}\nDe: ${input.authorName}`,
+      link: `/admin/preguntas-frecuentes?faq=${input.faqId}`,
       entity: "Faq",
       entityId: input.faqId,
     })),

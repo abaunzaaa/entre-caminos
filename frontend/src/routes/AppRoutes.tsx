@@ -37,6 +37,7 @@ import { FaqsPage } from "../pages/admin/FaqsPage";
 import { FaqPage } from "../pages/FaqPage";
 import { ExperienceFormPage } from "../pages/admin/ExperienceFormPage";
 import { ExperiencePreviewPage } from "../pages/admin/ExperiencePreviewPage";
+import { FaqModalProvider } from "../components/faq/FaqModalProvider";
 import { GuideHost } from "../components/guide/GuideHost";
 import { GuideProvider } from "../components/guide/GuideProvider";
 import { ProtectedRoute } from "./ProtectedRoute";
@@ -107,6 +108,7 @@ export function AppRoutes() {
     <BrowserRouter>
       <DocumentTitle />
       <LandingIntro />
+      <FaqModalProvider>
       <GuideProvider>
         <Routes>
         <Route path="/" element={<LandingPage />} />
@@ -198,6 +200,7 @@ export function AppRoutes() {
         </Routes>
         <GuideHost />
       </GuideProvider>
+      </FaqModalProvider>
     </BrowserRouter>
   );
 }

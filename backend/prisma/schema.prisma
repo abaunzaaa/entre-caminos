@@ -650,6 +650,20 @@ model Contact {
 }
 
 /// Pregunta frecuente. La página pública solo muestra PUBLISHED con respuesta.
+/// Categorías de preguntas frecuentes. No se mezclan con las categorías de experiencias.
+model FaqCategory {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  faqs Faq[]
+
+  @@map("faq_categories")
+}
+
 model Faq {
   id           String     @id @default(uuid())
   subject      String
@@ -657,19 +671,23 @@ model Faq {
   answer       String?
   status       FaqStatus  @default(PENDING)
   source       FaqSource
+  categoryId   String?    @map("category_id")
+  seedKey      String?    @unique @map("seed_key")
   userId       String?    @map("user_id")
   reviewedById String?    @map("reviewed_by_id")
   publishedAt  DateTime?  @map("published_at")
   createdAt    DateTime   @default(now()) @map("created_at")
   updatedAt    DateTime   @updatedAt @map("updated_at")
 
-  user       User? @relation("FaqSubmittedBy", fields: [userId], references: [id], onDelete: SetNull)
-  reviewedBy User? @relation("FaqReviewedBy", fields: [reviewedById], references: [id], onDelete: SetNull)
+  category   FaqCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  user       User?        @relation("FaqSubmittedBy", fields: [userId], references: [id], onDelete: SetNull)
+  reviewedBy User?        @relation("FaqReviewedBy", fields: [reviewedById], references: [id], onDelete: SetNull)
 
   @@index([status, publishedAt])
   @@index([createdAt])
   @@index([source])
   @@index([userId])
+  @@index([categoryId])
   @@map("faqs")
 }
 

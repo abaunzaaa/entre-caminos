@@ -226,12 +226,19 @@ export type ApiResponse<T> = {
 export type FaqStatus = "PENDING" | "ANSWERED" | "PUBLISHED" | "HIDDEN" | "DISCARDED";
 export type FaqSource = "USER_SUBMISSION" | "ADMIN_CREATED";
 
+export type FaqCategory = {
+  id: string;
+  name: string;
+  slug: string;
+};
+
 export type PublicFaq = {
   id: string;
   subject: string;
   question: string;
   answer: string;
   publishedAt: string | null;
+  category: FaqCategory | null;
 };
 
 export type FaqPerson = {
@@ -250,6 +257,7 @@ export type AdminFaq = {
   publishedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  category: FaqCategory | null;
   user: (FaqPerson & { email: string }) | null;
   reviewedBy: FaqPerson | null;
 };
@@ -270,4 +278,5 @@ export type FaqList<T> = {
   limit: number;
   pageCount: number;
   counts?: FaqCounts;
+  categories?: FaqCategory[];
 };

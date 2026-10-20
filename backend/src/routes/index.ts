@@ -14,6 +14,7 @@ import { assistantRouter } from "./assistant.routes.js";
 import { journeyRouter } from "./journey.routes.js";
 import { bitacoraRouter } from "./bitacora.routes.js";
 import { faqRouter } from "./faq.routes.js";
+import { notificationRouter } from "./notification.routes.js";
 
 export const apiRouter = Router();
 
@@ -32,4 +33,5 @@ apiRouter.use("/assistant", assistantRouter);
 apiRouter.use("/journeys", journeyRouter);
 apiRouter.use("/bitacora", bitacoraRouter);
 apiRouter.use("/faqs", faqRouter);
+apiRouter.use("/notifications", notificationRouter);
 apiRouter.use(assistantRouter);

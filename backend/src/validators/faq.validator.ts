@@ -72,6 +72,16 @@ const answerField = z.preprocess((value) => {
   return clean.length ? clean : undefined;
 }, z.string().min(FAQ_ANSWER_MIN, "La respuesta debe tener al menos 10 caracteres").max(FAQ_ANSWER_MAX, "La respuesta es demasiado larga").optional());
 
+const categoryIdField = z.preprocess((value) => {
+  if (value === undefined) {
+    return undefined;
+  }
+  if (value == null || value === "") {
+    return null;
+  }
+  return value;
+}, z.string().uuid({ message: "La categoría no es válida" }).nullable().optional());
+
 const nullableAnswerField = z.preprocess((value) => {
   if (value === undefined) {
     return undefined;
@@ -87,7 +97,6 @@ const nullableAnswerField = z.preprocess((value) => {
 }, z.string().min(FAQ_ANSWER_MIN, "La respuesta debe tener al menos 10 caracteres").max(FAQ_ANSWER_MAX, "La respuesta es demasiado larga").nullable().optional());
 
 export const submitFaqSchema = z.object({
-  subject: subjectField,
   question: questionField,
 });
 
@@ -97,6 +106,7 @@ export const adminFaqCreateSchema = z
     question: questionField,
     answer: answerField,
     status: z.enum(STATUSES).optional().default(FAQ_STATUS.HIDDEN),
+    categoryId: categoryIdField,
   })
   .superRefine((data, ctx) => {
     if ((data.status === FAQ_STATUS.PUBLISHED || data.status === FAQ_STATUS.ANSWERED) && !data.answer) {
@@ -117,6 +127,7 @@ export const adminFaqUpdateSchema = z
     question: optionalQuestionField,
     answer: nullableAnswerField,
     status: z.enum(STATUSES).optional(),
+    categoryId: categoryIdField,
   })
   .refine((data) => Object.values(data).some((value) => value !== undefined), {
     message: "No hay cambios para guardar.",
@@ -131,6 +142,17 @@ export const answerFaqSchema = z.object({
       .max(FAQ_ANSWER_MAX, "La respuesta es demasiado larga"),
   ),
   publish: z.boolean().optional().default(false),
+  categoryId: categoryIdField,
+});
+
+export const createFaqCategorySchema = z.object({
+  name: z.preprocess(
+    (value) => (typeof value === "string" ? sanitizePlainText(value) : value),
+    z
+      .string({ required_error: "El nombre de la categoría es obligatorio" })
+      .min(2, "El nombre de la categoría debe tener al menos 2 caracteres")
+      .max(40, "El nombre de la categoría es demasiado largo"),
+  ),
 });
 
 export const adminFaqListSchema = z.object({
@@ -140,6 +162,7 @@ export const adminFaqListSchema = z.object({
   ),
   status: z.preprocess(emptyToUndefined, z.enum(STATUSES).optional()),
   source: z.preprocess(emptyToUndefined, z.enum(SOURCES).optional()),
+  categoryId: z.preprocess(emptyToUndefined, z.string().uuid().optional()),
   sort: z.preprocess(emptyToUndefined, z.enum(["newest", "oldest"]).optional()),
   page: z.preprocess(emptyToUndefined, z.coerce.number().int().min(1).optional()),
   limit: z.preprocess(emptyToUndefined, z.coerce.number().int().min(1).max(50).optional()),
@@ -153,4 +176,5 @@ export type SubmitFaqInput = z.infer<typeof submitFaqSchema>;
 export type AdminFaqCreateInput = z.infer<typeof adminFaqCreateSchema>;
 export type AdminFaqUpdateInput = z.infer<typeof adminFaqUpdateSchema>;
 export type AnswerFaqInput = z.infer<typeof answerFaqSchema>;
+export type CreateFaqCategoryInput = z.infer<typeof createFaqCategorySchema>;
 export type AdminFaqListQuery = z.infer<typeof adminFaqListSchema>;

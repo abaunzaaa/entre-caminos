@@ -9,6 +9,7 @@ import {
   adminFaqListSchema,
   adminFaqUpdateSchema,
   answerFaqSchema,
+  createFaqCategorySchema,
   faqIdSchema,
   submitFaqSchema,
 } from "../validators/faq.validator.js";
@@ -16,6 +17,12 @@ import {
 export const faqRouter = Router();
 
 faqRouter.get("/", asyncHandler(faqController.listPublic));
+faqRouter.get(
+  "/mine/:id",
+  authMiddleware,
+  validate(faqIdSchema, "params"),
+  asyncHandler(faqController.ownAnswer),
+);
 faqRouter.post(
   "/",
   faqSubmitRateLimiter,
@@ -27,6 +34,7 @@ faqRouter.post(
 export const adminFaqRouter = Router();
 
 adminFaqRouter.get("/", validate(adminFaqListSchema, "query"), asyncHandler(faqController.listAdmin));
+adminFaqRouter.post("/categories", validate(createFaqCategorySchema), asyncHandler(faqController.createCategory));
 adminFaqRouter.post("/", validate(adminFaqCreateSchema), asyncHandler(faqController.create));
 adminFaqRouter.get("/:id", validate(faqIdSchema, "params"), asyncHandler(faqController.getAdmin));
 adminFaqRouter.put(
