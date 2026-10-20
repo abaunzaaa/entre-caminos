@@ -32,6 +32,7 @@ import { ProfileStampAlbum } from "../components/profile/ProfileStampAlbum";
 import { listExperienceStamps, type ExperienceStampCard } from "../services/catalog.service";
 import { listFavoriteExperiences } from "../services/favorites.service";
 import { onFavoritesChanged } from "../services/favorites-sync";
+import { listMyReviews, type MyVisitorReview } from "../services/reviews.service";
 import { listVisitedIds } from "../services/visits.service";
 import { onVisitedStatus } from "../services/visits-sync";
 import type { Experience, PublicUser } from "../types";
@@ -121,6 +122,10 @@ export function ProfilePage() {
   const [visitedIds, setVisitedIds] = useState<string[]>([]);
   const [visitedLoading, setVisitedLoading] = useState(true);
   const [visitedError, setVisitedError] = useState(false);
+  const [myReviews, setMyReviews] = useState<MyVisitorReview[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
+  const [reviewsError, setReviewsError] = useState("");
+  const [reviewsReload, setReviewsReload] = useState(0);
 
   useEffect(() => {
     if (authLoading) {
@@ -165,6 +170,46 @@ export function ProfilePage() {
       unsubscribe();
     };
   }, [user?.id, authLoading]);
+
+  useEffect(() => {
+    if (authLoading) {
+      return;
+    }
+    if (!user) {
+      setMyReviews([]);
+      setReviewsLoading(false);
+      setReviewsError("");
+      return;
+    }
+
+    let cancelled = false;
+    function loadReviews() {
+      setReviewsLoading(true);
+      setReviewsError("");
+      listMyReviews()
+        .then((data) => {
+          if (!cancelled) {
+            setMyReviews(Array.isArray(data.reviews) ? data.reviews : []);
+          }
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setMyReviews([]);
+            setReviewsError("No se pudieron cargar las reseñas.");
+          }
+        })
+        .finally(() => {
+          if (!cancelled) {
+            setReviewsLoading(false);
+          }
+        });
+    }
+
+    loadReviews();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id, authLoading, reviewsReload]);
 
   useEffect(() => {
     if (authLoading) {
@@ -259,7 +304,12 @@ export function ProfilePage() {
       value: visitedError || visitedLoading ? null : visitedIds.length,
       tab: "estampitas",
     },
-    { id: "reviews", label: "Reseñas", value: 0 },
+    {
+      id: "reviews",
+      label: "Reseñas",
+      value: reviewsError || reviewsLoading ? null : myReviews.length,
+      tab: "resenas",
+    },
     {
       id: "favorites",
       label: "Favoritos",
@@ -463,7 +513,15 @@ export function ProfilePage() {
             </div>
           ) : null}
 
-          {tab === "resenas" ? <ProfileReviews /> : null}
+          {tab === "resenas" ? (
+            <ProfileReviews
+              reviews={myReviews}
+              loading={reviewsLoading}
+              error={reviewsError}
+              onChange={setMyReviews}
+              onRetry={() => setReviewsReload((current) => current + 1)}
+            />
+          ) : null}
 
           {tab === "estampitas" ? (
             <ProfileStampAlbum

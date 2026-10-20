@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { ArrowLeft, Star } from "lucide-react";
 import { listExperienceReviews, type VisitorReview, type VisitorReviewSummary } from "../../services/reviews.service";
-import { mediaUrl } from "../../utils/media";
 import { formatPersonName } from "../../utils/person-name";
+import { ReviewAuthorAvatar } from "../user/ReviewAuthorAvatar";
 
 type ReviewsState = {
   summary: VisitorReviewSummary;
@@ -46,21 +46,6 @@ function previewComment(text: string, limit = 240) {
   return `${cut.trimEnd()}...`;
 }
 
-function initials(name: string) {
-  const parts = formatPersonName(name).split(" ").filter(Boolean);
-  return parts.slice(0, 2).map((part) => part.charAt(0)).join("") || "EC";
-}
-
-function ReviewAvatar({ name, avatarUrl }: { name: string; avatarUrl: string | null }) {
-  const [failed, setFailed] = useState(false);
-  const source = avatarUrl?.trim() && !failed ? mediaUrl(avatarUrl, 128) : "";
-  return (
-    <span className="explorer-map-reviews__avatar" aria-hidden="true">
-      {source ? <img src={source} alt="" onError={() => setFailed(true)} /> : initials(name)}
-    </span>
-  );
-}
-
 function ReviewCard({ review }: { review: VisitorReview }) {
   const score = reviewScore(review);
   const comment = previewComment(review.comment);
@@ -68,7 +53,7 @@ function ReviewCard({ review }: { review: VisitorReview }) {
 
   return (
     <article className="explorer-map-reviews__card">
-      <ReviewAvatar name={review.user.name} avatarUrl={review.user.avatarUrl} />
+      <ReviewAuthorAvatar user={review.user} className="explorer-map-reviews__avatar" size={57} />
       <strong>{name}</strong>
       {comment ? <p className="explorer-map-reviews__comment">{comment}</p> : null}
       {score != null ? (

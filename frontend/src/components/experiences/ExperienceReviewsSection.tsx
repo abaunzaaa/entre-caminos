@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
+import { ReviewAuthorAvatar } from "../user/ReviewAuthorAvatar";
 import { ReviewPhotoStage, ReviewPhotoViewer } from "./ReviewPhotoStage";
 import { useAuth } from "../../hooks/useAuth";
 import {
@@ -38,12 +39,6 @@ function reviewErrorMessage(err: unknown, fallback: string) {
   return message;
 }
 
-function nameInitials(name: string) {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  const letters = parts.slice(0, 2).map((part) => part.charAt(0).toUpperCase());
-  return letters.join("") || "EC";
-}
-
 function starFill(index: number, value: number) {
   const shown = Math.round(value * 2) / 2;
   if (shown >= index) {
@@ -55,7 +50,7 @@ function starFill(index: number, value: number) {
   return "empty";
 }
 
-function Stars({ value }: { value: number }) {
+export function Stars({ value }: { value: number }) {
   const shown = Math.round(value * 2) / 2;
   return (
     <span className="experience-reviews__stars" aria-label={`${shown} de 5`}>
@@ -111,10 +106,8 @@ function ReviewDetailModal({
   const titleId = useId();
   const closeRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
-  const [avatarFailed, setAvatarFailed] = useState(false);
   const [photoIndex, setPhotoIndex] = useState(0);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
-  const avatar = review.user.avatarUrl?.trim() && !avatarFailed ? mediaUrl(review.user.avatarUrl, 240) : "";
   const images = [...(review.images ?? [])].sort((left, right) => left.position - right.position);
   const galleryUrls = images.map((image) => mediaUrl(image.imageUrl, 1200));
   const viewerUrls = images.map((image) => mediaUrl(image.imageUrl, 1600));
@@ -182,9 +175,11 @@ function ReviewDetailModal({
         <div className="experience-review-detail__body">
           <div className={`experience-review-detail__top${galleryUrls.length ? "" : " is-solo"}`}>
             <div className="experience-review-detail__identity">
-              <span className="experience-reviews__avatar experience-reviews__avatar--detail" aria-hidden="true">
-                {avatar ? <img src={avatar} alt="" onError={() => setAvatarFailed(true)} /> : nameInitials(review.user.name)}
-              </span>
+              <ReviewAuthorAvatar
+                user={review.user}
+                className="experience-reviews__avatar experience-reviews__avatar--detail"
+                size={70}
+              />
               <div className="experience-review-detail__facts">
                 <h2 id={titleId} className="experience-review-detail__name">{review.user.name}</h2>
                 {experienceTitle ? <p className="experience-reviews__quote-recommend">{experienceTitle}</p> : null}
@@ -268,9 +263,7 @@ export function ReviewCard({
   onEdit?: () => void;
   onDelete?: () => void;
 }) {
-  const [avatarFailed, setAvatarFailed] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
-  const avatar = review.user.avatarUrl?.trim() && !avatarFailed ? mediaUrl(review.user.avatarUrl, 240) : "";
   const score = reviewScore(review);
   const shown = Math.round(score * 2) / 2;
   const mood = generalMood(shown);
@@ -281,9 +274,7 @@ export function ReviewCard({
       className={`experience-reviews__quote${own ? " is-own" : ""}`}
       tabIndex={anchor ? -1 : undefined}
     >
-      <span className="experience-reviews__avatar" aria-hidden="true">
-        {avatar ? <img src={avatar} alt="" onError={() => setAvatarFailed(true)} /> : nameInitials(review.user.name)}
-      </span>
+      <ReviewAuthorAvatar user={review.user} className="experience-reviews__avatar" size={70} />
       <strong className="experience-reviews__quote-name">{review.user.name}</strong>
       {experienceTitle ? <p className="experience-reviews__quote-recommend">{experienceTitle}</p> : null}
       <Stars value={shown} />

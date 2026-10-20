@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { useLocation } from "react-router-dom";
-import { CircleHelp, Heart } from "lucide-react";
+import { CircleHelp, Heart, Share2 } from "lucide-react";
 import { VisitedCheckIcon } from "../icons/VisitedCheckIcon";
 import { ExperienceEditorialDossier, type ExperienceEditorialFact } from "./ExperienceEditorialDossier";
 import { ExperienceEditorialGallery } from "./ExperienceEditorialGallery";
@@ -21,6 +21,7 @@ import {
   durationParts,
   formatDuration,
 } from "../../utils/experience-details";
+import { showFavoriteToast } from "../../services/favorites-sync";
 import { experienceImages, mediaUrl } from "../../utils/media";
 import { placeTabLabel, placesFromExperience, projectExperience } from "../../utils/experience-places";
 import type { Experience, ExperienceStatus, PublicOrganizationProfile } from "../../types";
@@ -43,6 +44,33 @@ const STATUS_LABEL: Record<ExperienceStatus, string> = {
   ARCHIVED: "Inactiva",
   REJECTED: "Rechazada",
 };
+
+function experienceShareUrl() {
+  const url = new URL(window.location.href);
+  url.search = "";
+  url.hash = "";
+  return url.toString();
+}
+
+async function shareExperienceLink(title: string) {
+  const shareUrl = experienceShareUrl();
+  if (typeof navigator.share === "function") {
+    try {
+      await navigator.share({ title, url: shareUrl });
+      return;
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        return;
+      }
+    }
+  }
+  try {
+    await navigator.clipboard.writeText(shareUrl);
+    showFavoriteToast("Enlace copiado correctamente");
+  } catch {
+    showFavoriteToast("No se pudo copiar el enlace", "error");
+  }
+}
 
 function hasMapCoordinates(latitude: number | null, longitude: number | null) {
   if (latitude == null || longitude == null) {
@@ -465,6 +493,18 @@ export function ExperienceEditorialView({
                 />
               </button>
             ) : null}
+            <button
+              type="button"
+              className="experience-hero-action"
+              aria-label="Compartir experiencia"
+              title="Compartir experiencia"
+              data-tooltip="Compartir experiencia"
+              onClick={() => {
+                void shareExperienceLink(experience.title);
+              }}
+            >
+              <Share2 size={16} strokeWidth={1.75} aria-hidden="true" />
+            </button>
           </div>
         ) : null}
       </section>

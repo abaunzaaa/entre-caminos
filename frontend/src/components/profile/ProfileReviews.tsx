@@ -1,11 +1,10 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { ReviewCard } from "../experiences/ExperienceReviewsSection";
+import { useLayoutEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
+import { ReviewPhotoViewer } from "../experiences/ReviewPhotoStage";
+import { Stars } from "../experiences/ExperienceReviewsSection";
 import { ReviewComposerModal, type ReviewDraft } from "../experiences/ReviewComposerModal";
-import { useAuth } from "../../hooks/useAuth";
 import {
   deleteExperienceReview,
-  listMyReviews,
   updateExperienceReview,
   type MyVisitorReview,
   type VisitorReviewInput,
@@ -13,6 +12,7 @@ import {
 } from "../../services/reviews.service";
 import { showFavoriteToast } from "../../services/favorites-sync";
 import { getApiErrorMessage } from "../../utils/api-error";
+import { mediaUrl } from "../../utils/media";
 import "../../styles/experience-reviews.css";
 
 function draftFromReview(review: MyVisitorReview): ReviewDraft {
@@ -25,85 +25,131 @@ function draftFromReview(review: MyVisitorReview): ReviewDraft {
   };
 }
 
-export function ProfileReviews() {
-  const { user } = useAuth();
-  const [reviews, setReviews] = useState<MyVisitorReview[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+function formatReviewDate(iso: string) {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+  const month = new Intl.DateTimeFormat("es-CO", { month: "short" }).format(date).replace(".", "").toUpperCase();
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${month} ${day}, ${date.getFullYear()}`;
+}
+
+function ReviewComment({ text }: { text: string }) {
+  const ref = useRef<HTMLParagraphElement>(null);
+  const [open, setOpen] = useState(false);
+  const [overflows, setOverflows] = useState(false);
+
+  useLayoutEffect(() => {
+    const node = ref.current;
+    if (!node || open) {
+      return;
+    }
+    setOverflows(node.scrollHeight > node.clientHeight + 1);
+  }, [text, open]);
+
+  return (
+    <>
+      <p ref={ref} className={`experience-reviews__comment${open ? " is-open" : ""}`}>
+        “{text}”
+      </p>
+      {overflows || open ? (
+        <button type="button" className="experience-reviews__more" onClick={() => setOpen((current) => !current)}>
+          {open ? "Ver menos" : "Ver más"}
+        </button>
+      ) : null}
+    </>
+  );
+}
+
+function ProfileReviewCard({
+  review,
+  busy,
+  deleting,
+  onEdit,
+  onDelete,
+}: {
+  review: MyVisitorReview;
+  busy: boolean;
+  deleting: boolean;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const [photoIndex, setPhotoIndex] = useState<number | null>(null);
+  const cover = mediaUrl(review.experience.imageUrl, 640);
+  const sede = review.location?.label?.trim() ?? "";
+  const comment = review.comment.trim();
+  const images = [...(review.images ?? [])].sort((left, right) => left.position - right.position);
+  const photoUrls = images.map((image) => mediaUrl(image.imageUrl, 960));
+  const detailPath = `/explorar/${review.experience.id}`;
+
+  return (
+    <article className="profile-review-card">
+      <Link className="profile-review-card__media" to={detailPath} aria-label={review.experience.title}>
+        <img src={cover} alt="" />
+      </Link>
+      <div className="profile-review-card__body">
+        <h3 className="profile-review-card__title">
+          <Link to={detailPath}>{review.experience.title}</Link>
+        </h3>
+        <Stars value={review.rating} />
+        {sede ? <p className="profile-review-card__sede">Visitó · {sede}</p> : null}
+        {review.recommended != null ? (
+          <p className="profile-review-card__recommend">{review.recommended ? "La recomienda" : "No la recomienda"}</p>
+        ) : null}
+        {comment ? <ReviewComment text={comment} /> : null}
+        {photoUrls.length ? (
+          <ul className="profile-review-card__photos">
+            {photoUrls.map((url, index) => (
+              <li key={images[index]?.id ?? url}>
+                <button type="button" aria-label={`Ver foto ${index + 1} de la reseña`} onClick={() => setPhotoIndex(index)}>
+                  <img src={mediaUrl(images[index]?.imageUrl, 240)} alt="" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        <footer className="profile-review-card__footer">
+          <time dateTime={review.createdAt}>{formatReviewDate(review.createdAt)}</time>
+          <p className="experience-reviews__card-actions">
+            <button type="button" onClick={onEdit} disabled={busy}>
+              Editar
+            </button>
+            <span aria-hidden="true">·</span>
+            <button type="button" onClick={onDelete} disabled={busy}>
+              {deleting ? "Eliminando…" : "Eliminar"}
+            </button>
+          </p>
+        </footer>
+      </div>
+      {photoIndex != null ? (
+        <ReviewPhotoViewer
+          urls={photoUrls}
+          index={photoIndex}
+          onIndexChange={setPhotoIndex}
+          onClose={() => setPhotoIndex(null)}
+        />
+      ) : null}
+    </article>
+  );
+}
+
+export function ProfileReviews({
+  reviews,
+  loading,
+  error,
+  onChange,
+  onRetry,
+}: {
+  reviews: MyVisitorReview[];
+  loading: boolean;
+  error: string;
+  onChange: (reviews: MyVisitorReview[]) => void;
+  onRetry: () => void;
+}) {
   const [editing, setEditing] = useState<MyVisitorReview | null>(null);
   const [busy, setBusy] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const viewportRef = useRef<HTMLDivElement>(null);
-  const [index, setIndex] = useState(0);
-  const [visible, setVisible] = useState(1);
-  const [offset, setOffset] = useState(0);
-  const [step, setStep] = useState(0);
-
-  useEffect(() => {
-    if (!user?.id) {
-      setReviews([]);
-      setLoading(false);
-      return;
-    }
-
-    let cancelled = false;
-    setLoading(true);
-    setError("");
-    listMyReviews()
-      .then((data) => {
-        if (!cancelled) {
-          setReviews(Array.isArray(data.reviews) ? data.reviews : []);
-        }
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          setError(getApiErrorMessage(err, "No se pudieron cargar las reseñas."));
-        }
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [user?.id]);
-
-  useLayoutEffect(() => {
-    const viewport = viewportRef.current;
-    if (!viewport) {
-      return;
-    }
-
-    function measure() {
-      const node = viewportRef.current;
-      if (!node) {
-        return;
-      }
-      const style = getComputedStyle(node);
-      const padX = Number.parseFloat(style.paddingLeft) + Number.parseFloat(style.paddingRight);
-      const available = Math.max(0, node.clientWidth - padX);
-      const root = Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
-      const gap = 1.75 * root;
-      const preferred = 17.25 * root;
-      const card = available > 0 ? Math.min(preferred, available) : preferred;
-      const count = card > 0 ? Math.max(1, Math.floor((available + gap) / (card + gap))) : 1;
-      const shown = Math.min(count, Math.max(reviews.length, 1));
-      const windowWidth = shown * card + Math.max(0, shown - 1) * gap;
-      node.style.setProperty("--profile-review-card", `${card}px`);
-      setVisible(shown);
-      setStep(card + gap);
-      setOffset(Math.max(0, (available - windowWidth) / 2));
-      setIndex((current) => Math.min(current, Math.max(0, reviews.length - shown)));
-    }
-
-    measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(viewport);
-    return () => observer.disconnect();
-  }, [reviews.length]);
 
   async function saveReview(input: VisitorReviewInput, photos: VisitorReviewPhotos) {
     if (!editing || busy) {
@@ -112,8 +158,8 @@ export function ProfileReviews() {
     setBusy(true);
     try {
       const data = await updateExperienceReview(editing.experienceId, editing.id, input, photos);
-      setReviews((current) =>
-        current.map((review) =>
+      onChange(
+        reviews.map((review) =>
           review.id === editing.id ? { ...review, ...data.review, experience: review.experience } : review,
         ),
       );
@@ -134,7 +180,7 @@ export function ProfileReviews() {
     setDeletingId(review.id);
     try {
       await deleteExperienceReview(review.experienceId, review.id);
-      setReviews((current) => current.filter((item) => item.id !== review.id));
+      onChange(reviews.filter((item) => item.id !== review.id));
       setEditing((current) => (current?.id === review.id ? null : current));
       showFavoriteToast("Reseña eliminada correctamente");
     } catch (err) {
@@ -150,8 +196,15 @@ export function ProfileReviews() {
 
   return (
     <div className="profile-reviews">
-      {loading ? <p className="experience-reviews__note">Cargando reseñas…</p> : null}
-      {!loading && error ? <p className="experience-reviews__note">{error}</p> : null}
+      {loading ? <p className="profile-stamps__status">Cargando reseñas…</p> : null}
+      {!loading && error ? (
+        <div className="profile-stamps__status">
+          <p>{error}</p>
+          <button type="button" className="profile-stamps__retry" onClick={onRetry}>
+            Intentar de nuevo
+          </button>
+        </div>
+      ) : null}
       {!loading && !error && reviews.length === 0 ? (
         <div className="profile-reviews__empty">
           <h2 className="explorer-discover-title">Aún no tienes reseñas</h2>
@@ -159,53 +212,19 @@ export function ProfileReviews() {
         </div>
       ) : null}
       {!loading && !error && reviews.length > 0 ? (
-        <div className="profile-reviews__carousel">
-          {reviews.length > visible ? (
-            <button
-              type="button"
-              className="profile-reviews__nav"
-              aria-label="Reseñas anteriores"
-              disabled={index === 0}
-              onClick={() => setIndex((current) => Math.max(0, current - 1))}
-            >
-              <ChevronLeft size={18} strokeWidth={1.85} aria-hidden="true" />
-            </button>
-          ) : null}
-          <div className="profile-reviews__viewport" ref={viewportRef}>
-            <ul
-              className="profile-reviews__track"
-              style={{ transform: `translate3d(${offset - index * step}px, 0, 0)` }}
-            >
-              {reviews.map((review) => {
-                const own = Boolean(user && review.user.id === user.id);
-                return (
-                  <li key={review.id}>
-                    <ReviewCard
-                      review={review}
-                      experienceTitle={review.experience.title}
-                      own={own}
-                      busy={busy}
-                      deleting={deletingId === review.id}
-                      onEdit={own ? () => setEditing(review) : undefined}
-                      onDelete={own ? () => void removeReview(review) : undefined}
-                    />
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-          {reviews.length > visible ? (
-            <button
-              type="button"
-              className="profile-reviews__nav"
-              aria-label="Reseñas siguientes"
-              disabled={index >= reviews.length - visible}
-              onClick={() => setIndex((current) => Math.min(reviews.length - visible, current + 1))}
-            >
-              <ChevronRight size={18} strokeWidth={1.85} aria-hidden="true" />
-            </button>
-          ) : null}
-        </div>
+        <ul className="profile-review-list">
+          {reviews.map((review) => (
+            <li key={review.id}>
+              <ProfileReviewCard
+                review={review}
+                busy={busy}
+                deleting={deletingId === review.id}
+                onEdit={() => setEditing(review)}
+                onDelete={() => void removeReview(review)}
+              />
+            </li>
+          ))}
+        </ul>
       ) : null}
       {editing ? (
         <ReviewComposerModal
