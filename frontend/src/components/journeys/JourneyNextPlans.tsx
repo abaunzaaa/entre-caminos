@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import brandLogo from "../../assets/logo.png";
 import { useInViewReveal } from "../../hooks/useInViewReveal";
 import { bogotaDay, ticketDate } from "../../utils/journey-dates";
 import { mediaUrl } from "../../utils/media";
@@ -7,7 +8,7 @@ import type { JourneyPlan } from "../../services/journey.service";
 import { selectUpcomingPlans } from "./next-plans";
 
 const MAX_RANGE_MINUTES = 16 * 60;
-const TICKET_PATH = "M12 48H70C80 48 90 10 120 10C150 10 160 48 170 48H228C232.4 48 236 51.6 236 56V504C236 510.6 230.6 516 224 516H16C9.4 516 4 510.6 4 504V56C4 51.6 7.6 48 12 48Z";
+const TICKET_PATH = "M5 62H50A50 44 0 0 0 150 62H195A3 3 0 0 1 198 65V432A3 3 0 0 1 195 435H5A3 3 0 0 1 2 432V65A3 3 0 0 1 5 62Z";
 
 function clock(date: Date) {
   const parts = new Intl.DateTimeFormat("en-US", {
@@ -32,18 +33,6 @@ function planTime(plan: JourneyPlan) {
 
 function delay(ms: number) {
   return { "--reveal-delay": `${ms}ms` } as CSSProperties;
-}
-
-function TicketSeal() {
-  return (
-    <svg className="caminos-boleto__seal" viewBox="0 0 40 48" aria-hidden="true">
-      <ellipse cx="20" cy="24" rx="13.4" ry="17.4" fill="none" stroke="currentColor" strokeWidth="0.75" />
-      <ellipse cx="20" cy="24" rx="11.3" ry="15.1" fill="none" stroke="currentColor" strokeWidth="0.4" />
-      <text x="20" y="28.2" textAnchor="middle" fill="currentColor" fontFamily="Georgia, 'Times New Roman', serif" fontSize="11" fontStyle="italic">
-        EC
-      </text>
-    </svg>
-  );
 }
 
 export function JourneyNextPlans({
@@ -145,11 +134,11 @@ export function JourneyNextPlans({
 
         {items.length > 0 ? (
           <div className="caminos-boletos">
-            {canPrev ? (
-              <button type="button" className="caminos-boletos__nav caminos-boletos__nav--prev" aria-label="Planes anteriores" onClick={() => scrollByCard(-1)}>
+            {fitted ? null : (
+              <button type="button" className="caminos-boletos__nav caminos-boletos__nav--prev" aria-label="Planes anteriores" disabled={!canPrev} onClick={() => scrollByCard(-1)}>
                 <ChevronLeft size={16} strokeWidth={1.6} aria-hidden="true" />
               </button>
-            ) : null}
+            )}
             <ul ref={scrollerRef} className={`caminos-boletos__rail${fitted ? " is-fitted" : ""}`}>
               {items.map((plan, index) => {
                 const date = ticketDate(plan.plannedAt);
@@ -163,10 +152,10 @@ export function JourneyNextPlans({
                       onClick={() => onOpenDay(bogotaDay(plan.plannedAt))}
                       aria-label={`${plan.experience.title}${when ? `, ${when}` : ""}, ${date.day} ${date.month} ${date.year}. Abrir en el calendario`}
                     >
-                      <svg className="caminos-boleto__shape" viewBox="0 0 240 520" preserveAspectRatio="none" aria-hidden="true">
+                      <svg className="caminos-boleto__shape" viewBox="0 0 200 438" preserveAspectRatio="none" aria-hidden="true">
                         <path d={TICKET_PATH} />
                       </svg>
-                      <TicketSeal />
+                      <img className="caminos-boleto__seal" src={brandLogo} alt="" draggable={false} />
                       <span className="caminos-boleto__content">
                         <span className="caminos-boleto__rule" aria-hidden="true" />
                         <span className="caminos-boleto__photo">
@@ -199,11 +188,11 @@ export function JourneyNextPlans({
                 );
               })}
             </ul>
-            {canNext ? (
-              <button type="button" className="caminos-boletos__nav caminos-boletos__nav--next" aria-label="Planes siguientes" onClick={() => scrollByCard(1)}>
+            {fitted ? null : (
+              <button type="button" className="caminos-boletos__nav caminos-boletos__nav--next" aria-label="Planes siguientes" disabled={!canNext} onClick={() => scrollByCard(1)}>
                 <ChevronRight size={16} strokeWidth={1.6} aria-hidden="true" />
               </button>
-            ) : null}
+            )}
           </div>
         ) : null}
       </div>

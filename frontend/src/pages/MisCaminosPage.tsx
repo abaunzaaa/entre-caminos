@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
-import { BookOpen } from "lucide-react";
 import palomaLeft from "../assets/paloma1.png";
 import palomaRight from "../assets/paloma 2.png";
 import {
@@ -346,9 +345,10 @@ export function MisCaminosPage() {
               </figure>
             </div>
             <div className="caminos-hero__copy">
-              <h1 className="explorer-reveal explorer-reveal--title" style={{ "--reveal-delay": "200ms" } as CSSProperties}>Mis caminos</h1>
-              <p className="caminos-hero__lead explorer-reveal explorer-reveal--soft" style={{ "--reveal-delay": "320ms" } as CSSProperties}>Un espacio para tus planes y recuerdos</p>
-              <button type="button" className="tourist-hero__cta explorer-reveal explorer-reveal--soft" style={{ "--reveal-delay": "440ms" } as CSSProperties} onClick={() => openCalendar()}>
+              <img className="caminos-hero__mark explorer-reveal explorer-reveal--soft" src="/mis-caminos/cartas-lazo.png" alt="" width={700} height={598} style={{ "--reveal-delay": "200ms" } as CSSProperties} />
+              <h1 className="explorer-reveal explorer-reveal--title" style={{ "--reveal-delay": "300ms" } as CSSProperties}>Mis caminos</h1>
+              <p className="caminos-hero__lead explorer-reveal explorer-reveal--soft" style={{ "--reveal-delay": "400ms" } as CSSProperties}>Un espacio para tus planes y recuerdos</p>
+              <button type="button" className="tourist-hero__cta explorer-reveal explorer-reveal--soft" style={{ "--reveal-delay": "500ms" } as CSSProperties} onClick={() => openCalendar()}>
                 Ver mi calendario
               </button>
             </div>
@@ -360,13 +360,12 @@ export function MisCaminosPage() {
       <section className="caminos-memory" aria-label="Bitácora de recuerdos">
         <img
           src="/mis-caminos/franja-recuerdos.jpg"
-          alt="Los caminos también guardan los momentos que nos transforman."
+          alt="Los caminos guardan los momentos que nos transforman."
           width={1024}
-          height={341}
+          height={385}
           decoding="async"
         />
         <button type="button" className="caminos-memory__cta" onClick={() => navigate("/mis-caminos/bitacora")}>
-          <BookOpen size={15} strokeWidth={1.7} aria-hidden="true" />
           Abrir bitácora
         </button>
       </section>
