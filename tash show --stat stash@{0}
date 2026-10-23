@@ -1,0 +1,39 @@
+* Unmerged path frontend/src/components/explorer/ExplorerNavbar.tsx
+[1mdiff --git a/frontend/src/components/explorer/ExplorerNavbar.tsx b/frontend/src/components/explorer/ExplorerNavbar.tsx[m
+[1mindex 3310a75..d859814 100644[m
+[1m--- a/frontend/src/components/explorer/ExplorerNavbar.tsx[m
+[1m+++ b/frontend/src/components/explorer/ExplorerNavbar.tsx[m
+[36m@@ -8,8 +8,8 @@[m [mimport {[m
+   Map,[m
+   MapPinned,[m
+   Menu,[m
+[31m-  Route,[m
+   UserRound,[m
+[32m+[m[32m  Users,[m
+   X,[m
+ } from "lucide-react";[m
+ import { AdminNotifications } from "../admin/AdminNotifications";[m
+[36m@@ -26,16 +26,20 @@[m [mconst NAV_LINKS: Array<{[m
+   end?: boolean;[m
+ }> = [[m
+   { to: "/explorar", label: "Inicio", icon: Compass, end: true },[m
+[31m-  { to: "/mapa", label: "Mapa", icon: Map, end: true },[m
+   { to: "/favoritos", label: "Favoritos", icon: Heart, end: true },[m
+[32m+[m[32m<<<<<<< Updated upstream[m
+[32m+[m[32m  { to: "/mapa", label: "Mapa", icon: Map, end: true },[m
+[32m+[m[32m  { to: "/plan-con-amigos", label: "Plan con amigos", icon: Users, end: true },[m
+[32m+[m[32m=======[m
+   { to: "/planear-mi-plan", label: "Planear mi plan", icon: Route },[m
+[32m+[m[32m>>>>>>> Stashed changes[m
+   { to: "/visitados", label: "Visitados", icon: MapPinned, end: true },[m
+ ];[m
+ [m
+[31m-const EXPLORER_SHELL_PATHS = new Set(["/favoritos", "/mapa", "/plan-con-amigos", "/planear-mi-plan", "/visitados", "/perfil", "/mis-caminos"]);[m
+[32m+[m[32mconst EXPLORER_SHELL_PATHS = new Set(["/favoritos", "/mapa", "/plan-con-amigos", "/visitados", "/perfil", "/mis-caminos"]);[m
+ [m
+ export function isExplorerShellPath(pathname: string) {[m
+[31m-  return pathname.startsWith("/explorar") || pathname === "/perfil" || pathname.startsWith("/mis-caminos") || pathname.startsWith("/planear-mi-plan") || EXPLORER_SHELL_PATHS.has(pathname);[m
+[32m+[m[32m  return pathname.startsWith("/explorar") || pathname === "/perfil" || pathname.startsWith("/mis-caminos") || EXPLORER_SHELL_PATHS.has(pathname);[m
+ }[m
+ [m
+ export function ExplorerNavbar() {[m

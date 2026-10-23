@@ -28,7 +28,7 @@ const NAV_LINKS: Array<{
   { to: "/explorar", label: "Inicio", icon: Compass, end: true },
   { to: "/mapa", label: "Mapa", icon: Map, end: true },
   { to: "/favoritos", label: "Favoritos", icon: Heart, end: true },
-  { to: "/planear-mi-plan", label: "Plan con amigos", icon: Route },
+  { to: "/planear-mi-plan", label: "Crear plan", icon: Route },
   { to: "/visitados", label: "Visitados", icon: MapPinned, end: true },
 ];
 
