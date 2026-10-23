@@ -26,6 +26,8 @@ import {
   type MemoryInput,
 } from "../services/journey.service";
 import { ExplorerUserFooter } from "../components/explorer/ExplorerUserFooter";
+import { ensureBitacoraFonts } from "../components/bitacora/fonts";
+import { prefetchBitacora } from "../services/bitacora.service";
 import { JourneyCalendar } from "../components/journeys/JourneyCalendar";
 import { JourneyJournal, type MemorySeed } from "../components/journeys/JourneyJournal";
 import { JourneyNextPlans } from "../components/journeys/JourneyNextPlans";
@@ -62,6 +64,11 @@ export function MisCaminosPage() {
   const clearSeed = useCallback(() => setSeed(null), []);
   const { ref: heroRef, inView: heroInView } = useInViewReveal<HTMLDivElement>({ rootMargin: "0px", enterRatio: 0.12, leaveRatio: 0 });
   const { ref: closeRef, inView: closeInView } = useInViewReveal<HTMLDivElement>({ rootMargin: "0px", enterRatio: 0.16, leaveRatio: 0 });
+
+  useEffect(() => {
+    ensureBitacoraFonts();
+    prefetchBitacora();
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -362,10 +369,16 @@ export function MisCaminosPage() {
           src="/mis-caminos/franja-recuerdos.jpg"
           alt="Los caminos guardan los momentos que nos transforman."
           width={1024}
-          height={385}
+          height={341}
           decoding="async"
         />
-        <button type="button" className="caminos-memory__cta" onClick={() => navigate("/mis-caminos/bitacora")}>
+        <button
+          type="button"
+          className="caminos-memory__cta"
+          onClick={() => navigate("/mis-caminos/bitacora")}
+          onPointerEnter={() => prefetchBitacora()}
+          onFocus={() => prefetchBitacora()}
+        >
           Abrir bitácora
         </button>
       </section>

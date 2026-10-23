@@ -1,14 +1,20 @@
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import brandLogo from "../../assets/logo.png";
 import { useInViewReveal } from "../../hooks/useInViewReveal";
 import { bogotaDay, ticketDate } from "../../utils/journey-dates";
 import { mediaUrl } from "../../utils/media";
 import type { JourneyPlan } from "../../services/journey.service";
 import { selectUpcomingPlans } from "./next-plans";
+import { TicketCategoryIcon } from "./TicketCategoryIcon";
 
 const MAX_RANGE_MINUTES = 16 * 60;
-const TICKET_PATH = "M5 62H50A50 44 0 0 0 150 62H195A3 3 0 0 1 198 65V432A3 3 0 0 1 195 435H5A3 3 0 0 1 2 432V65A3 3 0 0 1 5 62Z";
+const TICKET_CAP_FILL = "M8 96H58C92 96 86 54 120 54C154 54 148 96 182 96H232C235.3 96 238 98.7 238 102H2C2 98.7 4.7 96 8 96Z";
+const TICKET_CAP_LINE = "M2 102C2 98.7 4.7 96 8 96H58C92 96 86 54 120 54C154 54 148 96 182 96H232C235.3 96 238 98.7 238 102";
+
+function slotCount(count: number, width: number) {
+  const maxSlots = width < 540 ? 1 : width < 800 ? 2 : width < 1080 ? 3 : 4;
+  return Math.max(1, Math.min(Math.max(count, 1), maxSlots));
+}
 
 function clock(date: Date) {
   const parts = new Intl.DateTimeFormat("en-US", {
@@ -47,12 +53,14 @@ export function JourneyNextPlans({
   onOpenCalendar: () => void;
 }) {
   const { ref, inView } = useInViewReveal<HTMLDivElement>({ rootMargin: "0px", enterRatio: 0.14, leaveRatio: 0 });
+  const frameRef = useRef<HTMLDivElement>(null);
   const scrollerRef = useRef<HTMLUListElement>(null);
   const [canPrev, setCanPrev] = useState(false);
   const [canNext, setCanNext] = useState(false);
-  const [fitted, setFitted] = useState(false);
   const selection = selectUpcomingPlans(plans, Date.now(), 0, Math.max(plans.length, 1));
   const items = status === "ready" ? selection.items : [];
+  const [slots, setSlots] = useState(() => slotCount(items.length, typeof window === "undefined" ? 1200 : window.innerWidth));
+  const carousel = items.length > slots;
 
   const update = useCallback(() => {
     const scroller = scrollerRef.current;
@@ -62,21 +70,29 @@ export function JourneyNextPlans({
       return;
     }
     const max = scroller.scrollWidth - scroller.clientWidth;
-    setFitted(max <= 8);
-    if (max <= 8) {
-      setCanPrev(false);
-      setCanNext(false);
-      return;
-    }
-    setCanPrev(scroller.scrollLeft > 8);
-    setCanNext(scroller.scrollLeft < max - 8);
+    const overflow = max > 8;
+    setCanPrev(overflow && scroller.scrollLeft > 8);
+    setCanNext(overflow && scroller.scrollLeft < max - 8);
   }, []);
 
   useEffect(() => {
+    const frame = frameRef.current;
+    if (!frame) {
+      return;
+    }
+    const measure = () => setSlots(slotCount(items.length, frame.clientWidth));
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(frame);
+    return () => observer.disconnect();
+  }, [items.length]);
+
+  useLayoutEffect(() => {
     const scroller = scrollerRef.current;
     if (!scroller) {
       return;
     }
+    scroller.scrollLeft = 0;
     update();
     const observer = new ResizeObserver(() => update());
     observer.observe(scroller);
@@ -89,14 +105,14 @@ export function JourneyNextPlans({
       window.removeEventListener("resize", update);
       window.clearTimeout(timer);
     };
-  }, [items.length, update]);
+  }, [items.length, slots, update]);
 
   function scrollByCard(direction: -1 | 1) {
     const scroller = scrollerRef.current;
     if (!scroller) {
       return;
     }
-    const card = scroller.querySelector<HTMLElement>(".caminos-boleto");
+    const card = scroller.querySelector<HTMLElement>("li");
     const styles = window.getComputedStyle(scroller);
     const rawGap = styles.columnGap || styles.gap || "24";
     const parsedGap = Number.parseFloat(rawGap);
@@ -105,6 +121,14 @@ export function JourneyNextPlans({
     const amount = (card?.offsetWidth ?? 260) + gap;
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     scroller.scrollBy({ left: direction * amount, behavior: reduceMotion ? "auto" : "smooth" });
+  }
+
+  function onRailKey(event: KeyboardEvent<HTMLUListElement>) {
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") {
+      return;
+    }
+    event.preventDefault();
+    scrollByCard(event.key === "ArrowRight" ? 1 : -1);
   }
 
   return (
@@ -118,7 +142,7 @@ export function JourneyNextPlans({
         Experiencias que ya hacen parte de tu camino.
       </p>
 
-      <div className="caminos-plans__body">
+      <div className="caminos-plans__body" ref={frameRef}>
         {status === "loading" ? <p className="caminos-plans__status">Cargando tus planes…</p> : null}
 
         {status === "ready" && items.length === 0 ? (
@@ -133,13 +157,19 @@ export function JourneyNextPlans({
         ) : null}
 
         {items.length > 0 ? (
-          <div className="caminos-boletos">
-            {fitted ? null : (
-              <button type="button" className="caminos-boletos__nav caminos-boletos__nav--prev" aria-label="Planes anteriores" disabled={!canPrev} onClick={() => scrollByCard(-1)}>
+          <div className="caminos-boletos" data-carousel={carousel ? "true" : "false"} style={{ "--visible": slots } as CSSProperties}>
+            {carousel && canPrev ? (
+              <button type="button" className="caminos-boletos__nav caminos-boletos__nav--prev" aria-label="Planes anteriores" onClick={() => scrollByCard(-1)}>
                 <ChevronLeft size={16} strokeWidth={1.6} aria-hidden="true" />
               </button>
-            )}
-            <ul ref={scrollerRef} className={`caminos-boletos__rail${fitted ? " is-fitted" : ""}`}>
+            ) : null}
+            <ul
+              ref={scrollerRef}
+              className="caminos-boletos__rail"
+              tabIndex={carousel ? 0 : undefined}
+              aria-label={carousel ? "Próximos planes" : undefined}
+              onKeyDown={carousel ? onRailKey : undefined}
+            >
               {items.map((plan, index) => {
                 const date = ticketDate(plan.plannedAt);
                 const when = planTime(plan);
@@ -150,12 +180,17 @@ export function JourneyNextPlans({
                       type="button"
                       className="caminos-boleto"
                       onClick={() => onOpenDay(bogotaDay(plan.plannedAt))}
-                      aria-label={`${plan.experience.title}${when ? `, ${when}` : ""}, ${date.day} ${date.month} ${date.year}. Abrir en el calendario`}
+                      aria-label={`${plan.experience.title}${when ? `, ${when}` : ""}${place ? `, ${place}` : ""}, ${date.day} ${date.month} ${date.year}. Abrir en el calendario`}
+                      title={plan.experience.title}
                     >
-                      <svg className="caminos-boleto__shape" viewBox="0 0 200 438" preserveAspectRatio="none" aria-hidden="true">
-                        <path d={TICKET_PATH} />
+                      <svg className="caminos-boleto__shape" viewBox="0 0 240 102" preserveAspectRatio="none" aria-hidden="true">
+                        <path className="is-fill" d={TICKET_CAP_FILL} />
+                        <path className="is-line" d={TICKET_CAP_LINE} />
                       </svg>
-                      <img className="caminos-boleto__seal" src={brandLogo} alt="" draggable={false} />
+                      <span className="caminos-boleto__board" aria-hidden="true" />
+                      <span className="caminos-boleto__seal">
+                        <TicketCategoryIcon name={plan.experience.category} />
+                      </span>
                       <span className="caminos-boleto__content">
                         <span className="caminos-boleto__rule" aria-hidden="true" />
                         <span className="caminos-boleto__photo">
@@ -188,11 +223,11 @@ export function JourneyNextPlans({
                 );
               })}
             </ul>
-            {fitted ? null : (
-              <button type="button" className="caminos-boletos__nav caminos-boletos__nav--next" aria-label="Planes siguientes" disabled={!canNext} onClick={() => scrollByCard(1)}>
+            {carousel && canNext ? (
+              <button type="button" className="caminos-boletos__nav caminos-boletos__nav--next" aria-label="Planes siguientes" onClick={() => scrollByCard(1)}>
                 <ChevronRight size={16} strokeWidth={1.6} aria-hidden="true" />
               </button>
-            )}
+            ) : null}
           </div>
         ) : null}
       </div>

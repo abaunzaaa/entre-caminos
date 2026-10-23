@@ -60,7 +60,7 @@
 
 .caminos-hero__stage {
   position: relative;
-  width: min(100%, 27rem, calc((100dvh - var(--explorer-nav-height, 4.75rem) - 4.5rem) * 656 / 608));
+  width: min(100%, 31.4rem, calc((100dvh - var(--explorer-nav-height, 4.75rem) - 4.5rem) * 656 / 608));
   height: auto;
   aspect-ratio: 656 / 608;
   min-height: 0;
@@ -936,7 +936,7 @@
   }
 
   .caminos-hero__stage {
-    width: min(100%, 20.5rem);
+    width: min(100%, 23.6rem);
     height: auto;
     min-height: 0;
   }
@@ -2289,42 +2289,36 @@
 
   .caminos-close__dove,
   .caminos-close.is-revealed .caminos-close__dove {
-    opacity: 0.96;
+    opacity: 0.55;
   }
 }
 
 .caminos-panel {
-  background: #e3e7dc;
+  background: #ffffff;
   max-width: none;
 }
 
 .caminos-close {
   position: relative;
-  padding-top: clamp(2.4rem, 2.8vw, 3.15rem);
-  background: #e3e7dc;
-}
-
-.caminos-close .explorer-user-footer {
-  background: #e3e7dc;
+  padding-top: clamp(3.6rem, 5.6vw, 4.8rem);
+  background: #ffffff;
 }
 
 .caminos-close__dove {
   position: absolute;
   z-index: 4;
-  top: 1.7rem;
-  width: clamp(2rem, 3.3vw, 2.65rem);
-  height: auto;
+  top: clamp(0.45rem, 1.1vw, 0.85rem);
+  width: clamp(2.85rem, 6.5vw, 4.25rem);
+  height: clamp(2.85rem, 6.5vw, 4.25rem);
+  object-fit: contain;
   pointer-events: none;
   user-select: none;
-  filter:
-    brightness(0) invert(1)
-    drop-shadow(0 0 0.45px rgba(110, 143, 136, 0.9))
-    drop-shadow(0 1px 1px rgba(138, 145, 140, 0.28));
+  filter: brightness(0) invert(0.78);
   opacity: 0;
 }
 
 .caminos-close.is-revealed .caminos-close__dove {
-  opacity: 0.96;
+  opacity: 0.55;
   transition: opacity 640ms ease;
 }
 
@@ -2332,20 +2326,17 @@
   transition-delay: 120ms;
 }
 
-.caminos-close__dove--left { left: clamp(1.25rem, 4vw, 3rem); }
-.caminos-close__dove--right { right: 12rem; }
-
-@media (max-width: 900px) {
-  .caminos-close__dove {
-    top: 0.4rem;
-  }
-
-  .caminos-close__dove--right { right: 11.5rem; }
-}
+.caminos-close__dove--left { left: clamp(1rem, 4.5vw, 3rem); }
+.caminos-close__dove--right { right: clamp(1rem, 4.5vw, 3rem); }
 
 @media (max-width: 640px) {
+  .caminos-close {
+    padding-top: 3.1rem;
+  }
+
   .caminos-close__dove {
-    width: 1.7rem;
+    width: 2.35rem;
+    height: 2.35rem;
   }
 }
 
@@ -5007,24 +4998,27 @@
 .caminos-memory {
   position: relative;
   width: 100%;
+  height: clamp(280px, 28vw, 380px);
   margin: 0;
-  background: #cbb592;
+  box-sizing: border-box;
+  padding-bottom: 2.75rem;
+  background: #8e997b;
   line-height: 0;
 }
 
 .caminos-memory img {
   display: block;
   width: 100%;
-  height: clamp(280px, 28vw, 380px);
-  object-fit: cover;
-  object-position: center 62%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center center;
   filter: none;
 }
 
 .caminos-memory__cta {
   position: absolute;
   left: 50%;
-  bottom: 0.85rem;
+  bottom: 0.55rem;
   z-index: 1;
   display: inline-flex;
   align-items: center;
@@ -5069,6 +5063,14 @@
 .caminos-plans {
   padding: 1.7rem 0 2.8rem;
   background: #ffffff;
+}
+
+.caminos-plans:has(.caminos-boletos) {
+  padding: 2.35rem 0 1.15rem;
+}
+
+.caminos-plans:has(.caminos-boletos) .caminos-plans__body {
+  margin-top: 0;
 }
 
 .caminos-plans__inner {
@@ -5137,10 +5139,13 @@
 }
 
 .caminos-boletos {
-  --boleto-gap: 1.2rem;
+  --boleto-gap: 1.1rem;
+  --card-max: 14.15rem;
+  --visible: 4;
+  --photo-extra: clamp(0px, calc(100dvh - var(--explorer-nav-height, 4.75rem) - 38rem), 60px);
   position: relative;
-  width: min(100%, calc(4 * 13.15rem + 3 * var(--boleto-gap)));
-  margin: 0.85rem auto 0;
+  width: 100%;
+  margin: 0.15rem auto 0;
 }
 
 .caminos-boletos__rail {
@@ -5150,7 +5155,7 @@
   gap: var(--boleto-gap);
   width: 100%;
   margin: 0;
-  padding: 0.35rem 0 0.85rem;
+  padding: 0.35rem 0 0.45rem;
   overflow-x: auto;
   overscroll-behavior-x: contain;
   scroll-snap-type: x mandatory;
@@ -5159,8 +5164,13 @@
   scrollbar-width: none;
 }
 
-.caminos-boletos__rail.is-fitted {
+.caminos-boletos[data-carousel="false"] .caminos-boletos__rail {
   justify-content: center;
+}
+
+.caminos-boletos__rail:focus-visible {
+  outline: 2px solid #6e8f88;
+  outline-offset: 4px;
 }
 
 .caminos-boletos__rail::-webkit-scrollbar {
@@ -5168,14 +5178,38 @@
 }
 
 .caminos-boletos__rail > li {
-  flex: 0 0 calc((100% - 3 * var(--boleto-gap)) / 4);
-  width: calc((100% - 3 * var(--boleto-gap)) / 4);
+  display: flex;
+  flex: 0 0 calc((100% - (var(--visible) - 1) * var(--boleto-gap)) / var(--visible));
+  justify-content: center;
   scroll-snap-align: start;
+  overflow: visible;
+}
+
+.caminos-boletos[data-carousel="false"] .caminos-boletos__rail > li {
+  flex-basis: min(var(--card-max), calc((100% - (var(--visible) - 1) * var(--boleto-gap)) / var(--visible)));
+  width: min(var(--card-max), calc((100% - (var(--visible) - 1) * var(--boleto-gap)) / var(--visible)));
+}
+
+/* The cap path peaks 54/240 of the card width below the button edge.
+   Shift the card up by that empty band so the rail clips it, leaving the
+   tab peak just inside the top padding (room for hover translateY(-3px)). */
+.caminos-plans:has(.caminos-boletos) .caminos-boletos {
+  margin-top: calc(1.875rem - 0.35rem);
+}
+
+.caminos-plans:has(.caminos-boletos) .caminos-boletos__rail > li {
+  margin-top: calc(-54 / 240 * min(var(--card-max), (100% - (var(--visible) - 1) * var(--boleto-gap)) / var(--visible)));
+}
+
+@media (max-width: 700px) {
+  .caminos-plans:has(.caminos-boletos) .caminos-plans__body {
+    margin-top: -0.75rem;
+  }
 }
 
 .caminos-boletos__nav {
   position: absolute;
-  top: 42%;
+  top: 48%;
   z-index: 2;
   display: grid;
   place-items: center;
@@ -5192,8 +5226,12 @@
   transition: background 180ms ease, color 180ms ease, border-color 180ms ease;
 }
 
-.caminos-boletos__nav--prev { left: -2.15rem; }
-.caminos-boletos__nav--next { right: -2.15rem; }
+.caminos-boletos[data-carousel="true"] {
+  padding-inline: 2.4rem;
+}
+
+.caminos-boletos__nav--prev { left: 0; }
+.caminos-boletos__nav--next { right: 0; }
 
 .caminos-boletos__nav:hover:not(:disabled) {
   background: #1c332e;
@@ -5213,17 +5251,21 @@
 }
 
 .caminos-boleto {
+  container-type: inline-size;
+  box-sizing: content-box;
   position: relative;
   display: block;
-  width: 100%;
-  aspect-ratio: 200 / 438;
-  padding: 0;
+  width: min(100%, var(--card-max));
+  height: auto;
+  aspect-ratio: 240 / 440;
+  padding: 0 0 var(--photo-extra);
   border: 0;
   background: transparent;
   color: inherit;
   font: inherit;
   text-align: left;
   cursor: pointer;
+  overflow: visible;
   filter: drop-shadow(0 1px 1px rgba(28, 51, 46, 0.05));
   transition: transform 240ms ease, filter 240ms ease;
 }
@@ -5240,54 +5282,86 @@
 
 .caminos-boleto__shape {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
   width: 100%;
-  height: 100%;
+  height: calc(100cqw * 102 / 240);
+  overflow: visible;
   pointer-events: none;
 }
 
-.caminos-boleto__shape path {
-  fill: #f4f5f0;
-  stroke: rgba(122, 140, 130, 0.55);
+.caminos-boleto__shape .is-fill {
+  fill: #e6e6e4;
+  stroke: none;
+}
+
+.caminos-boleto__shape .is-line {
+  fill: none;
+  stroke: rgba(150, 150, 146, 0.72);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
+}
+
+.caminos-boleto__board {
+  position: absolute;
+  top: calc(100cqw * 102 / 240 - 1px);
+  right: calc(100cqw * 2 / 240);
+  bottom: 0;
+  left: calc(100cqw * 2 / 240);
+  background: #e6e6e4;
+  border: 1px solid rgba(150, 150, 146, 0.72);
+  border-top: 0;
+  border-radius: 0 0 calc(100cqw * 8 / 240) calc(100cqw * 8 / 240);
+  pointer-events: none;
 }
 
 .caminos-boleto__seal {
   position: absolute;
   z-index: 1;
-  top: 5.8%;
+  top: calc(100cqw * 74.8 / 240);
   left: 50%;
-  width: 1.35rem;
-  height: auto;
+  display: grid;
+  place-items: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  border: 1px solid rgba(120, 120, 116, 0.72);
+  border-radius: 50%;
+  background: #e6e6e4;
   pointer-events: none;
-  transform: translateX(-50%);
-  object-fit: contain;
+  transform: translate(-50%, -50%);
+}
+
+.caminos-boleto__mark {
+  display: block;
+  width: 1.15rem;
+  height: 1.15rem;
+  color: #5c6840;
 }
 
 .caminos-boleto__content {
   position: absolute;
-  top: 16.4%;
-  right: 5.6%;
-  bottom: 3.4%;
-  left: 5.6%;
+  top: calc(100cqw * 106.48 / 240);
+  right: 6.2%;
+  bottom: calc(100cqw * 17.6 / 240);
+  left: 6.2%;
   display: flex;
   flex-direction: column;
   min-width: 0;
+  overflow: hidden;
 }
 
 .caminos-boleto__rule {
   flex: 0 0 auto;
-  width: 1.35rem;
+  width: 1.55rem;
   height: 1px;
-  margin: 0 auto 0.45rem;
-  background: rgba(122, 140, 130, 0.55);
+  margin: 0 auto 0.35rem;
+  background: rgba(122, 140, 130, 0.5);
 }
 
 .caminos-boleto__photo {
   position: relative;
   flex: 1 1 auto;
-  min-height: 5.6rem;
+  min-height: 0;
   overflow: hidden;
   background: #e4ebe3;
 }
@@ -5303,30 +5377,29 @@
 
 .caminos-boleto__foot {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 2.7rem;
-  gap: 0.3rem;
+  grid-template-columns: minmax(0, 1fr) 3.15rem;
+  gap: 0.45rem;
   align-items: stretch;
   flex: 0 0 auto;
   margin-top: 0.42rem;
-  min-height: 3.7rem;
 }
 
 .caminos-boleto__meta {
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  gap: 0.22rem;
+  gap: 0.28rem;
   min-width: 0;
-  padding: 0 0 0.15rem;
+  padding: 0 0.1rem 0.1rem 0;
 }
 
 .caminos-boleto__title {
   display: -webkit-box;
   overflow: hidden;
   color: #1c332e;
-  font: 600 0.74rem/1.25 Poppins, Nunito, system-ui, sans-serif;
+  font: 600 0.78rem/1.28 Poppins, Nunito, system-ui, sans-serif;
   letter-spacing: 0.005em;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   line-clamp: 2;
@@ -5335,7 +5408,7 @@
 .caminos-boleto__time {
   overflow: hidden;
   color: #6e8f88;
-  font: 500 0.58rem/1.3 Poppins, Nunito, system-ui, sans-serif;
+  font: 500 0.68rem/1.35 Poppins, Nunito, system-ui, sans-serif;
   letter-spacing: 0.02em;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -5345,10 +5418,11 @@
   display: -webkit-box;
   overflow: hidden;
   color: #6b746f;
-  font: 400 0.58rem/1.35 Poppins, Nunito, system-ui, sans-serif;
+  font: 400 0.68rem/1.35 Poppins, Nunito, system-ui, sans-serif;
+  overflow-wrap: break-word;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 1;
-  line-clamp: 1;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 
 .caminos-boleto__date {
@@ -5356,9 +5430,9 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.18rem;
-  padding-left: 0.35rem;
-  border-left: 1px solid rgba(64, 57, 47, 0.18);
+  gap: 0.22rem;
+  padding-left: 0.45rem;
+  border-left: 1px solid rgba(122, 140, 130, 0.45);
 }
 
 .caminos-boleto__month {
@@ -5370,7 +5444,7 @@
 
 .caminos-boleto__day {
   color: #1c332e;
-  font: 500 1.28rem/0.9 Poppins, Nunito, system-ui, sans-serif;
+  font: 500 1.45rem/0.9 Poppins, Nunito, system-ui, sans-serif;
   font-variant-numeric: lining-nums tabular-nums;
 }
 
@@ -5380,53 +5454,28 @@
   letter-spacing: 0.12em;
 }
 
-@media (max-width: 1080px) {
+@media (max-width: 640px) {
   .caminos-boletos {
-    width: min(100%, calc(3 * 13.15rem + 2 * var(--boleto-gap)));
+    --card-max: 15.75rem;
   }
 
-  .caminos-boletos__rail > li {
-    flex-basis: calc((100% - 2 * var(--boleto-gap)) / 3);
-    width: calc((100% - 2 * var(--boleto-gap)) / 3);
+  .caminos-boletos[data-carousel="true"] {
+    padding-inline: 1.9rem;
   }
-}
-
-@media (max-width: 760px) {
-  .caminos-boletos {
-    width: min(100%, calc(2 * 12.4rem + var(--boleto-gap)));
-  }
-
-  .caminos-boletos__rail > li {
-    flex-basis: calc((100% - var(--boleto-gap)) / 2);
-    width: calc((100% - var(--boleto-gap)) / 2);
-  }
-}
-
-@media (max-width: 560px) {
-  .caminos-boletos {
-    width: min(100%, 16.25rem);
-  }
-
-  .caminos-boletos__rail > li {
-    flex-basis: 100%;
-    width: 100%;
-  }
-
-  .caminos-boletos__nav--prev { left: 0.05rem; }
-  .caminos-boletos__nav--next { right: 0.05rem; }
 }
 
 @media (max-width: 700px) {
+  .caminos-memory {
+    height: auto;
+    padding-bottom: 2.7rem;
+    background: #8e997b;
+  }
+
   .caminos-memory img {
     height: auto;
     max-height: none;
     object-fit: contain;
     object-position: center center;
-  }
-
-  .caminos-memory {
-    padding-bottom: 2.7rem;
-    background: #efe2c8;
   }
 
   .caminos-memory__cta {
