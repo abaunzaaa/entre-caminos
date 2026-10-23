@@ -11,9 +11,20 @@ const MAX_RANGE_MINUTES = 16 * 60;
 const TICKET_CAP_FILL = "M8 96H58C92 96 86 54 120 54C154 54 148 96 182 96H232C235.3 96 238 98.7 238 102H2C2 98.7 4.7 96 8 96Z";
 const TICKET_CAP_LINE = "M2 102C2 98.7 4.7 96 8 96H58C92 96 86 54 120 54C154 54 148 96 182 96H232C235.3 96 238 98.7 238 102";
 
-function slotCount(count: number, width: number) {
-  const maxSlots = width < 540 ? 1 : width < 800 ? 2 : width < 1080 ? 3 : 4;
-  return Math.max(1, Math.min(Math.max(count, 1), maxSlots));
+function lengthPx(raw: string, root: number) {
+  const value = raw.trim();
+  const amount = Number.parseFloat(value);
+  if (!Number.isFinite(amount)) {
+    return 0;
+  }
+  return value.endsWith("rem") ? amount * root : amount;
+}
+
+function slotCount(count: number, width: number, card = 226, gap = 14) {
+  const chrome = 92;
+  const available = Math.max(card, width - chrome);
+  const fit = Math.max(1, Math.floor((available + gap) / (card + gap)));
+  return Math.max(1, Math.min(Math.max(count, 1), fit));
 }
 
 function clock(date: Date) {
@@ -80,7 +91,14 @@ export function JourneyNextPlans({
     if (!frame) {
       return;
     }
-    const measure = () => setSlots(slotCount(items.length, frame.clientWidth));
+    const measure = () => {
+      const root = Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+      const boletos = frame.querySelector<HTMLElement>(".caminos-boletos");
+      const styles = boletos ? getComputedStyle(boletos) : null;
+      const card = styles ? lengthPx(styles.getPropertyValue("--card-max"), root) : 226;
+      const gap = styles ? lengthPx(styles.getPropertyValue("--boleto-gap"), root) : 14;
+      setSlots(slotCount(items.length, frame.clientWidth, card || 226, gap || 14));
+    };
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(frame);
@@ -158,11 +176,9 @@ export function JourneyNextPlans({
 
         {items.length > 0 ? (
           <div className="caminos-boletos" data-carousel={carousel ? "true" : "false"} style={{ "--visible": slots } as CSSProperties}>
-            {carousel && canPrev ? (
-              <button type="button" className="caminos-boletos__nav caminos-boletos__nav--prev" aria-label="Planes anteriores" onClick={() => scrollByCard(-1)}>
-                <ChevronLeft size={16} strokeWidth={1.6} aria-hidden="true" />
-              </button>
-            ) : null}
+            <button type="button" className="caminos-boletos__nav caminos-boletos__nav--prev" aria-label="Planes anteriores" disabled={!canPrev} onClick={() => scrollByCard(-1)}>
+              <ChevronLeft size={18} strokeWidth={1.8} aria-hidden="true" />
+            </button>
             <ul
               ref={scrollerRef}
               className="caminos-boletos__rail"
@@ -179,6 +195,7 @@ export function JourneyNextPlans({
                     <button
                       type="button"
                       className="caminos-boleto"
+                      onMouseDown={(event) => event.preventDefault()}
                       onClick={() => onOpenDay(bogotaDay(plan.plannedAt))}
                       aria-label={`${plan.experience.title}${when ? `, ${when}` : ""}${place ? `, ${place}` : ""}, ${date.day} ${date.month} ${date.year}. Abrir en el calendario`}
                       title={plan.experience.title}
@@ -223,11 +240,9 @@ export function JourneyNextPlans({
                 );
               })}
             </ul>
-            {carousel && canNext ? (
-              <button type="button" className="caminos-boletos__nav caminos-boletos__nav--next" aria-label="Planes siguientes" onClick={() => scrollByCard(1)}>
-                <ChevronRight size={16} strokeWidth={1.6} aria-hidden="true" />
-              </button>
-            ) : null}
+            <button type="button" className="caminos-boletos__nav caminos-boletos__nav--next" aria-label="Planes siguientes" disabled={!canNext} onClick={() => scrollByCard(1)}>
+              <ChevronRight size={18} strokeWidth={1.8} aria-hidden="true" />
+            </button>
           </div>
         ) : null}
       </div>
