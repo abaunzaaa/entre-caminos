@@ -8,8 +8,8 @@ import {
   Map,
   MapPinned,
   Menu,
+  Route,
   UserRound,
-  Users,
   X,
 } from "lucide-react";
 import { AdminNotifications } from "../admin/AdminNotifications";
@@ -26,16 +26,16 @@ const NAV_LINKS: Array<{
   end?: boolean;
 }> = [
   { to: "/explorar", label: "Inicio", icon: Compass, end: true },
-  { to: "/favoritos", label: "Favoritos", icon: Heart, end: true },
   { to: "/mapa", label: "Mapa", icon: Map, end: true },
-  { to: "/plan-con-amigos", label: "Plan con amigos", icon: Users, end: true },
+  { to: "/favoritos", label: "Favoritos", icon: Heart, end: true },
+  { to: "/planear-mi-plan", label: "Plan con amigos", icon: Route },
   { to: "/visitados", label: "Visitados", icon: MapPinned, end: true },
 ];
 
-const EXPLORER_SHELL_PATHS = new Set(["/favoritos", "/mapa", "/plan-con-amigos", "/visitados", "/perfil", "/mis-caminos"]);
+const EXPLORER_SHELL_PATHS = new Set(["/favoritos", "/mapa", "/plan-con-amigos", "/planear-mi-plan", "/visitados", "/perfil", "/mis-caminos"]);
 
 export function isExplorerShellPath(pathname: string) {
-  return pathname.startsWith("/explorar") || pathname === "/perfil" || pathname.startsWith("/mis-caminos") || EXPLORER_SHELL_PATHS.has(pathname);
+  return pathname.startsWith("/explorar") || pathname === "/perfil" || pathname.startsWith("/mis-caminos") || pathname.startsWith("/planear-mi-plan") || EXPLORER_SHELL_PATHS.has(pathname);
 }
 
 export function ExplorerNavbar() {

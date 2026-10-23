@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
-import { useNavigate } from "react-router-dom";
 import palomaLeft from "../assets/paloma1.png";
 import palomaRight from "../assets/paloma 2.png";
 import {
@@ -44,7 +43,6 @@ function fail(error: unknown, fallback: string): never {
 }
 
 export function MisCaminosPage() {
-  const navigate = useNavigate();
   const [section, setSection] = useState<Section>("calendario");
   const [loading, setLoading] = useState(true);
   const [journeyReady, setJourneyReady] = useState(false);
@@ -338,90 +336,82 @@ export function MisCaminosPage() {
   const memoryPlanIds = new Set(memories.map((memory) => memory.planId).filter((id): id is string => Boolean(id)));
 
   return (
-    <main className="caminos">
-      <section className="caminos-intro" aria-label="Mis caminos">
-        <div className="caminos-wrap">
-          <div className="caminos-hero-screen">
-          <div ref={heroRef} className={`caminos-hero explorer-reveal-scope${heroInView ? " is-revealed" : ""}`}>
-            <div className="caminos-hero__stage">
-              <figure className="caminos-hero__base">
-                <img src="/mis-caminos/flores.jpg" alt="" />
-              </figure>
-              <figure className="caminos-hero__photo">
-                <img src="/mis-caminos/caminata.jpg" alt="Grupo caminando por un sendero entre montañas" />
-              </figure>
-            </div>
-            <div className="caminos-hero__copy">
-              <img className="caminos-hero__mark explorer-reveal explorer-reveal--soft" src="/mis-caminos/cartas-lazo.png" alt="" width={700} height={598} style={{ "--reveal-delay": "200ms" } as CSSProperties} />
-              <h1 className="explorer-reveal explorer-reveal--title" style={{ "--reveal-delay": "300ms" } as CSSProperties}>Mis caminos</h1>
-              <p className="caminos-hero__lead explorer-reveal explorer-reveal--soft" style={{ "--reveal-delay": "400ms" } as CSSProperties}>Un espacio para tus planes y recuerdos</p>
-              <button type="button" className="tourist-hero__cta explorer-reveal explorer-reveal--soft" style={{ "--reveal-delay": "500ms" } as CSSProperties} onClick={() => openCalendar()}>
-                Ver mi calendario
-              </button>
-            </div>
-          </div>
+    <main className="caminos caminos--band">
+      <section className="caminos-band" aria-labelledby="caminos-page-title">
+        <div className="caminos-band__inner">
+          <header ref={heroRef} className={`caminos-band__intro explorer-reveal-scope${heroInView ? " is-revealed" : ""}`}>
+            <img
+              className="caminos-band__mark explorer-reveal explorer-reveal--soft"
+              src="/mis-caminos/cartas-lazo.png"
+              alt=""
+              width={700}
+              height={598}
+              style={{ "--reveal-delay": "160ms" } as CSSProperties}
+            />
+            <h1
+              className="favorites-library__title explorer-block-title explorer-reveal explorer-reveal--title"
+              id="caminos-page-title"
+              style={{ "--reveal-delay": "240ms" } as CSSProperties}
+            >
+              Mis caminos
+            </h1>
+            <p
+              className="favorites-library__lead explorer-block-lead explorer-reveal explorer-reveal--soft"
+              style={{ "--reveal-delay": "320ms" } as CSSProperties}
+            >
+              Un espacio para tus planes y recuerdos
+            </p>
+            <button
+              type="button"
+              className="caminos-band__cta tourist-hero__cta explorer-reveal explorer-reveal--soft"
+              style={{ "--reveal-delay": "400ms" } as CSSProperties}
+              onClick={() => openCalendar()}
+            >
+              Abrir calendario
+            </button>
+          </header>
+
+          <div className="caminos-band__plans">
+            {error && !journeyReady ? (
+              <div className="caminos-loadfail">
+                <p className="caminos-error" role="alert">{error}</p>
+                <button type="button" onClick={() => setLoadNonce((value) => value + 1)}>Reintentar</button>
+              </div>
+            ) : (
+              <JourneyNextPlans
+                plans={plans}
+                status={loading ? "loading" : journeyReady ? "ready" : "error"}
+                onOpenDay={(day) => openCalendar(day)}
+                onOpenCalendar={() => openCalendar()}
+              />
+            )}
+            {error && journeyReady ? <p className="caminos-error" role="alert">{error}</p> : null}
+            {notice ? <p className="caminos-saved" role="status">{notice}</p> : null}
           </div>
         </div>
       </section>
 
-      <section className="caminos-memory" aria-label="Bitácora de recuerdos">
-        <img
-          src="/mis-caminos/franja-recuerdos.jpg"
-          alt="Los caminos guardan los momentos que nos transforman."
-          width={1024}
-          height={341}
-          decoding="async"
-        />
-        <button
-          type="button"
-          className="caminos-memory__cta"
-          onClick={() => navigate("/mis-caminos/bitacora")}
-          onPointerEnter={() => prefetchBitacora()}
-          onFocus={() => prefetchBitacora()}
-        >
-          Abrir bitácora
-        </button>
-      </section>
-
-      <section className="caminos-plans" aria-labelledby="caminos-plans-title">
-        <div className="caminos-wrap caminos-plans__inner">
-          <JourneyNextPlans
-            plans={plans}
-            status={loading ? "loading" : journeyReady ? "ready" : "error"}
-            onOpenDay={(day) => openCalendar(day)}
-            onOpenCalendar={() => openCalendar()}
-          />
+      {!loading && (section === "proximas" || section === "bitacora") ? (
+        <div className="caminos-wrap caminos-panel" id="caminos-panel">
+          {section === "proximas" ? (
+            <JourneyUpcoming plans={plans} onUpdatePlan={updatePlan} onDeletePlan={removePlan} />
+          ) : null}
+          {section === "bitacora" ? (
+            <JourneyJournal
+              memories={memories}
+              seed={seed}
+              onSeedConsumed={clearSeed}
+              onSave={saveMemory}
+              onDelete={removeMemory}
+              onUpload={uploadPhoto}
+              onDeletePhoto={removePhoto}
+              onAddSticker={addSticker}
+              onMoveSticker={moveSticker}
+              onDeleteSticker={removeSticker}
+            />
+          ) : null}
         </div>
-      </section>
-
-      <div className="caminos-wrap caminos-panel" id="caminos-panel">
-        {error && !journeyReady ? (
-          <div className="caminos-loadfail">
-            <p className="caminos-error" role="alert">{error}</p>
-            <button type="button" onClick={() => setLoadNonce((value) => value + 1)}>Reintentar</button>
-          </div>
-        ) : error ? <p className="caminos-error" role="alert">{error}</p> : null}
-        {notice ? <p className="caminos-saved" role="status">{notice}</p> : null}
-
-        {!loading && section === "proximas" ? (
-          <JourneyUpcoming plans={plans} onUpdatePlan={updatePlan} onDeletePlan={removePlan} />
-        ) : null}
-
-        {!loading && section === "bitacora" ? (
-          <JourneyJournal
-            memories={memories}
-            seed={seed}
-            onSeedConsumed={clearSeed}
-            onSave={saveMemory}
-            onDelete={removeMemory}
-            onUpload={uploadPhoto}
-            onDeletePhoto={removePhoto}
-            onAddSticker={addSticker}
-            onMoveSticker={moveSticker}
-            onDeleteSticker={removeSticker}
-          />
-        ) : null}
-      </div>
+      ) : null}
       <div ref={closeRef} className={`caminos-close${closeInView ? " is-revealed" : ""}`}>
         <img className="caminos-close__dove caminos-close__dove--left" src={palomaLeft} alt="" aria-hidden="true" decoding="async" />
         <img className="caminos-close__dove caminos-close__dove--right" src={palomaRight} alt="" aria-hidden="true" decoding="async" />

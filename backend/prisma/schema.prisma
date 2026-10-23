@@ -135,6 +135,7 @@ model User {
   journeyPlans             JourneyPlan[]
   journeyDecorations       JourneyDecoration[]
   journeyMemories          JourneyMemory[]
+  plannerItineraries      PlannerItinerary[]
   bitacora                 Bitacora?
   bitacoraAssets           BitacoraAsset[]
   faqsSubmitted            Faq[]                     @relation("FaqSubmittedBy")
@@ -247,6 +248,7 @@ model Experience {
   favoriteCollectionItems  FavoriteCollectionItem[]
   journeyPlans             JourneyPlan[]
   journeyMemories          JourneyMemory[]
+  plannerStops             PlannerStop[]
   bitacoraPages            BitacoraPage[]
 
   @@index([status])
@@ -719,6 +721,45 @@ model JourneyPlan {
   @@index([userId, plannedAt])
   @@index([experienceId])
   @@map("journey_plans")
+}
+
+/// Itinerario compuesto de la HU-28. No es una reserva ni un plan del calendario.
+model PlannerItinerary {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  title        String
+  summary      String   @default("")
+  why          String   @default("")
+  plannedOn    DateTime @map("planned_on") @db.Date
+  municipality String
+  people       Int
+  durationKey  String   @map("duration_key")
+  budgetCop    Int      @map("budget_cop")
+  planType     String   @map("plan_type")
+  note         String   @default("")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user  User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stops PlannerStop[]
+
+  @@index([userId, createdAt])
+  @@map("planner_itineraries")
+}
+
+model PlannerStop {
+  id           String @id @default(uuid())
+  itineraryId  String @map("itinerary_id")
+  experienceId String @map("experience_id")
+  position     Int
+  suggestedAt  String @default("") @map("suggested_at")
+  blurb        String @default("")
+
+  itinerary  PlannerItinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
+  experience Experience       @relation(fields: [experienceId], references: [id], onDelete: Restrict)
+
+  @@unique([itineraryId, position])
+  @@index([experienceId])
+  @@map("planner_stops")
 }
 
 model JourneyDecoration {
