@@ -133,3 +133,141 @@ export function separateNearbyPins<T extends MapPercent>(points: T[], width: num
     return { ...point, offsetX: point.offsetX * scale, offsetY: point.offsetY * scale };
   });
 }
+
+/** Centro visual de los recuerdos. Medellín queda aquí; el norte sube y el oriente va a la derecha. */
+export const MEDELLIN_REFERENCE = { latitude: 6.2442, longitude: -75.5812 } as const;
+
+const PIN_FIELD = { left: 22, right: 84, top: 22, bottom: 78 } as const;
+const PIN_CENTER = {
+  xPercent: (PIN_FIELD.left + PIN_FIELD.right) / 2,
+  yPercent: (PIN_FIELD.top + PIN_FIELD.bottom) / 2,
+};
+const PIN_MIN_GAP = 12.4;
+
+type VisitedPinInput = {
+  id: string;
+  latitude: number | null;
+  longitude: number | null;
+};
+
+function clampPercent(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function hasVisitedPoint(stop: VisitedPinInput): stop is VisitedPinInput & { latitude: number; longitude: number } {
+  if (stop.latitude == null || stop.longitude == null) {
+    return false;
+  }
+  if (!Number.isFinite(stop.latitude) || !Number.isFinite(stop.longitude)) {
+    return false;
+  }
+  if (Math.abs(stop.latitude) > 90 || Math.abs(stop.longitude) > 180) {
+    return false;
+  }
+  return Math.abs(stop.latitude) > 0.000001 || Math.abs(stop.longitude) > 0.000001;
+}
+
+/** Agranda los grados cortos para que Sabaneta no caiga encima de Medellín, y frena los viajes largos. */
+function spreadDegrees(delta: number) {
+  const magnitude = Math.abs(delta);
+  if (magnitude < 0.0008) {
+    return 0;
+  }
+  return Math.sign(delta) * Math.sqrt(magnitude / 0.045);
+}
+
+function directionFromMedellin(latitude: number, longitude: number): MapPercent {
+  const east = spreadDegrees(longitude - MEDELLIN_REFERENCE.longitude) * 8.2;
+  const north = spreadDegrees(latitude - MEDELLIN_REFERENCE.latitude) * 9.4;
+  return {
+    xPercent: clampPercent(PIN_CENTER.xPercent + east, PIN_FIELD.left, PIN_FIELD.right),
+    yPercent: clampPercent(PIN_CENTER.yPercent - north, PIN_FIELD.top, PIN_FIELD.bottom),
+  };
+}
+
+function pinGap(left: MapPercent, right: MapPercent) {
+  return Math.hypot((left.xPercent - right.xPercent) * 1.65, left.yPercent - right.yPercent);
+}
+
+function clusterOffset(index: number) {
+  if (index === 0) {
+    return { xPercent: 0, yPercent: 0 };
+  }
+  const angle = index * 2.399963229728653;
+  const radius = 8.6 + (index - 1) * 2.55;
+  return {
+    xPercent: Math.cos(angle) * radius * 0.7,
+    yPercent: Math.sin(angle) * radius,
+  };
+}
+
+function sameZone(left: MapPercent, right: MapPercent) {
+  return pinGap(left, right) < 3.6;
+}
+
+/**
+ * Coloca cada experiencia según su dirección respecto a Medellín
+ * y separa las que caerían en el mismo punto. El resultado no cambia entre renders.
+ */
+export function placeVisitedPins(stops: VisitedPinInput[]): MapPercent[] {
+  const geographic = stops.map((stop) =>
+    hasVisitedPoint(stop) ? directionFromMedellin(stop.latitude, stop.longitude) : { ...PIN_CENTER },
+  );
+  const placed = geographic.map((point) => ({ ...point }));
+  const seen = new Set<number>();
+  for (let index = 0; index < placed.length; index += 1) {
+    if (seen.has(index)) {
+      continue;
+    }
+    const members = [index];
+    seen.add(index);
+    for (let other = index + 1; other < placed.length; other += 1) {
+      if (seen.has(other) || !sameZone(geographic[index], geographic[other])) {
+        continue;
+      }
+      members.push(other);
+      seen.add(other);
+    }
+    const ordered = [...members].sort((left, right) => stops[left].id.localeCompare(stops[right].id));
+    ordered.forEach((member, order) => {
+      const offset = clusterOffset(order);
+      placed[member] = {
+        xPercent: clampPercent(geographic[member].xPercent + offset.xPercent, PIN_FIELD.left, PIN_FIELD.right),
+        yPercent: clampPercent(geographic[member].yPercent + offset.yPercent, PIN_FIELD.top, PIN_FIELD.bottom),
+      };
+    });
+  }
+  for (let pass = 0; pass < 28; pass += 1) {
+    let moved = false;
+    for (let index = 0; index < placed.length; index += 1) {
+      for (let other = 0; other < index; other += 1) {
+        const dx = (placed[index].xPercent - placed[other].xPercent) * 1.65;
+        const dy = placed[index].yPercent - placed[other].yPercent;
+        const distance = Math.hypot(dx, dy);
+        if (distance >= PIN_MIN_GAP) {
+          continue;
+        }
+        const safe = distance < 0.05 ? 0.05 : distance;
+        const push = (PIN_MIN_GAP - distance) / 2;
+        const stepX = (dx / safe / 1.65) * push;
+        const stepY = (dy / safe) * push;
+        placed[index].xPercent += stepX;
+        placed[index].yPercent += stepY;
+        placed[other].xPercent -= stepX;
+        placed[other].yPercent -= stepY;
+        moved = true;
+      }
+    }
+    for (const point of placed) {
+      point.xPercent = clampPercent(point.xPercent, PIN_FIELD.left, PIN_FIELD.right);
+      point.yPercent = clampPercent(point.yPercent, PIN_FIELD.top, PIN_FIELD.bottom);
+    }
+    if (!moved) {
+      break;
+    }
+  }
+  return placed.map((point) => ({
+    xPercent: Math.round(point.xPercent * 100) / 100,
+    yPercent: Math.round(point.yPercent * 100) / 100,
+  }));
+}

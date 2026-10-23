@@ -4,7 +4,7 @@ import { experienceCoverUrl } from "../explorer/explorer-media";
 import type { VisitedJourneyStop } from "../../services/visits.service";
 import { stopPlaceName } from "../../utils/visited-map";
 import { stopMatchesCategory } from "../../utils/visited-filters";
-import { assignMemorySlots } from "../../utils/world-cover-position";
+import { placeVisitedPins } from "../../utils/world-cover-position";
 
 const PIN_PATH = "M32 6C18.4 6 8 16.9 8 31.4C8 44.2 17.2 55.2 32 74.5C46.8 55.2 56 44.2 56 31.4C56 16.9 45.6 6 32 6Z";
 
@@ -35,7 +35,7 @@ function PinShape({ id, src, broken }: { id: string; src: string; broken: boolea
         ) : (
           <image className="visited-drop__photo" href={src} x="4" y="4" width="56" height="68" clipPath={`url(#${id})`} preserveAspectRatio="xMidYMid slice" />
         )}
-        <path className="visited-drop__fill" d={PIN_PATH} fill="#6e8f88" stroke="#6e8f88" strokeWidth="4" />
+        <path className="visited-drop__fill" d={PIN_PATH} fill="#6b746f" stroke="#6b746f" strokeWidth="4" />
         <path d={PIN_PATH} fill="none" stroke="rgba(41, 73, 66, 0.32)" strokeWidth="1.15" />
       </g>
       <circle className="visited-drop__tip" cx="32" cy="82.2" r="2.15" fill="#1c332e" />
@@ -51,10 +51,14 @@ export function VisitedCoverMarkers({ stops, categoryId = null }: VisitedCoverMa
   const [broken, setBroken] = useState<Record<string, true>>({});
   const [cardBox, setCardBox] = useState<CardBox | null>(null);
   const [cardMeasure, setCardMeasure] = useState(0);
+  const [pinnedId, setPinnedId] = useState<string | null>(null);
+  const closeTimer = useRef<number | null>(null);
+  const pinnedRef = useRef<string | null>(null);
+  pinnedRef.current = pinnedId;
   const clipBase = useId().replace(/:/g, "");
 
   const placed = useMemo(() => {
-    const slots = assignMemorySlots(stops.length);
+    const slots = placeVisitedPins(stops);
     return stops.map((stop, index) => ({ stop, ...slots[index] }));
   }, [stops]);
 
@@ -67,6 +71,7 @@ export function VisitedCoverMarkers({ stops, categoryId = null }: VisitedCoverMa
     }
     const stop = stops.find((item) => item.id === selectedId);
     if (!stop || !stopMatchesCategory(stop, categoryId)) {
+      setPinnedId(null);
       setSelectedId(null);
     }
   }, [categoryId, selectedId, stops]);
@@ -114,11 +119,12 @@ export function VisitedCoverMarkers({ stops, categoryId = null }: VisitedCoverMa
     const boundsRight = Math.min(layerRect.width, window.innerWidth - margin - layerRect.left);
     const width = cardRect.width;
     const height = cardRect.height;
-    const aboveTop = pinY - 74 - height - 8;
+    const pointing = pinnedId === selected.stop.id;
+    const aboveTop = pointing ? pinY - height - 16 : pinY - 74 - height - 8;
     let top = aboveTop;
     let place: CardBox["place"] = "above";
     if (top < boundsTop) {
-      top = pinY + 12;
+      top = pinY + (pointing ? 10 : 12);
       place = "below";
     }
     if (top + height > boundsBottom) {
@@ -139,7 +145,7 @@ export function VisitedCoverMarkers({ stops, categoryId = null }: VisitedCoverMa
       }
       return { left, top, place, arrow };
     });
-  }, [selected, size.height, size.width, cardMeasure]);
+  }, [pinnedId, selected, size.height, size.width, cardMeasure]);
 
   useEffect(() => {
     if (!selectedId) {
@@ -154,10 +160,12 @@ export function VisitedCoverMarkers({ stops, categoryId = null }: VisitedCoverMa
       if (target.closest(".visited-float-slot, .visited-drop, .visited-filters")) {
         return;
       }
+      setPinnedId(null);
       setSelectedId(null);
     }
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
+        setPinnedId(null);
         setSelectedId(null);
       }
     }
@@ -171,25 +179,61 @@ export function VisitedCoverMarkers({ stops, categoryId = null }: VisitedCoverMa
 
   const placeName = selected ? stopPlaceName(selected.stop) : "";
 
+  function showPin(id: string) {
+    if (closeTimer.current !== null) {
+      window.clearTimeout(closeTimer.current);
+      closeTimer.current = null;
+    }
+    setSelectedId(id);
+  }
+
+  function hidePinSoon() {
+    if (closeTimer.current !== null) {
+      window.clearTimeout(closeTimer.current);
+    }
+    closeTimer.current = window.setTimeout(() => {
+      setSelectedId(pinnedRef.current);
+      closeTimer.current = null;
+    }, 180);
+  }
+
   return (
     <div className="visited-hero__markers" ref={layerRef}>
-      {visibleCount === 0 ? <p className="visited-cover__empty">No tienes experiencias visitadas en esta categoría.</p> : null}
+      {visibleCount === 0 ? (
+        <p className="visited-cover__empty">
+          {stops.length === 0 ? "No tienes experiencias visitadas." : "No tienes experiencias visitadas en esta categoría."}
+        </p>
+      ) : null}
       {placed.map((pin) => {
         const visible = stopMatchesCategory(pin.stop, categoryId);
         return (
         <button
           key={pin.stop.id}
           type="button"
-          className={`visited-drop${selectedId === pin.stop.id ? " is-open" : ""}${visible ? "" : " is-muted"}`}
+          className={`visited-drop${pinnedId === pin.stop.id ? " is-open" : ""}${selectedId === pin.stop.id && pinnedId !== pin.stop.id ? " is-hot" : ""}${visible ? "" : " is-muted"}`}
           style={{ left: `${pin.xPercent}%`, top: `${pin.yPercent}%` }}
           aria-label={pin.stop.title}
           aria-expanded={selectedId === pin.stop.id}
           aria-hidden={visible ? undefined : true}
           tabIndex={visible ? undefined : -1}
-          onClick={() => {
+          onMouseEnter={() => {
             if (visible) {
-              setSelectedId(pin.stop.id);
+              showPin(pin.stop.id);
             }
+          }}
+          onMouseLeave={hidePinSoon}
+          onFocus={() => {
+            if (visible) {
+              showPin(pin.stop.id);
+            }
+          }}
+          onBlur={hidePinSoon}
+          onClick={() => {
+            if (!visible) {
+              return;
+            }
+            setPinnedId(pin.stop.id);
+            showPin(pin.stop.id);
           }}
         >
           <PinShape id={`${clipBase}-${pin.stop.id}`} src={experienceCoverUrl(pin.stop, 160)} broken={Boolean(broken[pin.stop.id])} />
@@ -204,6 +248,8 @@ export function VisitedCoverMarkers({ stops, categoryId = null }: VisitedCoverMa
             className={`visited-float__link is-${cardBox?.place ?? "above"}`}
             style={{ "--arrow": `${cardBox?.arrow ?? 50}%` } as CSSProperties}
             to={`/explorar/${selected.stop.id}`}
+            onMouseEnter={() => showPin(selected.stop.id)}
+            onMouseLeave={hidePinSoon}
           >
             <span className="visited-float__media">
               <img src={experienceCoverUrl(selected.stop, 320)} alt="" onLoad={() => setCardMeasure((value) => value + 1)} />

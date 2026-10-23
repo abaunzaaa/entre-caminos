@@ -327,10 +327,10 @@
 
 .visited-memories__paths path {
   fill: none;
-  stroke: #8aa39c;
-  stroke-width: 1.15px;
+  stroke: #6e8f88;
+  stroke-width: 1.7px;
   stroke-linecap: round;
-  stroke-dasharray: 1.4 6.5;
+  stroke-dasharray: 2.6 4.8;
   vector-effect: non-scaling-stroke;
 }
 
@@ -399,6 +399,8 @@
   padding: 0;
   border: 0;
   background: transparent;
+  color: inherit;
+  text-decoration: none;
   pointer-events: auto;
   cursor: pointer;
   transform: translate(-50%, -100%);
@@ -407,6 +409,7 @@
 }
 
 .visited-drop:hover,
+.visited-drop.is-hot,
 .visited-drop.is-open {
   transform: translate(-50%, -100%) scale(1.04);
 }
@@ -434,16 +437,19 @@
   opacity: 0;
 }
 
-.visited-drop:hover:not(.is-open) .visited-drop__photo {
+.visited-drop:hover .visited-drop__photo,
+.visited-drop.is-hot .visited-drop__photo {
   opacity: 0;
 }
 
-.visited-drop:hover:not(.is-open) .visited-drop__fill {
+.visited-drop:hover .visited-drop__fill,
+.visited-drop.is-hot .visited-drop__fill {
   opacity: 1;
 }
 
-.visited-drop:hover:not(.is-open) .visited-drop__tip {
-  fill: #6e8f88;
+.visited-drop:hover:not(.is-open) .visited-drop__tip,
+.visited-drop.is-hot .visited-drop__tip {
+  fill: #6b746f;
 }
 
 .visited-drop.is-open .visited-drop__body {
@@ -451,6 +457,7 @@
 }
 
 .visited-drop.is-open .visited-drop__tip {
+  fill: #1c332e;
   transform-box: fill-box;
   transform-origin: center;
   transform: scale(2);
@@ -480,7 +487,7 @@
   gap: 0.12rem;
   padding: 0.4rem 0.4rem 0.48rem;
   border: 1px solid rgba(41, 73, 66, 0.14);
-  border-radius: 1rem;
+  border-radius: 0.72rem;
   background: #fff;
   box-shadow: 0 8px 18px rgba(28, 51, 46, 0.1);
   color: #1c332e;
@@ -531,7 +538,7 @@
 
 .visited-float__title {
   display: block;
-  margin: 0.32rem 0.12rem 0;
+  margin: 0.28rem 0.12rem 0;
   overflow: hidden;
   font-family: Poppins, Nunito, system-ui, sans-serif;
   font-size: 0.76rem;
@@ -543,10 +550,10 @@
 
 .visited-float__place {
   display: -webkit-box;
-  margin: 0 0.12rem;
+  margin: 0.08rem 0 0;
   overflow: hidden;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 1;
   color: #6b746f;
   font-size: 0.68rem;
   font-weight: 500;
@@ -811,20 +818,302 @@
 }
 
 .visited-hero.favorites-library {
+  --favorites-page-top: calc(var(--explorer-nav-height, 4.75rem) + 0.6rem);
+  position: relative;
   min-height: 0;
   margin-top: 0;
   align-items: stretch;
   background: transparent;
 }
 
+.visited-hero.favorites-library::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 0;
+  height: 8.5rem;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(28, 51, 46, 0.01) 42%,
+    rgba(28, 51, 46, 0.026) 100%
+  );
+  pointer-events: none;
+}
+
+.visited-hero.favorites-library .favorites-library__top {
+  padding-bottom: clamp(1.65rem, 2.5vw, 2.55rem);
+}
+
 .visited-hero.favorites-library .favorites-library__top-inner {
-  align-items: start;
+  align-items: center;
 }
 
 .visited-hero.favorites-library .favorites-library__intro {
   justify-content: flex-start;
-  margin-top: 3.7rem;
+  margin-top: 0;
   padding-bottom: 0;
+}
+
+.visited-bitacora {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin-top: 1.75rem;
+  text-align: center;
+}
+
+.visited-bitacora__title {
+  margin: 0;
+  color: #1c332e;
+  font-family: Poppins, Nunito, system-ui, sans-serif;
+  font-size: 1.08rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1.35;
+  text-transform: none;
+}
+
+.visited-bitacora__lead {
+  margin: 0.32rem 0 0;
+  color: #6b746f;
+  font-family: Poppins, Nunito, system-ui, sans-serif;
+  font-size: 0.8rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.4;
+  text-transform: none;
+  white-space: nowrap;
+}
+
+.visited-bitacora .caminos-keep__cta {
+  margin-top: 0.95rem;
+  padding: 0.52rem 1.15rem;
+  font-size: 0.78rem;
+}
+
+.visited-strip {
+  --visited-strip-gutter: 2.75rem;
+  --visited-strip-height: 20rem;
+  position: relative;
+  align-self: center;
+  justify-self: end;
+  width: 100%;
+  min-height: var(--visited-strip-height);
+}
+
+.visited-strip .visited-memories.is-strip {
+  position: relative;
+  z-index: 1;
+  top: auto;
+  right: auto;
+  bottom: auto;
+  left: auto;
+  width: 100%;
+  height: var(--visited-strip-height);
+  margin: 0;
+  overflow: visible;
+}
+
+.visited-strip.has-nav .visited-memories.is-strip {
+  width: calc(100% - (var(--visited-strip-gutter) * 2));
+  margin-inline: auto;
+}
+
+.visited-memories__viewport {
+  position: relative;
+  height: 100%;
+  overflow: visible;
+}
+
+.visited-strip.has-nav .visited-memories__viewport {
+  overflow-x: clip;
+  overflow-y: visible;
+}
+
+.visited-memories__track {
+  position: absolute;
+  inset: 0;
+  --drag: 0px;
+  transform: translate3d(calc(var(--origin, 0) * var(--step, -26%) + var(--drag)), 0, 0);
+  pointer-events: none;
+}
+
+.visited-memories__sheet {
+  position: absolute;
+  top: 0;
+  left: calc(var(--sheet, 0) * 100%);
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.visited-memories__frame {
+  position: absolute;
+  top: 1.35rem;
+  right: 0;
+  bottom: 2.35rem;
+  left: 0;
+  overflow: visible;
+}
+
+.visited-strip .visited-memories__paths {
+  inset: auto;
+  top: 0;
+  left: 0;
+  height: 100%;
+  z-index: 0;
+  overflow: visible;
+}
+
+.visited-memories.is-strip.is-gliding .visited-memory {
+  transition: none;
+}
+
+.visited-strip .visited-memories.is-strip .visited-memory {
+  z-index: 1;
+  width: 19%;
+}
+
+.visited-strip .visited-memories__nav {
+  top: 50%;
+  z-index: 5;
+  transform: translateY(-50%);
+}
+
+.visited-strip.is-waiting,
+.visited-strip.is-waiting .visited-memories.is-strip {
+  height: auto;
+  min-height: var(--visited-strip-height);
+}
+
+.visited-strip.is-waiting {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.visited-strip.is-waiting .visited-memories.is-strip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.visited-strip.is-waiting .visited-memories.is-strip .visited-memory.is-waiting {
+  position: relative;
+  left: auto;
+  top: auto;
+  width: min(18rem, 82%);
+  margin: 0;
+  padding: 0.72rem 0.72rem 0.85rem;
+  transform: none;
+  pointer-events: none;
+}
+
+.visited-memory.is-waiting .visited-memory__photo {
+  display: grid;
+  place-items: center;
+  background: #f3f5f4;
+}
+
+.visited-memory.is-waiting .visited-memory__photo img {
+  width: 34%;
+  height: auto;
+  object-fit: contain;
+  opacity: 0.5;
+}
+
+.visited-memory__waiting {
+  display: flex;
+  flex-direction: column;
+  gap: 0.38rem;
+  margin: 0.55rem 0.2rem 0.15rem;
+  text-align: center;
+}
+
+.visited-memory__waiting strong {
+  color: #1c332e;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.visited-memory__waiting span {
+  color: #6b746f;
+  font-size: 0.62rem;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+.visited-stage {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 92vw);
+  margin: calc(var(--favorites-tip-height, 2rem) + 0.05rem) auto 0;
+  padding-bottom: clamp(2.4rem, 4vw, 3.4rem);
+  transform: translateX(0.55rem);
+}
+
+.visited-stage .visited-hero__map {
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  overflow: visible;
+  background: transparent;
+}
+
+.visited-stage .visited-hero__map .visited-summary {
+  position: absolute;
+  top: -1.7rem;
+  left: 0.75rem;
+  z-index: 5;
+  width: min(18.5rem, 42%);
+  margin: 0;
+}
+
+.visited-hero__frame {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  aspect-ratio: 3168 / 1248;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 96%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 96%, transparent 100%);
+}
+
+.visited-hero__canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3168 / 1344;
+}
+
+.visited-stage .visited-hero__bg {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3168 / 1344;
+  background: transparent;
+}
+
+.visited-map-compass {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  z-index: 0;
+  width: 176px;
+  height: auto;
+  opacity: 0.42;
+  pointer-events: none;
+  user-select: none;
 }
 
 .favorites-library__top-inner .visited-hero__map {
@@ -1734,6 +2023,11 @@
 }
 
 @media (max-width: 980px) {
+  .visited-strip {
+    justify-self: center;
+    width: 100%;
+  }
+
   .visited-board {
     width: 100%;
   }

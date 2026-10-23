@@ -2,7 +2,9 @@ import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { VisitedCoverFilters } from "../components/visited/VisitedCoverFilters";
 import { VisitedCoverMarkers } from "../components/visited/VisitedCoverMarkers";
+import { OpenBitacoraButton } from "../components/journeys/OpenBitacoraButton";
 import { VisitedMemories } from "../components/visited/VisitedMemories";
+import brujula from "../assets/brujula.png";
 import fondoVisitados from "../assets/fondovisitados.jpg";
 import sobreVisitados from "../assets/sobrevisitados.png";
 import mapaIcon from "../assets/mapa-icon.png";
@@ -128,17 +130,6 @@ export function VisitedPage() {
             Reintentar
           </button>
         </div>
-      ) : ordered.length === 0 ? (
-        <div className="visited-paths__empty">
-          <img className="visited-paths__mark" src={mapaIcon} alt="" />
-          <h1 className="visited-paths__empty-title" id="visited-page-title">
-            Tu mapa todavía está esperando su primer camino
-          </h1>
-          <p className="visited-paths__lead">Cuando marques una experiencia como visitada, comenzará a aparecer aquí.</p>
-          <Link to="/explorar" className="explorer-empty__cta">
-            Descubrir experiencias →
-          </Link>
-        </div>
       ) : (
         <>
           <section className="visited-hero favorites-library">
@@ -160,53 +151,57 @@ export function VisitedPage() {
                       <br />
                       visitadas
                     </p>
+                    <div className="visited-bitacora">
+                      <p className="visited-bitacora__title">Guarda tus recuerdos</p>
+                      <p className="visited-bitacora__lead">Crea tu bitácora con fotos y notas.</p>
+                      <OpenBitacoraButton />
+                    </div>
                   </header>
+                  <VisitedMemories stops={ordered} />
+                </div>
+              </div>
+              <div className="visited-stage">
                   <div className="visited-hero__map">
-                    <svg className="visited-hero__bg" viewBox="0 0 3168 1344" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-                      <defs>
-                        <filter id="visited-land" colorInterpolationFilters="sRGB" x="0" y="0" width="100%" height="100%">
-                          <feColorMatrix
-                            in="SourceGraphic"
-                            type="matrix"
-                            result="lum"
-                            values="0.2126 0.7152 0.0722 0 0 0.2126 0.7152 0.0722 0 0 0.2126 0.7152 0.0722 0 0 0 0 0 1 0"
-                          />
-                          <feComponentTransfer in="lum" result="mask">
-                            <feFuncR type="table" tableValues="0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0.632 0.264 0 0" />
-                          </feComponentTransfer>
-                          <feColorMatrix in="mask" type="matrix" result="cut" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0" />
-                          <feFlood floodColor="#ffffff" floodOpacity="1" result="ink" />
-                          <feComposite in="ink" in2="cut" operator="in" result="land" />
-                          <feDropShadow in="land" dx="0" dy="1" stdDeviation="16" floodColor="#1c332e" floodOpacity="0.16" />
-                        </filter>
-                      </defs>
-                      <image href={fondoVisitados} width="3168" height="1344" filter="url(#visited-land)" />
-                    </svg>
-                    <VisitedCoverMarkers stops={ordered} categoryId={categoryId} />
+                  <section className="visited-summary" aria-label="Tu recorrido">
+                    <div className="visited-summary__sheet">
+                      <h2>Mi recorrido</h2>
+                      <ul>
+                        <li>{countLabel(summary.places, "experiencia", "experiencias")}</li>
+                        {summary.municipalities > 0 ? <li>{countLabel(summary.municipalities, "municipio", "municipios")}</li> : null}
+                        {regions > 0 ? <li>{countLabel(regions, "región", "regiones")}</li> : null}
+                      </ul>
+                      {summary.latestName ? (
+                        <p className="visited-summary__last">
+                          <span>Último camino</span>
+                          {summary.latestName}
+                        </p>
+                      ) : null}
+                    </div>
+                  </section>
+                  <div className="visited-hero__frame">
+                    <div className="visited-hero__canvas">
+                      <svg className="visited-hero__bg" viewBox="0 0 3168 1344" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+                        <defs>
+                          <filter id="visited-land" colorInterpolationFilters="sRGB" x="0" y="0" width="100%" height="100%">
+                            <feColorMatrix
+                              in="SourceGraphic"
+                              type="matrix"
+                              result="cut"
+                              values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -3.3 -3.3 -3.3 0 9.86"
+                            />
+                            <feComposite in="SourceGraphic" in2="cut" operator="in" />
+                          </filter>
+                        </defs>
+                        <image href={fondoVisitados} width="3168" height="1344" filter="url(#visited-land)" />
+                      </svg>
+                      <VisitedCoverMarkers stops={ordered} categoryId={categoryId} />
+                    </div>
+                  </div>
+                    <img className="visited-map-compass" src={brujula} alt="" draggable={false} />
                     <VisitedCoverFilters options={categoryFilters} total={ordered.length} activeId={categoryId} onChange={setCategoryId} />
                   </div>
                 </div>
               </div>
-              <div className="visited-gallery">
-                <section className="visited-summary" aria-label="Tu recorrido">
-                  <div className="visited-summary__sheet">
-                    <h2>Mi recorrido</h2>
-                    <ul>
-                      <li>{countLabel(summary.places, "experiencia", "experiencias")}</li>
-                      {summary.municipalities > 0 ? <li>{countLabel(summary.municipalities, "municipio", "municipios")}</li> : null}
-                      {regions > 0 ? <li>{countLabel(regions, "región", "regiones")}</li> : null}
-                    </ul>
-                    {summary.latestName ? (
-                      <p className="visited-summary__last">
-                        <span>Último camino</span>
-                        {summary.latestName}
-                      </p>
-                    ) : null}
-                  </div>
-                </section>
-                <VisitedMemories stops={ordered} />
-              </div>
-            </div>
           </section>
         </>
       )}

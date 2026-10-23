@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
-import { useNavigate } from "react-router-dom";
 import palomaLeft from "../assets/paloma1.png";
 import palomaRight from "../assets/paloma 2.png";
 import {
@@ -60,7 +59,6 @@ function fail(error: unknown, fallback: string): never {
 }
 
 export function MisCaminosPage() {
-  const navigate = useNavigate();
   const [section, setSection] = useState<Section>("calendario");
   const [loading, setLoading] = useState(true);
   const [journeyReady, setJourneyReady] = useState(false);
@@ -402,7 +400,7 @@ export function MisCaminosPage() {
         <section className="caminos-plans" aria-labelledby="caminos-plans-title">
           <div className="caminos-plans__inner">
             <JourneyNextPlans plans={plans} loading={loading || !journeyReady} onOpenDay={(day) => openCalendar(day)} />
-            <JourneyKeepsake photos={keepsakes} onOpen={() => navigate("/mis-caminos/bitacora")} />
+            <JourneyKeepsake photos={keepsakes} />
           </div>
         </section>
       </section>
