@@ -1,4 +1,5 @@
 import { useEffect, useState, type CSSProperties } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { experienceCoverUrl } from "../explorer/explorer-media";
 import type { VisitedJourneyStop } from "../../services/visits.service";
@@ -10,19 +11,19 @@ type MemorySlot = {
   tilt: number;
 };
 
-type MemoryMode = "desktop" | "compact" | "stacked";
+type MemoryMode = "gallery" | "compact" | "stacked";
 
-const DESKTOP_SLOTS: MemorySlot[] = [
-  { x: 0, y: 0, tilt: -4 },
-  { x: 66, y: 3, tilt: 2 },
-  { x: 0, y: 58, tilt: -2 },
-  { x: 62, y: 52, tilt: 3 },
+const GALLERY_SLOTS: MemorySlot[] = [
+  { x: 3, y: 24, tilt: -4 },
+  { x: 28, y: 4, tilt: 2 },
+  { x: 52, y: 32, tilt: -2 },
+  { x: 76, y: 8, tilt: 3 },
 ];
 
 const COMPACT_SLOTS: MemorySlot[] = [
-  { x: 0, y: 0, tilt: -4 },
-  { x: 56, y: 2, tilt: 2 },
-  { x: 4, y: 56, tilt: -2 },
+  { x: 4, y: 16, tilt: -4 },
+  { x: 38, y: 2, tilt: 2 },
+  { x: 68, y: 24, tilt: -2 },
 ];
 
 const STACKED_SLOTS: MemorySlot[] = [
@@ -32,22 +33,22 @@ const STACKED_SLOTS: MemorySlot[] = [
 ];
 
 const CARD_WIDTH: Record<MemoryMode, number> = {
-  desktop: 30,
-  compact: 40,
+  gallery: 14,
+  compact: 18,
   stacked: 28,
 };
 
 function readMode(): MemoryMode {
   if (typeof window === "undefined") {
-    return "desktop";
+    return "gallery";
   }
-  if (window.matchMedia("(max-width: 920px)").matches) {
+  if (window.matchMedia("(max-width: 720px)").matches) {
     return "stacked";
   }
   if (window.matchMedia("(max-width: 1100px)").matches) {
     return "compact";
   }
-  return "desktop";
+  return "gallery";
 }
 
 function slotsFor(mode: MemoryMode) {
@@ -57,16 +58,11 @@ function slotsFor(mode: MemoryMode) {
   if (mode === "compact") {
     return COMPACT_SLOTS;
   }
-  return DESKTOP_SLOTS;
+  return GALLERY_SLOTS;
 }
 
 function memoryCaption(stop: VisitedJourneyStop) {
-  const place = stopPlaceName(stop);
-  const title = stop.title.trim();
-  if (place && place.length <= 28) {
-    return place;
-  }
-  return title || place;
+  return stop.title.trim();
 }
 
 function trail(from: MemorySlot, to: MemorySlot, cardWidth: number) {
@@ -82,30 +78,29 @@ function trail(from: MemorySlot, to: MemorySlot, cardWidth: number) {
 }
 
 function trailsFor(slots: MemorySlot[], count: number, cardWidth: number) {
+  const total = Math.min(count, slots.length);
   const lines: string[] = [];
-  if (count >= 2) {
-    lines.push(trail(slots[0], slots[1], cardWidth));
-  }
-  if (count === 3) {
-    lines.push(trail(slots[1], slots[2], cardWidth));
-  }
-  if (count >= 4) {
-    lines.push(trail(slots[2], slots[3], cardWidth));
+  for (let index = 0; index < total - 1; index += 1) {
+    lines.push(trail(slots[index], slots[index + 1], cardWidth));
   }
   return lines;
 }
 
 export function VisitedMemories({ stops }: { stops: VisitedJourneyStop[] }) {
   const [mode, setMode] = useState<MemoryMode>(readMode);
+  const [page, setPage] = useState(0);
   const [broken, setBroken] = useState<Record<string, true>>({});
   const slots = slotsFor(mode);
-  const visible = stops.slice(-slots.length);
+  const pageSize = slots.length;
+  const pageCount = Math.max(1, Math.ceil(stops.length / pageSize));
+  const safePage = Math.min(page, pageCount - 1);
+  const visible = stops.slice(safePage * pageSize, safePage * pageSize + pageSize);
   const cardWidth = CARD_WIDTH[mode];
   const lines = trailsFor(slots, visible.length, cardWidth);
 
   useEffect(() => {
     const compact = window.matchMedia("(max-width: 1100px)");
-    const stacked = window.matchMedia("(max-width: 920px)");
+    const stacked = window.matchMedia("(max-width: 720px)");
     const update = () => setMode(readMode());
     update();
     compact.addEventListener("change", update);
@@ -116,12 +111,26 @@ export function VisitedMemories({ stops }: { stops: VisitedJourneyStop[] }) {
     };
   }, []);
 
-  if (visible.length === 0) {
+  if (stops.length === 0) {
     return null;
   }
 
+  const showNav = stops.length > pageSize;
+
   return (
-    <aside className={`visited-memories is-${mode}`} aria-label="Recuerdos de viaje">
+    <div className={`visited-memories-pager${showNav ? " has-nav" : ""}`}>
+      {showNav ? (
+        <button
+          type="button"
+          className="visited-memories__nav visited-memories__nav--prev"
+          aria-label="Experiencias anteriores"
+          disabled={safePage === 0}
+          onClick={() => setPage(safePage - 1)}
+        >
+          <ChevronLeft size={16} strokeWidth={1.8} aria-hidden="true" />
+        </button>
+      ) : null}
+      <aside className={`visited-memories is-${mode}`} aria-label="Recuerdos de viaje">
       <svg className="visited-memories__paths" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
         {lines.map((line) => (
           <path key={line} d={line} />
@@ -153,6 +162,18 @@ export function VisitedMemories({ stops }: { stops: VisitedJourneyStop[] }) {
           </Link>
         );
       })}
-    </aside>
+      </aside>
+      {showNav ? (
+        <button
+          type="button"
+          className="visited-memories__nav visited-memories__nav--next"
+          aria-label="Experiencias siguientes"
+          disabled={safePage >= pageCount - 1}
+          onClick={() => setPage(safePage + 1)}
+        >
+          <ChevronRight size={16} strokeWidth={1.8} aria-hidden="true" />
+        </button>
+      ) : null}
+    </div>
   );
 }
