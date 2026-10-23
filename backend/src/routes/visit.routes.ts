@@ -8,6 +8,7 @@ export const visitRouter = Router();
 visitRouter.use(authMiddleware);
 
 visitRouter.get("/", asyncHandler(visitController.list));
+visitRouter.get("/journey", asyncHandler(visitController.journey));
 visitRouter.get("/:experienceId", asyncHandler(visitController.status));
 visitRouter.post("/:experienceId", asyncHandler(visitController.add));
 visitRouter.delete("/:experienceId", asyncHandler(visitController.remove));

@@ -36,7 +36,8 @@
 }
 
 .explorer-page--closing .explorer-blank,
-.explorer-page--closing .favorites-library {
+.explorer-page--closing .favorites-library,
+.explorer-page--closing .visited-paths {
   flex: 1 1 auto;
   width: 100%;
   min-height: auto;
@@ -49,7 +50,8 @@
   }
 
   .explorer-page--closing .explorer-blank,
-  .explorer-page--closing .favorites-library {
+  .explorer-page--closing .favorites-library,
+  .explorer-page--closing .visited-paths {
     padding-bottom: 0.5rem;
   }
 }
