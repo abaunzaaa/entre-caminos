@@ -857,6 +857,12 @@
   padding-bottom: 0;
 }
 
+.visited-hero.favorites-library .favorites-library__lead {
+  width: max-content;
+  max-width: none;
+  white-space: nowrap;
+}
+
 .visited-bitacora {
   display: flex;
   flex-direction: column;

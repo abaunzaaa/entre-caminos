@@ -146,11 +146,7 @@ export function VisitedPage() {
                     <h1 className="favorites-library__title explorer-block-title" id="visited-page-title">
                       Mis visitados
                     </h1>
-                    <p className="favorites-library__lead explorer-block-lead">
-                      Tus experiencias
-                      <br />
-                      visitadas
-                    </p>
+                    <p className="favorites-library__lead explorer-block-lead">Tus experiencias visitadas</p>
                     <div className="visited-bitacora">
                       <p className="visited-bitacora__title">Guarda tus recuerdos</p>
                       <p className="visited-bitacora__lead">Crea tu bitácora con fotos y notas.</p>

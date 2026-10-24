@@ -11,6 +11,7 @@ import { ratingNumber, reviewScore, roundRating } from "./review-score.js";
 import { destroyStoredImage, persistReviewImage } from "./upload.service.js";
 import { normalizeAvatarConfig } from "../config/onboarding.js";
 import { assertPublishedExperience, isExperienceVisited } from "./visit.service.js";
+import { notifyReviewPublished } from "./notification.service.js";
 
 const reviewUserSelect = {
   id: true,
@@ -399,10 +400,16 @@ export async function createVisitorReview(
       },
       include: reviewInclude,
     });
-    return {
+    const result = {
       review: serializeReview(review, labels),
       summary: await summaryFor(experienceId),
     };
+    await notifyReviewPublished({
+      userId,
+      reviewId: review.id,
+      experienceId,
+    }).catch(() => undefined);
+    return result;
   } catch (error) {
     await Promise.all(uploaded.map((item) => destroyStoredImage(item.publicId)));
     rethrowReviewWrite(error);

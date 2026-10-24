@@ -5,6 +5,7 @@ import {
   getNotifications,
   markAllNotificationsRead,
   markNotificationRead,
+  NOTIFICATIONS_REFRESH_EVENT,
 } from "../../services/notifications.service";
 import type { AdminNotification } from "../../types";
 
@@ -82,7 +83,7 @@ function writeDismissed(ids: Set<string>) {
 }
 
 function NotificationIcon({ type }: { type: string }) {
-  if (type === "EXPERIENCE_APPROVED" || type === "CATEGORY_APPROVED") {
+  if (type === "EXPERIENCE_APPROVED" || type === "CATEGORY_APPROVED" || type === "REVIEW_PUBLISHED") {
     return <Check size={14} strokeWidth={1.8} />;
   }
   if (type === "EXPERIENCE_REJECTED" || type === "CATEGORY_REJECTED") {
@@ -148,10 +149,13 @@ export function AdminNotifications() {
     void load();
     const timer = window.setInterval(() => void load(), 30000);
     const onFocus = () => void load();
+    const onRefresh = () => void load();
     window.addEventListener("focus", onFocus);
+    window.addEventListener(NOTIFICATIONS_REFRESH_EVENT, onRefresh);
     return () => {
       window.clearInterval(timer);
       window.removeEventListener("focus", onFocus);
+      window.removeEventListener(NOTIFICATIONS_REFRESH_EVENT, onRefresh);
     };
   }, []);
 

@@ -1807,7 +1807,9 @@ button.caminos-keep__cta:focus-visible {
 .explorer-discover-card:has(.dash-exps-tile__fav:hover),
 .explorer-discover-card:has(.dash-exps-tile__fav:focus-visible),
 .explorer-discover-card:has(.dash-exps-tile__visited:hover),
-.explorer-discover-card:has(.dash-exps-tile__visited:focus-visible) {
+.explorer-discover-card:has(.dash-exps-tile__visited:focus-visible),
+.explorer-discover-card:has(.dash-exps-tile__share:hover),
+.explorer-discover-card:has(.dash-exps-tile__share:focus-visible) {
   z-index: 12;
   position: relative;
 }
@@ -1895,8 +1897,15 @@ button.caminos-keep__cta:focus-visible {
   font-size: 12px;
 }
 
+.explorer-discover-catalog .dash-exps-tile__gallery .dash-team-gallery__dots {
+  left: 42%;
+  bottom: 17px;
+  transform: translateX(-50%);
+}
+
 .explorer-discover-catalog .dash-exps-tile__fav,
-.explorer-discover-catalog .dash-exps-tile__visited {
+.explorer-discover-catalog .dash-exps-tile__visited,
+.explorer-discover-catalog .dash-exps-tile__share {
   width: 28px;
   height: 28px;
 }
