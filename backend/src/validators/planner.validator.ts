@@ -9,6 +9,14 @@ import {
 } from "../config/onboarding.js";
 
 const day = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Elige una fecha válida.");
+export const ANY_MUNICIPALITY = "ANY";
+
+const municipalityField = z
+  .string()
+  .trim()
+  .min(2, "Elige un municipio.")
+  .max(80)
+  .transform((value) => (value.toLocaleLowerCase("es") === "cualquier municipio" ? ANY_MUNICIPALITY : value));
 
 export const PLAN_TYPES = ["aventura", "tranquilo", "romantico", "familia", "aire"] as const;
 export const PLANNER_FOLDERS = ["naturaleza", "cultura", "sabores", "descubrimientos"] as const;
@@ -54,7 +62,7 @@ const plannerPreferencesObject = z.object({
     companion: z.preprocess(mapCompanion, z.enum(ONBOARDING_COMPANIONS).optional()),
     planType: z.enum(PLAN_TYPES).optional(),
     durationKey: z.enum(DURATION_KEYS),
-    municipality: z.string().trim().min(2, "Elige un municipio.").max(80),
+    municipality: municipalityField,
     people: z.number().int().min(1).max(30),
     note: z.string().trim().max(400).optional().default(""),
 });

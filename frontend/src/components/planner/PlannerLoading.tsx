@@ -12,6 +12,7 @@ const ICONS = [
 type PlannerLoadingProps = {
   error: string;
   empty: boolean;
+  detail?: boolean;
   onRetry: () => void;
   onBack: () => void;
   phase?: "working" | "ready";
@@ -22,6 +23,7 @@ type PlannerLoadingProps = {
 export function PlannerLoading({
   error,
   empty,
+  detail = false,
   onRetry,
   onBack,
   phase = "working",
@@ -40,7 +42,7 @@ export function PlannerLoading({
             </h2>
           </header>
           <p>
-            {empty
+            {empty || detail
               ? error
               : "Esta vez no logramos crear tu itinerario. Puedes intentarlo de nuevo o ajustar tus preferencias."}
           </p>

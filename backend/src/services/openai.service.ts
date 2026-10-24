@@ -135,11 +135,16 @@ export class StructuredGroqError extends Error {
   }
 }
 
-function retryAfterSeconds(response: Response) {
+function retryAfterSeconds(response: Response, detail = "") {
   const raw = response.headers.get("retry-after");
-  if (!raw) return null;
-  const seconds = Number(raw);
-  return Number.isFinite(seconds) ? seconds : null;
+  if (raw) {
+    const seconds = Number(raw);
+    if (Number.isFinite(seconds)) return seconds;
+  }
+  const match = detail.match(/try again in\s+([0-9]+(?:\.[0-9]+)?)\s*s/i);
+  if (!match) return null;
+  const seconds = Number(match[1]);
+  return Number.isFinite(seconds) ? Math.ceil(seconds) : null;
 }
 
 function groqErrorCode(detail: string) {
@@ -162,6 +167,7 @@ export async function generateStructuredGroqJson(input: {
   stage: string;
   attempt: number;
   maxTokens?: number;
+  format?: "json_schema" | "json_object";
 }) {
   const key = groqKey();
   if (!key) {
@@ -170,6 +176,17 @@ export async function generateStructuredGroqJson(input: {
   }
   const started = Date.now();
   const model = groqModel();
+  const format = input.format ?? "json_schema";
+  const responseFormat = format === "json_object"
+    ? { type: "json_object" as const }
+    : {
+        type: "json_schema" as const,
+        json_schema: {
+          name: input.schemaName,
+          strict: true,
+          schema: input.schema,
+        },
+      };
   let response: Response;
   try {
     response = await fetch(`${groqBase()}/chat/completions`, {
@@ -182,14 +199,7 @@ export async function generateStructuredGroqJson(input: {
         model,
         temperature: 0.3,
         max_tokens: input.maxTokens ?? 1200,
-        response_format: {
-          type: "json_schema",
-          json_schema: {
-            name: input.schemaName,
-            strict: true,
-            schema: input.schema,
-          },
-        },
+        response_format: responseFormat,
         messages: [
           { role: "system", content: input.system },
           { role: "user", content: input.user },
@@ -201,7 +211,7 @@ export async function generateStructuredGroqJson(input: {
       stage: input.stage,
       attempt: input.attempt,
       model,
-      responseFormat: "json_schema",
+      responseFormat: format,
       ms: Date.now() - started,
       error: error instanceof Error ? error.message : "unknown",
     });
@@ -218,7 +228,7 @@ export async function generateStructuredGroqJson(input: {
         stage: input.stage,
         attempt: input.attempt,
         model,
-        responseFormat: "json_schema",
+        responseFormat: format,
         status: response.status,
         groqCode,
         ms,
@@ -229,13 +239,14 @@ export async function generateStructuredGroqJson(input: {
       stage: input.stage,
       attempt: input.attempt,
       model,
-      responseFormat: "json_schema",
+      responseFormat: format,
       status: response.status,
       groqCode,
-      retryAfterSeconds: retryAfterSeconds(response),
+      detail: detail.replace(/\s+/g, " ").trim().slice(0, 280),
+      retryAfterSeconds: retryAfterSeconds(response, detail),
       ms,
     });
-    throw new StructuredGroqError(response.status, groqCode, retryAfterSeconds(response));
+    throw new StructuredGroqError(response.status, groqCode, retryAfterSeconds(response, detail));
   }
 
   const data = (await response.json()) as { choices?: Array<{ message?: { content?: string } }> };
@@ -244,7 +255,7 @@ export async function generateStructuredGroqJson(input: {
     stage: input.stage,
     attempt: input.attempt,
     model,
-    responseFormat: "json_schema",
+    responseFormat: format,
     status: response.status,
     ms,
   });

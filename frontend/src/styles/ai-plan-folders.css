@@ -240,6 +240,9 @@
   transition: transform 240ms ease;
 }
 
+.ai-folder__art--cultura { --art-scale: 1.19; }
+.ai-folder__art--sabores { --art-scale: 1.18; }
+
 .ai-folder:hover .ai-folder__art,
 .ai-folder:focus-visible .ai-folder__art {
   transform: translateY(-3px) scale(var(--art-scale, 1));

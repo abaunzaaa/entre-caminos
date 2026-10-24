@@ -2707,6 +2707,29 @@
 
 .plan-save-list { max-height: 18rem; }
 
+.plan-save-list .plan-save-list__art {
+  width: 1.45rem;
+  height: 1.45rem;
+  object-fit: contain;
+}
+
+.plan-save-modal__mark {
+  display: block;
+  width: 5.5rem;
+  height: auto;
+  margin: 0 0 0.85rem;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+
+@media (max-width: 640px) {
+  .plan-save-modal__mark {
+    width: 4.4rem;
+    margin-bottom: 0.75rem;
+  }
+}
+
 @media (max-width: 980px) {
   .planner.planner--result {
     height: auto;

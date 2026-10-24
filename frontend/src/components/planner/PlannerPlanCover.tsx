@@ -32,8 +32,10 @@ function ChartTip({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-function money(value: number) {
-  return new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(value);
+function money(value: number, currency?: string) {
+  const code = (currency || "COP").trim().toUpperCase() || "COP";
+  const formatted = new Intl.NumberFormat("es-CO", { maximumFractionDigits: 0 }).format(value);
+  return `$ ${formatted} ${code}`;
 }
 
 function planDate(iso: string) {
@@ -194,7 +196,7 @@ export function PlannerPlanCover({ draft, prefs, onBack, onDetail, onDiscover }:
               </span>
             </div>
             <div className="plan-cover__price">
-              <strong>{priceKnown ? money(draft.estimatedCop) : "Por confirmar"}</strong>
+              <strong>{priceKnown ? money(draft.estimatedCop, draft.currency) : "Por confirmar"}</strong>
             </div>
             <div className="plan-cover__actions">
               <button type="button" className="plan-cover__detail" onClick={onDetail}>

@@ -18,6 +18,8 @@ const BUDGET_MAX = 20_000_000;
 const SLIDER_MIN = 50_000;
 const SLIDER_MAX = 2_000_000;
 const PEOPLE_MAX = 30;
+const ANY_MUNICIPALITY = "ANY";
+const ANY_MUNICIPALITY_LABEL = "Cualquier municipio";
 
 const PLACE_ALIAS: Record<string, string> = { Bosque: "Bosque / Naturaleza", Pueblos: "Pueblos mágicos" };
 const COMPANION_ALIAS: Record<string, PlannerCompanion> = { "Con amigos": "Amigos", "En familia": "Familia" };
@@ -59,7 +61,9 @@ export function createPlannerPreferences(raw?: Partial<PlannerPreferences> | nul
     categoryIds: Array.isArray(raw.categoryIds) ? raw.categoryIds.filter((item) => typeof item === "string") : [],
     interests,
     durationKey: duration,
-    municipality: typeof raw.municipality === "string" ? raw.municipality : "",
+    municipality: typeof raw.municipality === "string"
+      ? (raw.municipality === ANY_MUNICIPALITY || raw.municipality === ANY_MUNICIPALITY_LABEL ? ANY_MUNICIPALITY : raw.municipality)
+      : "",
     note: typeof raw.note === "string" ? raw.note.slice(0, 400) : "",
   };
 }
@@ -336,7 +340,10 @@ export function PlannerPreferencesForm({
   const sliderFill = prefs.budgetChosen ? ((sliderValue - SLIDER_MIN) / (SLIDER_MAX - SLIDER_MIN)) * 100 : 0;
   const minYear = Number(today.slice(0, 4));
   const months = yearMonths(viewYear, viewMonth);
-  const cityOptions = useMemo(() => municipalities.map((name) => ({ value: name, label: name })), [municipalities]);
+  const cityOptions = useMemo(
+    () => [{ value: ANY_MUNICIPALITY, label: ANY_MUNICIPALITY_LABEL }, ...municipalities.map((name) => ({ value: name, label: name }))],
+    [municipalities],
+  );
   const days = useMemo(() => validDays(viewYear, viewMonth), [viewYear, viewMonth]);
   const dayOptions = useMemo(() => days.map((day) => ({ value: String(day).padStart(2, "0"), label: String(day) })), [days]);
   const selectedDay = /^\d{4}-\d{2}-\d{2}$/.test(prefs.date)
@@ -535,7 +542,7 @@ export function PlannerPreferencesForm({
               setCityOpen((open) => !open);
             }}
           >
-            <span>{prefs.municipality || "Selecciona un municipio"}</span>
+            <span>{prefs.municipality === ANY_MUNICIPALITY ? ANY_MUNICIPALITY_LABEL : prefs.municipality || "Selecciona un municipio"}</span>
             <ChevronDown size={14} strokeWidth={1.8} aria-hidden="true" />
           </button>
           <PrefsMenu

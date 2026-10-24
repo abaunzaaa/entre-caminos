@@ -1,10 +1,9 @@
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { X } from "lucide-react";
 import { AuthKeyIcon } from "../components/auth/AuthKeyIcon";
 import { AI_PLAN_FOLDERS, type AiPlanFolderKey } from "../data/ai-plan-folders";
 import { distinctPlanPhotoUrls, planCountLabel } from "../components/planner/AiPlanFolderCard";
-import heartIcon from "../assets/heart-icon.png";
 import flores from "../assets/mis-caminos/carpeta-naturaleza.png";
 import paleta from "../assets/mis-caminos/carpeta-cultura.png";
 import camara from "../assets/mis-caminos/carpeta-sabores.png";
@@ -265,6 +264,7 @@ export function PlannerPage() {
           key={loadAttempt}
           error={error}
           empty={errorCode === "PLANNER_EMPTY"}
+          detail={errorCode === "PLANNER_RATE_LIMIT"}
           phase={loadReady ? "ready" : "working"}
           onFinished={() => {
             setLoadReady(false);
@@ -324,12 +324,7 @@ export function PlannerPage() {
                 <X size={16} />
               </button>
               <header className="favorite-save-modal__head">
-                <span
-                  className="favorite-save-modal__mark"
-                  style={{ "--favorites-mark-mask": `url(${heartIcon})` } as CSSProperties}
-                  role="img"
-                  aria-hidden="true"
-                />
+                <img className="plan-save-modal__mark" src="/mis-caminos/cartas-lazo.png" alt="" width={700} height={598} />
                 <h2 id="plan-folder-title" className="favorite-save-modal__title">Guardar este plan</h2>
               </header>
               <div className="favorite-save-modal__list plan-save-list">
@@ -344,7 +339,7 @@ export function PlannerPage() {
                       onClick={() => setFolderKey(folder.key)}
                     >
                       <span className="favorite-save-modal__thumb">
-                        {photo ? <img src={photo} alt="" /> : <img src={FOLDER_ART[folder.key]} alt="" />}
+                        {photo ? <img src={photo} alt="" /> : <img className="plan-save-list__art" src={FOLDER_ART[folder.key]} alt="" />}
                       </span>
                       <span className="favorite-save-modal__meta">
                         <strong>{folder.name}</strong>
