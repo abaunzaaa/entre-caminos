@@ -1,28 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
-import { Bookmark, Calendar, Camera, Check, ChevronLeft, ChevronRight, Clock, House, Leaf, MapPin, PersonStanding, SlidersHorizontal, Sparkles, Wallet } from "lucide-react";
-import type { PlannerItinerary, PlannerPreferences, PlannerStop } from "../../services/planner.service";
+import { useNavigate } from "react-router-dom";
+import { Bookmark, Calendar, Check, ChevronLeft, ChevronRight, Clock, ExternalLink, MapPin, SlidersHorizontal, Sparkles } from "lucide-react";
+import { getPublicExperience } from "../../services/catalog.service";
+import type { PlannerItinerary, PlannerStop } from "../../services/planner.service";
 import { mediaUrl } from "../../utils/media";
-import { atmosphereCopy, durationCopy, durationDots, effortEstimate, planFit, type FitIcon } from "./plan-cover";
 import "../../styles/planner.css";
-
-const ICONS: Record<FitIcon, typeof Leaf> = {
-  leaf: Leaf,
-  home: House,
-  walk: PersonStanding,
-  wallet: Wallet,
-  calendar: Calendar,
-};
 
 type PlannerItineraryBoardProps = {
   draft: PlannerItinerary;
-  prefs: PlannerPreferences;
   busy: boolean;
   saved: boolean;
   error: string;
   onBack: () => void;
   onEdit: () => void;
   onSave: () => void;
-  onOpenExperience: (id: string) => void;
 };
 
 function planPhotos(draft: PlannerItinerary) {
@@ -42,10 +33,10 @@ function planPhotos(draft: PlannerItinerary) {
   return photos;
 }
 
-function sentence(value: string) {
-  const clean = value.trim();
-  if (!clean) return "";
-  return clean.charAt(0).toUpperCase() + clean.slice(1);
+function planDate(iso: string) {
+  const [year, month, day] = iso.slice(0, 10).split("-").map(Number);
+  if (!year || !month || !day) return iso;
+  return new Intl.DateTimeFormat("es-CO", { day: "numeric", month: "short", year: "numeric" }).format(new Date(year, month - 1, day));
 }
 
 function stopWhen(stop: PlannerStop) {
@@ -59,6 +50,90 @@ function stopKind(stop: PlannerStop) {
   return "Incluido en la experiencia";
 }
 
+function briefCopy(value: string) {
+  const clean = value.replace(/\s+/g, " ").trim();
+  if (clean.length <= 118) return clean;
+  const slice = clean.slice(0, 118);
+  const cut = slice.lastIndexOf(" ");
+  return `${(cut > 70 ? slice.slice(0, cut) : slice).trim()}…`;
+}
+
+const THEME_ART: Record<string, string> = {
+  gastronomia: "/planner/paradas/gastronomia.svg",
+  naturaleza: "/planner/paradas/naturaleza.svg",
+  cultura: "/planner/paradas/cultura.svg",
+  arte: "/planner/paradas/arte.svg",
+  bienestar: "/planner/paradas/bienestar.svg",
+  deporte: "/planner/paradas/deporte.svg",
+  llegada: "/planner/paradas/llegada.svg",
+  traslado: "/planner/paradas/traslado.svg",
+  descanso: "/planner/paradas/descanso.svg",
+};
+
+function themeKey(stop: PlannerStop) {
+  const text = `${stop.category} ${stop.title} ${stop.description}`.toLocaleLowerCase("es");
+  const thematic: [string, RegExp][] = [
+    ["gastronomia", /almuerz|desayun|\bcena\b|comida|gastronom|caf[eé]|restaur|taza|sabor|cocina/],
+    ["naturaleza", /bosque|naturalez|parque|paisaje|monta[nñ]|cafetal|\baves?\b|\bsendero\b|reserva/],
+    ["cultura", /museo|cultura|historia|patrimonio|finca|tradici/],
+    ["arte", /\barte\b|mural|galer[ií]a|pintura|teatro/],
+    ["bienestar", /bienestar|\bspa\b|yoga|meditaci/],
+    ["deporte", /deporte|cicl|\bbici\b|senderismo/],
+  ];
+  const themes = thematic.filter(([, pattern]) => pattern.test(text)).map(([theme]) => theme);
+  if (themes.length === 1) return themes[0];
+  if (themes.length > 1) return null;
+  const organizational: [string, RegExp][] = [
+    ["llegada", /\bllegad|\bencuent|\binicio\b|\bbienvenid/],
+    ["traslado", /\btraslad|\bregres|\btransport/],
+    ["descanso", /\bdescans|\bpausa\b|\btiempo libre|\balmuerzo/],
+  ];
+  const moments = organizational.filter(([, pattern]) => pattern.test(text)).map(([theme]) => theme);
+  return moments.length === 1 ? moments[0] : null;
+}
+
+function assignStopImages(stops: PlannerStop[], photos: string[], broken: string[]) {
+  const pool = photos.filter((src) => src && !broken.includes(src));
+  const own = stops.map((stop) => stop.imageUrl?.trim() || "");
+  const tally = new Map<string, number>();
+  for (const url of own) {
+    if (!url || broken.includes(url)) continue;
+    tally.set(url, (tally.get(url) ?? 0) + 1);
+  }
+  const used = new Set<string>();
+  const assigned = stops.map(() => "");
+  stops.forEach((_, index) => {
+    const url = own[index];
+    if (url && !broken.includes(url) && tally.get(url) === 1) {
+      assigned[index] = url;
+      used.add(url);
+    }
+  });
+  stops.forEach((stop, index) => {
+    if (assigned[index]) return;
+    const prev = index > 0 ? assigned[index - 1] : "";
+    const fresh = pool.filter((src) => !used.has(src) && src !== prev);
+    if (fresh.length) {
+      assigned[index] = fresh[0];
+      used.add(fresh[0]);
+      return;
+    }
+    const theme = themeKey(stop);
+    const art = theme ? THEME_ART[theme] : "";
+    if (art && art !== prev && !broken.includes(art)) {
+      assigned[index] = art;
+      return;
+    }
+    const reuse = pool.find((src) => src !== prev);
+    assigned[index] = reuse || pool[index % Math.max(pool.length, 1)] || "";
+  });
+  return assigned;
+}
+
+function presentUrl(src: string, width: number) {
+  return src.startsWith("/planner/") ? src : mediaUrl(src, width);
+}
+
 function stopLength(stop: PlannerStop) {
   const minutes = stop.durationMinutes ?? 0;
   if (minutes <= 0) return stop.durationLabel || "";
@@ -69,43 +144,46 @@ function stopLength(stop: PlannerStop) {
   return `${rest} min`;
 }
 
-function Dots({ filled }: { filled: number }) {
-  return (
-    <span className="plan-board__dots" aria-hidden="true">
-      {Array.from({ length: 5 }, (_, index) => (
-        <i key={index} className={index < filled ? "is-on" : ""} />
-      ))}
-    </span>
-  );
-}
-
 export function PlannerItineraryBoard({
   draft,
-  prefs,
   busy,
   saved,
   error,
   onBack,
   onEdit,
   onSave,
-  onOpenExperience,
 }: PlannerItineraryBoardProps) {
   const photos = useMemo(() => planPhotos(draft), [draft]);
   const [index, setIndex] = useState(0);
   const [broken, setBroken] = useState<string[]>([]);
+  const images = useMemo(() => assignStopImages(draft.stops, photos, broken), [draft.stops, photos, broken]);
+  const [openStops, setOpenStops] = useState<string[]>([]);
+  const [zoom, setZoom] = useState(false);
+  const [opening, setOpening] = useState(false);
+  const [experienceNote, setExperienceNote] = useState("");
+  const navigate = useNavigate();
   const visible = photos.filter((src) => !broken.includes(src));
   const active = visible[Math.min(index, Math.max(0, visible.length - 1))] ?? "";
-  const fit = planFit(draft, prefs);
-  const effort = effortEstimate(draft);
-  const atmosphere = sentence(atmosphereCopy(draft));
-  const traits = atmosphere ? atmosphere.split(",").map((item) => item.trim()).filter(Boolean).length : 0;
-  const atmosphereDots = traits <= 0 ? 0 : Math.min(5, traits + 2);
-  const average = fit.score ?? 0;
+  const department = draft.venue?.department?.trim() || "";
+  const place = department ? `${draft.municipality}, ${department}` : draft.municipality;
+  const schedule = draft.scheduleLabel?.trim() || "Horario flexible";
+  const scheduleCaption = draft.scheduleIsSuggested ? "Horario propuesto" : "Sin hora fija";
 
   useEffect(() => {
     setIndex(0);
     setBroken([]);
+    setOpenStops([]);
+    setZoom(false);
   }, [draft.id, draft.title, draft.primaryExperienceId]);
+
+  useEffect(() => {
+    if (!zoom) return;
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") setZoom(false);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [zoom]);
 
   function show(next: number) {
     if (!visible.length) return;
@@ -113,101 +191,89 @@ export function PlannerItineraryBoard({
     setIndex((next + count) % count);
   }
 
+  async function openExperience() {
+    const id = draft.primaryExperienceId?.trim();
+    if (!id) {
+      setExperienceNote("Esta experiencia ya no está disponible en el catálogo.");
+      return;
+    }
+    setOpening(true);
+    setExperienceNote("");
+    try {
+      await getPublicExperience(id);
+      navigate(`/explorar/${id}`);
+    } catch {
+      setExperienceNote("Esta experiencia ya no está disponible en el catálogo.");
+    } finally {
+      setOpening(false);
+    }
+  }
+
   return (
     <div className="plan-board-page">
-      <button type="button" className="plan-board__back" aria-label="Volver a la presentación" onClick={onBack}>
-        <ChevronLeft size={16} strokeWidth={1.8} />
-      </button>
       <div className="plan-board">
-        <section className="plan-board__info">
-          <div className="plan-board__about">
-            <p className="plan-board__kicker">Sobre el plan</p>
+        <div className="plan-board__main">
+        <header className="plan-board__head">
+          <div className="plan-board__title-row">
+            <button type="button" className="plan-board__back" aria-label="Volver a la presentación" onClick={onBack}>
+              <ChevronLeft size={20} strokeWidth={1.8} />
+            </button>
             <h1>{draft.title}</h1>
+          </div>
+          <div className="plan-board__copy">
             <p className="plan-board__summary">{draft.summary}</p>
             {draft.alternativeMessage ? <p className="plan-board__alt">{draft.alternativeMessage}</p> : null}
-            {draft.primaryExperienceId ? (
-              <button type="button" className="plan-board__catalog" onClick={() => onOpenExperience(draft.primaryExperienceId!)}>
-                Ver experiencia
-              </button>
-            ) : null}
-            <div className="plan-board__meter">
-              <div>
-                <span>Duración</span>
-                <Dots filled={durationDots(draft)} />
-                <strong>{durationCopy(draft)}</strong>
-              </div>
-              <div>
-                <span>Nivel de esfuerzo</span>
-                <Dots filled={effort.dots} />
-                <strong title="Estimación según la duración del recorrido.">
-                  {effort.label}
-                  {effort.dots > 0 ? <small>estimado</small> : null}
-                </strong>
-              </div>
-              <div>
-                <span>Ambiente</span>
-                <Dots filled={atmosphereDots} />
-                <strong>{atmosphere || "Sin dato"}</strong>
-              </div>
-            </div>
+            <ul className="plan-board__facts">
+              <li><MapPin size={14} strokeWidth={1.7} aria-hidden="true" /> {place}</li>
+              <li><Calendar size={14} strokeWidth={1.7} aria-hidden="true" /> {planDate(draft.date)}</li>
+              <li>
+                <Clock size={14} strokeWidth={1.7} aria-hidden="true" />
+                <span>{schedule}</span>
+                <small>{scheduleCaption}</small>
+              </li>
+            </ul>
           </div>
-          <div className="plan-board__fit">
-            <h2>Según tus preferencias</h2>
-            {fit.bars.length ? (
-              <div className="plan-board__chart" role="img" aria-label={fit.score == null ? "Coincidencias con tus preferencias" : `Compatibilidad ${fit.score} por ciento`}>
-                <div className="plan-board__bars">
-                  <i className="plan-board__line" style={{ bottom: `${Math.max(18, Math.min(82, average))}%` }} />
-                  {fit.bars.map((bar, barIndex) => (
-                    <span
-                      key={bar.key}
-                      className={bar.value >= 0.6 ? "is-strong" : ""}
-                      style={{ height: `${Math.max(22, Math.round(bar.value * 100))}%`, animationDelay: `${barIndex * 70}ms` }}
-                      title={`${bar.label}. ${bar.hint}`}
-                    />
-                  ))}
-                  {fit.score == null ? null : <em style={{ bottom: `${Math.max(18, Math.min(82, average))}%` }}>{fit.score}%</em>}
-                </div>
-                <div className="plan-board__icons">
-                  {fit.bars.map((bar) => {
-                    const Icon = ICONS[bar.icon];
-                    return <Icon key={bar.key} size={14} strokeWidth={1.7} aria-hidden="true" />;
-                  })}
-                </div>
-              </div>
-            ) : (
-              <p className="plan-board__unscored">Todavía no hay coincidencias suficientes para un porcentaje.</p>
-            )}
-            <p className="plan-board__fit-note">
-              {fit.bars.map((bar) => `${bar.label}: ${Math.round(bar.value * 100)}%. ${bar.hint}`).join(" ")}
-            </p>
-          </div>
-        </section>
-
+        </header>
         <section className="plan-board__route">
           <h2>Tu recorrido</h2>
           <div className="plan-board__stops">
             <ol>
-              {draft.stops.map((stop) => {
+              {draft.stops.map((stop, stopIndex) => {
                 const suggestion = stop.stopType === "suggestion" || stop.included === false;
-                const photo = !suggestion && stop.imageUrl && !broken.includes(stop.imageUrl) ? stop.imageUrl : "";
+                const key = `${stop.position}-${stop.title}`;
+                const photo = images[stopIndex] || "";
+                const expanded = openStops.includes(key);
+                const full = stop.description.replace(/\s+/g, " ").trim();
+                const preview = briefCopy(full);
+                const canExpand = preview !== full;
                 return (
-                  <li key={`${stop.position}-${stop.title}`}>
+                  <li key={key}>
                     <span className="plan-board__num">{stop.position}</span>
                     <article>
                       {photo ? (
-                        <img src={mediaUrl(photo, 240)} alt="" onError={() => setBroken((current) => current.includes(photo) ? current : [...current, photo])} />
+                        <img src={presentUrl(photo, 480)} alt="" onError={() => setBroken((current) => current.includes(photo) ? current : [...current, photo])} />
                       ) : (
-                        <span className="plan-board__blank" aria-hidden="true"><Camera size={16} strokeWidth={1.6} /></span>
+                        <span className="plan-board__blank" aria-hidden="true" />
                       )}
                       <div>
                         <small>{stopWhen(stop)}</small>
                         <h3>{stop.title}</h3>
-                        <p>{stop.description}</p>
+                        <p>{expanded || !canExpand ? full : preview}</p>
+                        {canExpand ? (
+                          <button
+                            type="button"
+                            className="plan-board__more"
+                            aria-expanded={expanded}
+                            onClick={() => setOpenStops((current) => expanded ? current.filter((item) => item !== key) : [...current, key])}
+                          >
+                            {expanded ? "Ver menos" : "Ver descripción"}
+                          </button>
+                        ) : null}
                       </div>
                       <ul>
-                        {stopLength(stop) ? <li><Clock size={13} strokeWidth={1.7} aria-hidden="true" /> {stopLength(stop)}</li> : null}
-                        <li><MapPin size={13} strokeWidth={1.7} aria-hidden="true" /> {stop.municipality || stop.location}</li>
-                        <li>{suggestion ? <Sparkles size={13} strokeWidth={1.7} aria-hidden="true" /> : <Check size={13} strokeWidth={1.7} aria-hidden="true" />} {stopKind(stop)}</li>
+                        {stopLength(stop) ? <li><Clock size={14} strokeWidth={1.7} aria-hidden="true" /> {stopLength(stop)}</li> : null}
+                        <li><MapPin size={14} strokeWidth={1.7} aria-hidden="true" /> {stop.municipality || stop.location}</li>
+                        <li>{suggestion ? <Sparkles size={14} strokeWidth={1.7} aria-hidden="true" /> : <Check size={14} strokeWidth={1.7} aria-hidden="true" />} {stopKind(stop)}</li>
                       </ul>
                     </article>
                   </li>
@@ -216,43 +282,54 @@ export function PlannerItineraryBoard({
             </ol>
           </div>
         </section>
+        <div className="plan-board__experience">
+          <button type="button" disabled={opening} onClick={() => { void openExperience(); }}>
+            <ExternalLink size={15} strokeWidth={1.8} /> Ver experiencia
+          </button>
+          {experienceNote ? <p className="plan-board__note" role="status">{experienceNote}</p> : null}
+        </div>
+        </div>
 
-        <section className="plan-board__gallery">
-          {active ? (
-            <div className="plan-board__hero">
-              <img key={active} src={mediaUrl(active, 1200)} alt="" onError={() => setBroken((current) => current.includes(active) ? current : [...current, active])} />
-              {visible.length > 1 ? (
-                <>
-                  <button type="button" aria-label="Foto anterior" onClick={() => show(index - 1)}><ChevronLeft size={16} /></button>
-                  <button type="button" className="is-next" aria-label="Foto siguiente" onClick={() => show(index + 1)}><ChevronRight size={16} /></button>
-                </>
-              ) : null}
-            </div>
-          ) : (
-            <div className="plan-board__hero is-empty">Sin fotografías publicadas</div>
-          )}
-          {visible.length > 1 ? (
-            <div className="plan-board__thumbs">
-              {visible.map((src, photoIndex) => (
-                <button
-                  key={src}
-                  type="button"
-                  className={src === active ? "is-on" : ""}
-                  aria-label={`Fotografía ${photoIndex + 1}`}
-                  onClick={() => setIndex(photoIndex)}
-                >
-                  <img src={mediaUrl(src, 240)} alt="" onError={() => setBroken((current) => current.includes(src) ? current : [...current, src])} />
+        <aside className="plan-board__side">
+          <section className="plan-board__gallery">
+            {active ? (
+              <div className="plan-board__hero">
+                <img className="plan-board__hero-bg" src={mediaUrl(active, 640)} alt="" aria-hidden="true" />
+                <button type="button" className="plan-board__zoom" aria-label="Ver la fotografía completa" onClick={() => setZoom(true)}>
+                  <img key={active} src={mediaUrl(active, 1400)} alt="" onError={() => setBroken((current) => current.includes(active) ? current : [...current, active])} />
                 </button>
-              ))}
-            </div>
-          ) : null}
-        </section>
+                {visible.length > 1 ? (
+                  <>
+                    <button type="button" aria-label="Foto anterior" onClick={() => show(index - 1)}><ChevronLeft size={16} /></button>
+                    <button type="button" className="is-next" aria-label="Foto siguiente" onClick={() => show(index + 1)}><ChevronRight size={16} /></button>
+                  </>
+                ) : null}
+              </div>
+            ) : (
+              <div className="plan-board__hero is-empty">Sin fotografías publicadas</div>
+            )}
+            {visible.length > 1 ? (
+              <div className="plan-board__thumbs">
+                {visible.map((src, photoIndex) => (
+                  <button
+                    key={src}
+                    type="button"
+                    className={src === active ? "is-on" : ""}
+                    aria-label={`Fotografía ${photoIndex + 1}`}
+                    onClick={() => setIndex(photoIndex)}
+                  >
+                    <img src={mediaUrl(src, 240)} alt="" onError={() => setBroken((current) => current.includes(src) ? current : [...current, src])} />
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </section>
 
-        <div className="plan-board__side">
           <section className="plan-board__why">
-            <h2><Sparkles size={15} strokeWidth={1.7} aria-hidden="true" /> ¿Por qué este plan es para ti?</h2>
+            <h2><Sparkles size={16} strokeWidth={1.7} aria-hidden="true" /> ¿Por qué este plan es para ti?</h2>
             <p>{draft.why}</p>
           </section>
+
           <div className="plan-board__actions">
             <button type="button" onClick={onEdit}><SlidersHorizontal size={15} strokeWidth={1.8} /> Editar preferencias</button>
             <button type="button" className="is-solid" disabled={busy || saved} onClick={onSave}>
@@ -260,8 +337,14 @@ export function PlannerItineraryBoard({
             </button>
           </div>
           {error ? <p className="planner__error" role="alert">{error}</p> : null}
-        </div>
+        </aside>
       </div>
+      {zoom && active ? (
+        <div className="plan-board__lightbox" role="dialog" aria-modal="true" aria-label="Fotografía completa">
+          <button type="button" className="plan-board__lightbox-close" aria-label="Cerrar" onClick={() => setZoom(false)} />
+          <img src={mediaUrl(active, 1600)} alt="" />
+        </div>
+      ) : null}
     </div>
   );
 }

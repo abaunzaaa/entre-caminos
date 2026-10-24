@@ -1,14 +1,9 @@
-import { Calendar, Clock, House, Leaf, MapPin, PersonStanding, Wallet } from "lucide-react";
+import type { CSSProperties, ReactNode } from "react";
+import { Calendar, ChevronLeft, Clock, House, Leaf, MapPin, PersonStanding, Wallet } from "lucide-react";
 import type { PlannerItinerary, PlannerPreferences } from "../../services/planner.service";
-import { mediaUrl } from "../../utils/media";
 import { atmosphereCopy, durationCopy, durationDots, effortEstimate, planFit, type FitIcon } from "./plan-cover";
 
-const FLOATS = [
-  { src: "/planner/mochila.png", tilt: "a", label: "Mochila" },
-  { src: "/planner/mapa-decorativo.png", tilt: "b", label: "Mapa" },
-  { src: "/planner/camara.png", tilt: "c", label: "Cámara" },
-  { src: "/mis-caminos/stickers/line-brujula.png", tilt: "d", label: "Brújula" },
-] as const;
+const PLACE_IMAGE = "/planner/descubre-lugar.jpg";
 
 const ICONS: Record<FitIcon, typeof Leaf> = {
   leaf: Leaf,
@@ -21,9 +16,21 @@ const ICONS: Record<FitIcon, typeof Leaf> = {
 type PlannerPlanCoverProps = {
   draft: PlannerItinerary;
   prefs: PlannerPreferences;
+  onBack: () => void;
   onDetail: () => void;
   onDiscover: (latitude: number, longitude: number) => void;
 };
+
+function ChartTip({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <span className="plan-cover__tip">
+      <button type="button" className="plan-cover__tip-btn" aria-label={label}>
+        {children}
+      </button>
+      <span className="plan-cover__tip-bubble" role="tooltip">{label}</span>
+    </span>
+  );
+}
 
 function money(value: number) {
   return new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(value);
@@ -54,9 +61,8 @@ function PinMark() {
   );
 }
 
-export function PlannerPlanCover({ draft, prefs, onDetail, onDiscover }: PlannerPlanCoverProps) {
+export function PlannerPlanCover({ draft, prefs, onBack, onDetail, onDiscover }: PlannerPlanCoverProps) {
   const venue = draft.venue;
-  const photo = draft.coverImageUrl || draft.stops.find((stop) => stop.imageUrl)?.imageUrl || "";
   const duration = durationCopy(draft);
   const dots = durationDots(draft);
   const effort = effortEstimate(draft);
@@ -75,7 +81,12 @@ export function PlannerPlanCover({ draft, prefs, onDetail, onDiscover }: Planner
 
   return (
     <div className="plan-cover-page">
-      <h1>{draft.title}</h1>
+      <header className="plan-cover__head">
+        <button type="button" className="plan-cover__back" aria-label="Volver a las preferencias" onClick={onBack}>
+          <ChevronLeft size={22} strokeWidth={1.8} />
+        </button>
+        <h1>{draft.title}</h1>
+      </header>
       <div className="plan-cover-stage">
         <article className="plan-cover">
           <div className="plan-cover__body">
@@ -96,9 +107,9 @@ export function PlannerPlanCover({ draft, prefs, onDetail, onDiscover }: Planner
                     {effort.dots > 0 ? <small>estimado</small> : null}
                   </strong>
                 </div>
-                <div className="is-wide">
+                <div className="is-plain">
                   <span>Ambiente</span>
-                  <strong>{atmosphere || "Sin dato de ambiente"}</strong>
+                  <strong title={atmosphere || "Sin dato de ambiente"}>{atmosphere || "Sin dato de ambiente"}</strong>
                 </div>
               </div>
             </div>
@@ -106,25 +117,27 @@ export function PlannerPlanCover({ draft, prefs, onDetail, onDiscover }: Planner
               <h2>Según tus preferencias</h2>
               {fit.bars.length ? (
                 <div className="plan-cover__chart" role="img" aria-label={fit.score == null ? "Coincidencias con tus preferencias" : `Compatibilidad ${fit.score} por ciento`}>
-                  <div className="plan-cover__plot">
-                    <div className="plan-cover__bars">
-                      <i className="plan-cover__line" style={{ bottom: `${Math.max(14, Math.min(86, average))}%` }} />
-                      {fit.bars.map((bar, index) => (
-                        <span
-                          key={bar.key}
-                          className={bar.value >= 0.6 ? "is-strong" : ""}
-                          style={{ height: `${Math.max(18, Math.round(bar.value * 100))}%`, animationDelay: `${index * 70}ms` }}
-                          title={`${bar.label}. ${bar.hint}`}
-                        />
-                      ))}
-                      {fit.score == null ? null : <em style={{ bottom: `${Math.max(14, Math.min(86, average))}%` }}>{fit.score}%</em>}
-                    </div>
-                    <div className="plan-cover__icons">
-                      {fit.bars.map((bar) => {
-                        const Icon = ICONS[bar.icon];
-                        return <Icon key={bar.key} size={14} strokeWidth={1.7} aria-hidden="true" />;
-                      })}
-                    </div>
+                  <div
+                    className="plan-cover__plot"
+                    style={{ "--plan-line": `${Math.max(14, Math.min(86, average))}`, "--bars": fit.bars.length } as CSSProperties}
+                  >
+                    <i className="plan-cover__line" />
+                    {fit.bars.map((bar, index) => {
+                      const Icon = ICONS[bar.icon];
+                      const tone = bar.value >= 0.75 ? "is-strong" : bar.value >= 0.45 ? "is-mid" : "";
+                      return (
+                        <div key={bar.key} className="plan-cover__col">
+                          <span
+                            className={`plan-cover__bar${tone ? ` ${tone}` : ""}`}
+                            style={{ height: `${Math.max(16, Math.round(bar.value * 100))}%`, animationDelay: `${index * 70}ms` }}
+                          />
+                          <ChartTip label={bar.label}>
+                            <Icon size={16} strokeWidth={1.7} aria-hidden="true" />
+                          </ChartTip>
+                        </div>
+                      );
+                    })}
+                    {fit.score == null ? <span /> : <em>{fit.score}%</em>}
                   </div>
                 </div>
               ) : (
@@ -134,20 +147,28 @@ export function PlannerPlanCover({ draft, prefs, onDetail, onDiscover }: Planner
                 {fit.bars.map((bar) => `${bar.label}: ${Math.round(bar.value * 100)}%. ${bar.hint}`).join(" ")}
               </p>
               <h2>Descubre el lugar</h2>
-              <figure className="plan-cover__place">
-                {photo ? <img src={mediaUrl(photo, 960)} alt="" /> : <span />}
-                <button
-                  type="button"
-                  disabled={!canDiscover}
-                  title={canDiscover ? "Abrir la sede en el mapa" : "Esta sede no tiene coordenadas publicadas."}
-                  onClick={() => {
-                    if (canDiscover && latitude != null && longitude != null) onDiscover(latitude, longitude);
-                  }}
-                >
-                  <PinMark />
-                  Descubrir
-                </button>
-              </figure>
+              <div className="plan-cover__discover">
+                <figure className="plan-cover__place">
+                  <img src={PLACE_IMAGE} alt="" />
+                  <button
+                    type="button"
+                    disabled={!canDiscover}
+                    title={canDiscover ? "Abrir la sede en el mapa" : "Esta sede no tiene coordenadas publicadas."}
+                    onClick={() => {
+                      if (canDiscover && latitude != null && longitude != null) onDiscover(latitude, longitude);
+                    }}
+                  >
+                    <PinMark />
+                    Descubrir
+                  </button>
+                </figure>
+                <div className="plan-cover__floats" aria-hidden="true">
+                  <img className="is-mochila" src="/planner/carga-mochila.png" alt="" />
+                  <img className="is-mapa" src="/planner/carga-mapa.png" alt="" />
+                  <img className="is-camara" src="/planner/carga-camara.png" alt="" />
+                  <img className="is-brujula" src="/planner/carga-brujula.png" alt="" />
+                </div>
+              </div>
             </div>
           </div>
           <footer className="plan-cover__strip">
@@ -156,15 +177,15 @@ export function PlannerPlanCover({ draft, prefs, onDetail, onDiscover }: Planner
               {department ? <small>{department}</small> : null}
             </div>
             <div>
-              <Calendar size={16} strokeWidth={1.7} aria-hidden="true" />
+              <span className="plan-cover__glyph"><Calendar size={17} strokeWidth={1.7} aria-hidden="true" /></span>
               <span><strong>{planDate(draft.date)}</strong><small>Fecha</small></span>
             </div>
             <div>
-              <Clock size={16} strokeWidth={1.7} aria-hidden="true" />
+              <span className="plan-cover__glyph"><Clock size={17} strokeWidth={1.7} aria-hidden="true" /></span>
               <span><strong>{schedule}</strong><small>{scheduleCaption}</small></span>
             </div>
-            <div>
-              <MapPin size={16} strokeWidth={1.7} aria-hidden="true" />
+            <div className="plan-cover__meet" title={address || "Sin dirección publicada"}>
+              <span className="plan-cover__glyph"><MapPin size={17} strokeWidth={1.7} aria-hidden="true" /></span>
               <span>
                 <strong>{address || "Sin dirección publicada"}</strong>
                 <small>{address ? "Punto de encuentro" : "Sede"}</small>
@@ -172,32 +193,14 @@ export function PlannerPlanCover({ draft, prefs, onDetail, onDiscover }: Planner
             </div>
             <div className="plan-cover__price">
               <strong>{priceKnown ? money(draft.estimatedCop) : "Por confirmar"}</strong>
-              <small>{priceKnown ? "Precio publicado" : "Sin precio confirmado"}</small>
             </div>
             <div className="plan-cover__actions">
-              {canDiscover && latitude != null && longitude != null ? (
-                <button
-                  type="button"
-                  className="plan-cover__map-pin"
-                  aria-label="Abrir la sede en el mapa"
-                  onClick={() => onDiscover(latitude, longitude)}
-                >
-                  <PinMark />
-                </button>
-              ) : null}
               <button type="button" className="plan-cover__detail" onClick={onDetail}>
                 Ver detalle <span aria-hidden="true">→</span>
               </button>
             </div>
           </footer>
         </article>
-        <ul className="plan-cover__float" aria-hidden="true">
-          {FLOATS.map((item) => (
-            <li key={item.label} className={`is-${item.tilt}`}>
-              <img src={item.src} alt="" draggable={false} />
-            </li>
-          ))}
-        </ul>
       </div>
     </div>
   );

@@ -1,9 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { X } from "lucide-react";
 import { AuthKeyIcon } from "../components/auth/AuthKeyIcon";
 import { AI_PLAN_FOLDERS, type AiPlanFolderKey } from "../data/ai-plan-folders";
-import { AiPlanFolderCard, distinctPlanPhotoUrls } from "../components/planner/AiPlanFolderCard";
+import { distinctPlanPhotoUrls, planCountLabel } from "../components/planner/AiPlanFolderCard";
+import heartIcon from "../assets/heart-icon.png";
+import flores from "../assets/mis-caminos/carpeta-naturaleza.png";
+import paleta from "../assets/mis-caminos/carpeta-cultura.png";
+import camara from "../assets/mis-caminos/carpeta-sabores.png";
+import lupa from "../assets/mis-caminos/carpeta-descubrimientos.png";
 import { PlannerItineraryBoard } from "../components/planner/PlannerItineraryBoard";
 import { PlannerLoading } from "../components/planner/PlannerLoading";
 import { PlannerPreferencesForm, createPlannerPreferences, profilePlannerHints } from "../components/planner/PlannerPreferencesForm";
@@ -24,6 +29,12 @@ import "../styles/planner.css";
 
 const PREF_KEY = "ec-planner-prefs";
 const DRAFT_KEY = "ec-planner-draft";
+const FOLDER_ART: Record<AiPlanFolderKey, string> = {
+  naturaleza: flores,
+  cultura: paleta,
+  sabores: camara,
+  descubrimientos: lupa,
+};
 
 type Step = "welcome" | "form" | "making" | "cover" | "result";
 
@@ -277,6 +288,7 @@ export function PlannerPage() {
         <PlannerPlanCover
           draft={draft}
           prefs={prefs}
+          onBack={() => setStep("form")}
           onDetail={() => setStep("result")}
           onDiscover={(latitude, longitude) => {
             const params = new URLSearchParams({
@@ -297,45 +309,55 @@ export function PlannerPage() {
       <main className="planner planner--board">
         <PlannerItineraryBoard
           draft={draft}
-          prefs={prefs}
           busy={busy}
           saved={saved}
           error={error}
           onBack={() => setStep("cover")}
           onEdit={() => setStep("form")}
           onSave={() => { setFolderKey(null); setFolderOpen(true); }}
-          onOpenExperience={(experienceId) => navigate(`/explorar/${experienceId}`)}
         />
         {folderOpen ? (
           <div className="favorite-save-modal" role="dialog" aria-modal="true" aria-labelledby="plan-folder-title">
             <button type="button" className="favorite-save-modal__backdrop" aria-label="Cerrar" onClick={() => { if (!busy) setFolderOpen(false); }} />
-            <div className="favorite-save-modal__panel ai-plans-picker">
+            <div className="favorite-save-modal__panel">
               <button type="button" className="favorite-save-modal__close" aria-label="Cerrar" onClick={() => { if (!busy) setFolderOpen(false); }}>
                 <X size={16} />
               </button>
               <header className="favorite-save-modal__head">
-                <AuthKeyIcon />
-                <h2 id="plan-folder-title" className="favorite-save-modal__title">¿Dónde quieres guardar tu camino?</h2>
+                <span
+                  className="favorite-save-modal__mark"
+                  style={{ "--favorites-mark-mask": `url(${heartIcon})` } as CSSProperties}
+                  role="img"
+                  aria-hidden="true"
+                />
+                <h2 id="plan-folder-title" className="favorite-save-modal__title">Guardar este plan</h2>
               </header>
-              <p>Elige una carpeta para tener tu plan siempre a mano.</p>
-              <div className="ai-plans-picker__list">
-                {AI_PLAN_FOLDERS.map((folder) => (
-                  <AiPlanFolderCard
-                    key={folder.key}
-                    folderKey={folder.key}
-                    name={folder.name}
-                    tone={folder.tone}
-                    count={folderCounts ? folderCounts[folder.key] ?? 0 : null}
-                    photos={folderCovers?.[folder.key] ?? []}
-                    selected={folderKey === folder.key}
-                    selectable
-                    onClick={() => setFolderKey(folder.key)}
-                  />
-                ))}
+              <div className="favorite-save-modal__list plan-save-list">
+                {AI_PLAN_FOLDERS.map((folder) => {
+                  const count = folderCounts ? folderCounts[folder.key] ?? 0 : null;
+                  const photo = folderCovers?.[folder.key]?.[0];
+                  return (
+                    <button
+                      key={folder.key}
+                      type="button"
+                      className={`favorite-save-modal__item${folderKey === folder.key ? " is-on" : ""}`}
+                      onClick={() => setFolderKey(folder.key)}
+                    >
+                      <span className="favorite-save-modal__thumb">
+                        {photo ? <img src={photo} alt="" /> : <img src={FOLDER_ART[folder.key]} alt="" />}
+                      </span>
+                      <span className="favorite-save-modal__meta">
+                        <strong>{folder.name}</strong>
+                        <em>{count == null ? "Carpeta" : planCountLabel(count)}</em>
+                      </span>
+                      <span className="favorite-save-modal__check" aria-hidden="true">{folderKey === folder.key ? "✓" : ""}</span>
+                    </button>
+                  );
+                })}
               </div>
+              {error ? <p className="favorite-save-modal__error">{error}</p> : null}
               <div className="favorite-save-modal__actions">
-                <button type="button" className="favorite-save-modal__primary" disabled={!folderKey || busy} onClick={() => folderKey && void persist(folderKey)}>Guardar en esta carpeta</button>
-                <button type="button" className="favorite-save-modal__ghost" disabled={busy} onClick={() => setFolderOpen(false)}>Cancelar</button>
+                <button type="button" className="favorite-save-modal__primary" disabled={!folderKey || busy} onClick={() => folderKey && void persist(folderKey)}>Guardar este plan</button>
               </div>
             </div>
           </div>
