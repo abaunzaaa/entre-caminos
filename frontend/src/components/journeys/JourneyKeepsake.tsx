@@ -1,7 +1,9 @@
 import type { CSSProperties } from "react";
 import { useInViewReveal } from "../../hooks/useInViewReveal";
+import { OpenBitacoraButton } from "./OpenBitacoraButton";
 
-export function JourneyKeepsake({ onOpen }: { photos: string[]; onOpen: () => void }) {
+export function JourneyKeepsake({ photos }: { photos: string[] }) {
+  void photos;
   const { ref, inView } = useInViewReveal<HTMLDivElement>({ rootMargin: "0px", enterRatio: 0.14, leaveRatio: 0 });
 
   return (
@@ -27,9 +29,7 @@ export function JourneyKeepsake({ onOpen }: { photos: string[]; onOpen: () => vo
             decoding="async"
           />
         </div>
-        <button type="button" className="tourist-hero__cta caminos-keep__cta" onClick={onOpen}>
-          Abrir bitácora
-        </button>
+        <OpenBitacoraButton />
       </div>
     </div>
   );

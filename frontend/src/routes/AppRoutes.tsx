@@ -15,11 +15,11 @@ import { OnboardingCatalogGuard } from "../components/onboarding/OnboardingCatal
 import { OnboardingLayout } from "../components/onboarding/OnboardingLayout";
 import { OnboardingPage } from "../pages/onboarding/OnboardingPage";
 import { ExplorePage } from "../pages/ExplorePage";
-import { ExplorerBlankPage } from "../pages/ExplorerBlankPage";
 import { MapPage } from "../pages/MapPage";
 import { ExperienceDetailPage } from "../pages/ExperienceDetailPage";
 import { PlannerPage } from "../pages/PlannerPage";
 import { FavoritesPage } from "../pages/FavoritesPage";
+import { VisitedPage } from "../pages/VisitedPage";
 import { ProfilePage } from "../pages/ProfilePage";
 import { MisCaminosPage } from "../pages/MisCaminosPage";
 import { BitacoraPage } from "../pages/BitacoraPage";
@@ -54,6 +54,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/onboarding/preferencias": "Personaliza tu experiencia | Entre Caminos",
   "/onboarding/listo": "Personaliza tu experiencia | Entre Caminos",
   "/mapa": "Mapa | Entre Caminos",
+  "/visitados": "Visitados | Entre Caminos",
   "/perfil": "Tu perfil | Entre Caminos",
   "/mis-caminos": "Mis caminos | Entre Caminos",
   "/planear-mi-plan": "Planear mi plan | Entre Caminos",
@@ -155,7 +156,7 @@ export function AppRoutes() {
             <Route path="/favoritos" element={<FavoritesPage />} />
             <Route path="/mapa" element={<MapPage />} />
             <Route path="/plan-con-amigos" element={<Navigate to="/planear-mi-plan" replace />} />
-            <Route path="/visitados" element={<ExplorerBlankPage title="VISITADOS" />} />
+            <Route path="/visitados" element={<VisitedPage />} />
           </Route>
         </Route>
         <Route element={<ProtectedRoute admin />}>

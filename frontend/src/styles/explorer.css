@@ -36,7 +36,8 @@
 }
 
 .explorer-page--closing .explorer-blank,
-.explorer-page--closing .favorites-library {
+.explorer-page--closing .favorites-library,
+.explorer-page--closing .visited-paths {
   flex: 1 1 auto;
   width: 100%;
   min-height: auto;
@@ -49,7 +50,8 @@
   }
 
   .explorer-page--closing .explorer-blank,
-  .explorer-page--closing .favorites-library {
+  .explorer-page--closing .favorites-library,
+  .explorer-page--closing .visited-paths {
     padding-bottom: 0.5rem;
   }
 }
@@ -759,6 +761,43 @@
   transform: translateY(-1px);
   background: var(--explorer-forest, #1c332e);
   box-shadow: 0 12px 24px rgba(28, 51, 46, 0.16);
+}
+
+button.caminos-keep__cta {
+  position: static;
+  z-index: 1;
+  left: auto;
+  bottom: auto;
+  display: inline-flex;
+  margin: 12px auto 0;
+  flex-shrink: 0;
+  padding: 0.4rem 0.95rem;
+  border: 0;
+  border-radius: 999px;
+  background: #1c332e;
+  color: #fff;
+  cursor: pointer;
+  font-family: Poppins, Nunito, system-ui, sans-serif;
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  text-transform: none;
+  white-space: nowrap;
+  box-shadow: 0 6px 14px rgba(28, 51, 46, 0.1);
+  transform: none;
+  transition: background 200ms ease, box-shadow 200ms ease, transform 200ms ease;
+}
+
+button.caminos-keep__cta:hover {
+  background: #243f38;
+  box-shadow: 0 8px 16px rgba(28, 51, 46, 0.14);
+  transform: translateY(-1px);
+}
+
+button.caminos-keep__cta:focus-visible {
+  outline: 2px solid #6e8f88;
+  outline-offset: 3px;
 }
 
 .tourist-hero__showcase {
@@ -1768,7 +1807,9 @@
 .explorer-discover-card:has(.dash-exps-tile__fav:hover),
 .explorer-discover-card:has(.dash-exps-tile__fav:focus-visible),
 .explorer-discover-card:has(.dash-exps-tile__visited:hover),
-.explorer-discover-card:has(.dash-exps-tile__visited:focus-visible) {
+.explorer-discover-card:has(.dash-exps-tile__visited:focus-visible),
+.explorer-discover-card:has(.dash-exps-tile__share:hover),
+.explorer-discover-card:has(.dash-exps-tile__share:focus-visible) {
   z-index: 12;
   position: relative;
 }
@@ -1856,8 +1897,15 @@
   font-size: 12px;
 }
 
+.explorer-discover-catalog .dash-exps-tile__gallery .dash-team-gallery__dots {
+  left: 42%;
+  bottom: 17px;
+  transform: translateX(-50%);
+}
+
 .explorer-discover-catalog .dash-exps-tile__fav,
-.explorer-discover-catalog .dash-exps-tile__visited {
+.explorer-discover-catalog .dash-exps-tile__visited,
+.explorer-discover-catalog .dash-exps-tile__share {
   width: 28px;
   height: 28px;
 }

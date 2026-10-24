@@ -11,6 +11,7 @@ export const NOTIFICATION_TYPES = {
   CATEGORY_APPROVED: "CATEGORY_APPROVED",
   FAQ_RECEIVED: "FAQ_RECEIVED",
   FAQ_ANSWERED: "FAQ_ANSWERED",
+  REVIEW_PUBLISHED: "REVIEW_PUBLISHED",
 } as const;
 
 type CreateNotificationInput = {
@@ -216,6 +217,41 @@ export async function notifyFaqReceived(input: {
       entityId: input.faqId,
     })),
   );
+}
+
+export async function notifyReviewPublished(input: {
+  userId: string;
+  reviewId: string;
+  experienceId: string;
+}) {
+  const existing = await prisma.notification.findFirst({
+    where: {
+      userId: input.userId,
+      type: NOTIFICATION_TYPES.REVIEW_PUBLISHED,
+      entity: "ExperienceVisitorReview",
+      entityId: input.reviewId,
+    },
+    select: { id: true },
+  });
+  if (existing) {
+    return;
+  }
+  const experience = await prisma.experience.findFirst({
+    where: { id: input.experienceId },
+    select: { title: true },
+  });
+  const experienceTitle = experience?.title?.trim() || "esta experiencia";
+  await createNotifications([
+    {
+      userId: input.userId,
+      type: NOTIFICATION_TYPES.REVIEW_PUBLISHED,
+      title: "Reseña publicada correctamente",
+      body: `Tu reseña de ${experienceTitle} ya está publicada.`,
+      link: `/explorar/${input.experienceId}`,
+      entity: "ExperienceVisitorReview",
+      entityId: input.reviewId,
+    },
+  ]);
 }
 
 export async function listNotifications(userId: string) {
