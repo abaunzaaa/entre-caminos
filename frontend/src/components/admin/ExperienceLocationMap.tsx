@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useMapWheelZoom } from "../../hooks/useMapWheelZoom";
 import { TILE_SIZE, latLngToWorld, worldToLatLng } from "../../utils/map-projection";
 
 type ExperienceLocationMapProps = {
@@ -66,6 +67,15 @@ export function ExperienceLocationMap({
   worldRef.current = centerWorld;
   viewZoomRef.current = viewZoom;
 
+  const stopWheel = useMapWheelZoom({
+    viewportRef,
+    zoomRef: viewZoomRef,
+    enabled: true,
+    minZoom: MIN_ZOOM,
+    maxZoom: MAX_ZOOM,
+    setZoom: setViewZoom,
+  });
+
   useEffect(() => {
     setCamera(null);
   }, [lat, lng]);
@@ -74,8 +84,9 @@ export function ExperienceLocationMap({
     if (draggingRef.current) {
       return;
     }
+    stopWheel();
     setViewZoom(Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom)));
-  }, [zoom]);
+  }, [stopWheel, zoom]);
 
   useEffect(() => {
     const node = viewportRef.current;
@@ -96,17 +107,21 @@ export function ExperienceLocationMap({
     return () => observer.disconnect();
   }, []);
 
+  const tileZoom = Math.round(Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, viewZoom)));
+  const tileScale = 2 ** (viewZoom - tileZoom);
+  const tileWorld = useMemo(() => latLngToWorld(cameraLat, cameraLng, tileZoom), [cameraLat, cameraLng, tileZoom]);
+
   const tiles = useMemo(() => {
     if (!size.width) {
       return [];
     }
-    const left = centerWorld.x - size.width / 2;
-    const top = centerWorld.y - size.height / 2;
+    const left = tileWorld.x - size.width / 2;
+    const top = tileWorld.y - size.height / 2;
     const x0 = Math.floor(left / TILE_SIZE);
     const y0 = Math.floor(top / TILE_SIZE);
     const x1 = Math.floor((left + size.width) / TILE_SIZE);
     const y1 = Math.floor((top + size.height) / TILE_SIZE);
-    const maxIndex = 2 ** viewZoom;
+    const maxIndex = 2 ** tileZoom;
     const next: Array<{ key: string; left: number; top: number; src: string }> = [];
     for (let x = x0; x <= x1; x += 1) {
       for (let y = y0; y <= y1; y += 1) {
@@ -115,15 +130,15 @@ export function ExperienceLocationMap({
         }
         const wrappedX = ((x % maxIndex) + maxIndex) % maxIndex;
         next.push({
-          key: `${viewZoom}-${wrappedX}-${y}-${x}`,
+          key: `${tileZoom}-${wrappedX}-${y}-${x}`,
           left: x * TILE_SIZE - left,
           top: y * TILE_SIZE - top,
-          src: `https://tile.openstreetmap.org/${viewZoom}/${wrappedX}/${y}.png`,
+          src: `https://tile.openstreetmap.org/${tileZoom}/${wrappedX}/${y}.png`,
         });
       }
     }
     return next;
-  }, [centerWorld.x, centerWorld.y, size.height, size.width, viewZoom]);
+  }, [size.height, size.width, tileWorld.x, tileWorld.y, tileZoom]);
 
   const emitPoint = useCallback((x: number, y: number, ended: boolean) => {
     const point = worldToLatLng(x, y, viewZoomRef.current);
@@ -206,8 +221,8 @@ export function ExperienceLocationMap({
   }, [onWindowPointerMove, onWindowPointerUp]);
 
   function shiftZoom(delta: number) {
-    const nextZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, viewZoom + delta));
-    setViewZoom(nextZoom);
+    stopWheel();
+    setViewZoom((current) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, current + delta)));
   }
 
   const canPan = interactive || explore;
@@ -223,16 +238,22 @@ export function ExperienceLocationMap({
         className="dash-exps-map__viewport"
         onPointerDown={canPan ? (event) => onPointerDown(event, "map") : undefined}
       >
-        {tiles.map((tile) => (
-          <img
-            key={tile.key}
-            src={tile.src}
-            alt=""
-            draggable={false}
-            className="dash-exps-map__tile"
-            style={{ transform: `translate(${tile.left}px, ${tile.top}px)` }}
-          />
-        ))}
+        {tiles.length ? (
+          <div className="dash-exps-map__land" aria-hidden="true">
+            <div className="dash-exps-map__scaler" style={{ transform: `scale(${tileScale})` }}>
+              {tiles.map((tile) => (
+                <img
+                  key={tile.key}
+                  src={tile.src}
+                  alt=""
+                  draggable={false}
+                  className="dash-exps-map__tile"
+                  style={{ transform: `translate(${tile.left}px, ${tile.top}px)` }}
+                />
+              ))}
+            </div>
+          </div>
+        ) : null}
         <div className="dash-exps-map__pin-wrap" style={{ transform: `translate(${markerShift.x}px, ${markerShift.y}px)` }}>
           {interactive && !explore ? (
             <button

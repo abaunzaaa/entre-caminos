@@ -18,6 +18,7 @@ import { getApiErrorMessage } from "../../utils/api-error";
 import { EXPERIENCE_DETAIL_SECTIONS } from "../../utils/experience-detail-sections";
 import { sedeChoices } from "../../utils/experience-places";
 import { showFavoriteToast } from "../../services/favorites-sync";
+import { requestNotificationsRefresh } from "../../services/notifications.service";
 import { mediaUrl } from "../../utils/media";
 import { usePageScrollLock } from "../../hooks/usePageScrollLock";
 import { ReviewComposerModal, generalMood, type ReviewDraft, type ReviewModalMark } from "./ReviewComposerModal";
@@ -396,7 +397,14 @@ export function ExperienceReviewsSection({
   const editing = mine.find((review) => review.id === editingId) ?? null;
 
   useEffect(() => {
+    setComposer(null);
+    setEditingId(null);
+  }, [experienceId]);
+
+  useEffect(() => {
     if (!composeRequest) {
+      setComposer(null);
+      setEditingId(null);
       return;
     }
     const options = sedeRef.current;
@@ -445,6 +453,9 @@ export function ExperienceReviewsSection({
       setReviews((current) => [data.review, ...current.filter((review) => review.id !== data.review.id)]);
       setComposer(null);
       showFavoriteToast(editingExisting ? REVIEW_UPDATED : REVIEW_PUBLISHED);
+      if (!editingExisting) {
+        requestNotificationsRefresh();
+      }
     } catch (err) {
       showFavoriteToast(
         reviewErrorMessage(err, editingExisting ? REVIEW_UPDATE_FAILED : REVIEW_PUBLISH_FAILED),

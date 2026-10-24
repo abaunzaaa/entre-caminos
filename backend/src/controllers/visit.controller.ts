@@ -6,6 +6,11 @@ export async function list(req: Request, res: Response) {
   return res.json({ success: true, data: { ids } });
 }
 
+export async function journey(req: Request, res: Response) {
+  const stops = await visitService.listVisitedJourney(req.user!.id);
+  return res.json({ success: true, data: { stops } });
+}
+
 export async function status(req: Request, res: Response) {
   const visited = await visitService.isExperienceVisited(req.user!.id, String(req.params.experienceId));
   return res.json({ success: true, data: { visited } });

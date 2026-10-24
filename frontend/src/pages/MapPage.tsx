@@ -14,7 +14,6 @@ import { useFavoriteToggle } from "../hooks/useFavoriteToggle";
 import { getExperiencesNear, getPublicExperiences, type NearbyExperience } from "../services/catalog.service";
 import { listFavoriteIds } from "../services/favorites.service";
 import { onFavoritesChanged } from "../services/favorites-sync";
-import { saveSharedMapLocation } from "../services/onboarding.service";
 import mapaIcon from "../assets/mapa-icon.png";
 import { COLOMBIA_DEPARTMENTS, findMunicipality } from "../data/colombia-locations";
 import { formatPrice } from "../utils/cn";
@@ -32,9 +31,11 @@ import {
 import {
   geocodeMunicipality,
   resolveColombiaPlace,
+  reverseGeocodeColombia,
   searchColombiaPlaces,
   type ColombiaPlaceSuggestion,
 } from "../utils/geocode";
+import { CURRENT_PLACE_FALLBACK, formatCurrentPlace } from "../utils/map-place";
 import "../styles/explorer-map.css";
 
 const EMPTY_POINTS: ExplorerMapPoint[] = [];
@@ -68,24 +69,6 @@ function matchesExploredMunicipality(experience: NearbyExperience, place: Explor
     return false;
   }
   return true;
-}
-
-function profileCoordinates(profile?: { latitude: number | null; longitude: number | null } | null) {
-  if (!profile || profile.latitude == null || profile.longitude == null) {
-    return null;
-  }
-  const latitude = Number(profile.latitude);
-  const longitude = Number(profile.longitude);
-  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
-    return null;
-  }
-  if (Math.abs(latitude) < 0.000001 && Math.abs(longitude) < 0.000001) {
-    return null;
-  }
-  if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
-    return null;
-  }
-  return { latitude, longitude };
 }
 
 function formatDistance(km: number) {
@@ -223,12 +206,7 @@ export function MapPage() {
   const department = user?.profile?.department?.trim() ?? "";
   const city = user?.profile?.city?.trim() ?? "";
   const profilePlace = [department, city].filter(Boolean).join(" · ");
-  const shared = useMemo(() => {
-    if (user?.profile?.currentLocationShared !== true) {
-      return null;
-    }
-    return profileCoordinates(user.profile);
-  }, [user?.profile]);
+  const registeredPlace = city && department ? `${city} · ${department}` : profilePlace;
 
   const [approx, setApprox] = useState<MapPoint | null>(null);
   const [placeLoading, setPlaceLoading] = useState(false);
@@ -266,11 +244,15 @@ export function MapPage() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [shareError, setShareError] = useState("");
+  const [currentFix, setCurrentFix] = useState<MapPoint | null>(null);
+  const [currentLabel, setCurrentLabel] = useState("");
   const [filters, setFilters] = useState<MapFilters>(EMPTY_MAP_FILTERS);
   const [sort] = useState<MapSort>("near");
   const [menu, setMenu] = useState<"category" | "price" | "company" | null>(null);
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(() => new Set());
   const searchRequest = useRef(0);
+  const shareRequest = useRef(0);
+  const seenUser = useRef<string | undefined>(undefined);
   const chosenPlaceQuery = useRef("");
   const toolsRef = useRef<HTMLDivElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
@@ -336,15 +318,31 @@ export function MapPage() {
     };
   }, [user?.id]);
 
-  const personal = shared ?? approx;
+  const personal = currentFix ?? approx;
   const active = explore ?? personal;
-  const waitingForPlace = Boolean(user && !shared && city && placeLoading && !explore);
+  const waitingForPlace = Boolean(user && !currentFix && city && placeLoading && !explore);
+  const shownPlace = currentFix ? currentLabel || CURRENT_PLACE_FALLBACK : registeredPlace;
+
+  useEffect(() => {
+    const next = user?.id;
+    if (seenUser.current === next) {
+      return;
+    }
+    const previous = seenUser.current;
+    seenUser.current = next;
+    if (previous === undefined && next) {
+      return;
+    }
+    shareRequest.current += 1;
+    setCurrentFix(null);
+    setCurrentLabel("");
+  }, [user?.id]);
 
   useEffect(() => {
     if (authLoading) {
       return;
     }
-    if (!user || shared || !city) {
+    if (!user || !city) {
       setApprox(null);
       setPlaceMiss(false);
       setPlaceLoading(false);
@@ -375,7 +373,7 @@ export function MapPage() {
     return () => {
       cancelled = true;
     };
-  }, [authLoading, city, department, shared, user]);
+  }, [authLoading, city, department, user]);
 
   const nameFocus = useMemo(() => {
     if (explore || searchQuery.trim().length < 2) {
@@ -394,8 +392,8 @@ export function MapPage() {
       ? `name:${nameFocus.latitude.toFixed(5)},${nameFocus.longitude.toFixed(5)}`
       : waitingForPlace || authLoading
         ? "pending"
-        : shared
-          ? `shared:${shared.latitude.toFixed(5)},${shared.longitude.toFixed(5)}`
+        : currentFix
+          ? `current:${currentFix.latitude.toFixed(5)},${currentFix.longitude.toFixed(5)}`
           : approx
             ? `approx:${approx.latitude.toFixed(5)},${approx.longitude.toFixed(5)}`
             : "overview";
@@ -407,14 +405,14 @@ export function MapPage() {
 
   const view = useMemo<ExplorerMapView>(() => {
     const point = explore ?? nameFocus ?? active ?? COLOMBIA_MAP_OVERVIEW;
-    const zoom = explore || nameFocus || shared ? 13 : approx && !explore ? 12 : COLOMBIA_MAP_OVERVIEW.zoom;
+    const zoom = explore || nameFocus || currentFix ? 13 : approx && !explore ? 12 : COLOMBIA_MAP_OVERVIEW.zoom;
     return {
       latitude: point.latitude,
       longitude: point.longitude,
       zoom,
       token: viewToken,
     };
-  }, [active, approx, explore, nameFocus, shared, viewToken]);
+  }, [active, approx, currentFix, explore, nameFocus, viewToken]);
 
   useEffect(() => {
     if (authLoading || waitingForPlace || !active) {
@@ -666,27 +664,44 @@ export function MapPage() {
       setShareError("Este navegador no puede compartir la ubicación.");
       return;
     }
+    const requestId = shareRequest.current + 1;
+    shareRequest.current = requestId;
     setShareError("");
     setSharing(true);
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        void (async () => {
-          try {
-            await saveSharedMapLocation({
-              latitude: position.coords.latitude,
-              longitude: position.coords.longitude,
-              currentLocationShared: true,
-            });
-            clearExploredPlace();
-            await refresh();
-          } catch {
-            setShareError("No pudimos guardar tu ubicación.");
-          } finally {
-            setSharing(false);
-          }
-        })();
+        if (requestId !== shareRequest.current) {
+          return;
+        }
+        const latitude = position.coords.latitude;
+        const longitude = position.coords.longitude;
+        if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+          setSharing(false);
+          setShareError("No pudimos leer tu ubicación.");
+          return;
+        }
+        setCurrentFix({ latitude, longitude });
+        setCurrentLabel(CURRENT_PLACE_FALLBACK);
+        clearExploredPlace();
+        setSharing(false);
+        void reverseGeocodeColombia(latitude, longitude)
+          .then((match) => {
+            if (requestId !== shareRequest.current) {
+              return;
+            }
+            setCurrentLabel(formatCurrentPlace(match));
+          })
+          .catch(() => {
+            if (requestId !== shareRequest.current) {
+              return;
+            }
+            setCurrentLabel(CURRENT_PLACE_FALLBACK);
+          });
       },
       () => {
+        if (requestId !== shareRequest.current) {
+          return;
+        }
         setSharing(false);
         setShareError("No pudimos acceder a tu ubicación. Revisa el permiso del navegador.");
       },
@@ -694,22 +709,13 @@ export function MapPage() {
     );
   }
 
-  async function stopSharing() {
+  function stopSharing() {
+    shareRequest.current += 1;
     setShareError("");
-    setSharing(true);
-    try {
-      await saveSharedMapLocation({
-        latitude: null,
-        longitude: null,
-        currentLocationShared: false,
-      });
-      clearExploredPlace();
-      await refresh();
-    } catch {
-      setShareError("No pudimos dejar de compartir tu ubicación.");
-    } finally {
-      setSharing(false);
-    }
+    setSharing(false);
+    setCurrentFix(null);
+    setCurrentLabel("");
+    clearExploredPlace();
   }
 
   let experienceBody = null;
@@ -785,9 +791,9 @@ export function MapPage() {
           <div className="explorer-map-page__head">
             <div className="explorer-map-heading">
               <h1 id="nearby-map-title">Mi ubicación</h1>
-              {profilePlace ? (
+              {shownPlace ? (
                 <p className="explorer-map-place">
-                  <strong>{city && department ? `${city} · ${department}` : profilePlace}</strong>
+                  <strong>{shownPlace}</strong>
                 </p>
               ) : !authLoading ? (
                 <p className="explorer-map-search__note">
@@ -802,21 +808,21 @@ export function MapPage() {
                 {user ? (
                   <button
                     type="button"
-                    className={`explorer-map-share__toggle${shared ? " is-active" : ""}`}
-                    aria-pressed={Boolean(shared)}
-                    aria-label={shared ? "Compartiendo ubicación" : "Compartir ubicación"}
-                    title={shared ? "Dejar de compartir" : "Compartir ubicación"}
+                    className={`explorer-map-share__toggle${currentFix ? " is-active" : ""}`}
+                    aria-pressed={Boolean(currentFix)}
+                    aria-label={currentFix ? "Compartiendo ubicación" : "Compartir ubicación"}
+                    title={currentFix ? "Dejar de compartir" : "Compartir ubicación"}
                     disabled={sharing}
                     onClick={() => {
-                      if (shared) {
-                        void stopSharing();
+                      if (currentFix) {
+                        stopSharing();
                         return;
                       }
                       shareCurrentLocation();
                     }}
                   >
                     <LocateFixed size={13} strokeWidth={1.8} aria-hidden="true" />
-                    {sharing ? "Guardando…" : shared ? "Compartiendo ubicación" : "Compartir ubicación"}
+                    {sharing ? "Ubicando…" : currentFix ? "Compartiendo ubicación" : "Compartir ubicación"}
                   </button>
                 ) : (
                   <Link
@@ -837,7 +843,7 @@ export function MapPage() {
               ) : null}
             </div>
             {shareError ? <p className="explorer-map-search__note">{shareError}</p> : null}
-            {placeMiss && !explore && !shared ? (
+            {placeMiss && !explore && !currentFix ? (
               <p className="explorer-map-search__note">No pudimos ubicar el municipio. Puedes buscar una experiencia o compartir tu ubicación.</p>
             ) : null}
             <hr className="explorer-map-rule" />
@@ -1044,11 +1050,11 @@ export function MapPage() {
         <div className="explorer-map-page__canvas">
           <ExplorerNearbyMap
             enabled={!authLoading}
-            preciseLocation={shared}
+            preciseLocation={currentFix}
             view={view}
             home={
               personal
-                ? { latitude: personal.latitude, longitude: personal.longitude, zoom: shared ? 13 : 12 }
+                ? { latitude: personal.latitude, longitude: personal.longitude, zoom: currentFix ? 13 : 12 }
                 : null
             }
             points={active ? points : EMPTY_POINTS}

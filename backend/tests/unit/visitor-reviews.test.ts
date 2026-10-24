@@ -54,6 +54,17 @@ const harness = vi.hoisted(() => {
     published: new Set<string>(),
     visits: [] as Array<{ userId: string; experienceId: string }>,
     reviews: [] as ReviewRow[],
+    notifications: [] as Array<{
+      id: string;
+      userId: string;
+      type: string;
+      title: string;
+      body: string;
+      link: string | null;
+      entity: string | null;
+      entityId: string | null;
+      readAt: Date | null;
+    }>,
     locations: [] as SedeRow[],
     sequence: 1,
   };
@@ -73,6 +84,10 @@ const harness = vi.hoisted(() => {
       create: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
+    },
+    notification: {
+      findFirst: vi.fn(),
+      createMany: vi.fn(),
     },
   };
 
@@ -122,10 +137,17 @@ function attachLocation(row: ReviewRow): ReviewRow {
 function wireMocks() {
   prismaMock.experience.findFirst.mockReset();
   prismaMock.experience.findFirst.mockImplementation(async (args: { where: { id: string; status?: string } }) => {
-    if (args.where.status === "PUBLISHED" && state.published.has(args.where.id)) {
-      return { id: args.where.id };
+    const published = state.published.has(args.where.id);
+    if (args.where.status === "PUBLISHED" && !published) {
+      return null;
     }
-    return null;
+    if (!published) {
+      return null;
+    }
+    return {
+      id: args.where.id,
+      title: args.where.id === "exp-2" ? "Otra ruta" : "Ruta gastronómica por Sabaneta y Envigado",
+    };
   });
 
   prismaMock.experienceVisit.findUnique.mockReset();
@@ -322,6 +344,62 @@ function wireMocks() {
     const [row] = state.reviews.splice(index, 1);
     return row;
   });
+
+  prismaMock.notification.findFirst.mockReset();
+  prismaMock.notification.findFirst.mockImplementation(
+    async (args: { where: { userId: string; type: string; entity: string; entityId: string } }) => {
+      return (
+        state.notifications.find(
+          (item) =>
+            item.userId === args.where.userId &&
+            item.type === args.where.type &&
+            item.entity === args.where.entity &&
+            item.entityId === args.where.entityId,
+        ) ?? null
+      );
+    },
+  );
+
+  prismaMock.notification.createMany.mockReset();
+  prismaMock.notification.createMany.mockImplementation(
+    async (args: {
+      data:
+        | Array<{
+            userId: string;
+            type: string;
+            title: string;
+            body: string;
+            link?: string | null;
+            entity?: string | null;
+            entityId?: string | null;
+          }>
+        | {
+            userId: string;
+            type: string;
+            title: string;
+            body: string;
+            link?: string | null;
+            entity?: string | null;
+            entityId?: string | null;
+          };
+    }) => {
+      const rows = Array.isArray(args.data) ? args.data : [args.data];
+      rows.forEach((item) => {
+        state.notifications.push({
+          id: `note-${state.notifications.length + 1}`,
+          userId: item.userId,
+          type: item.type,
+          title: item.title,
+          body: item.body,
+          link: item.link ?? null,
+          entity: item.entity ?? null,
+          entityId: item.entityId ?? null,
+          readAt: null,
+        });
+      });
+      return { count: rows.length };
+    },
+  );
 }
 
 function seedReview(userId: string, experienceId: string, rating: number, comment: string) {
@@ -348,6 +426,7 @@ beforeEach(() => {
   state.published = new Set(["exp-1"]);
   state.visits = [];
   state.reviews = [];
+  state.notifications = [];
   state.locations = [{ id: "loc-1", experienceId: "exp-1", municipality: "Sabaneta", address: "", position: 0 }];
   state.sequence = 1;
   uploadHarness.persistReviewImage.mockClear();
@@ -384,6 +463,7 @@ describe("HU-11 reseñas de visitantes", () => {
       message: "Marca esta experiencia como visitada para poder compartir tu reseña.",
     });
     expect(state.reviews).toHaveLength(0);
+    expect(state.notifications).toHaveLength(0);
   });
 
   it("un usuario que la visitó puede crear su reseña", async () => {
@@ -394,6 +474,18 @@ describe("HU-11 reseñas de visitantes", () => {
     expect(data.review.comment).toBe("Muy buena guía.");
     expect(data.summary).toEqual({ averageRating: 4, count: 1 });
     expect(state.visits).toEqual([{ userId: "user-a", experienceId: "exp-1" }]);
+    expect(state.notifications).toEqual([
+      expect.objectContaining({
+        userId: "user-a",
+        type: "REVIEW_PUBLISHED",
+        title: "Reseña publicada correctamente",
+        body: "Tu reseña de Ruta gastronómica por Sabaneta y Envigado ya está publicada.",
+        link: "/explorar/exp-1",
+        entity: "ExperienceVisitorReview",
+        entityId: data.review.id,
+        readAt: null,
+      }),
+    ]);
   });
 
   it("un usuario no puede crear dos reseñas de la misma sede", async () => {
@@ -404,6 +496,7 @@ describe("HU-11 reseñas de visitantes", () => {
     ).rejects.toMatchObject({ statusCode: 409, message: VISITOR_REVIEW_MESSAGES.duplicate });
     expect(state.reviews).toHaveLength(1);
     expect(state.reviews[0]?.comment).toBe("Primera.");
+    expect(state.notifications).toHaveLength(1);
   });
 
   it("si la restricción única de la base rechaza el duplicado, no se crea otra reseña", async () => {

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ExperienceEditorialView } from "../components/admin/ExperienceEditorialView";
 import { VisitLockedDialog, VisitMarkedDialog } from "../components/experiences/VisitReviewDialogs";
@@ -27,6 +27,7 @@ export function ExperienceDetailPage() {
   const [error, setError] = useState("");
   const [visitWelcomeOpen, setVisitWelcomeOpen] = useState(false);
   const [visitLockOpen, setVisitLockOpen] = useState(false);
+  const [reviewExperienceId, setReviewExperienceId] = useState<string | null>(null);
   const [composeRequest, setComposeRequest] = useState(0);
   const [reviewFocusRequest, setReviewFocusRequest] = useState(0);
   const favorite = useFavoriteToggle(id ?? "", {
@@ -40,18 +41,33 @@ export function ExperienceDetailPage() {
   });
 
   const openReviewComposer = useCallback(() => {
+    if (!id) {
+      return;
+    }
+    setReviewExperienceId(id);
     setComposeRequest((value) => value + 1);
-  }, []);
+  }, [id]);
+
+  useLayoutEffect(() => {
+    setVisitWelcomeOpen(false);
+    setVisitLockOpen(false);
+    setReviewFocusRequest(0);
+    if (searchParams.get("calificar") !== "1") {
+      setReviewExperienceId(null);
+      setComposeRequest(0);
+    }
+    window.scrollTo(0, 0);
+  }, [id]);
 
   useEffect(() => {
-    if (!id || !user || !visited.visited || searchParams.get("calificar") !== "1") {
+    if (!id || !user || visited.settledFor !== id || !visited.visited || searchParams.get("calificar") !== "1") {
       return;
     }
     openReviewComposer();
     const next = new URLSearchParams(searchParams);
     next.delete("calificar");
     setSearchParams(next, { replace: true });
-  }, [id, openReviewComposer, searchParams, setSearchParams, user, visited.visited]);
+  }, [id, openReviewComposer, searchParams, setSearchParams, user, visited.settledFor, visited.visited]);
 
   const fetchNearby = useCallback(async () => getNearbyExperiences(), []);
 
@@ -96,7 +112,9 @@ export function ExperienceDetailPage() {
     };
   }, [id]);
 
-  if (loading) {
+  const waitingForRoute = Boolean(id && experience && experience.id !== id);
+
+  if (loading || waitingForRoute) {
     return (
       <div className="dash dash--exps dash--exps-preview tourist-editorial-shell">
         <p className="dash-section__lead" style={{ padding: "6rem 1.5rem" }}>
@@ -127,7 +145,7 @@ export function ExperienceDetailPage() {
         visitedOn={visited.visited}
         visitedBusy={visited.busy}
         onVisitedToggle={visited.toggle}
-        reviewComposeRequest={composeRequest}
+        reviewComposeRequest={reviewExperienceId === experience.id ? composeRequest : 0}
         reviewFocusRequest={reviewFocusRequest}
         nearbyHref={(nearbyId) => `/explorar/${nearbyId}`}
         fetchNearby={fetchNearby}

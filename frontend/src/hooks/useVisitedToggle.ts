@@ -19,37 +19,42 @@ export function useVisitedToggle(experienceId: string, options: UseVisitedToggle
   const navigate = useNavigate();
   const hasInitial = typeof options.initialVisited === "boolean";
   const [visited, setVisited] = useState(Boolean(options.initialVisited));
+  const [settledFor, setSettledFor] = useState<string | null>(hasInitial ? experienceId : null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (hasInitial) {
       setVisited(Boolean(options.initialVisited));
+      setSettledFor(experienceId);
+      return;
     }
-  }, [hasInitial, options.initialVisited, experienceId]);
-
-  useEffect(() => {
-    if (hasInitial || !user || !experienceId) {
-      if (!user && !hasInitial) {
+    if (!user || !experienceId) {
+      if (!user) {
         setVisited(false);
       }
+      setSettledFor(experienceId || null);
       return;
     }
     let cancelled = false;
+    setSettledFor(null);
+    setVisited(false);
     getVisitedStatus(experienceId)
       .then((value) => {
         if (!cancelled) {
           setVisited(value);
+          setSettledFor(experienceId);
         }
       })
       .catch(() => {
         if (!cancelled) {
           setVisited(false);
+          setSettledFor(experienceId);
         }
       });
     return () => {
       cancelled = true;
     };
-  }, [experienceId, hasInitial, user?.id]);
+  }, [experienceId, hasInitial, options.initialVisited, user?.id]);
 
   useEffect(() => {
     return onVisitedStatus((id, value) => {
@@ -96,6 +101,7 @@ export function useVisitedToggle(experienceId: string, options: UseVisitedToggle
 
   return {
     visited,
+    settledFor,
     busy,
     toggle: () => {
       void toggle();

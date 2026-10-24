@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Compass, Dumbbell, Landmark, LocateFixed, Palette, PartyPopper, Trees, Utensils, X, type LucideIcon } from "lucide-react";
+import { useMapWheelZoom } from "../../hooks/useMapWheelZoom";
 import { TILE_SIZE, latLngToWorld, worldToLatLng } from "../../utils/map-projection";
 
 const MIN_ZOOM = 5;
@@ -167,11 +168,28 @@ export function ExplorerNearbyMap({
   centerRef.current = center;
   zoomRef.current = zoom;
 
+  const stopWheel = useMapWheelZoom({
+    viewportRef,
+    zoomRef,
+    enabled,
+    minZoom: MIN_ZOOM,
+    maxZoom: MAX_ZOOM,
+    setZoom,
+    onInteract: () => {
+      movedRef.current = true;
+      if (flyRef.current != null) {
+        cancelAnimationFrame(flyRef.current);
+        flyRef.current = null;
+      }
+    },
+  });
+
   useEffect(() => {
     if (!enabled || view.token === 0 || view.token === seenView.current) {
       return;
     }
     seenView.current = view.token;
+    stopWheel();
     if (flyRef.current != null) {
       cancelAnimationFrame(flyRef.current);
       flyRef.current = null;
@@ -179,7 +197,7 @@ export function ExplorerNearbyMap({
     movedRef.current = true;
     setCenter({ latitude: view.latitude, longitude: view.longitude });
     setZoom(Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, view.zoom)));
-  }, [enabled, view]);
+  }, [enabled, stopWheel, view]);
 
   useEffect(() => {
     if (focusToken === seenFocus.current) {
@@ -190,10 +208,11 @@ export function ExplorerNearbyMap({
     if (!point) {
       return;
     }
+    stopWheel();
     movedRef.current = true;
     setCenter({ latitude: point.latitude, longitude: point.longitude });
     setZoom((current) => (current < 13 ? 13 : current));
-  }, [focusToken, points, selectedId]);
+  }, [focusToken, points, selectedId, stopWheel]);
 
   useEffect(() => {
     const node = viewportRef.current;
@@ -215,21 +234,6 @@ export function ExplorerNearbyMap({
   }, [enabled]);
 
   useEffect(() => {
-    const node = viewportRef.current;
-    if (!node) {
-      return;
-    }
-    function onWheel(event: WheelEvent) {
-      event.preventDefault();
-      movedRef.current = true;
-      const delta = event.deltaY < 0 ? 1 : -1;
-      setZoom((current) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, current + delta)));
-    }
-    node.addEventListener("wheel", onWheel, { passive: false });
-    return () => node.removeEventListener("wheel", onWheel);
-  }, [enabled]);
-
-  useEffect(() => {
     if (!selectedId) {
       return;
     }
@@ -246,18 +250,24 @@ export function ExplorerNearbyMap({
     () => latLngToWorld(center.latitude, center.longitude, zoom),
     [center.latitude, center.longitude, zoom],
   );
+  const tileZoom = Math.round(Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom)));
+  const tileScale = 2 ** (zoom - tileZoom);
+  const tileWorld = useMemo(
+    () => latLngToWorld(center.latitude, center.longitude, tileZoom),
+    [center.latitude, center.longitude, tileZoom],
+  );
 
   const tiles = useMemo(() => {
     if (!size.width || !size.height) {
       return [];
     }
-    const left = world.x - size.width / 2;
-    const top = world.y - size.height / 2;
+    const left = tileWorld.x - size.width / 2;
+    const top = tileWorld.y - size.height / 2;
     const x0 = Math.floor(left / TILE_SIZE);
     const y0 = Math.floor(top / TILE_SIZE);
     const x1 = Math.floor((left + size.width) / TILE_SIZE);
     const y1 = Math.floor((top + size.height) / TILE_SIZE);
-    const maxIndex = 2 ** zoom;
+    const maxIndex = 2 ** tileZoom;
     const next: Array<{ key: string; left: number; top: number; src: string }> = [];
     for (let x = x0; x <= x1; x += 1) {
       for (let y = y0; y <= y1; y += 1) {
@@ -266,15 +276,15 @@ export function ExplorerNearbyMap({
         }
         const wrappedX = ((x % maxIndex) + maxIndex) % maxIndex;
         next.push({
-          key: `${zoom}-${wrappedX}-${y}-${x}`,
+          key: `${tileZoom}-${wrappedX}-${y}-${x}`,
           left: x * TILE_SIZE - left,
           top: y * TILE_SIZE - top,
-          src: `https://tile.openstreetmap.org/${zoom}/${wrappedX}/${y}.png`,
+          src: `https://tile.openstreetmap.org/${tileZoom}/${wrappedX}/${y}.png`,
         });
       }
     }
     return next;
-  }, [size.height, size.width, world.x, world.y, zoom]);
+  }, [size.height, size.width, tileWorld.x, tileWorld.y, tileZoom]);
 
   const project = useCallback(
     (latitude: number, longitude: number) => {
@@ -358,6 +368,7 @@ export function ExplorerNearbyMap({
   }
 
   function changeZoom(delta: number) {
+    stopWheel();
     movedRef.current = true;
     setZoom((current) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, current + delta)));
   }
@@ -366,6 +377,7 @@ export function ExplorerNearbyMap({
     if (!home) {
       return;
     }
+    stopWheel();
     if (flyRef.current != null) {
       cancelAnimationFrame(flyRef.current);
       flyRef.current = null;
@@ -455,16 +467,20 @@ export function ExplorerNearbyMap({
           role="application"
           aria-label={variant === "preview" ? "Vista previa del mapa de experiencias" : "Mapa de experiencias cerca de ti"}
         >
-          {tiles.map((tile) => (
-            <img
-              key={tile.key}
-              src={tile.src}
-              alt=""
-              draggable={false}
-              className="explorer-nearby-map__tile"
-              style={{ transform: `translate(${tile.left}px, ${tile.top}px)` }}
-            />
-          ))}
+          <div className="explorer-nearby-map__land" aria-hidden="true">
+            <div className="explorer-nearby-map__scaler" style={{ transform: `scale(${tileScale})` }}>
+              {tiles.map((tile) => (
+                <img
+                  key={tile.key}
+                  src={tile.src}
+                  alt=""
+                  draggable={false}
+                  className="explorer-nearby-map__tile"
+                  style={{ transform: `translate(${tile.left}px, ${tile.top}px)` }}
+                />
+              ))}
+            </div>
+          </div>
           {preciseLocation ? (
             <span
               className="explorer-nearby-map__user"

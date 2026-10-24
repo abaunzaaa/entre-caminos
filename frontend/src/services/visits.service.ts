@@ -2,6 +2,27 @@ import { api } from "./api";
 
 type ApiResponse<T> = { success: boolean; data: T };
 
+export type VisitedJourneyStop = {
+  id: string;
+  title: string;
+  imageUrl: string | null;
+  imageUrls: string[];
+  location: string;
+  description: string;
+  department: string;
+  municipality: string;
+  latitude: number | null;
+  longitude: number | null;
+  visitedAt: string;
+  venueCount: number;
+  categories: Array<{ id: string; name: string }>;
+};
+
+export async function listVisitedJourney() {
+  const { data } = await api.get<ApiResponse<{ stops: VisitedJourneyStop[] }>>("/visits/journey");
+  return data.data.stops;
+}
+
 let visitedIdsInflight: Promise<string[]> | null = null;
 
 export function listVisitedIds() {

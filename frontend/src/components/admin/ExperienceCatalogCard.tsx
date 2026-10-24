@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Heart, MapPin } from "lucide-react";
+import { Heart, MapPin, Share } from "lucide-react";
 import { VisitedCheckIcon } from "../icons/VisitedCheckIcon";
 import { Link, useNavigate } from "react-router-dom";
 import { VisitLockedDialog, VisitMarkedDialog } from "../experiences/VisitReviewDialogs";
@@ -14,6 +14,7 @@ import type { Experience, ExperienceStatus } from "../../types";
 import { StatusDot } from "./Panel";
 import { TeamInviteCarousel } from "./TeamInviteCarousel";
 import { canDeleteExperience, canEditExperience } from "../../utils/admin-access";
+import { shareExperience } from "../../utils/share-experience";
 
 const STATUS_LABEL: Record<ExperienceStatus, string> = {
   DRAFT: "Borrador",
@@ -54,6 +55,26 @@ function formatSentAt(value?: string | null) {
     month: "short",
     year: "numeric",
   }).format(date);
+}
+
+function TouristShareButton({ experienceId, title }: { experienceId: string; title: string }) {
+  return (
+    <button
+      type="button"
+      className="dash-exps-tile__share"
+      aria-label="Compartir experiencia"
+      onClick={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        void shareExperience(experienceId, title);
+      }}
+    >
+      <Share size={14} strokeWidth={1.9} aria-hidden="true" />
+      <span className="dash-exps-tile__fav-tip" role="tooltip">
+        Compartir
+      </span>
+    </button>
+  );
 }
 
 function TouristVisitedButton({
@@ -231,6 +252,7 @@ export function ExperienceCatalogCard({
         </div>
         {isTourist ? (
           <div className="dash-exps-tile__actions">
+            <TouristShareButton experienceId={experience.id} title={experience.title} />
             <TouristVisitedButton experienceId={experience.id} initialVisited={visited} />
             <TouristFavoriteButton
               experienceId={experience.id}

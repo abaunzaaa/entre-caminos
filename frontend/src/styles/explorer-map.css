@@ -1494,6 +1494,17 @@
   cursor: default;
 }
 
+.explorer-nearby-map__land,
+.explorer-nearby-map__scaler {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.explorer-nearby-map__scaler {
+  transform-origin: center center;
+}
+
 .explorer-nearby-map__tile {
   position: absolute;
   top: 0;

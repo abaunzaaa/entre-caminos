@@ -2306,7 +2306,9 @@
 .dash-exps-tile:has(.dash-exps-tile__fav:hover),
 .dash-exps-tile:has(.dash-exps-tile__fav:focus-visible),
 .dash-exps-tile:has(.dash-exps-tile__visited:hover),
-.dash-exps-tile:has(.dash-exps-tile__visited:focus-visible) {
+.dash-exps-tile:has(.dash-exps-tile__visited:focus-visible),
+.dash-exps-tile:has(.dash-exps-tile__share:hover),
+.dash-exps-tile:has(.dash-exps-tile__share:focus-visible) {
   z-index: 12;
 }
 
@@ -2420,7 +2422,8 @@
 }
 
 .dash-exps-tile__fav,
-.dash-exps-tile__visited {
+.dash-exps-tile__visited,
+.dash-exps-tile__share {
   position: relative;
   z-index: 5;
   display: inline-grid;
@@ -2448,7 +2451,9 @@
 .dash-exps-tile__fav:hover,
 .dash-exps-tile__fav:focus-visible,
 .dash-exps-tile__visited:hover,
-.dash-exps-tile__visited:focus-visible {
+.dash-exps-tile__visited:focus-visible,
+.dash-exps-tile__share:hover,
+.dash-exps-tile__share:focus-visible {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.18) 100%),
     rgba(255, 255, 255, 0.52);
@@ -2505,7 +2510,9 @@
 .dash-exps-tile__fav:hover .dash-exps-tile__fav-tip,
 .dash-exps-tile__fav:focus-visible .dash-exps-tile__fav-tip,
 .dash-exps-tile__visited:hover .dash-exps-tile__fav-tip,
-.dash-exps-tile__visited:focus-visible .dash-exps-tile__fav-tip {
+.dash-exps-tile__visited:focus-visible .dash-exps-tile__fav-tip,
+.dash-exps-tile__share:hover .dash-exps-tile__fav-tip,
+.dash-exps-tile__share:focus-visible .dash-exps-tile__fav-tip {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
@@ -3684,6 +3691,17 @@
 .dash-exps-map.is-readonly .dash-exps-map__viewport {
   overflow: clip;
   touch-action: pan-y;
+}
+
+.dash-exps-map__land,
+.dash-exps-map__scaler {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.dash-exps-map__scaler {
+  transform-origin: center center;
 }
 
 .dash-exps-map__tile {
