@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bookmark, Calendar, Check, ChevronLeft, ChevronRight, Clock, ExternalLink, MapPin, SlidersHorizontal, Sparkles } from "lucide-react";
+import { Bookmark, Calendar, Check, ChevronLeft, ChevronRight, CircleHelp, Clock, ExternalLink, MapPin, SlidersHorizontal, Sparkles, X } from "lucide-react";
 import { getPublicExperience } from "../../services/catalog.service";
 import type { PlannerItinerary, PlannerStop } from "../../services/planner.service";
 import { mediaUrl } from "../../utils/media";
@@ -159,6 +159,7 @@ export function PlannerItineraryBoard({
   const images = useMemo(() => assignStopImages(draft.stops, photos, broken), [draft.stops, photos, broken]);
   const [openStops, setOpenStops] = useState<string[]>([]);
   const [zoom, setZoom] = useState(false);
+  const [whyOpen, setWhyOpen] = useState(false);
   const [opening, setOpening] = useState(false);
   const [experienceNote, setExperienceNote] = useState("");
   const navigate = useNavigate();
@@ -168,22 +169,30 @@ export function PlannerItineraryBoard({
   const place = department ? `${draft.municipality}, ${department}` : draft.municipality;
   const schedule = draft.scheduleLabel?.trim() || "Horario flexible";
   const scheduleCaption = draft.scheduleIsSuggested ? "Horario propuesto" : "Sin hora fija";
+  const density = draft.stops.length <= 2
+    ? "planner-detail--2-stops"
+    : draft.stops.length === 3
+      ? "planner-detail--3-stops"
+      : "planner-detail--4-stops";
 
   useEffect(() => {
     setIndex(0);
     setBroken([]);
     setOpenStops([]);
     setZoom(false);
+    setWhyOpen(false);
   }, [draft.id, draft.title, draft.primaryExperienceId]);
 
   useEffect(() => {
-    if (!zoom) return;
+    if (!zoom && !whyOpen) return;
     function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape") setZoom(false);
+      if (event.key !== "Escape") return;
+      setZoom(false);
+      setWhyOpen(false);
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [zoom]);
+  }, [zoom, whyOpen]);
 
   function show(next: number) {
     if (!visible.length) return;
@@ -210,7 +219,7 @@ export function PlannerItineraryBoard({
   }
 
   return (
-    <div className="plan-board-page">
+    <div className={`plan-board-page ${density}`}>
       <div className="plan-board">
         <div className="plan-board__main">
         <header className="plan-board__head">
@@ -304,9 +313,17 @@ export function PlannerItineraryBoard({
                     <button type="button" className="is-next" aria-label="Foto siguiente" onClick={() => show(index + 1)}><ChevronRight size={16} /></button>
                   </>
                 ) : null}
+                <button type="button" className="plan-board__why-btn" aria-label="¿Por qué este plan es para ti?" onClick={() => setWhyOpen(true)}>
+                  <CircleHelp size={18} strokeWidth={1.8} />
+                </button>
               </div>
             ) : (
-              <div className="plan-board__hero is-empty">Sin fotografías publicadas</div>
+              <div className="plan-board__hero is-empty">
+                Sin fotografías publicadas
+                <button type="button" className="plan-board__why-btn" aria-label="¿Por qué este plan es para ti?" onClick={() => setWhyOpen(true)}>
+                  <CircleHelp size={18} strokeWidth={1.8} />
+                </button>
+              </div>
             )}
             {visible.length > 1 ? (
               <div className="plan-board__thumbs">
@@ -325,11 +342,6 @@ export function PlannerItineraryBoard({
             ) : null}
           </section>
 
-          <section className="plan-board__why">
-            <h2><Sparkles size={16} strokeWidth={1.7} aria-hidden="true" /> ¿Por qué este plan es para ti?</h2>
-            <p>{draft.why}</p>
-          </section>
-
           <div className="plan-board__actions">
             <button type="button" onClick={onEdit}><SlidersHorizontal size={15} strokeWidth={1.8} /> Editar preferencias</button>
             <button type="button" className="is-solid" disabled={busy || saved} onClick={onSave}>
@@ -339,6 +351,18 @@ export function PlannerItineraryBoard({
           {error ? <p className="planner__error" role="alert">{error}</p> : null}
         </aside>
       </div>
+      {whyOpen ? (
+        <div className="plan-board__why-modal" role="dialog" aria-modal="true" aria-labelledby="plan-why-title">
+          <button type="button" className="plan-board__why-modal-backdrop" aria-label="Cerrar" onClick={() => setWhyOpen(false)} />
+          <div className="plan-board__why-modal-panel">
+            <button type="button" className="plan-board__why-modal-close" aria-label="Cerrar" onClick={() => setWhyOpen(false)}>
+              <X size={16} strokeWidth={1.8} />
+            </button>
+            <h2 id="plan-why-title"><Sparkles size={16} strokeWidth={1.7} aria-hidden="true" /> ¿Por qué este plan es para ti?</h2>
+            <p>{draft.why}</p>
+          </div>
+        </div>
+      ) : null}
       {zoom && active ? (
         <div className="plan-board__lightbox" role="dialog" aria-modal="true" aria-label="Fotografía completa">
           <button type="button" className="plan-board__lightbox-close" aria-label="Cerrar" onClick={() => setZoom(false)} />

@@ -163,10 +163,12 @@ export function PlannerPlanCover({ draft, prefs, onBack, onDetail, onDiscover }:
                   </button>
                 </figure>
                 <div className="plan-cover__floats" aria-hidden="true">
-                  <img className="is-mochila" src="/planner/carga-mochila.png" alt="" />
-                  <img className="is-mapa" src="/planner/carga-mapa.png" alt="" />
-                  <img className="is-camara" src="/planner/carga-camara.png" alt="" />
-                  <img className="is-brujula" src="/planner/carga-brujula.png" alt="" />
+                  <div className="plan-cover__float-grid">
+                    <img className="is-mochila" src="/planner/carga-mochila.png" alt="" />
+                    <img className="is-mapa" src="/planner/carga-mapa.png" alt="" />
+                    <img className="is-camara" src="/planner/carga-camara.png" alt="" />
+                    <img className="is-brujula" src="/planner/carga-brujula.png" alt="" />
+                  </div>
                 </div>
               </div>
             </div>

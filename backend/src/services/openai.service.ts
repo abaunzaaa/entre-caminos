@@ -161,6 +161,7 @@ export async function generateStructuredGroqJson(input: {
   schema: Record<string, unknown>;
   stage: string;
   attempt: number;
+  maxTokens?: number;
 }) {
   const key = groqKey();
   if (!key) {
@@ -180,7 +181,7 @@ export async function generateStructuredGroqJson(input: {
       body: JSON.stringify({
         model,
         temperature: 0.3,
-        max_tokens: 1200,
+        max_tokens: input.maxTokens ?? 1200,
         response_format: {
           type: "json_schema",
           json_schema: {
