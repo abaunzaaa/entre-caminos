@@ -336,30 +336,226 @@
 
 .visited-memory {
   position: absolute;
-  display: flex;
-  flex-direction: column;
   width: 30%;
-  padding: 0.28rem 0.28rem 0.48rem;
+  pointer-events: auto;
+}
+
+.visited-memory.is-open {
+  z-index: 4;
+}
+
+.visited-memory__tilt {
+  width: 100%;
+  transform: rotate(var(--tilt, 0deg));
+}
+
+.visited-memory__flip {
+  perspective: 1400px;
+}
+
+.visited-memories__track,
+.visited-memories__frame,
+.visited-memory__tilt,
+.visited-memory__flip,
+.visited-memory__flip-inner,
+.visited-memory__face {
+  transform-style: preserve-3d;
+}
+
+.visited-memory__flip-inner {
+  position: relative;
+  transform: rotateY(0deg);
+  transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+.visited-memory__flip.is-open .visited-memory__flip-inner {
+  transform: rotateY(180deg);
+}
+
+.visited-memory__face {
   border: 1px solid rgba(41, 73, 66, 0.12);
   border-radius: 0.32rem;
   background: #fff;
   box-shadow: 0 5px 12px rgba(28, 51, 46, 0.07);
-  color: #1c332e;
-  text-decoration: none;
-  pointer-events: auto;
-  transform: rotate(var(--tilt, 0deg));
-  transition: transform 220ms ease, box-shadow 220ms ease;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
-.visited-memory:hover {
-  z-index: 3;
-  box-shadow: 0 8px 16px rgba(28, 51, 46, 0.12);
-  transform: translateY(-2px) scale(1.02) rotate(var(--tilt, 0deg));
+.visited-memory__face--front {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 0.28rem 0.28rem 0.48rem;
+  color: inherit;
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+  transform: translateZ(0.1px);
 }
 
-.visited-memory:focus-visible {
+.visited-memory__face--front:focus-visible,
+.visited-memory__face--back:focus-visible,
+.visited-memory__open:focus-visible {
   outline: 1px solid #294942;
   outline-offset: 3px;
+}
+
+.visited-memory__face--back {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  padding: 0.28rem 0.28rem 0.36rem;
+  cursor: pointer;
+  transform: rotateY(180deg) translateZ(0.1px);
+}
+
+.visited-memory__back {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  text-align: center;
+}
+
+.visited-memory__stamp {
+  display: block;
+  flex: 0 0 auto;
+  align-self: center;
+  width: auto;
+  max-width: 78%;
+  height: 48%;
+  margin: 0.04rem auto 0.1rem;
+  object-fit: contain;
+  object-position: center;
+  background: transparent;
+  pointer-events: none;
+}
+
+.visited-memory__stamp.is-fallback {
+  max-width: 52%;
+  height: 36%;
+  opacity: 0.7;
+}
+
+.visited-memory__place,
+.visited-memory__region,
+.visited-memory__when,
+.visited-memory__rate {
+  margin: 0;
+}
+
+.visited-memory__place {
+  max-width: 100%;
+  color: #1c332e;
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  line-height: 1.25;
+  text-transform: uppercase;
+}
+
+.visited-memory__region {
+  margin-top: 0.12rem;
+  color: #6e8f88;
+  font-size: 0.52rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.visited-memory__when,
+.visited-memory__rate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.08rem;
+  margin-top: 0.28rem;
+}
+
+.visited-memory__when span,
+.visited-memory__rate span {
+  color: #6b746f;
+  font-size: 0.48rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.visited-memory__when {
+  color: #1c332e;
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+}
+
+.visited-memory__rate strong {
+  color: #1c332e;
+  font-size: 0.56rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.visited-memory__score {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.22rem;
+}
+
+.visited-memory__stars {
+  display: inline-flex;
+  gap: 0.05rem;
+}
+
+.visited-memory__star {
+  position: relative;
+  width: 0.55rem;
+  height: 0.55rem;
+}
+
+.visited-memory__star svg {
+  width: 0.55rem;
+  height: 0.55rem;
+  fill: none;
+  stroke: #9aa59c;
+  stroke-width: 1.4;
+  stroke-linejoin: round;
+}
+
+.visited-memory__star svg.is-fill {
+  position: absolute;
+  inset: 0;
+  fill: #1c332e;
+  stroke: #1c332e;
+}
+
+.visited-memory__star.is-half svg.is-fill {
+  clip-path: inset(0 50% 0 0);
+}
+
+.visited-memory__star.is-empty svg.is-fill {
+  visibility: hidden;
+}
+
+.visited-memory__open {
+  margin-top: auto;
+  padding: 0.4rem 0.2rem 0.08rem;
+  color: #1c332e;
+  font-size: 0.48rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.visited-memory__open:hover {
+  text-decoration: underline;
 }
 
 .visited-memory__photo {
@@ -408,10 +604,32 @@
   transition: transform 200ms ease, opacity 200ms ease;
 }
 
-.visited-drop:hover,
-.visited-drop.is-hot,
-.visited-drop.is-open {
-  transform: translate(-50%, -100%) scale(1.04);
+@media (hover: hover) and (pointer: fine) {
+  .visited-drop:hover .visited-drop__photo,
+  .visited-drop:focus-visible .visited-drop__photo,
+  .visited-drop.is-hot .visited-drop__photo {
+    opacity: 0;
+  }
+
+  .visited-drop:hover .visited-drop__fill,
+  .visited-drop:focus-visible .visited-drop__fill,
+  .visited-drop.is-hot .visited-drop__fill {
+    opacity: 1;
+  }
+}
+
+.visited-drop.is-open,
+.visited-drop.is-open:hover,
+.visited-drop.is-open:focus-visible {
+  transform: translate(-50%, -100%);
+}
+
+.visited-drop.is-open .visited-drop__body,
+.visited-drop.is-open .visited-drop__photo,
+.visited-drop.is-open .visited-drop__fill,
+.visited-drop.is-open:hover .visited-drop__photo,
+.visited-drop.is-open:hover .visited-drop__fill {
+  opacity: 0;
 }
 
 .visited-drop.is-muted,
@@ -429,38 +647,14 @@
   overflow: visible;
 }
 
-.visited-drop__body {
+.visited-drop__body,
+.visited-drop__photo,
+.visited-drop__fill {
   transition: opacity 180ms ease;
 }
 
 .visited-drop__fill {
   opacity: 0;
-}
-
-.visited-drop:hover .visited-drop__photo,
-.visited-drop.is-hot .visited-drop__photo {
-  opacity: 0;
-}
-
-.visited-drop:hover .visited-drop__fill,
-.visited-drop.is-hot .visited-drop__fill {
-  opacity: 1;
-}
-
-.visited-drop:hover:not(.is-open) .visited-drop__tip,
-.visited-drop.is-hot .visited-drop__tip {
-  fill: #6b746f;
-}
-
-.visited-drop.is-open .visited-drop__body {
-  opacity: 0;
-}
-
-.visited-drop.is-open .visited-drop__tip {
-  fill: #1c332e;
-  transform-box: fill-box;
-  transform-origin: center;
-  transform: scale(2);
 }
 
 .visited-drop.is-muted .visited-drop__photo,
@@ -499,6 +693,22 @@
 .visited-float__link:hover {
   border-color: rgba(28, 51, 46, 0.32);
   box-shadow: 0 10px 20px rgba(28, 51, 46, 0.14);
+}
+
+.visited-float__link::before {
+  content: "";
+  position: absolute;
+  left: -0.4rem;
+  width: calc(100% + 0.8rem);
+  height: 5.75rem;
+}
+
+.visited-float__link.is-above::before {
+  top: 100%;
+}
+
+.visited-float__link.is-below::before {
+  bottom: 100%;
 }
 
 .visited-float__link::after {
@@ -975,7 +1185,8 @@
   overflow: visible;
 }
 
-.visited-memories.is-strip.is-gliding .visited-memory {
+.visited-memories.is-strip.is-gliding .visited-memory,
+.visited-memories.is-strip.is-gliding .visited-memory__flip-inner {
   transition: none;
 }
 
@@ -1012,9 +1223,15 @@
   position: relative;
   left: auto;
   top: auto;
+  display: flex;
+  flex-direction: column;
   width: min(18rem, 82%);
   margin: 0;
   padding: 0.72rem 0.72rem 0.85rem;
+  border: 1px solid rgba(41, 73, 66, 0.12);
+  border-radius: 0.32rem;
+  background: #fff;
+  box-shadow: 0 5px 12px rgba(28, 51, 46, 0.07);
   transform: none;
   pointer-events: none;
 }
@@ -1899,6 +2116,7 @@
   .visited-drop__body,
   .visited-float,
   .visited-memory,
+  .visited-memory__flip-inner,
   .visited-filters__trigger,
   .visited-filters__trigger svg {
     animation: none;
@@ -1960,6 +2178,9 @@
 
   .visited-memories.is-compact .visited-memory {
     width: 40%;
+  }
+
+  .visited-memories.is-compact .visited-memory__face {
     padding: 0.22rem 0.22rem 0.4rem;
   }
 
@@ -1998,6 +2219,11 @@
   .visited-memories.is-compact .visited-memory,
   .visited-memories.is-stacked .visited-memory {
     width: 28%;
+  }
+
+  .visited-memories .visited-memory__face,
+  .visited-memories.is-compact .visited-memory__face,
+  .visited-memories.is-stacked .visited-memory__face {
     padding: 0.22rem 0.22rem 0.38rem;
   }
 

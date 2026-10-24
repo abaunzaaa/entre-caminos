@@ -171,13 +171,15 @@ export function ExplorerNavbar() {
                   <span>Perfil</span>
                 </NavLink>
               ) : null}
-              <NavLink
-                to="/mis-caminos"
-                className={({ isActive }) => `explorer-nav__drawer-link${isActive ? " is-active" : ""}`}
-              >
-                <BookOpen size={18} strokeWidth={1.8} aria-hidden="true" />
-                <span>Mis caminos</span>
-              </NavLink>
+              {user.role === "USER" ? (
+                <NavLink
+                  to="/mis-caminos"
+                  className={({ isActive }) => `explorer-nav__drawer-link${isActive ? " is-active" : ""}`}
+                >
+                  <BookOpen size={18} strokeWidth={1.8} aria-hidden="true" />
+                  <span>Mis caminos</span>
+                </NavLink>
+              ) : null}
               <button
                 type="button"
                 className="explorer-nav__drawer-link"

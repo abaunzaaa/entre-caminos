@@ -27,3 +27,25 @@ export function ProtectedRoute({ admin = false }: { admin?: boolean }) {
 
   return <Outlet />;
 }
+
+/** Mis caminos y la bitácora son solo del rol USER. */
+export function UserAreaRoute() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <Spinner />;
+  }
+
+  if (!user) {
+    if (peekSessionExpired()) {
+      return null;
+    }
+    return <Navigate to="/login" replace />;
+  }
+
+  if (user.role !== "USER") {
+    return <Navigate to="/admin" replace />;
+  }
+
+  return <Outlet />;
+}

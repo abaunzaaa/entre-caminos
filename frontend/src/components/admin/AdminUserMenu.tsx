@@ -384,18 +384,20 @@ export function AdminUserMenu({
             {isOrgAdmin ? <Building2 size={18} strokeWidth={1.7} /> : <UserRound size={18} strokeWidth={1.7} />}
             {profileLabel}
           </button>
-          <button
-            type="button"
-            className="admin-usermenu__item"
-            role="menuitem"
-            onClick={() => {
-              setOpen(false);
-              navigate("/mis-caminos");
-            }}
-          >
-            <BookOpen size={18} strokeWidth={1.7} />
-            Mis caminos
-          </button>
+          {isExplorerUser ? (
+            <button
+              type="button"
+              className="admin-usermenu__item"
+              role="menuitem"
+              onClick={() => {
+                setOpen(false);
+                navigate("/mis-caminos");
+              }}
+            >
+              <BookOpen size={18} strokeWidth={1.7} />
+              Mis caminos
+            </button>
+          ) : null}
           <button
             type="button"
             className="admin-usermenu__item admin-usermenu__item--logout"

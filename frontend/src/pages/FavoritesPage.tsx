@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { FavoritesLibrary } from "../components/explorer/FavoritesLibrary";
 import { useAuth } from "../hooks/useAuth";
@@ -9,6 +9,11 @@ import "../styles/explorer.css";
 
 export function FavoritesPage() {
   const { user, loading: authLoading } = useAuth();
+
+  useLayoutEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, []);
+
   const [experiences, setExperiences] = useState<Experience[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");

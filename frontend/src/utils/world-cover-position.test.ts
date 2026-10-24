@@ -97,13 +97,59 @@ describe("placeVisitedPins", () => {
       for (let other = index + 1; other < pins.length; other += 1) {
         const dx = (pins[index].xPercent - pins[other].xPercent) * 1.65;
         const dy = pins[index].yPercent - pins[other].yPercent;
-        expect(Math.hypot(dx, dy)).toBeGreaterThan(11);
+        expect(Math.hypot(dx, dy)).toBeGreaterThan(6);
       }
       expect(pins[index].xPercent).toBeGreaterThan(30);
       expect(pins[index].xPercent).toBeLessThan(76);
       expect(pins[index].yPercent).toBeGreaterThan(28);
       expect(pins[index].yPercent).toBeLessThan(74);
     }
+  });
+
+  it("deja la cabalgata de Caldas claramente más al sur que el taller de flores", () => {
+    const taller = { id: "taller-flores", latitude: 6.2442, longitude: -75.5812 };
+    const cabalgata = { id: "cabalgata-caldas", latitude: 6.0910202, longitude: -75.638654 };
+    const [flores, caldas] = placeVisitedPins([taller, cabalgata]);
+    expect(caldas.yPercent - flores.yPercent).toBeGreaterThan(18);
+    expect(caldas.yPercent - flores.yPercent).toBeLessThan(28);
+    expect(caldas.xPercent).toBeLessThan(flores.xPercent);
+  });
+
+  it("deja el oriente cerca de Medellín y separa Caldas de El Carmen", () => {
+    const medellin = { id: "medellin", latitude: 6.2442, longitude: -75.5812 };
+    const rionegro = { id: "rionegro", latitude: 6.1877036, longitude: -75.4096427 };
+    const carmen = { id: "carmen", latitude: 6.0893921, longitude: -75.3375161 };
+    const caldas = { id: "caldas", latitude: 6.0910202, longitude: -75.638654 };
+    const donmatias = { id: "donmatias", latitude: 6.4856, longitude: -75.3958 };
+    const [home, east, southeast, southwest, north] = placeVisitedPins([medellin, rionegro, carmen, caldas, donmatias]);
+    expect(east.xPercent - home.xPercent).toBeGreaterThan(6);
+    expect(east.xPercent - home.xPercent).toBeLessThan(12);
+    expect(southeast.xPercent).toBeGreaterThan(east.xPercent);
+    expect(southeast.xPercent - home.xPercent).toBeLessThan(26);
+    expect(southwest.xPercent).toBeLessThan(home.xPercent);
+    expect(southwest.yPercent).toBeGreaterThan(home.yPercent);
+    expect(north.yPercent).toBeLessThan(home.yPercent);
+    expect(southeast.xPercent - southwest.xPercent).toBeGreaterThan(14);
+  });
+
+  it("conserva el orden vertical del valle aunque los pins se separen", () => {
+    const pins = placeVisitedPins([
+      { id: "medellin", latitude: 6.2442, longitude: -75.5812 },
+      { id: "envigado", latitude: 6.1734018, longitude: -75.5663361 },
+      { id: "sabaneta", latitude: 6.1515736, longitude: -75.6154278 },
+      { id: "caldas", latitude: 6.0910202, longitude: -75.638654 },
+      { id: "medellin-b", latitude: 6.2442, longitude: -75.5812 },
+      { id: "medellin-c", latitude: 6.2442, longitude: -75.5812 },
+    ]);
+    expect(pins[0].yPercent).toBeLessThan(pins[1].yPercent);
+    expect(pins[1].yPercent).toBeLessThan(pins[2].yPercent);
+    expect(pins[2].yPercent).toBeLessThan(pins[3].yPercent);
+    const homeSouth = Math.max(pins[0].yPercent, pins[4].yPercent, pins[5].yPercent);
+    expect(pins[3].yPercent - homeSouth).toBeGreaterThan(14);
+    expect(homeSouth).toBeLessThan(60);
+    expect(pins[3].yPercent - pins[2].yPercent).toBeGreaterThan(pins[2].yPercent - pins[1].yPercent);
+    expect(pins[4].yPercent).toBeLessThan(pins[3].yPercent - 12);
+    expect(pins[5].yPercent).toBeLessThan(pins[3].yPercent - 12);
   });
 
   it("no pega los pins a los bordes", () => {

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
 import {
   AlignCenter,
   AlignLeft,
@@ -125,6 +126,8 @@ function findSelected(pages: PageDoc[], id: string | null) {
 
 export function BitacoraStudio() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isExplorerUser = user?.role === "USER";
   const mobile = useMobile();
   const dockRef = useRef<HTMLDivElement>(null);
   const dockDensity = useDockDensity(dockRef);
@@ -826,14 +829,18 @@ export function BitacoraStudio() {
     return () => window.removeEventListener("keydown", onKey);
   });
 
-  async function goBack() {
+  async function leaveTo(path: string) {
     if (dirtyRef.current) {
       const result = await flush();
       if (result !== "saved") {
         return;
       }
     }
-    navigate("/mis-caminos");
+    navigate(path);
+  }
+
+  async function goBack() {
+    await leaveTo(isExplorerUser ? "/mis-caminos" : "/admin");
   }
 
   function saveNow() {
@@ -887,11 +894,15 @@ export function BitacoraStudio() {
       <>
       <header className="bita-head">
         <div className="bita-head__start">
-          <button type="button" className="bita-back" onClick={() => void goBack()}>
-            <ChevronLeft size={15} aria-hidden="true" />
-            Mis caminos
-          </button>
-          <span className="bita-head__rule" aria-hidden="true" />
+          {isExplorerUser ? (
+            <>
+              <button type="button" className="bita-back" onClick={() => void leaveTo("/visitados")}>
+                <ChevronLeft size={15} aria-hidden="true" />
+                Mis visitados
+              </button>
+              <span className="bita-head__rule" aria-hidden="true" />
+            </>
+          ) : null}
           <button type="button" className="bita-iconbtn" onClick={undo} disabled={history.past.length === 0} aria-label="Deshacer">
             <Undo2 size={15} aria-hidden="true" />
           </button>
@@ -1269,7 +1280,7 @@ export function BitacoraStudio() {
                 <h2 id="bita-gate-title" className="contact-success__title">No pudimos abrir tu bitácora</h2>
                 <p id="bita-gate-copy" className="contact-success__text">{loadError}</p>
                 <div className="contact-success__actions">
-                  <button type="button" className="contact-success__cancel" onClick={() => navigate("/mis-caminos")}>Volver</button>
+                  <button type="button" className="contact-success__cancel" onClick={() => navigate(isExplorerUser ? "/mis-caminos" : "/admin")}>Volver</button>
                   <button type="button" className="contact-success__action admin-cta" onClick={() => setLoadNonce((value) => value + 1)}>Reintentar</button>
                 </div>
               </>

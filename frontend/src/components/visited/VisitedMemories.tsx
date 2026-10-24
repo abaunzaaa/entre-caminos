@@ -1,9 +1,12 @@
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type MouseEvent } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import mapaIcon from "../../assets/mapa-icon.png";
+import sobreVisitados from "../../assets/sobrevisitados.png";
 import { experienceCoverUrl } from "../explorer/explorer-media";
+import type { MyVisitorReview } from "../../services/reviews.service";
 import type { VisitedJourneyStop } from "../../services/visits.service";
+import { formatVisitedStamp, formatVisitRating, pickVisitReview } from "../../utils/visited-memory";
 import { stopPlaceName } from "../../utils/visited-map";
 
 type MemorySlot = {
@@ -57,9 +60,229 @@ function prefersReducedMotion() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-export function VisitedMemories({ stops }: { stops: VisitedJourneyStop[] }) {
+function useFinePointer() {
+  const [fine, setFine] = useState(() =>
+    typeof window !== "undefined" ? window.matchMedia("(hover: hover) and (pointer: fine)").matches : false,
+  );
+
+  useEffect(() => {
+    const query = window.matchMedia("(hover: hover) and (pointer: fine)");
+    const update = () => setFine(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
+
+  return fine;
+}
+
+function MemoryStars({ value }: { value: number }) {
+  const shown = Math.round(value * 2) / 2;
+  return (
+    <span className="visited-memory__stars" aria-label={`${formatVisitRating(shown)} de 5`}>
+      {Array.from({ length: 5 }, (_, index) => {
+        const fill = shown >= index + 1 ? "full" : shown >= index + 0.5 ? "half" : "empty";
+        return (
+          <span key={index} className={`visited-memory__star is-${fill}`} aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 2.7 14.7 8.2l6 .9-4.35 4.24 1.03 6L12 16.6 6.62 19.34l1.03-6L3.3 9.1l6-.9L12 2.7Z" />
+            </svg>
+            <svg viewBox="0 0 24 24" className="is-fill">
+              <path d="M12 2.7 14.7 8.2l6 .9-4.35 4.24 1.03 6L12 16.6 6.62 19.34l1.03-6L3.3 9.1l6-.9L12 2.7Z" />
+            </svg>
+          </span>
+        );
+      })}
+    </span>
+  );
+}
+
+function MemoryCard({
+  stop,
+  reviews,
+  stampSrc,
+  slot,
+  onStage,
+  near,
+  broken,
+  flipped,
+  finePointer,
+  onOpen,
+  onClose,
+  onToggle,
+  onBroken,
+}: {
+  stop: VisitedJourneyStop;
+  reviews: MyVisitorReview[];
+  stampSrc: string;
+  slot: MemorySlot;
+  onStage: boolean;
+  near: boolean;
+  broken: boolean;
+  flipped: boolean;
+  finePointer: boolean;
+  onOpen: () => void;
+  onClose: () => void;
+  onToggle: () => void;
+  onBroken: () => void;
+}) {
+  const frontRef = useRef<HTMLDivElement>(null);
+  const backRef = useRef<HTMLDivElement>(null);
+  const keyboardFlip = useRef(false);
+  const [stampBroken, setStampBroken] = useState(false);
+  const caption = memoryCaption(stop);
+  const city = stop.municipality.trim() || stopPlaceName(stop);
+  const department = stop.department.trim();
+  const place = city || department;
+  const region = city && department && department.toLocaleLowerCase("es") !== city.toLocaleLowerCase("es") ? department : "";
+  const visitedOn = formatVisitedStamp(stop.visitedAt);
+  const review = pickVisitReview(reviews, stop.id, city);
+  const stamp = stampSrc && !stampBroken ? stampSrc : "";
+
+  useEffect(() => {
+    if (!keyboardFlip.current) {
+      return;
+    }
+    keyboardFlip.current = false;
+    if (flipped) {
+      backRef.current?.focus();
+      return;
+    }
+    frontRef.current?.focus();
+  }, [flipped]);
+
+  function toggleFromPointer(event: MouseEvent<HTMLDivElement>) {
+    if (finePointer || (event.target as HTMLElement).closest("a")) {
+      return;
+    }
+    onToggle();
+  }
+
+  function flipFromKey(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.key !== "Enter" && event.key !== " ") {
+      return;
+    }
+    if ((event.target as HTMLElement).closest("a")) {
+      return;
+    }
+    event.preventDefault();
+    keyboardFlip.current = true;
+    onToggle();
+  }
+
+  return (
+    <article
+      className={`visited-memory${flipped ? " is-open" : ""}`}
+      style={{ left: `${slot.x}%`, top: `${slot.y}%`, "--tilt": `${slot.tilt}deg` } as CSSProperties}
+      inert={near ? undefined : true}
+      aria-hidden={onStage ? undefined : true}
+      onMouseEnter={() => {
+        if (finePointer) {
+          onOpen();
+        }
+      }}
+      onMouseLeave={(event) => {
+        if (!finePointer) {
+          return;
+        }
+        const next = event.relatedTarget;
+        if (next instanceof Node && event.currentTarget.contains(next)) {
+          return;
+        }
+        onClose();
+      }}
+    >
+      <div className="visited-memory__tilt">
+      <div className={`visited-memory__flip${flipped ? " is-open" : ""}`}>
+        <div className="visited-memory__flip-inner">
+          <div
+            ref={frontRef}
+            className="visited-memory__face visited-memory__face--front"
+            role="button"
+            tabIndex={onStage && !flipped ? 0 : -1}
+            inert={flipped ? true : undefined}
+            aria-expanded={flipped}
+            aria-label={`${caption}. Ver el recuerdo de la visita`}
+            onClick={toggleFromPointer}
+            onKeyDown={flipFromKey}
+          >
+            <span className="visited-memory__photo">
+              {broken ? null : (
+                <img
+                  src={experienceCoverUrl(stop, 240)}
+                  alt=""
+                  draggable={false}
+                  onError={onBroken}
+                />
+              )}
+            </span>
+            <span className="visited-memory__label">{caption}</span>
+          </div>
+          <div
+            ref={backRef}
+            className="visited-memory__face visited-memory__face--back"
+            tabIndex={flipped ? 0 : -1}
+            inert={flipped ? undefined : true}
+            role="group"
+            aria-label={`${caption}. Recuerdo de la visita`}
+            onClick={toggleFromPointer}
+            onKeyDown={flipFromKey}
+          >
+            <div className="visited-memory__back">
+              <img
+                className={`visited-memory__stamp${stamp ? "" : " is-fallback"}`}
+                src={stamp || sobreVisitados}
+                alt=""
+                draggable={false}
+                onError={() => setStampBroken(true)}
+              />
+              {place ? <p className="visited-memory__place">{place}</p> : null}
+              {region ? <p className="visited-memory__region">{region}</p> : null}
+              {visitedOn ? (
+                <p className="visited-memory__when">
+                  <span>Visitada</span>
+                  {visitedOn}
+                </p>
+              ) : null}
+              {review ? (
+                <p className="visited-memory__rate">
+                  <span>Mi calificación</span>
+                  <span className="visited-memory__score">
+                    <MemoryStars value={review.rating} />
+                    <strong>{formatVisitRating(review.rating)}</strong>
+                  </span>
+                </p>
+              ) : null}
+              <Link
+                className="visited-memory__open"
+                to={`/explorar/${stop.id}`}
+                tabIndex={flipped ? undefined : -1}
+                onClick={(event) => event.stopPropagation()}
+              >
+                Ver experiencia →
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+      </div>
+    </article>
+  );
+}
+
+export function VisitedMemories({
+  stops,
+  reviews,
+  stamps,
+}: {
+  stops: VisitedJourneyStop[];
+  reviews: MyVisitorReview[];
+  stamps: Record<string, string>;
+}) {
   const [origin, setOrigin] = useState(0);
   const [broken, setBroken] = useState<Record<string, true>>({});
+  const [flippedId, setFlippedId] = useState<string | null>(null);
+  const finePointer = useFinePointer();
   const maxOrigin = Math.max(0, stops.length - PAGE_SIZE);
   const safeOrigin = Math.min(origin, maxOrigin);
   const stageRef = useRef<HTMLElement>(null);
@@ -102,6 +325,7 @@ export function VisitedMemories({ stops }: { stops: VisitedJourneyStop[] }) {
     trackRef.current?.style.setProperty("--drag", "0px");
     stageRef.current?.classList.remove("is-gliding");
     setOrigin(0);
+    setFlippedId(null);
   }, [stops.length]);
 
   function paintDrift(px: number) {
@@ -214,6 +438,7 @@ export function VisitedMemories({ stops }: { stops: VisitedJourneyStop[] }) {
     if (next < 0 || next > maxOriginRef.current || cardStep() <= 0) {
       return;
     }
+    setFlippedId(null);
     hoverDir.current = dir;
     stageRef.current?.classList.add("is-gliding");
     if (!glideRaf.current) {
@@ -238,6 +463,7 @@ export function VisitedMemories({ stops }: { stops: VisitedJourneyStop[] }) {
       }
       return;
     }
+    setFlippedId(null);
     originRef.current = next;
     setOrigin(next);
     if (pointerDir.current) {
@@ -330,31 +556,23 @@ export function VisitedMemories({ stops }: { stops: VisitedJourneyStop[] }) {
               const slot = slots[index];
               const onStage = index >= firstVisible && index <= lastVisible;
               const near = index >= firstVisible - 1 && index <= lastVisible + 1;
-              const caption = memoryCaption(stop);
-              const place = stopPlaceName(stop);
               return (
-                <Link
+                <MemoryCard
                   key={stop.id}
-                  className="visited-memory"
-                  style={{ left: `${slot.x}%`, top: `${slot.y}%`, "--tilt": `${slot.tilt}deg` } as CSSProperties}
-                  to={`/explorar/${stop.id}`}
-                  tabIndex={onStage ? undefined : -1}
-                  inert={near ? undefined : true}
-                  aria-hidden={onStage ? undefined : true}
-                  aria-label={place && place !== stop.title ? `${stop.title}, ${place}` : stop.title}
-                >
-                  <span className="visited-memory__photo">
-                    {broken[stop.id] ? null : (
-                      <img
-                        src={experienceCoverUrl(stop, 240)}
-                        alt=""
-                        draggable={false}
-                        onError={() => setBroken((current) => ({ ...current, [stop.id]: true }))}
-                      />
-                    )}
-                  </span>
-                  <span className="visited-memory__label">{caption}</span>
-                </Link>
+                  stop={stop}
+                  reviews={reviews}
+                  stampSrc={stamps[stop.id] ?? ""}
+                  slot={slot}
+                  onStage={onStage}
+                  near={near}
+                  broken={Boolean(broken[stop.id])}
+                  flipped={flippedId === stop.id}
+                  finePointer={finePointer}
+                  onOpen={() => setFlippedId(stop.id)}
+                  onClose={() => setFlippedId((current) => (current === stop.id ? null : current))}
+                  onToggle={() => setFlippedId((current) => (current === stop.id ? null : stop.id))}
+                  onBroken={() => setBroken((current) => ({ ...current, [stop.id]: true }))}
+                />
               );
             })}
           </div>
