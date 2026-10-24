@@ -5,6 +5,10 @@
 }
 
 .bita {
+  --bita-rail: 76px;
+  --bita-panel: 340px;
+  --bita-gap: 10px;
+  --bita-pad: 8px;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -115,12 +119,21 @@
 }
 
 .bita-head__title {
+  position: absolute;
+  left: calc(
+    var(--bita-pad) + var(--bita-rail) + var(--bita-gap) +
+    (100% - (var(--bita-pad) * 2) - var(--bita-rail) - var(--bita-panel) - (var(--bita-gap) * 2)) / 2
+  );
+  top: 50%;
+  z-index: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 0.12rem;
   min-width: 0;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
 }
 
 .bita-head__start {
@@ -463,14 +476,13 @@
 
 .bita-workspace {
   display: grid;
-  grid-template-columns: 76px minmax(0, 1fr) 252px;
-  gap: 10px;
+  grid-template-columns: var(--bita-rail) minmax(0, 1fr) var(--bita-panel);
+  gap: var(--bita-gap);
   align-items: stretch;
   flex: 1 1 auto;
   min-height: 0;
-  min-height: 0;
   overflow: hidden;
-  padding: 2px 8px 4px;
+  padding: 2px var(--bita-pad) 4px;
 }
 
 .bita-rail {
@@ -1800,7 +1812,7 @@
 
 .bita-stickers {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 10px;
 }
 
@@ -1953,10 +1965,15 @@
 }
 
 @media (max-width: 1180px) {
-  .bita-workspace {
-    grid-template-columns: 72px minmax(0, 1fr) 220px;
-    gap: 12px;
-    padding-inline: 14px;
+  .bita {
+    --bita-rail: 72px;
+    --bita-panel: 220px;
+    --bita-gap: 12px;
+    --bita-pad: 14px;
+  }
+
+  .bita-stickers {
+    grid-template-columns: repeat(3, 1fr);
   }
 
   .bita-stickers img {
@@ -1981,7 +1998,9 @@
   .bita-head__title,
   .bita-head h1,
   .bita-head p {
+    position: static;
     align-items: flex-start;
+    transform: none;
     text-align: left;
   }
 

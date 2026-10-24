@@ -211,6 +211,19 @@ export async function generateStructuredGroqJson(input: {
   if (!response.ok) {
     const detail = await response.text().catch(() => "");
     const groqCode = groqErrorCode(detail) || guideHttpReason(response.status);
+    const recovered = response.status === 400 ? failedGenerationFromDetail(detail) : "";
+    if (recovered) {
+      logger.warn("Groq rechazó el esquema; se conserva el JSON generado", {
+        stage: input.stage,
+        attempt: input.attempt,
+        model,
+        responseFormat: "json_schema",
+        status: response.status,
+        groqCode,
+        ms,
+      });
+      return recovered;
+    }
     logger.error("Groq no respondió", {
       stage: input.stage,
       attempt: input.attempt,

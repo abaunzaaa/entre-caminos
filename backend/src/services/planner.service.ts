@@ -36,6 +36,7 @@ type Candidate = {
   available: boolean | null;
   latitude: number | null;
   longitude: number | null;
+  department: string;
 };
 
 const DURATION_BAND: Record<Preferences["durationKey"], [number, number]> = {
@@ -156,7 +157,7 @@ async function loadCandidates(input: Preferences, scope: "local" | "other" = "lo
       environments: true,
       idealFor: true,
       locations: {
-        select: { municipality: true, address: true, availability: true, howToGetThere: true, latitude: true, longitude: true, position: true },
+        select: { municipality: true, address: true, department: true, availability: true, howToGetThere: true, latitude: true, longitude: true, position: true },
         orderBy: { position: "asc" },
       },
       experienceCategories: { select: { category: { select: { name: true } }, categoryId: true }, orderBy: { position: "asc" } },
@@ -197,6 +198,7 @@ async function loadCandidates(input: Preferences, scope: "local" | "other" = "lo
       available: availability.available,
       latitude: place?.latitude == null ? null : Number(place.latitude),
       longitude: place?.longitude == null ? null : Number(place.longitude),
+      department: place?.department?.trim() || "",
     } satisfies Candidate;
   });
 }
@@ -414,6 +416,40 @@ function fillTimes(stops: BuiltStop[], catalogStart: string) {
   }
 }
 
+function ensureCatalogExperience(stops: BuiltStop[], primary: Candidate) {
+  const named = stops.find((stop) => stop.title.toLocaleLowerCase("es") === primary.title.toLocaleLowerCase("es"));
+  if (named && named.stopType !== "experience") {
+    named.stopType = "experience";
+    named.included = true;
+    named.description = shortCopy(primary.description, 220);
+    named.location = primary.address || primary.municipality;
+    named.imageUrl = primary.imageUrl;
+    if (primary.durationMinutes && primary.durationMinutes > 0) {
+      named.durationMinutes = primary.durationMinutes;
+      named.durationLabel = durationText(primary.durationMinutes);
+    }
+  }
+  if (stops.some((stop) => stop.stopType === "experience")) return;
+  const tail = /^(cierre|regres|salida|final|despu[eé]s)/i;
+  const insertAt = stops.findIndex((stop) => tail.test(stop.title));
+  const minutes = primary.durationMinutes && primary.durationMinutes > 0 ? primary.durationMinutes : 60;
+  stops.splice(insertAt < 0 ? stops.length : insertAt, 0, {
+    position: 0,
+    experienceId: primary.id,
+    title: primary.title,
+    description: shortCopy(primary.description, 220),
+    location: primary.address || primary.municipality,
+    stopType: "experience",
+    included: true,
+    additionalCost: "",
+    durationMinutes: minutes,
+    durationLabel: durationText(minutes),
+    suggestedAt: "",
+    suggestedEnd: "",
+    imageUrl: primary.imageUrl,
+  });
+}
+
 function validatePlan(raw: Record<string, unknown> | null, primary: Candidate, input: Preferences) {
   const errors: string[] = [];
   if (!raw) return { errors: ["La respuesta no es JSON."], plan: null as BuiltPlan | null };
@@ -429,9 +465,9 @@ function validatePlan(raw: Record<string, unknown> | null, primary: Candidate, i
     const title = asText(record.title, 90);
     const description = asText(record.description, 280);
     const minutes = typeof record.durationMinutes === "number" && Number.isFinite(record.durationMinutes) ? Math.round(record.durationMinutes) : null;
-    const organizational = /llegad|prepar|encuentro|inicio del|cierre|regres|pausa|descanso|tiempo libre|anticipaci[oó]n|despu[eé]s/i.test(`${title} ${description}`);
+    const titleIsMoment = /^(llegad|prepar|encuentro|inicio|cierre|regres|pausa|descanso|tiempo libre|anticipaci)/i.test(title);
     const catalog = kind === "experience" || kind === "catalog_activity";
-    const type = !catalog || organizational ? "suggestion" : "experience";
+    const type = catalog && !titleIsMoment ? "experience" : "suggestion";
     if (!title || !description || (kind !== "experience" && kind !== "suggestion" && kind !== "catalog_activity" && kind !== "suggested_moment")) {
       errors.push("Hay una parada sin título, descripción o tipo válido.");
       continue;
@@ -439,16 +475,18 @@ function validatePlan(raw: Record<string, unknown> | null, primary: Candidate, i
     if (type === "experience") {
       const sameTitle = title.toLocaleLowerCase("es") === primary.title.toLocaleLowerCase("es");
       const invented = looksInvented(`${title}. ${description}`, primary);
-      if (invented && !sameTitle) {
+      const already = stops.some((stop) => stop.stopType === "experience");
+      if (invented && !sameTitle && already) {
         dropped.push(`«${title}» agrega datos que no están en la ficha. Márcalo como suggestion si es una pausa, sin nombrar establecimientos.`);
         continue;
       }
+      const safeTitle = invented && !sameTitle ? primary.title : title;
       const safeDescription = invented ? shortCopy(primary.description, 220) : description;
-      if (sameTitle && stops.some((stop) => stop.stopType === "experience")) continue;
+      if (sameTitle && already) continue;
       stops.push({
         position: stops.length + 1,
         experienceId: primary.id,
-        title,
+        title: safeTitle,
         description: safeDescription,
         location: primary.address || primary.municipality,
         stopType: "experience",
@@ -482,6 +520,7 @@ function validatePlan(raw: Record<string, unknown> | null, primary: Candidate, i
     }
     if (stops.length >= 8) break;
   }
+  ensureCatalogExperience(stops, primary);
   let used = stops.reduce((sum, stop) => sum + (stop.durationMinutes ?? 0), 0);
   while (used > windowMinutes + 15 && stops.filter((stop) => stop.stopType === "suggestion").length > 1) {
     const extra = stops.map((stop, index) => ({ stop, index })).reverse().find((item) => item.stop.stopType === "suggestion");
@@ -793,6 +832,8 @@ export async function generateItinerary(input: Preferences) {
     note: input.note,
     coverImageUrl: ready.coverImageUrl,
     primaryExperienceId: ready.primary.id,
+    photos: photoList(ready.primary.imageUrl, ready.primary.imageUrls),
+    venue: venueOf(ready.primary),
     stops: ready.stops.map((stop) => ({
       position: stop.position,
       experienceId: stop.experienceId,
@@ -854,12 +895,56 @@ const draftSelect = {
           imageUrl: true,
           imageUrls: true,
           category: { select: { name: true } },
-          locations: { select: { municipality: true, address: true }, orderBy: { position: "asc" as const }, take: 1 },
+          environments: true,
+          experienceInterests: { select: { interest: { select: { name: true } } }, orderBy: { position: "asc" as const } },
+          experienceCategories: { select: { category: { select: { name: true } } }, orderBy: { position: "asc" as const } },
+          locations: {
+            select: { municipality: true, address: true, department: true, latitude: true, longitude: true, availability: true },
+            orderBy: { position: "asc" as const },
+            take: 1,
+          },
         },
       },
     },
   },
 } satisfies Prisma.PlannerItinerarySelect;
+
+function photoList(imageUrl: string | null, imageUrls: string[]) {
+  const seen = new Set<string>();
+  const photos: string[] = [];
+  for (const item of [imageUrl, ...imageUrls]) {
+    const value = item?.trim();
+    if (!value || seen.has(value)) continue;
+    seen.add(value);
+    photos.push(value);
+  }
+  return photos;
+}
+
+function venueOf(item: {
+  department?: string;
+  address: string;
+  latitude: number | null;
+  longitude: number | null;
+  environments: string[];
+  interests: string[];
+  categories: string[];
+  category?: string;
+  available: boolean | null;
+}) {
+  const latitude = item.latitude != null && Number.isFinite(item.latitude) ? item.latitude : null;
+  const longitude = item.longitude != null && Number.isFinite(item.longitude) ? item.longitude : null;
+  return {
+    department: item.department?.trim() || "",
+    address: item.address.trim(),
+    latitude,
+    longitude,
+    environments: item.environments.filter(Boolean),
+    interests: item.interests.filter(Boolean),
+    categories: (item.categories.length ? item.categories : item.category ? [item.category] : []).filter(Boolean),
+    available: item.available,
+  };
+}
 
 function unpackWhy(value: string) {
   const match = value.match(/^«alt»([\s\S]*?)«\/alt»/);
@@ -903,6 +988,21 @@ function present(row: Prisma.PlannerItineraryGetPayload<{ select: typeof draftSe
   });
   const unpacked = unpackWhy(row.why);
   const schedule = !row.scheduleLabel || row.scheduleLabel === "Por confirmar" ? "Horario flexible" : row.scheduleLabel;
+  const place = primary?.locations[0];
+  const availability = readAvailability(place?.availability, row.plannedOn.toISOString().slice(0, 10));
+  const venue = primary
+    ? venueOf({
+      department: place?.department || "",
+      address: place?.address || "",
+      latitude: place?.latitude == null ? null : Number(place.latitude),
+      longitude: place?.longitude == null ? null : Number(place.longitude),
+      environments: primary.environments,
+      interests: primary.experienceInterests.map((item) => item.interest.name),
+      categories: primary.experienceCategories.map((item) => item.category.name),
+      category: primary.category.name,
+      available: availability.available,
+    })
+    : null;
   return {
     id: row.id,
     title: row.title,
@@ -925,7 +1025,9 @@ function present(row: Prisma.PlannerItineraryGetPayload<{ select: typeof draftSe
     planType: row.planType,
     note: row.note,
     coverImageUrl: primary?.imageUrl || primary?.imageUrls[0] || null,
+    photos: primary ? photoList(primary.imageUrl, primary.imageUrls) : [],
     primaryExperienceId: primary?.id ?? null,
+    venue,
     createdAt: row.createdAt.toISOString(),
     stops,
   };

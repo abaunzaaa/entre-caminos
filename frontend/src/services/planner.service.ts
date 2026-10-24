@@ -63,7 +63,20 @@ export type PlannerItinerary = {
   requestedMunicipality?: string;
   usedAlternativeMunicipality?: boolean;
   alternativeMessage?: string;
+  venue?: PlannerVenue | null;
+  photos?: string[];
   stops: PlannerStop[];
+};
+
+export type PlannerVenue = {
+  department: string;
+  address: string;
+  latitude: number | null;
+  longitude: number | null;
+  environments: string[];
+  interests: string[];
+  categories: string[];
+  available: boolean | null;
 };
 
 export type PlannerListItem = {

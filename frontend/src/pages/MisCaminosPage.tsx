@@ -419,7 +419,6 @@ export function MisCaminosPage() {
                 plans={[...savedPaths, ...plans]}
                 status={loading ? "loading" : journeyReady ? "ready" : "error"}
                 onOpenDay={(day) => openCalendar(day)}
-                onOpenCalendar={() => openCalendar()}
                 onOpenPlanner={(planId) => navigate(`/planear-mi-plan/guardado/${planId}`)}
               />
             )}

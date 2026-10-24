@@ -56,13 +56,11 @@ export function JourneyNextPlans({
   plans,
   status,
   onOpenDay,
-  onOpenCalendar,
   onOpenPlanner,
 }: {
   plans: JourneyPlan[];
   status: "loading" | "ready" | "error";
   onOpenDay: (day: string) => void;
-  onOpenCalendar: () => void;
   onOpenPlanner?: (id: string) => void;
 }) {
   const { ref, inView } = useInViewReveal<HTMLDivElement>({ rootMargin: "0px", enterRatio: 0.14, leaveRatio: 0 });
@@ -170,9 +168,6 @@ export function JourneyNextPlans({
             <img src="/mis-caminos/vacio-planes.png" alt="" width={1024} height={682} decoding="async" />
             <p>Aún no tienes próximos planes</p>
             <span>Tu próxima experiencia está por comenzar. Explora, elige y agenda un nuevo camino.</span>
-            <button type="button" className="tourist-hero__cta" onClick={onOpenCalendar}>
-              Ir a mi calendario
-            </button>
           </div>
         ) : null}
 

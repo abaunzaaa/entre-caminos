@@ -44,14 +44,14 @@ export function FavoriteToast() {
     return null;
   }
 
-  const removed = toast.message.toLowerCase().includes("eliminado");
+  const confirmed = /eliminad|guardad/i.test(toast.message);
 
   return createPortal(
     <div className={`favorite-toast${toast.tone === "error" ? " is-error" : ""}`} role="status" aria-live="polite" key={toast.id}>
       <span className="favorite-toast__icon" aria-hidden="true">
         {toast.tone === "error" ? (
           <CircleAlert size={14} strokeWidth={2.2} />
-        ) : removed ? (
+        ) : confirmed ? (
           <Check size={14} strokeWidth={2.2} />
         ) : (
           <Heart size={14} strokeWidth={2} fill="currentColor" />
