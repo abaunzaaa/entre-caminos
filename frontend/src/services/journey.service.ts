@@ -34,6 +34,7 @@ export type JourneyExperience = {
 export type JourneyPlan = {
   id: string;
   plannedAt: string;
+  plannerItineraryId?: string;
   experience: JourneyExperience;
 };
 

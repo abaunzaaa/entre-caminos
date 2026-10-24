@@ -122,6 +122,124 @@ function guideHttpReason(status: number) {
   return "error_proveedor";
 }
 
+export class StructuredGroqError extends Error {
+  readonly status: number;
+  readonly groqCode: string;
+  readonly retryAfterSeconds: number | null;
+
+  constructor(status: number, groqCode: string, retryAfterSeconds: number | null) {
+    super(groqCode || `groq_${status}`);
+    this.status = status;
+    this.groqCode = groqCode;
+    this.retryAfterSeconds = retryAfterSeconds;
+  }
+}
+
+function retryAfterSeconds(response: Response) {
+  const raw = response.headers.get("retry-after");
+  if (!raw) return null;
+  const seconds = Number(raw);
+  return Number.isFinite(seconds) ? seconds : null;
+}
+
+function groqErrorCode(detail: string) {
+  try {
+    const payload = JSON.parse(detail) as { error?: { code?: string } };
+    return payload.error?.code ?? "";
+  } catch {
+    return "";
+  }
+}
+
+/**
+ * JSON Schema estricto para el planificador. No convierte fallos al esquema del guía.
+ */
+export async function generateStructuredGroqJson(input: {
+  system: string;
+  user: string;
+  schemaName: string;
+  schema: Record<string, unknown>;
+  stage: string;
+  attempt: number;
+}) {
+  const key = groqKey();
+  if (!key) {
+    logger.error("Planificador sin proveedor", { stage: input.stage, reason: "key_ausente" });
+    throw new StructuredGroqError(503, "key_ausente", null);
+  }
+  const started = Date.now();
+  const model = groqModel();
+  let response: Response;
+  try {
+    response = await fetch(`${groqBase()}/chat/completions`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model,
+        temperature: 0.3,
+        max_tokens: 1200,
+        response_format: {
+          type: "json_schema",
+          json_schema: {
+            name: input.schemaName,
+            strict: true,
+            schema: input.schema,
+          },
+        },
+        messages: [
+          { role: "system", content: input.system },
+          { role: "user", content: input.user },
+        ],
+      }),
+    });
+  } catch (error) {
+    logger.error("Groq sin conexión", {
+      stage: input.stage,
+      attempt: input.attempt,
+      model,
+      responseFormat: "json_schema",
+      ms: Date.now() - started,
+      error: error instanceof Error ? error.message : "unknown",
+    });
+    throw new StructuredGroqError(0, "network", null);
+  }
+
+  const ms = Date.now() - started;
+  if (!response.ok) {
+    const detail = await response.text().catch(() => "");
+    const groqCode = groqErrorCode(detail) || guideHttpReason(response.status);
+    logger.error("Groq no respondió", {
+      stage: input.stage,
+      attempt: input.attempt,
+      model,
+      responseFormat: "json_schema",
+      status: response.status,
+      groqCode,
+      retryAfterSeconds: retryAfterSeconds(response),
+      ms,
+    });
+    throw new StructuredGroqError(response.status, groqCode, retryAfterSeconds(response));
+  }
+
+  const data = (await response.json()) as { choices?: Array<{ message?: { content?: string } }> };
+  const text = data.choices?.[0]?.message?.content?.trim() ?? "";
+  logger.info("Groq respondió", {
+    stage: input.stage,
+    attempt: input.attempt,
+    model,
+    responseFormat: "json_schema",
+    status: response.status,
+    ms,
+  });
+  if (!text) {
+    throw new StructuredGroqError(502, "empty_content", null);
+  }
+  return text;
+}
+
 export async function generateGroqJson(
   system: string,
   turns: Array<{ role: "user" | "assistant"; content: string }>,

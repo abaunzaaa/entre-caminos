@@ -44,17 +44,25 @@ export function PlannerWelcome({ onDiscover }: { onDiscover: () => void }) {
           <SoftCloud id="planner-cloud-a" className="planner-hero__cloud planner-hero__cloud--a" />
           <SoftCloud id="planner-cloud-b" className="planner-hero__cloud planner-hero__cloud--b" />
 
-          <span className="planner-hero__card planner-hero__card--binoculars">
-            <img src="/planner/binoculares.png" alt="" draggable={false} />
+          <span className="planner-hero__float planner-hero__float--binoculars">
+            <span className="planner-hero__card planner-hero__card--binoculars">
+              <img src="/planner/binoculares.png" alt="" draggable={false} />
+            </span>
           </span>
-          <span className="planner-hero__card planner-hero__card--backpack">
-            <img src="/planner/mochila.png" alt="" draggable={false} />
+          <span className="planner-hero__float planner-hero__float--backpack">
+            <span className="planner-hero__card planner-hero__card--backpack">
+              <img src="/planner/mochila.png" alt="" draggable={false} />
+            </span>
           </span>
-          <span className="planner-hero__card planner-hero__card--camera">
-            <img src="/planner/camara.png" alt="" draggable={false} />
+          <span className="planner-hero__float planner-hero__float--camera">
+            <span className="planner-hero__card planner-hero__card--camera">
+              <img src="/planner/camara.png" alt="" draggable={false} />
+            </span>
           </span>
-          <span className="planner-hero__card planner-hero__card--coffee">
-            <img src="/planner/taza.png" alt="" draggable={false} />
+          <span className="planner-hero__float planner-hero__float--coffee">
+            <span className="planner-hero__card planner-hero__card--coffee">
+              <img src="/planner/taza.png" alt="" draggable={false} />
+            </span>
           </span>
 
           <em className="planner-hero__tag planner-hero__tag--descubre">Descubre</em>

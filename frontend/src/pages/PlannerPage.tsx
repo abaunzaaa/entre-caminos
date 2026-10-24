@@ -1,68 +1,68 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Compass, Heart, Leaf, Mountain, Sun, Trees, Users } from "lucide-react";
-import { TicketCategoryIcon } from "../components/journeys/TicketCategoryIcon";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { ArrowLeft, Bookmark, Calendar, Clock, Lightbulb, MapPin, Plus, SlidersHorizontal, X } from "lucide-react";
+import { AuthKeyIcon } from "../components/auth/AuthKeyIcon";
+import { AI_PLAN_FOLDERS, type AiPlanFolderKey } from "../data/ai-plan-folders";
+import { AiPlanFolderCard, distinctPlanPhotoUrls } from "../components/planner/AiPlanFolderCard";
+import { PlannerLoading } from "../components/planner/PlannerLoading";
+import { PlannerPreferencesForm, createPlannerPreferences, profilePlannerHints } from "../components/planner/PlannerPreferencesForm";
 import { PlannerWelcome } from "../components/planner/PlannerWelcome";
+import { useAuth } from "../hooks/useAuth";
 import {
   generatePlanner,
+  listPlannerItineraries,
   loadPlannerItinerary,
   loadPlannerOptions,
   savePlanner,
-  type DurationKey,
   type PlannerItinerary,
   type PlannerPreferences,
-  type PlanType,
 } from "../services/planner.service";
-import { getApiErrorMessage } from "../utils/api-error";
+import { getApiErrorCode, getApiErrorMessage } from "../utils/api-error";
 import { mediaUrl } from "../utils/media";
 import "../styles/planner.css";
 
 const PREF_KEY = "ec-planner-prefs";
 const DRAFT_KEY = "ec-planner-draft";
 
-const PLAN_TYPES: Array<{ id: PlanType; label: string; icon: typeof Mountain }> = [
-  { id: "aventura", label: "Aventura", icon: Mountain },
-  { id: "tranquilo", label: "Tranquilo", icon: Sun },
-  { id: "romantico", label: "Romántico", icon: Heart },
-  { id: "familia", label: "En familia", icon: Users },
-  { id: "aire", label: "Al aire libre", icon: Trees },
-];
-
-const DURATIONS: Array<{ id: DurationKey; label: string }> = [
-  { id: "1-2", label: "1–2 horas" },
-  { id: "3-5", label: "3–5 horas" },
-  { id: "5-8", label: "5–8 horas" },
-  { id: "8+", label: "Más de 8 horas" },
-];
-
 type Step = "welcome" | "form" | "making" | "result";
-
-function todayBogota() {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Bogota", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
-}
 
 function money(value: number) {
   return new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(value);
 }
 
-const MONTHS = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
-
-function monthRail(iso: string) {
-  const today = todayBogota();
-  const start = new Date(`${today}T12:00:00`);
-  return Array.from({ length: 8 }, (_, index) => {
-    const date = new Date(start.getFullYear(), start.getMonth() + index, 1);
-    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-    return { label: MONTHS[date.getMonth()], key, on: iso.startsWith(key) };
-  });
+function planDate(iso: string) {
+  const [year, month, day] = iso.slice(0, 10).split("-").map(Number);
+  if (!year || !month || !day) return iso;
+  return new Intl.DateTimeFormat("es-CO", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(Date.UTC(year, month - 1, day)));
 }
 
-function dateInMonth(current: string, key: string) {
-  const today = todayBogota();
-  const dim = new Date(Number(key.slice(0, 4)), Number(key.slice(5, 7)), 0).getDate();
-  const day = Math.min(Number(current.slice(8, 10)) || 1, dim);
-  const next = `${key}-${String(day).padStart(2, "0")}`;
-  return next < today ? today : next;
+function stopWhen(stop: { suggestedAt: string; suggestedEnd?: string }) {
+  if (stop.suggestedAt && stop.suggestedEnd) return `${stop.suggestedAt} – ${stop.suggestedEnd}`;
+  if (stop.suggestedAt) return stop.suggestedAt;
+  return "Horario flexible";
+}
+
+function stopKind(stop: { stopType?: string; included?: boolean; additionalCost?: string }) {
+  if (stop.stopType === "suggestion" || stop.included === false) {
+    return stop.additionalCost ? "Sugerido por IA · Costo adicional" : "Sugerido por IA";
+  }
+  return "Incluido en la experiencia";
+}
+
+function stopLength(stop: { durationMinutes?: number | null; durationLabel?: string | null }) {
+  const minutes = stop.durationMinutes ?? 0;
+  if (minutes <= 0) return stop.durationLabel || "";
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  if (hours && rest) return `${hours} h ${rest} min`;
+  if (hours) return hours === 1 ? "1 h" : `${hours} h`;
+  return `${rest} min`;
 }
 
 function readJson<T>(key: string): T | null {
@@ -74,29 +74,67 @@ function readJson<T>(key: string): T | null {
   }
 }
 
-function emptyPrefs(): PlannerPreferences {
-  return {
-    date: todayBogota(),
-    budgetCop: 300000,
-    categoryIds: [],
-    planType: "aventura",
-    durationKey: "3-5",
-    municipality: "",
-    people: 2,
-    note: "",
-  };
-}
-
 export function PlannerPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [step, setStep] = useState<Step>(id ? "result" : "welcome");
-  const [prefs, setPrefs] = useState<PlannerPreferences>(() => readJson<PlannerPreferences>(PREF_KEY) ?? emptyPrefs());
+  const [prefs, setPrefs] = useState<PlannerPreferences>(() => createPlannerPreferences(null));
   const [draft, setDraft] = useState<PlannerItinerary | null>(() => readJson<PlannerItinerary>(DRAFT_KEY));
   const [options, setOptions] = useState<{ categories: { id: string; name: string }[]; municipalities: string[] }>({ categories: [], municipalities: [] });
   const [error, setError] = useState("");
+  const [errorCode, setErrorCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [savedOpen, setSavedOpen] = useState(false);
+  const [folderOpen, setFolderOpen] = useState(false);
+  const [folderKey, setFolderKey] = useState<AiPlanFolderKey | null>(null);
+  const [folderCounts, setFolderCounts] = useState<Partial<Record<AiPlanFolderKey, number>> | null>(null);
+  const [folderCovers, setFolderCovers] = useState<Partial<Record<AiPlanFolderKey, string[]>> | null>(null);
+  const [openTry, setOpenTry] = useState(0);
+  const runLock = useRef(false);
+
+  useEffect(() => {
+    if (!folderOpen) return;
+    let alive = true;
+    listPlannerItineraries()
+      .then((rows) => {
+        if (!alive) return;
+        const counts: Record<AiPlanFolderKey, number> = {
+          naturaleza: 0,
+          cultura: 0,
+          sabores: 0,
+          descubrimientos: 0,
+        };
+        const groups: Record<AiPlanFolderKey, { imageUrl?: string | null }[]> = {
+          naturaleza: [],
+          cultura: [],
+          sabores: [],
+          descubrimientos: [],
+        };
+        for (const row of rows) {
+          const key = AI_PLAN_FOLDERS.some((folder) => folder.key === row.folderKey) ? row.folderKey! : "descubrimientos";
+          counts[key] += 1;
+          groups[key].push(row);
+        }
+        setFolderCounts(counts);
+        setFolderCovers({
+          naturaleza: distinctPlanPhotoUrls(groups.naturaleza),
+          cultura: distinctPlanPhotoUrls(groups.cultura),
+          sabores: distinctPlanPhotoUrls(groups.sabores),
+          descubrimientos: distinctPlanPhotoUrls(groups.descubrimientos),
+        });
+      })
+      .catch(() => {
+        if (alive) {
+          setFolderCounts(null);
+          setFolderCovers(null);
+        }
+      });
+    return () => {
+      alive = false;
+    };
+  }, [folderOpen]);
 
   useEffect(() => {
     let alive = true;
@@ -104,7 +142,6 @@ export function PlannerPage() {
       .then((data) => {
         if (!alive) return;
         setOptions(data);
-        setPrefs((current) => ({ ...current, municipality: current.municipality || data.municipalities[0] || "" }));
       })
       .catch((err) => {
         if (alive) setError(getApiErrorMessage(err, "No pudimos cargar las preferencias del catálogo."));
@@ -124,6 +161,16 @@ export function PlannerPage() {
         setDraft(data);
         setSaved(true);
         setStep("result");
+        setPrefs((current) => createPlannerPreferences({
+          date: data.date.slice(0, 10),
+          municipality: data.municipality,
+          durationKey: data.durationKey,
+          budgetCop: data.budgetCop,
+          note: data.note,
+          interests: current.touched && current.municipality === data.municipality ? current.interests : [],
+          budgetChosen: true,
+          touched: true,
+        }));
       })
       .catch((err) => {
         if (alive) setError(getApiErrorMessage(err, "No pudimos abrir ese plan."));
@@ -134,9 +181,9 @@ export function PlannerPage() {
     return () => {
       alive = false;
     };
-  }, [id]);
+  }, [id, openTry]);
 
-  const coverStop = useMemo(() => draft?.stops.find((stop) => stop.imageUrl) ?? draft?.stops[0] ?? null, [draft]);
+  const cover = useMemo(() => draft?.coverImageUrl || draft?.stops.find((stop) => stop.imageUrl)?.imageUrl || null, [draft]);
 
   function remember(nextPrefs: PlannerPreferences, nextDraft: PlannerItinerary | null) {
     sessionStorage.setItem(PREF_KEY, JSON.stringify(nextPrefs));
@@ -144,49 +191,53 @@ export function PlannerPage() {
   }
 
   async function run(avoid: string[]) {
+    if (runLock.current) return;
+    runLock.current = true;
     setError("");
+    setErrorCode("");
     setBusy(true);
     setStep("making");
     const previous = draft;
     try {
-      const next = await generatePlanner(prefs, avoid);
+      const next = await generatePlanner(
+        { ...prefs, categoryIds: [], environments: [], companion: "", people: 1 },
+        avoid,
+        profilePlannerHints(user?.profile),
+      );
       setDraft(next);
       setSaved(false);
       remember(prefs, next);
       setStep("result");
     } catch (err) {
-      const message = getApiErrorMessage(err, "No pudimos trazar el camino.");
-      setError(message);
+      setErrorCode(getApiErrorCode(err));
+      setError(getApiErrorMessage(err, "No pudimos trazar tu camino. Inténtalo de nuevo."));
       if (previous && avoid.length) {
         setDraft(previous);
         setStep("result");
       } else {
-        setStep("form");
+        setStep("making");
       }
     } finally {
+      runLock.current = false;
       setBusy(false);
     }
   }
 
-  function submit(event: FormEvent) {
-    event.preventDefault();
-    if (!prefs.categoryIds.length || !prefs.municipality || !prefs.date) {
-      setError("Completa la fecha, el municipio y al menos un interés.");
-      return;
-    }
-    void run([]);
-  }
+  useEffect(() => {
+    sessionStorage.setItem(PREF_KEY, JSON.stringify(prefs));
+  }, [prefs]);
 
-  async function persist() {
+  async function persist(chosen: AiPlanFolderKey) {
     if (!draft || busy) return;
     setBusy(true);
     setError("");
     try {
-      const stored = await savePlanner(draft, prefs);
+      const stored = await savePlanner(draft, prefs, chosen);
       setDraft(stored);
       setSaved(true);
+      setFolderOpen(false);
       remember(prefs, stored);
-      navigate(`/planear-mi-plan/guardado/${stored.id}`, { replace: true });
+      setSavedOpen(true);
     } catch (err) {
       setError(getApiErrorMessage(err, "No pudimos guardar el plan."));
     } finally {
@@ -202,203 +253,202 @@ export function PlannerPage() {
     );
   }
 
+  function startOver() {
+    const clean = createPlannerPreferences(null);
+    setPrefs(clean);
+    setDraft(null);
+    setSaved(false);
+    setSavedOpen(false);
+    setError("");
+    sessionStorage.removeItem(DRAFT_KEY);
+    sessionStorage.setItem(PREF_KEY, JSON.stringify(clean));
+    setStep("welcome");
+    if (id) navigate("/planear-mi-plan", { replace: true });
+  }
+
+  if (id && !draft) {
+    return (
+      <main className="planner planner--making">
+        <PlannerLoading
+          error={error}
+          empty={false}
+          onRetry={() => {
+            setError("");
+            setOpenTry((value) => value + 1);
+          }}
+          onBack={() => navigate("/planear-mi-plan")}
+        />
+      </main>
+    );
+  }
+
   if (step === "making") {
     return (
-      <main className="planner">
-        <section className="planner__making">
-          <div className="planner__hills" aria-hidden="true" />
-          <div className="planner__path" aria-hidden="true">
-            <span><Leaf size={16} /></span><i /><span><Mountain size={16} /></span><i /><span><Compass size={16} /></span>
-          </div>
-          <h1>Estamos trazando tu próximo camino...</h1>
-          <p>Explorando experiencias, combinando tus gustos y buscando una propuesta que se adapte a ti.</p>
-          <p className="planner__wait">Esto puede tardar unos segundos. Mientras tanto, piensa en qué te gustaría descubrir.</p>
-          {error ? <p className="planner__error" role="alert">{error}</p> : null}
-        </section>
+      <main className="planner planner--making">
+        <PlannerLoading
+          error={error}
+          empty={errorCode === "PLANNER_EMPTY"}
+          onRetry={() => void run([])}
+          onBack={() => {
+            setError("");
+            setErrorCode("");
+            setStep("form");
+          }}
+        />
       </main>
     );
   }
 
   if (step === "result" && draft) {
     return (
-      <main className="planner">
-        <section className="planner__result">
-          <div className="planner__story">
-            <button type="button" className="planner__back" onClick={() => setStep("form")}>
-              <ArrowLeft size={15} /> Volver
+      <main className="planner planner--result">
+        <section className="plan-view">
+          <div className="plan-view__head">
+          <div className="plan-view__top">
+            <button type="button" className="plan-view__back" aria-label="Volver" onClick={() => setStep("form")}>
+              <ArrowLeft size={16} strokeWidth={1.8} />
             </button>
-            <p className="planner__eyebrow">Tu camino personalizado</p>
-            <div className="planner__cover">
+            <div className="plan-view__hero">
               <div>
+                <p className="plan-view__kicker">Tu camino personalizado</p>
                 <h1>{draft.title}</h1>
-                <p className="planner__lead">{draft.summary}</p>
-                <div className="planner__meta">
-                  <span>{draft.date}</span>
-                  <span>{draft.municipality}</span>
-                  <span>{draft.people} {draft.people === 1 ? "persona" : "personas"}</span>
-                  {draft.durationLabel ? <span>{draft.durationLabel}</span> : null}
-                  <span>Estimado {money(draft.estimatedCop)}</span>
-                </div>
+                <p className="plan-view__lead">{draft.summary}</p>
               </div>
-              <article className="planner__poster">
-                {coverStop?.imageUrl ? <img src={mediaUrl(coverStop.imageUrl, 800)} alt="" /> : <div />}
-                <div>
-                  <strong>{money(draft.estimatedCop)}</strong>
-                  {coverStop ? <Link to={`/explorar/${coverStop.experienceId}`}>Ver detalle</Link> : null}
-                </div>
-              </article>
+              <div className="plan-view__photo">
+                {cover ? <img src={mediaUrl(cover, 960)} alt="" /> : <span />}
+              </div>
             </div>
-            <h2 className="planner__route-title">Tu recorrido</h2>
-            <ol className="planner__timeline">
-              {draft.stops.map((stop) => (
-                <li key={`${stop.experienceId}-${stop.position}`} className="planner__stop">
-                  <span className="planner__index">{stop.position}</span>
-                  {stop.imageUrl ? <img src={mediaUrl(stop.imageUrl, 320)} alt="" /> : <div className="planner__photo" />}
-                  <div>
-                    <h2>{stop.title}</h2>
-                    <p>{stop.category}</p>
-                    <p>{stop.description}</p>
-                    <p>
-                      {stop.durationLabel ? `${stop.durationLabel} · ` : ""}
-                      {stop.municipality}
-                      {` · ${money(stop.price)}`}
-                      {stop.suggestedAt ? ` · Sugerida ${stop.suggestedAt}` : ""}
-                    </p>
-                  </div>
-                  <Link to={`/explorar/${stop.experienceId}`}>Ver experiencia</Link>
-                </li>
-              ))}
-            </ol>
           </div>
-          <aside>
-            <div className="planner__why">
-              <h2>¿Por qué este plan es para ti?</h2>
+          {draft.alternativeMessage ? <p className="plan-view__alt">{draft.alternativeMessage}</p> : null}
+          <div className="plan-view__facts">
+            <article>
+              <Calendar size={15} strokeWidth={1.7} aria-hidden="true" />
+              <span><strong>{planDate(draft.date)}</strong><small>Fecha del plan</small></span>
+            </article>
+            <article>
+              <Clock size={15} strokeWidth={1.7} aria-hidden="true" />
+              <span>
+                <strong>{draft.scheduleLabel && draft.scheduleLabel !== "Horario flexible" ? draft.scheduleLabel : "Horario flexible"}</strong>
+                <small>{draft.scheduleIsSuggested === false || draft.scheduleLabel === "Horario flexible" ? "Sin hora fija" : "Horario propuesto"}</small>
+              </span>
+            </article>
+            <article>
+              <MapPin size={15} strokeWidth={1.7} aria-hidden="true" />
+              <span><strong>{draft.municipality}</strong><small>Municipio</small></span>
+            </article>
+            <article>
+              <span><strong>{money(draft.estimatedCop)}</strong><small>Precio de la experiencia</small></span>
+            </article>
+          </div>
+          </div>
+          <div className="plan-view__body">
+            <div className="plan-view__route-wrap">
+              <h2 className="plan-view__route">Tu recorrido</h2>
+              <div className="plan-view__scroll">
+                <ol className="plan-view__timeline">
+                  {draft.stops.map((stop) => (
+                    <li key={`${stop.position}-${stop.title}`}>
+                      <span className="plan-view__index">{stop.position}</span>
+                      <article>
+                        {stop.imageUrl ? <img src={mediaUrl(stop.imageUrl, 240)} alt="" /> : <span className="plan-view__mark" aria-hidden="true" />}
+                        <div>
+                          <small>{stopWhen(stop)}</small>
+                          <h3>{stop.title}</h3>
+                          <p>{stop.description}</p>
+                        </div>
+                        <p className="plan-view__meta">
+                          {stopLength(stop) ? <span><Clock size={13} strokeWidth={1.7} aria-hidden="true" /> {stopLength(stop)}</span> : null}
+                          <span><MapPin size={13} strokeWidth={1.7} aria-hidden="true" /> {stop.location || stop.municipality}</span>
+                          <span>{stopKind(stop)}</span>
+                        </p>
+                      </article>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            </div>
+            <aside className="plan-view__aside">
+            <div className="plan-view__why">
+              <h2><Lightbulb size={16} strokeWidth={1.8} aria-hidden="true" /> ¿Por qué este plan es para ti?</h2>
               <p>{draft.why}</p>
             </div>
-            <div className="planner__actions">
-              <button type="button" onClick={() => setStep("form")}>Editar preferencias</button>
-              <button type="button" disabled={busy} onClick={() => void run(draft.stops.map((stop) => stop.experienceId))}>Crear otro camino</button>
-              <button type="button" className="is-primary" disabled={busy || saved} onClick={() => void persist()}>{saved ? "Guardado en Mis caminos" : "Guardar este plan"}</button>
+            <div className="plan-view__actions">
+              <button type="button" onClick={() => setStep("form")}><SlidersHorizontal size={15} strokeWidth={1.8} /> Editar preferencias</button>
+              <button type="button" className="is-solid" disabled={busy || saved} onClick={() => { setFolderKey(null); setFolderOpen(true); }}><Bookmark size={15} strokeWidth={1.8} /> {saved ? "Plan guardado" : "Guardar este plan"}</button>
+              <button type="button" className="is-solid" onClick={startOver}><Plus size={15} strokeWidth={1.8} /> Crear otro camino</button>
             </div>
             {error ? <p className="planner__error" role="alert">{error}</p> : null}
           </aside>
+          </div>
         </section>
+        {folderOpen ? (
+          <div className="favorite-save-modal" role="dialog" aria-modal="true" aria-labelledby="plan-folder-title">
+            <button type="button" className="favorite-save-modal__backdrop" aria-label="Cerrar" onClick={() => { if (!busy) setFolderOpen(false); }} />
+            <div className="favorite-save-modal__panel ai-plans-picker">
+              <button type="button" className="favorite-save-modal__close" aria-label="Cerrar" onClick={() => { if (!busy) setFolderOpen(false); }}>
+                <X size={16} />
+              </button>
+              <header className="favorite-save-modal__head">
+                <AuthKeyIcon />
+                <h2 id="plan-folder-title" className="favorite-save-modal__title">¿Dónde quieres guardar tu camino?</h2>
+              </header>
+              <p>Elige una carpeta para tener tu plan siempre a mano.</p>
+              <div className="ai-plans-picker__list">
+                {AI_PLAN_FOLDERS.map((folder) => (
+                  <AiPlanFolderCard
+                    key={folder.key}
+                    folderKey={folder.key}
+                    name={folder.name}
+                    tone={folder.tone}
+                    count={folderCounts ? folderCounts[folder.key] ?? 0 : null}
+                    photos={folderCovers?.[folder.key] ?? []}
+                    selected={folderKey === folder.key}
+                    selectable
+                    onClick={() => setFolderKey(folder.key)}
+                  />
+                ))}
+              </div>
+              <div className="favorite-save-modal__actions">
+                <button type="button" className="favorite-save-modal__primary" disabled={!folderKey || busy} onClick={() => folderKey && void persist(folderKey)}>Guardar en esta carpeta</button>
+                <button type="button" className="favorite-save-modal__ghost" disabled={busy} onClick={() => setFolderOpen(false)}>Cancelar</button>
+              </div>
+            </div>
+          </div>
+        ) : null}
+        {savedOpen ? (
+          <div className="favorite-save-modal" role="dialog" aria-modal="true" aria-labelledby="plan-saved-title">
+            <button type="button" className="favorite-save-modal__backdrop" aria-label="Cerrar" onClick={() => setSavedOpen(false)} />
+            <div className="favorite-save-modal__panel">
+              <button type="button" className="favorite-save-modal__close" aria-label="Cerrar" onClick={() => setSavedOpen(false)}>
+                <X size={16} />
+              </button>
+              <header className="favorite-save-modal__head">
+                <AuthKeyIcon />
+                <h2 id="plan-saved-title" className="favorite-save-modal__title">¡Tu camino ha sido guardado!</h2>
+              </header>
+              <p>Lo encontrarás en Mis caminos, dentro de la carpeta que elegiste.</p>
+              <div className="favorite-save-modal__actions">
+                <button type="button" className="favorite-save-modal__primary" onClick={() => navigate("/mis-caminos")}>Ir a Mis caminos</button>
+                <button type="button" className="favorite-save-modal__ghost" onClick={() => navigate("/explorar")}>Seguir explorando</button>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </main>
     );
   }
 
   return (
-    <main className="planner">
-      <form className="planner__sheet" onSubmit={submit}>
-        <header className="planner__head">
-          <h1>Comparte tus preferencias.</h1>
-          <p>Cuéntanos qué es lo más importante para tu plan y la IA encontrará las experiencias perfectas para ti.</p>
-        </header>
-        <div className="planner__grid">
-          <section className="planner__card">
-            <h2>Fechas del plan</h2>
-            <p className="planner__hint">Elige el día. El carril marca el mes del plan.</p>
-            <div className="planner__rail" role="group" aria-label="Mes del plan">
-              {monthRail(prefs.date).map((month) => (
-                <button key={month.key} type="button" className={month.on ? "is-on" : ""} onClick={() => setPrefs({ ...prefs, date: dateInMonth(prefs.date, month.key) })}>
-                  {month.label}
-                </button>
-              ))}
-            </div>
-            <div className="planner__dates">
-              <input type="date" min={todayBogota()} value={prefs.date} onChange={(event) => setPrefs({ ...prefs, date: event.target.value })} required />
-            </div>
-          </section>
-          <section className="planner__card">
-            <h2>Presupuesto total</h2>
-            <div className="planner__budget">
-              <strong>{money(prefs.budgetCop)}</strong>
-              <input
-                type="range"
-                min={50000}
-                max={2000000}
-                step={10000}
-                value={Math.min(2000000, Math.max(50000, prefs.budgetCop))}
-                style={{ ["--fill" as string]: `${((Math.min(2000000, Math.max(50000, prefs.budgetCop)) - 50000) / 1950000) * 100}%` }}
-                onChange={(event) => setPrefs({ ...prefs, budgetCop: Number(event.target.value) })}
-              />
-              <input type="number" min={20000} max={20000000} step={1000} value={prefs.budgetCop} onChange={(event) => setPrefs({ ...prefs, budgetCop: Number(event.target.value) })} aria-label="Presupuesto en pesos" />
-            </div>
-          </section>
-          <section className="planner__card">
-            <h2>Actividades e intereses</h2>
-            <div className="planner__chips">
-              {options.categories.map((category) => {
-                const on = prefs.categoryIds.includes(category.id);
-                return (
-                  <button
-                    key={category.id}
-                    type="button"
-                    className={on ? "is-on" : ""}
-                    aria-pressed={on}
-                    onClick={() => setPrefs({
-                      ...prefs,
-                      categoryIds: on ? prefs.categoryIds.filter((item) => item !== category.id) : [...prefs.categoryIds, category.id],
-                    })}
-                  >
-                    <TicketCategoryIcon name={category.name} />
-                    {category.name}
-                  </button>
-                );
-              })}
-            </div>
-          </section>
-          <section className="planner__card">
-            <h2>Tipo de plan</h2>
-            <div className="planner__types">
-              {PLAN_TYPES.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <button key={item.id} type="button" className={prefs.planType === item.id ? "is-on" : ""} aria-pressed={prefs.planType === item.id} onClick={() => setPrefs({ ...prefs, planType: item.id })}>
-                    <Icon strokeWidth={1.7} />
-                    {item.label}
-                  </button>
-                );
-              })}
-            </div>
-          </section>
-          <section className="planner__card">
-            <h2>Duración</h2>
-            <div className="planner__choices">
-              {DURATIONS.map((item) => (
-                <button key={item.id} type="button" className={prefs.durationKey === item.id ? "is-on" : ""} aria-pressed={prefs.durationKey === item.id} onClick={() => setPrefs({ ...prefs, durationKey: item.id })}>
-                  {item.label}
-                </button>
-              ))}
-            </div>
-          </section>
-          <section className="planner__card">
-            <h2>Municipio</h2>
-            <select value={prefs.municipality} onChange={(event) => setPrefs({ ...prefs, municipality: event.target.value })} required>
-              <option value="">Elige un municipio</option>
-              {options.municipalities.map((name) => <option key={name} value={name}>{name}</option>)}
-            </select>
-          </section>
-          <section className="planner__card">
-            <h2>Participantes</h2>
-            <select value={prefs.people} onChange={(event) => setPrefs({ ...prefs, people: Number(event.target.value) })}>
-              {Array.from({ length: 12 }, (_, index) => index + 1).map((count) => (
-                <option key={count} value={count}>{count} {count === 1 ? "persona" : "personas"}</option>
-              ))}
-            </select>
-          </section>
-          <section className="planner__card">
-            <h2>Personalizado</h2>
-            <div className="planner__note">
-              <textarea value={prefs.note} maxLength={400} placeholder="Escribe aquí lo que se te ocurra..." onChange={(event) => setPrefs({ ...prefs, note: event.target.value })} />
-            </div>
-          </section>
-        </div>
-        {error ? <p className="planner__error" role="alert">{error}</p> : null}
-        <div className="planner__foot">
-          <button type="submit" className="planner__finish" disabled={busy}>Finalizar</button>
-        </div>
-      </form>
+    <main className="planner planner--prefs">
+      <PlannerPreferencesForm
+        prefs={prefs}
+        municipalities={options.municipalities}
+        error={error}
+        busy={busy}
+        onChange={setPrefs}
+        onSubmit={() => void run([])}
+        onBack={() => setStep("welcome")}
+      />
     </main>
   );
 }

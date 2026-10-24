@@ -1,0 +1,401 @@
+.ai-plans {
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+  padding: calc(var(--ai-plans-peak, clamp(1.55rem, 3.5vw, 2.45rem)) + 2.25rem) 0 1.65rem;
+  background: #ffffff;
+  overflow: visible;
+}
+
+.ai-plans__frame {
+  box-sizing: border-box;
+  width: min(1220px, 100%);
+  margin: 0 auto;
+  padding-inline: clamp(1rem, 3vw, 2.25rem);
+  overflow: visible;
+}
+
+.ai-plans__intro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0;
+  text-align: center;
+}
+
+.ai-plans .favorites-library__title {
+  max-width: none;
+  margin: 0;
+}
+
+.ai-plans__lead {
+  margin: 0.28rem 0 0;
+  color: #6b746f;
+  font-family: Poppins, Nunito, system-ui, sans-serif;
+  font-size: 0.88rem;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  line-height: 1.35;
+}
+
+.ai-plans__grid,
+.ai-plans-picker__list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 2.4rem;
+  row-gap: 5.7rem;
+  width: min(82%, 55.75rem);
+  margin: 5.55rem auto 0;
+  overflow: visible;
+}
+
+.ai-folder {
+  --photo-w: 6.15rem;
+  --photo-h: 7.25rem;
+  --photo-peek: 4.7rem;
+  --art-w: 3.6rem;
+  position: relative;
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  overflow: visible;
+  text-align: left;
+  transition: transform 240ms ease;
+}
+
+.ai-folder:hover,
+.ai-folder:focus-visible {
+  transform: translateY(-4px);
+  outline: none;
+}
+
+.ai-folder__tab {
+  background: var(--favorites-cat-paper, #f3eee4);
+}
+
+.ai-folder__body::before {
+  background: var(--favorites-cat-paper, #f3eee4);
+}
+
+.ai-folder__tab {
+  position: absolute;
+  z-index: 2;
+  top: -0.72rem;
+  left: 0;
+  width: 38%;
+  height: 0.88rem;
+  border-radius: 0.75rem 0.85rem 0 0;
+  box-shadow: 0 0 0 1px rgba(28, 51, 46, 0.05);
+  pointer-events: none;
+}
+
+.ai-folder__body {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+  min-height: 8.45rem;
+  padding: 1.15rem 1.2rem 1.15rem 1.4rem;
+  border-radius: 0 1.05rem 1.05rem 1.05rem;
+  background: transparent;
+  overflow: visible;
+}
+
+.ai-folder__body::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 10px 18px rgba(28, 51, 46, 0.07), 0 0 0 1px rgba(28, 51, 46, 0.05);
+  transition: box-shadow 240ms ease;
+}
+
+.ai-folder:hover .ai-folder__body::before,
+.ai-folder:focus-visible .ai-folder__body::before {
+  box-shadow: 0 16px 28px rgba(28, 51, 46, 0.12), 0 0 0 1px rgba(28, 51, 46, 0.06);
+}
+
+.ai-folder__photos {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  left: 1.35rem;
+  width: 11.5rem;
+  height: 0;
+  pointer-events: none;
+  transition: transform 240ms ease;
+}
+
+.ai-folder__photo {
+  position: absolute;
+  bottom: calc(var(--photo-peek) - var(--photo-h));
+  width: var(--photo-w);
+  height: var(--photo-h);
+  object-fit: cover;
+  object-position: center 18%;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 0.55rem;
+  background: #d9ddd6;
+  box-shadow: 0 8px 16px rgba(28, 51, 46, 0.12);
+  pointer-events: none;
+  user-select: none;
+}
+
+.ai-folder--shots-1 .ai-folder__photo:nth-child(1) {
+  left: 1.15rem;
+  z-index: 2;
+  transform: rotate(-2deg);
+}
+
+.ai-folder__photo:nth-child(1) {
+  left: 0;
+  z-index: 1;
+  transform: rotate(-7deg);
+}
+
+.ai-folder__photo:nth-child(2) {
+  left: 1.55rem;
+  bottom: calc(var(--photo-peek) - var(--photo-h) + 0.15rem);
+  z-index: 3;
+  transform: rotate(2.5deg);
+}
+
+.ai-folder__photo:nth-child(3) {
+  left: 3.05rem;
+  bottom: calc(var(--photo-peek) - var(--photo-h) + 0.05rem);
+  z-index: 2;
+  transform: rotate(7deg);
+}
+
+.ai-folder:hover .ai-folder__photos,
+.ai-folder:focus-visible .ai-folder__photos {
+  transform: translateY(-3px);
+}
+
+.ai-folder__copy {
+  position: relative;
+  z-index: 4;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.18rem;
+}
+
+.ai-folder__name {
+  color: #1c332e;
+  font-family: Poppins, Nunito, system-ui, sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+}
+
+.ai-folder__count {
+  color: #6b746f;
+  font-family: Poppins, Nunito, system-ui, sans-serif;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.ai-folder__arrow {
+  position: relative;
+  z-index: 4;
+  flex: 0 0 auto;
+  margin-right: 0.1rem;
+  color: #1c332e;
+  transition: transform 240ms ease;
+}
+
+.ai-folder:hover .ai-folder__arrow,
+.ai-folder:focus-visible .ai-folder__arrow {
+  transform: translateX(3px);
+}
+
+.ai-folder__art {
+  position: absolute;
+  z-index: 3;
+  top: -1.15rem;
+  right: 0.45rem;
+  width: var(--art-w);
+  height: var(--art-w);
+  object-fit: contain;
+  object-position: right bottom;
+  transform: scale(var(--art-scale, 1));
+  transform-origin: right bottom;
+  pointer-events: none;
+  user-select: none;
+  transition: transform 240ms ease;
+}
+
+.ai-folder__art--cultura { --art-scale: 1.24; }
+.ai-folder__art--sabores { --art-scale: 1.52; }
+.ai-folder__art--descubrimientos { --art-scale: 1.22; }
+
+.ai-folder:hover .ai-folder__art,
+.ai-folder:focus-visible .ai-folder__art {
+  transform: translateY(-3px) scale(var(--art-scale, 1));
+}
+
+.ai-folder.is-on .ai-folder__body::before,
+.ai-folder.is-on .ai-folder__tab {
+  box-shadow: inset 0 0 0 1.5px rgba(28, 51, 46, 0.72), 0 10px 18px rgba(28, 51, 46, 0.07);
+}
+
+.ai-folder.is-on:hover .ai-folder__body::before,
+.ai-folder.is-on:focus-visible .ai-folder__body::before {
+  box-shadow: inset 0 0 0 1.5px rgba(28, 51, 46, 0.72), 0 16px 28px rgba(28, 51, 46, 0.12);
+}
+
+.ai-plans-picker.favorite-save-modal__panel {
+  width: min(100%, 40rem);
+  overflow: visible;
+}
+
+.ai-plans-picker .auth-key-icon {
+  margin: 0 auto 0.15rem;
+}
+
+.ai-plans-picker__list {
+  width: 100%;
+  margin-top: 0.35rem;
+  padding-top: 1.2rem;
+  column-gap: 1.15rem;
+  row-gap: 1.85rem;
+}
+
+.ai-plans-picker .ai-folder {
+  --photo-w: 2.85rem;
+  --photo-h: 3.35rem;
+  --photo-peek: 1.85rem;
+  --art-w: 2.55rem;
+}
+
+.ai-plans-picker .ai-folder__body {
+  min-height: 5.35rem;
+  padding: 0.72rem 0.85rem 0.72rem 0.9rem;
+}
+
+.ai-plans-picker .ai-folder__name {
+  font-size: 0.84rem;
+}
+
+.ai-plans-picker .ai-folder__photos {
+  left: 0.7rem;
+  width: 7.5rem;
+}
+
+.ai-plans-picker .ai-folder--shots-1 .ai-folder__photo:nth-child(1) {
+  left: 0.45rem;
+}
+
+.ai-plans-picker .ai-folder__photo:nth-child(2) {
+  left: 0.85rem;
+}
+
+.ai-plans-picker .ai-folder__photo:nth-child(3) {
+  left: 1.7rem;
+}
+
+.ai-plans-picker .ai-folder__art {
+  top: -0.75rem;
+  right: 0.4rem;
+}
+
+@media (max-width: 900px) {
+  .ai-plans__grid {
+    width: min(94%, 44rem);
+    column-gap: 1.35rem;
+    row-gap: 4.85rem;
+    margin-top: 4.65rem;
+  }
+
+  .ai-folder__body {
+    min-height: 7.7rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .ai-plans {
+    padding-bottom: 1.35rem;
+  }
+
+  .ai-plans__grid,
+  .ai-plans-picker__list {
+    grid-template-columns: 1fr;
+    row-gap: 2.55rem;
+    width: min(100%, 26.5rem);
+    margin-top: 2.35rem;
+  }
+
+  .ai-plans-picker__list {
+    margin-top: 0.35rem;
+    padding-top: 1.05rem;
+    row-gap: 1.65rem;
+  }
+
+  .ai-folder {
+    --photo-w: 2.4rem;
+    --photo-h: 2.85rem;
+    --photo-peek: 1.3rem;
+    --art-w: 3rem;
+  }
+
+  .ai-plans-picker .ai-folder {
+    --photo-w: 2rem;
+    --photo-h: 2.35rem;
+    --photo-peek: 1rem;
+    --art-w: 2.55rem;
+  }
+
+  .ai-folder__body {
+    min-height: 7.15rem;
+    padding-right: 0.95rem;
+    padding-left: 1.05rem;
+  }
+
+  .ai-folder__name {
+    font-size: 0.95rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-folder,
+  .ai-folder__body::before,
+  .ai-folder__art,
+  .ai-folder__arrow,
+  .ai-folder__photos,
+  .ai-folder__photo {
+    transition: none;
+  }
+
+  .ai-folder:hover,
+  .ai-folder:focus-visible,
+  .ai-folder:hover .ai-folder__art,
+  .ai-folder:focus-visible .ai-folder__art {
+    transform: scale(var(--art-scale, 1));
+  }
+
+  .ai-folder:hover .ai-folder__arrow,
+  .ai-folder:focus-visible .ai-folder__arrow,
+  .ai-folder:hover .ai-folder__photos,
+  .ai-folder:focus-visible .ai-folder__photos,
+  .ai-folder__photo,
+  .ai-folder__photo:nth-child(1),
+  .ai-folder__photo:nth-child(2),
+  .ai-folder__photo:nth-child(3) {
+    transform: none;
+  }
+}

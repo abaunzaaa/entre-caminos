@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
+import { useNavigate } from "react-router-dom";
 import palomaLeft from "../assets/paloma1.png";
 import palomaRight from "../assets/paloma 2.png";
 import {
@@ -29,8 +30,10 @@ import { ensureBitacoraFonts } from "../components/bitacora/fonts";
 import { prefetchBitacora } from "../services/bitacora.service";
 import { JourneyCalendar } from "../components/journeys/JourneyCalendar";
 import { JourneyJournal, type MemorySeed } from "../components/journeys/JourneyJournal";
+import { AiPlanLibrary } from "../components/planner/AiPlanLibrary";
 import { JourneyNextPlans } from "../components/journeys/JourneyNextPlans";
 import { JourneyUpcoming } from "../components/journeys/JourneyUpcoming";
+import { listPlannerItineraries, type PlannerListItem } from "../services/planner.service";
 import { getApiErrorMessage } from "../utils/api-error";
 import { bogotaDay } from "../utils/journey-dates";
 import { useInViewReveal } from "../hooks/useInViewReveal";
@@ -43,6 +46,7 @@ function fail(error: unknown, fallback: string): never {
 }
 
 export function MisCaminosPage() {
+  const navigate = useNavigate();
   const [section, setSection] = useState<Section>("calendario");
   const [loading, setLoading] = useState(true);
   const [journeyReady, setJourneyReady] = useState(false);
@@ -51,6 +55,8 @@ export function MisCaminosPage() {
   const [notice, setNotice] = useState("");
   const [theme, setTheme] = useState<JourneyTheme>("olive");
   const [plans, setPlans] = useState<JourneyPlan[]>([]);
+  const [savedPaths, setSavedPaths] = useState<JourneyPlan[]>([]);
+  const [aiPlans, setAiPlans] = useState<PlannerListItem[]>([]);
   const [decorations, setDecorations] = useState<JourneyDecoration[]>([]);
   const [memories, setMemories] = useState<JourneyMemory[]>([]);
   const [seed, setSeed] = useState<MemorySeed | null>(null);
@@ -72,6 +78,37 @@ export function MisCaminosPage() {
     let active = true;
     setLoading(true);
     setError("");
+    void listPlannerItineraries()
+      .then((items) => {
+        if (!active) return;
+        setAiPlans(items);
+        setSavedPaths(
+          items.flatMap((item) => {
+            if (!item.primaryExperienceId) return [];
+            return [{
+              id: `planner-${item.id}`,
+              plannerItineraryId: item.id,
+              plannedAt: `${item.date.slice(0, 10)}T23:59:00-05:00`,
+              experience: {
+                id: item.primaryExperienceId,
+                title: item.title,
+                imageUrl: item.imageUrl ?? null,
+                location: item.municipality,
+                description: item.summary,
+                category: item.category || "Plan",
+                price: item.estimatedCop,
+                currency: item.currency,
+              },
+            }];
+          }),
+        );
+      })
+      .catch(() => {
+        if (active) {
+          setSavedPaths([]);
+          setAiPlans([]);
+        }
+      });
     void loadJourney()
       .then((bundle) => {
         if (!active) {
@@ -379,10 +416,11 @@ export function MisCaminosPage() {
               </div>
             ) : (
               <JourneyNextPlans
-                plans={plans}
+                plans={[...savedPaths, ...plans]}
                 status={loading ? "loading" : journeyReady ? "ready" : "error"}
                 onOpenDay={(day) => openCalendar(day)}
                 onOpenCalendar={() => openCalendar()}
+                onOpenPlanner={(planId) => navigate(`/planear-mi-plan/guardado/${planId}`)}
               />
             )}
             {error && journeyReady ? <p className="caminos-error" role="alert">{error}</p> : null}
@@ -412,6 +450,7 @@ export function MisCaminosPage() {
           ) : null}
         </div>
       ) : null}
+      <AiPlanLibrary items={aiPlans} />
       <div ref={closeRef} className={`caminos-close${closeInView ? " is-revealed" : ""}`}>
         <img className="caminos-close__dove caminos-close__dove--left" src={palomaLeft} alt="" aria-hidden="true" decoding="async" />
         <img className="caminos-close__dove caminos-close__dove--right" src={palomaRight} alt="" aria-hidden="true" decoding="async" />
