@@ -1,4 +1,4 @@
-import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import { Link } from "react-router-dom";
 import { experienceCoverUrl } from "../explorer/explorer-media";
 import type { VisitedJourneyStop } from "../../services/visits.service";
@@ -12,6 +12,22 @@ type VisitedCoverMarkersProps = {
   stops: VisitedJourneyStop[];
   categoryId?: string | null;
 };
+
+function useFinePointer() {
+  const [fine, setFine] = useState(() =>
+    typeof window !== "undefined" ? window.matchMedia("(hover: hover) and (pointer: fine)").matches : false,
+  );
+
+  useEffect(() => {
+    const query = window.matchMedia("(hover: hover) and (pointer: fine)");
+    const update = () => setFine(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
+
+  return fine;
+}
 
 type CardBox = {
   left: number;
@@ -47,14 +63,12 @@ export function VisitedCoverMarkers({ stops, categoryId = null }: VisitedCoverMa
   const layerRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLAnchorElement>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const finePointer = useFinePointer();
   const [broken, setBroken] = useState<Record<string, true>>({});
   const [cardBox, setCardBox] = useState<CardBox | null>(null);
   const [cardMeasure, setCardMeasure] = useState(0);
-  const [pinnedId, setPinnedId] = useState<string | null>(null);
-  const closeTimer = useRef<number | null>(null);
-  const pinnedRef = useRef<string | null>(null);
-  pinnedRef.current = pinnedId;
   const clipBase = useId().replace(/:/g, "");
 
   const placed = useMemo(() => {
@@ -66,15 +80,19 @@ export function VisitedCoverMarkers({ stops, categoryId = null }: VisitedCoverMa
   const visibleCount = placed.filter((pin) => stopMatchesCategory(pin.stop, categoryId)).length;
 
   useLayoutEffect(() => {
-    if (!selectedId) {
-      return;
+    if (selectedId) {
+      const stop = stops.find((item) => item.id === selectedId);
+      if (!stop || !stopMatchesCategory(stop, categoryId)) {
+        setSelectedId(null);
+      }
     }
-    const stop = stops.find((item) => item.id === selectedId);
-    if (!stop || !stopMatchesCategory(stop, categoryId)) {
-      setPinnedId(null);
-      setSelectedId(null);
+    if (hoveredId) {
+      const stop = stops.find((item) => item.id === hoveredId);
+      if (!stop || !stopMatchesCategory(stop, categoryId)) {
+        setHoveredId(null);
+      }
     }
-  }, [categoryId, selectedId, stops]);
+  }, [selectedId, hoveredId, categoryId, stops]);
 
   useEffect(() => {
     const node = layerRef.current;
@@ -119,12 +137,11 @@ export function VisitedCoverMarkers({ stops, categoryId = null }: VisitedCoverMa
     const boundsRight = Math.min(layerRect.width, window.innerWidth - margin - layerRect.left);
     const width = cardRect.width;
     const height = cardRect.height;
-    const pointing = pinnedId === selected.stop.id;
-    const aboveTop = pointing ? pinY - height - 16 : pinY - 74 - height - 8;
+    const aboveTop = pinY - height - 12;
     let top = aboveTop;
     let place: CardBox["place"] = "above";
     if (top < boundsTop) {
-      top = pinY + (pointing ? 10 : 12);
+      top = pinY + 14;
       place = "below";
     }
     if (top + height > boundsBottom) {
@@ -145,7 +162,7 @@ export function VisitedCoverMarkers({ stops, categoryId = null }: VisitedCoverMa
       }
       return { left, top, place, arrow };
     });
-  }, [pinnedId, selected, size.height, size.width, cardMeasure]);
+  }, [selected, size.height, size.width, cardMeasure]);
 
   useEffect(() => {
     if (!selectedId) {
@@ -160,12 +177,10 @@ export function VisitedCoverMarkers({ stops, categoryId = null }: VisitedCoverMa
       if (target.closest(".visited-float-slot, .visited-drop, .visited-filters")) {
         return;
       }
-      setPinnedId(null);
       setSelectedId(null);
     }
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
-        setPinnedId(null);
         setSelectedId(null);
       }
     }
@@ -179,22 +194,11 @@ export function VisitedCoverMarkers({ stops, categoryId = null }: VisitedCoverMa
 
   const placeName = selected ? stopPlaceName(selected.stop) : "";
 
-  function showPin(id: string) {
-    if (closeTimer.current !== null) {
-      window.clearTimeout(closeTimer.current);
-      closeTimer.current = null;
+  function hoverFromPointer(id: string, event: ReactPointerEvent) {
+    if (!finePointer || event.pointerType !== "mouse") {
+      return;
     }
-    setSelectedId(id);
-  }
-
-  function hidePinSoon() {
-    if (closeTimer.current !== null) {
-      window.clearTimeout(closeTimer.current);
-    }
-    closeTimer.current = window.setTimeout(() => {
-      setSelectedId(pinnedRef.current);
-      closeTimer.current = null;
-    }, 180);
+    setHoveredId(id);
   }
 
   return (
@@ -210,30 +214,38 @@ export function VisitedCoverMarkers({ stops, categoryId = null }: VisitedCoverMa
         <button
           key={pin.stop.id}
           type="button"
-          className={`visited-drop${pinnedId === pin.stop.id ? " is-open" : ""}${selectedId === pin.stop.id && pinnedId !== pin.stop.id ? " is-hot" : ""}${visible ? "" : " is-muted"}`}
+          className={`visited-drop${visible ? "" : " is-muted"}${visible && hoveredId === pin.stop.id && selectedId !== pin.stop.id ? " is-hot" : ""}${visible && selectedId === pin.stop.id ? " is-open" : ""}`}
           style={{ left: `${pin.xPercent}%`, top: `${pin.yPercent}%` }}
           aria-label={pin.stop.title}
           aria-expanded={selectedId === pin.stop.id}
           aria-hidden={visible ? undefined : true}
           tabIndex={visible ? undefined : -1}
-          onMouseEnter={() => {
+          onPointerEnter={(event) => {
             if (visible) {
-              showPin(pin.stop.id);
+              hoverFromPointer(pin.stop.id, event);
             }
           }}
-          onMouseLeave={hidePinSoon}
+          onPointerLeave={(event) => {
+            if (event.pointerType === "mouse") {
+              setHoveredId((current) => (current === pin.stop.id ? null : current));
+            }
+          }}
           onFocus={() => {
-            if (visible) {
-              showPin(pin.stop.id);
+            if (visible && finePointer) {
+              setHoveredId(pin.stop.id);
             }
           }}
-          onBlur={hidePinSoon}
+          onBlur={() => {
+            if (finePointer) {
+              setHoveredId((current) => (current === pin.stop.id ? null : current));
+            }
+          }}
           onClick={() => {
             if (!visible) {
               return;
             }
-            setPinnedId(pin.stop.id);
-            showPin(pin.stop.id);
+            setHoveredId(null);
+            setSelectedId(pin.stop.id);
           }}
         >
           <PinShape id={`${clipBase}-${pin.stop.id}`} src={experienceCoverUrl(pin.stop, 160)} broken={Boolean(broken[pin.stop.id])} />
@@ -248,8 +260,6 @@ export function VisitedCoverMarkers({ stops, categoryId = null }: VisitedCoverMa
             className={`visited-float__link is-${cardBox?.place ?? "above"}`}
             style={{ "--arrow": `${cardBox?.arrow ?? 50}%` } as CSSProperties}
             to={`/explorar/${selected.stop.id}`}
-            onMouseEnter={() => showPin(selected.stop.id)}
-            onMouseLeave={hidePinSoon}
           >
             <span className="visited-float__media">
               <img src={experienceCoverUrl(selected.stop, 320)} alt="" onLoad={() => setCardMeasure((value) => value + 1)} />

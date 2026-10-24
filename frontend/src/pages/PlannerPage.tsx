@@ -370,7 +370,9 @@ export function PlannerPage() {
               </header>
               <p>Lo encontrarás en Mis caminos, dentro de la carpeta que elegiste.</p>
               <div className="favorite-save-modal__actions">
-                <button type="button" className="favorite-save-modal__primary" onClick={() => navigate("/mis-caminos")}>Ir a Mis caminos</button>
+                {user?.role === "USER" ? (
+                  <button type="button" className="favorite-save-modal__primary" onClick={() => navigate("/mis-caminos")}>Ir a Mis caminos</button>
+                ) : null}
                 <button type="button" className="favorite-save-modal__ghost" onClick={() => { startOver(); navigate("/explorar"); }}>Seguir explorando</button>
               </div>
             </div>

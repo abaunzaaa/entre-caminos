@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useLayoutEffect, useMemo, useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { VisitedCoverFilters } from "../components/visited/VisitedCoverFilters";
 import { VisitedCoverMarkers } from "../components/visited/VisitedCoverMarkers";
@@ -9,8 +9,11 @@ import fondoVisitados from "../assets/fondovisitados.jpg";
 import sobreVisitados from "../assets/sobrevisitados.png";
 import mapaIcon from "../assets/mapa-icon.png";
 import { useAuth } from "../hooks/useAuth";
+import { listExperienceStamps } from "../services/catalog.service";
+import { listMyReviews, type MyVisitorReview } from "../services/reviews.service";
 import { listVisitedJourney, type VisitedJourneyStop } from "../services/visits.service";
 import { onVisitsChanged } from "../services/visits-sync";
+import { stampUrl } from "../utils/media";
 import { visitedCategoryFilters } from "../utils/visited-filters";
 import { isMappable, journeySummary, orderJourney } from "../utils/visited-map";
 import "../styles/visited-paths.css";
@@ -32,7 +35,13 @@ function regionCount(stops: VisitedJourneyStop[]) {
 
 export function VisitedPage() {
   const { user, loading: authLoading } = useAuth();
+
+  useLayoutEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, []);
   const [stops, setStops] = useState<VisitedJourneyStop[]>([]);
+  const [reviews, setReviews] = useState<MyVisitorReview[]>([]);
+  const [stamps, setStamps] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
@@ -44,6 +53,8 @@ export function VisitedPage() {
     }
     if (!user) {
       setStops([]);
+      setReviews([]);
+      setStamps({});
       setLoading(false);
       setError("");
       return;
@@ -70,6 +81,36 @@ export function VisitedPage() {
         .finally(() => {
           if (!cancelled) {
             setLoading(false);
+          }
+        });
+      listMyReviews()
+        .then((data) => {
+          if (!cancelled) {
+            setReviews(data.reviews);
+          }
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setReviews([]);
+          }
+        });
+      listExperienceStamps()
+        .then((items) => {
+          if (cancelled) {
+            return;
+          }
+          const next: Record<string, string> = {};
+          for (const item of items) {
+            const src = stampUrl(item.stampImageUrl);
+            if (src) {
+              next[item.id] = src;
+            }
+          }
+          setStamps(next);
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setStamps({});
           }
         });
     }
@@ -153,7 +194,7 @@ export function VisitedPage() {
                       <OpenBitacoraButton />
                     </div>
                   </header>
-                  <VisitedMemories stops={ordered} />
+                  <VisitedMemories stops={ordered} reviews={reviews} stamps={stamps} />
                 </div>
               </div>
               <div className="visited-stage">

@@ -42,7 +42,7 @@ import { ExperiencePreviewPage } from "../pages/admin/ExperiencePreviewPage";
 import { FaqModalProvider } from "../components/faq/FaqModalProvider";
 import { GuideHost } from "../components/guide/GuideHost";
 import { GuideProvider } from "../components/guide/GuideProvider";
-import { ProtectedRoute } from "./ProtectedRoute";
+import { ProtectedRoute, UserAreaRoute } from "./ProtectedRoute";
 
 const PAGE_TITLES: Record<string, string> = {
   "/login": "Iniciar sesión | Entre Caminos",
@@ -146,8 +146,10 @@ export function AppRoutes() {
           <Route element={<PublicLayout />}>
             <Route path="/explorar" element={<ExplorePage />} />
             <Route element={<ProtectedRoute />}>
-              <Route path="/mis-caminos" element={<MisCaminosPage />} />
-              <Route path="/mis-caminos/bitacora" element={<BitacoraPage />} />
+              <Route element={<UserAreaRoute />}>
+                <Route path="/mis-caminos" element={<MisCaminosPage />} />
+                <Route path="/mis-caminos/bitacora" element={<BitacoraPage />} />
+              </Route>
               <Route path="/planear-mi-plan" element={<PlannerPage />} />
               <Route path="/planear-mi-plan/guardado/:id" element={<PlannerPage />} />
             </Route>

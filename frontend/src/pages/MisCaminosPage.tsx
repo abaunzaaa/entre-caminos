@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
 import palomaLeft from "../assets/paloma1.png";
 import palomaRight from "../assets/paloma 2.png";
@@ -47,6 +47,11 @@ function fail(error: unknown, fallback: string): never {
 
 export function MisCaminosPage() {
   const navigate = useNavigate();
+
+  useLayoutEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, []);
+
   const [section, setSection] = useState<Section>("calendario");
   const [loading, setLoading] = useState(true);
   const [journeyReady, setJourneyReady] = useState(false);
