@@ -396,7 +396,14 @@ export function ExperienceReviewsSection({
   const editing = mine.find((review) => review.id === editingId) ?? null;
 
   useEffect(() => {
+    setComposer(null);
+    setEditingId(null);
+  }, [experienceId]);
+
+  useEffect(() => {
     if (!composeRequest) {
+      setComposer(null);
+      setEditingId(null);
       return;
     }
     const options = sedeRef.current;
