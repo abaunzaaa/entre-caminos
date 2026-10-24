@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { ChevronDown, Heart, LocateFixed, Search, Trash2, X } from "lucide-react";
 import {
   COLOMBIA_MAP_OVERVIEW,
@@ -201,7 +201,8 @@ function MapExplorerCard({
 }
 
 export function MapPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, refresh } = useAuth();
+  const [searchParams] = useSearchParams();
   const department = user?.profile?.department?.trim() ?? "";
   const city = user?.profile?.city?.trim() ?? "";
   const profilePlace = [department, city].filter(Boolean).join(" · ");
@@ -211,6 +212,24 @@ export function MapPage() {
   const [placeLoading, setPlaceLoading] = useState(false);
   const [placeMiss, setPlaceMiss] = useState(false);
   const [explore, setExplore] = useState<ExplorePlace | null>(null);
+
+  useEffect(() => {
+    const latitude = Number(searchParams.get("lat"));
+    const longitude = Number(searchParams.get("lng"));
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return;
+    if (latitude === 0 && longitude === 0) return;
+    if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) return;
+    const nombre = searchParams.get("nombre")?.trim() || "Ubicación del plan";
+    const depto = searchParams.get("depto")?.trim() || "";
+    setExplore({
+      latitude,
+      longitude,
+      label: nombre,
+      detail: depto,
+      municipality: nombre,
+      department: depto,
+    });
+  }, [searchParams]);
   const [trackedView, setTrackedView] = useState({ key: "", token: 0 });
   const [experiences, setExperiences] = useState<NearbyExperience[]>([]);
   const [loading, setLoading] = useState(false);

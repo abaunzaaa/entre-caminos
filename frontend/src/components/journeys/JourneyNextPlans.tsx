@@ -56,12 +56,12 @@ export function JourneyNextPlans({
   plans,
   status,
   onOpenDay,
-  onOpenCalendar,
+  onOpenPlanner,
 }: {
   plans: JourneyPlan[];
   status: "loading" | "ready" | "error";
   onOpenDay: (day: string) => void;
-  onOpenCalendar: () => void;
+  onOpenPlanner?: (id: string) => void;
 }) {
   const { ref, inView } = useInViewReveal<HTMLDivElement>({ rootMargin: "0px", enterRatio: 0.14, leaveRatio: 0 });
   const frameRef = useRef<HTMLDivElement>(null);
@@ -168,9 +168,6 @@ export function JourneyNextPlans({
             <img src="/mis-caminos/vacio-planes.png" alt="" width={1024} height={682} decoding="async" />
             <p>Aún no tienes próximos planes</p>
             <span>Tu próxima experiencia está por comenzar. Explora, elige y agenda un nuevo camino.</span>
-            <button type="button" className="tourist-hero__cta" onClick={onOpenCalendar}>
-              Ir a mi calendario
-            </button>
           </div>
         ) : null}
 
@@ -196,8 +193,14 @@ export function JourneyNextPlans({
                       type="button"
                       className="caminos-boleto"
                       onMouseDown={(event) => event.preventDefault()}
-                      onClick={() => onOpenDay(bogotaDay(plan.plannedAt))}
-                      aria-label={`${plan.experience.title}${when ? `, ${when}` : ""}${place ? `, ${place}` : ""}, ${date.day} ${date.month} ${date.year}. Abrir en el calendario`}
+                      onClick={() => {
+                        if (plan.plannerItineraryId && onOpenPlanner) {
+                          onOpenPlanner(plan.plannerItineraryId);
+                          return;
+                        }
+                        onOpenDay(bogotaDay(plan.plannedAt));
+                      }}
+                      aria-label={`${plan.experience.title}${when ? `, ${when}` : ""}${place ? `, ${place}` : ""}, ${date.day} ${date.month} ${date.year}. ${plan.plannerItineraryId ? "Abrir el plan guardado" : "Abrir en el calendario"}`}
                       title={plan.experience.title}
                     >
                       <svg className="caminos-boleto__shape" viewBox="0 0 240 102" preserveAspectRatio="none" aria-hidden="true">

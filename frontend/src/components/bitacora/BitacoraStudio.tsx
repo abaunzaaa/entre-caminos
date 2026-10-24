@@ -1231,6 +1231,8 @@ export function BitacoraStudio() {
         title="Bitácora guardada"
         description="Tus páginas quedaron guardadas."
         actionLabel="Seguir editando"
+        secondaryLabel="Salir"
+        onSecondary={() => navigate("/visitados")}
         initialFocus="action"
         className="contact-success--subtle"
       />
@@ -1520,12 +1522,14 @@ function DockIcon({
 
 function ObjectActions({
   variant,
+  layers = true,
   onDuplicate,
   onFront,
   onBack,
   onRemove,
 }: {
   variant: "icons" | "menu";
+  layers?: boolean;
   onDuplicate: () => void;
   onFront: () => void;
   onBack: () => void;
@@ -1533,8 +1537,12 @@ function ObjectActions({
 }) {
   const items = [
     { label: "Duplicar", icon: <Copy size={15} aria-hidden="true" />, run: onDuplicate },
-    { label: "Traer adelante", icon: <ArrowUp size={15} aria-hidden="true" />, run: onFront },
-    { label: "Enviar atrás", icon: <ArrowDown size={15} aria-hidden="true" />, run: onBack },
+    ...(layers
+      ? [
+          { label: "Traer adelante", icon: <ArrowUp size={15} aria-hidden="true" />, run: onFront },
+          { label: "Enviar atrás", icon: <ArrowDown size={15} aria-hidden="true" />, run: onBack },
+        ]
+      : []),
     { label: "Quitar", icon: <Trash2 size={15} aria-hidden="true" />, run: onRemove },
   ];
   if (variant === "menu") {
@@ -1782,7 +1790,7 @@ function PhotoProps({
       {density !== "compact" ? (
         <>
           <span className="bita-dock__sep" aria-hidden="true" />
-          <ObjectActions variant="icons" onDuplicate={onDuplicate} onFront={onFront} onBack={onBack} onRemove={onRemove} />
+          <ObjectActions variant="icons" layers={false} onDuplicate={onDuplicate} onFront={onFront} onBack={onBack} onRemove={onRemove} />
         </>
       ) : (
         <button
@@ -1846,7 +1854,7 @@ function PhotoProps({
         </button>
       </DockPopover>
       <DockPopover open={menu === "more"} onClose={() => setMenu(null)} label="Más opciones" anchorRef={moreRef} width={220}>
-        <ObjectActions variant="menu" onDuplicate={onDuplicate} onFront={onFront} onBack={onBack} onRemove={onRemove} />
+        <ObjectActions variant="menu" layers={false} onDuplicate={onDuplicate} onFront={onFront} onBack={onBack} onRemove={onRemove} />
       </DockPopover>
     </>
   );

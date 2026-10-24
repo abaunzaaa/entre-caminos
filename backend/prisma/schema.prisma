@@ -735,9 +735,12 @@ model PlannerItinerary {
   people       Int
   durationKey  String   @map("duration_key")
   budgetCop    Int      @map("budget_cop")
-  planType     String   @map("plan_type")
-  note         String   @default("")
-  createdAt    DateTime @default(now()) @map("created_at")
+  planType      String   @map("plan_type")
+  note          String   @default("")
+  scheduleLabel String   @default("") @map("schedule_label")
+  costNotes     String   @default("") @map("cost_notes")
+  folderKey     String   @default("descubrimientos") @map("folder_key")
+  createdAt     DateTime @default(now()) @map("created_at")
 
   user  User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   stops PlannerStop[]
@@ -750,9 +753,16 @@ model PlannerStop {
   id           String @id @default(uuid())
   itineraryId  String @map("itinerary_id")
   experienceId String @map("experience_id")
-  position     Int
-  suggestedAt  String @default("") @map("suggested_at")
-  blurb        String @default("")
+  position        Int
+  suggestedAt     String  @default("") @map("suggested_at")
+  suggestedEnd    String  @default("") @map("suggested_end")
+  blurb           String  @default("")
+  title           String  @default("")
+  location        String  @default("")
+  stopType        String  @default("experience") @map("stop_type")
+  included        Boolean @default(true)
+  additionalCost  String  @default("") @map("additional_cost")
+  durationMinutes Int?    @map("duration_minutes")
 
   itinerary  PlannerItinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
   experience Experience       @relation(fields: [experienceId], references: [id], onDelete: Restrict)

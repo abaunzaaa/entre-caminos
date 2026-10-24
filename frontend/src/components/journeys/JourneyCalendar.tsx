@@ -43,6 +43,7 @@ import {
   weekDays,
   weekdayShort,
 } from "../../utils/journey-dates";
+import { showFavoriteToast } from "../../services/favorites-sync";
 import { mediaUrl } from "../../utils/media";
 import { getPublicCategories } from "../../services/catalog.service";
 import {
@@ -565,6 +566,131 @@ function TimePicker({
                 </li>
               ))}
             </ul>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function DateField({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [cursor, setCursor] = useState(value.slice(0, 7));
+  const [box, setBox] = useState<{ left: number; top: number } | null>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const today = bogotaToday();
+  const year = Number(cursor.slice(0, 4));
+  const month = Number(cursor.slice(5, 7));
+  const cells = monthCells(year, month);
+  const label = new Intl.DateTimeFormat("es-CO", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(`${value}T12:00:00.000Z`));
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+    setCursor(value.slice(0, 7));
+    const place = () => {
+      const rect = triggerRef.current?.getBoundingClientRect();
+      const width = menuRef.current?.offsetWidth ?? 280;
+      if (!rect) {
+        return;
+      }
+      const left = Math.max(12, Math.min(window.innerWidth - width - 12, rect.left));
+      const top = Math.min(rect.bottom + 6, window.innerHeight - 340);
+      setBox({ left, top: Math.max(12, top) });
+    };
+    const away = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (!triggerRef.current?.contains(target) && !menuRef.current?.contains(target)) {
+        setOpen(false);
+      }
+    };
+    const key = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.stopPropagation();
+        setOpen(false);
+        triggerRef.current?.focus();
+      }
+    };
+    place();
+    const frame = window.requestAnimationFrame(place);
+    window.addEventListener("resize", place);
+    window.addEventListener("scroll", place, true);
+    document.addEventListener("pointerdown", away);
+    window.addEventListener("keydown", key, true);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("resize", place);
+      window.removeEventListener("scroll", place, true);
+      document.removeEventListener("pointerdown", away);
+      window.removeEventListener("keydown", key, true);
+    };
+  }, [open, value]);
+
+  function shift(delta: number) {
+    const next = new Date(Date.UTC(year, month - 1 + delta, 1, 12));
+    setCursor(`${next.getUTCFullYear()}-${String(next.getUTCMonth() + 1).padStart(2, "0")}`);
+  }
+
+  return (
+    <div className={`caminos-date${open ? " is-open" : ""}`}>
+      <button
+        ref={triggerRef}
+        type="button"
+        className="caminos-date__trigger"
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        aria-label={`Fecha ${label}`}
+        onClick={() => setOpen((state) => !state)}
+      >
+        <span>{label}</span>
+        <ChevronDown size={14} strokeWidth={1.6} aria-hidden="true" />
+      </button>
+      {open ? (
+        <div
+          ref={menuRef}
+          className="caminos-monthpick__menu caminos-date__menu"
+          role="dialog"
+          aria-label="Elegir fecha"
+          style={box ? { left: box.left, top: box.top } : { left: 0, top: 0, visibility: "hidden" }}
+        >
+          <div className="caminos-monthpick__head">
+            <button type="button" aria-label="Mes anterior" onClick={() => shift(-1)}>
+              <ChevronLeft size={14} strokeWidth={1.6} aria-hidden="true" />
+            </button>
+            <span>{monthName(year, month)} {year}</span>
+            <button type="button" aria-label="Mes siguiente" onClick={() => shift(1)}>
+              <ChevronRight size={14} strokeWidth={1.6} aria-hidden="true" />
+            </button>
+          </div>
+          <div className="caminos-date__week" aria-hidden="true">
+            {["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"].map((day) => <span key={day}>{day}</span>)}
+          </div>
+          <div className="caminos-date__grid">
+            {cells.map((day) => {
+              const inMonth = day.slice(0, 7) === cursor;
+              return (
+                <button
+                  key={day}
+                  type="button"
+                  className={`${day === value ? "is-on" : ""}${day === today ? " is-now" : ""}${inMonth ? "" : " is-out"}`}
+                  aria-pressed={day === value}
+                  aria-label={longDay(day)}
+                  onClick={() => {
+                    onChange(day);
+                    setOpen(false);
+                  }}
+                >
+                  {Number(day.slice(8))}
+                </button>
+              );
+            })}
           </div>
         </div>
       ) : null}
@@ -1408,6 +1534,7 @@ export function JourneyCalendar({
   function saveChanges() {
     commitNoteDraft();
     setSaved(true);
+    showFavoriteToast("Cambios guardados");
     window.setTimeout(() => setSaved(false), 1600);
   }
 
@@ -1837,7 +1964,7 @@ export function JourneyCalendar({
               <h3>Cambiar fecha</h3>
               <p>{dialog.plan.experience.title}</p>
               <label>Fecha
-                <input type="date" value={selected} onChange={(event) => { if (event.target.value) setSelected(event.target.value); }} required />
+                <DateField value={selected} onChange={setSelected} />
               </label>
               <label>Hora
                 <TimePicker variant="field" value={time} onChange={setTime} />

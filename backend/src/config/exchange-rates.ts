@@ -94,13 +94,33 @@ async function refreshCopRates(now: number): Promise<CopRates> {
   }
 }
 
+function ratesOrFallback() {
+  return cache?.rates ?? fallbackRates();
+}
+
+/**
+ * La consulta externa tiene abort a los 4 s, pero si el socket no responde al abort
+ * la promesa no termina y el catálogo se queda cargando. Este límite sí termina.
+ */
+function withDeadline(pending: Promise<CopRates>, ms: number) {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const deadline = new Promise<CopRates>((resolve) => {
+    timer = setTimeout(() => resolve(ratesOrFallback()), ms);
+  });
+  return Promise.race([pending, deadline]).finally(() => {
+    if (timer) {
+      clearTimeout(timer);
+    }
+  });
+}
+
 /** Devuelve la tasa en caché si sigue vigente. Solo consulta la API si venció o no existe. */
 export async function ensureCopRates(now = Date.now()) {
   if (isFresh(now)) {
     return cache!.rates;
   }
   if (!refreshPromise) {
-    refreshPromise = refreshCopRates(now).finally(() => {
+    refreshPromise = withDeadline(refreshCopRates(now), EXCHANGE_RATE_TIMEOUT_MS + 500).finally(() => {
       refreshPromise = null;
     });
   }

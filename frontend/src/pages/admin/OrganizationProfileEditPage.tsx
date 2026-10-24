@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Building2, Camera, Trash2 } from "lucide-react";
+import { OrgFieldSelect } from "../../components/admin/OrgFieldSelect";
 import { Button } from "../../components/ui/Button";
 import { Spinner } from "../../components/ui/Spinner";
 import { AdminChangePasswordDialog } from "../../components/admin/AdminChangePasswordDialog";
@@ -427,52 +428,36 @@ export function OrganizationProfileEditPage() {
                 <label className="admin-profile-edit__label" htmlFor="org-department">
                   Departamento <span className="admin-profile-edit__required">*</span>
                 </label>
-                <select
+                <OrgFieldSelect
                   id="org-department"
-                  className="admin-profile-edit__control"
                   value={draft.department}
+                  options={COLOMBIA_DEPARTMENTS.map((item) => item.name)}
                   disabled={saving}
-                  onChange={(event) => {
-                    const department = findDepartment(event.target.value)?.name ?? event.target.value;
+                  onChange={(department) => {
                     const nextCities = findDepartment(department)?.cities ?? [];
                     patchDraft({
                       department,
                       city: nextCities.includes(draft.city) ? draft.city : "",
                     });
                   }}
-                >
-                  <option value="">Selecciona</option>
-                  {COLOMBIA_DEPARTMENTS.map((item) => (
-                    <option key={item.name} value={item.name}>
-                      {item.name}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
 
               <div className="admin-profile-edit__field">
                 <label className="admin-profile-edit__label" htmlFor="org-city">
                   Municipio <span className="admin-profile-edit__required">*</span>
                 </label>
-                <select
+                <OrgFieldSelect
                   id="org-city"
-                  className="admin-profile-edit__control"
                   value={draft.city}
+                  options={cityOptions}
                   disabled={saving || !draft.department}
-                  onChange={(event) => {
-                    const city = draft.department
-                      ? findMunicipality(draft.department, event.target.value) || event.target.value
-                      : event.target.value;
-                    patchDraft({ city });
+                  onChange={(city) => {
+                    patchDraft({
+                      city: draft.department ? findMunicipality(draft.department, city) || city : city,
+                    });
                   }}
-                >
-                  <option value="">Selecciona</option>
-                  {cityOptions.map((city) => (
-                    <option key={city} value={city}>
-                      {city}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
 
               <div className="admin-profile-edit__field admin-profile-edit__field--full">

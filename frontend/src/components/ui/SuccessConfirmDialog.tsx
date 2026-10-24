@@ -11,6 +11,8 @@ type SuccessConfirmDialogProps = {
   title: string;
   description: string;
   actionLabel?: string;
+  secondaryLabel?: string;
+  onSecondary?: () => void;
   closeLabel?: string;
   initialFocus?: "action" | "close";
   className?: string;
@@ -23,6 +25,8 @@ export function SuccessConfirmDialog({
   title,
   description,
   actionLabel = "Entendido",
+  secondaryLabel,
+  onSecondary,
   closeLabel = "Cerrar",
   initialFocus = "close",
   className,
@@ -110,14 +114,30 @@ export function SuccessConfirmDialog({
         <p id={descriptionId} className="contact-success__text">
           {description}
         </p>
-        <button
-          ref={actionRef}
-          type="button"
-          className="contact-success__action admin-cta"
-          onClick={onClose}
-        >
-          {actionLabel}
-        </button>
+        {secondaryLabel && onSecondary ? (
+          <div className="contact-success__actions">
+            <button type="button" className="contact-success__cancel" onClick={onSecondary}>
+              {secondaryLabel}
+            </button>
+            <button
+              ref={actionRef}
+              type="button"
+              className="contact-success__action admin-cta"
+              onClick={onClose}
+            >
+              {actionLabel}
+            </button>
+          </div>
+        ) : (
+          <button
+            ref={actionRef}
+            type="button"
+            className="contact-success__action admin-cta"
+            onClick={onClose}
+          >
+            {actionLabel}
+          </button>
+        )}
       </div>
     </div>,
     document.body,

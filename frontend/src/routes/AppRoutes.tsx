@@ -57,7 +57,6 @@ const PAGE_TITLES: Record<string, string> = {
   "/visitados": "Visitados | Entre Caminos",
   "/perfil": "Tu perfil | Entre Caminos",
   "/mis-caminos": "Mis caminos | Entre Caminos",
-  "/planear-mi-plan": "Planear mi plan | Entre Caminos",
   "/mis-caminos/bitacora": "Mi bitácora | Entre Caminos",
   "/preguntas-frecuentes": "Preguntas frecuentes | Entre Caminos",
   "/admin/preguntas-frecuentes": "Preguntas frecuentes | Entre Caminos",
