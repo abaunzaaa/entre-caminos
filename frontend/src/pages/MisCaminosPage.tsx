@@ -25,34 +25,18 @@ import {
   type MemoryInput,
 } from "../services/journey.service";
 import { ExplorerUserFooter } from "../components/explorer/ExplorerUserFooter";
+import { ensureBitacoraFonts } from "../components/bitacora/fonts";
+import { prefetchBitacora } from "../services/bitacora.service";
 import { JourneyCalendar } from "../components/journeys/JourneyCalendar";
 import { JourneyJournal, type MemorySeed } from "../components/journeys/JourneyJournal";
-import { JourneyKeepsake } from "../components/journeys/JourneyKeepsake";
 import { JourneyNextPlans } from "../components/journeys/JourneyNextPlans";
 import { JourneyUpcoming } from "../components/journeys/JourneyUpcoming";
-import { getPublicExperiences } from "../services/catalog.service";
-import type { Experience } from "../types";
 import { getApiErrorMessage } from "../utils/api-error";
 import { bogotaDay } from "../utils/journey-dates";
-import { mediaUrl } from "../utils/media";
 import { useInViewReveal } from "../hooks/useInViewReveal";
 import "../styles/mis-caminos.css";
 
 type Section = "calendario" | "proximas" | "bitacora";
-
-type IntroPhotos = {
-  upcoming: string;
-  journal: string;
-};
-
-function coverText(experience: Experience) {
-  return `${experience.title} ${(experience.categories ?? []).map((category) => category.name).join(" ")}`.toLowerCase();
-}
-
-function takePhoto(list: Experience[], words: string[], width: number) {
-  const found = list.find((item) => item.imageUrl && words.some((word) => coverText(item).includes(word)));
-  return found?.imageUrl ? mediaUrl(found.imageUrl, width) : "";
-}
 
 function fail(error: unknown, fallback: string): never {
   throw new Error(getApiErrorMessage(error, fallback));
@@ -70,7 +54,6 @@ export function MisCaminosPage() {
   const [decorations, setDecorations] = useState<JourneyDecoration[]>([]);
   const [memories, setMemories] = useState<JourneyMemory[]>([]);
   const [seed, setSeed] = useState<MemorySeed | null>(null);
-  const [photos, setPhotos] = useState<IntroPhotos>({ upcoming: "", journal: "" });
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [calendarDay, setCalendarDay] = useState<string | undefined>(undefined);
   const calendarDialogRef = useRef<HTMLDivElement>(null);
@@ -79,6 +62,11 @@ export function MisCaminosPage() {
   const clearSeed = useCallback(() => setSeed(null), []);
   const { ref: heroRef, inView: heroInView } = useInViewReveal<HTMLDivElement>({ rootMargin: "0px", enterRatio: 0.12, leaveRatio: 0 });
   const { ref: closeRef, inView: closeInView } = useInViewReveal<HTMLDivElement>({ rootMargin: "0px", enterRatio: 0.16, leaveRatio: 0 });
+
+  useEffect(() => {
+    ensureBitacoraFonts();
+    prefetchBitacora();
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -109,25 +97,6 @@ export function MisCaminosPage() {
       active = false;
     };
   }, [loadNonce]);
-
-  useEffect(() => {
-    let active = true;
-    void getPublicExperiences({ limit: 18, offset: 0 })
-      .then((result) => {
-        if (!active) {
-          return;
-        }
-        const list = result.experiences;
-        setPhotos({
-          upcoming: takePhoto(list, ["cabalgata"], 420),
-          journal: takePhoto(list, ["gastronómica", "gastronomica"], 420),
-        });
-      })
-      .catch(() => undefined);
-    return () => {
-      active = false;
-    };
-  }, []);
 
   useEffect(() => {
     if (!calendarOpen) {
@@ -365,74 +334,84 @@ export function MisCaminosPage() {
   }
 
   const memoryPlanIds = new Set(memories.map((memory) => memory.planId).filter((id): id is string => Boolean(id)));
-  const keepsakes = [
-    ...memories.flatMap((memory) => memory.photos.map((photo) => mediaUrl(photo.url, 420))),
-    photos.upcoming,
-    photos.journal,
-  ].filter(Boolean);
 
   return (
-    <main className="caminos">
-      <section className="caminos-intro" aria-label="Mis caminos">
-        <div className="caminos-wrap">
-          <div className="caminos-hero-screen">
-          <div ref={heroRef} className={`caminos-hero explorer-reveal-scope${heroInView ? " is-revealed" : ""}`}>
-            <div className="caminos-hero__stage">
-              <figure className="caminos-hero__base">
-                <img src="/mis-caminos/flores.jpg" alt="" />
-              </figure>
-              <figure className="caminos-hero__photo">
-                <img src="/mis-caminos/caminata.jpg" alt="Grupo caminando por un sendero entre montañas" />
-              </figure>
-            </div>
-            <div className="caminos-hero__copy">
-              <img className="caminos-hero__mark explorer-reveal explorer-reveal--soft" src="/mis-caminos/cartas-lazo.png" alt="" width={700} height={598} style={{ "--reveal-delay": "200ms" } as CSSProperties} />
-              <h1 className="explorer-reveal explorer-reveal--title" style={{ "--reveal-delay": "300ms" } as CSSProperties}>Mis caminos</h1>
-              <p className="caminos-hero__lead explorer-reveal explorer-reveal--soft" style={{ "--reveal-delay": "400ms" } as CSSProperties}>Un espacio para tus planes y recuerdos</p>
-              <button type="button" className="tourist-hero__cta explorer-reveal explorer-reveal--soft" style={{ "--reveal-delay": "500ms" } as CSSProperties} onClick={() => openCalendar()}>
-                Ver mi calendario
-              </button>
-            </div>
-          </div>
+    <main className="caminos caminos--band">
+      <section className="caminos-band" aria-labelledby="caminos-page-title">
+        <div className="caminos-band__inner">
+          <header ref={heroRef} className={`caminos-band__intro explorer-reveal-scope${heroInView ? " is-revealed" : ""}`}>
+            <img
+              className="caminos-band__mark explorer-reveal explorer-reveal--soft"
+              src="/mis-caminos/cartas-lazo.png"
+              alt=""
+              width={700}
+              height={598}
+              style={{ "--reveal-delay": "160ms" } as CSSProperties}
+            />
+            <h1
+              className="favorites-library__title explorer-block-title explorer-reveal explorer-reveal--title"
+              id="caminos-page-title"
+              style={{ "--reveal-delay": "240ms" } as CSSProperties}
+            >
+              Mis caminos
+            </h1>
+            <p
+              className="favorites-library__lead explorer-block-lead explorer-reveal explorer-reveal--soft"
+              style={{ "--reveal-delay": "320ms" } as CSSProperties}
+            >
+              Un espacio para tus planes y recuerdos
+            </p>
+            <button
+              type="button"
+              className="caminos-band__cta tourist-hero__cta explorer-reveal explorer-reveal--soft"
+              style={{ "--reveal-delay": "400ms" } as CSSProperties}
+              onClick={() => openCalendar()}
+            >
+              Abrir calendario
+            </button>
+          </header>
+
+          <div className="caminos-band__plans">
+            {error && !journeyReady ? (
+              <div className="caminos-loadfail">
+                <p className="caminos-error" role="alert">{error}</p>
+                <button type="button" onClick={() => setLoadNonce((value) => value + 1)}>Reintentar</button>
+              </div>
+            ) : (
+              <JourneyNextPlans
+                plans={plans}
+                status={loading ? "loading" : journeyReady ? "ready" : "error"}
+                onOpenDay={(day) => openCalendar(day)}
+                onOpenCalendar={() => openCalendar()}
+              />
+            )}
+            {error && journeyReady ? <p className="caminos-error" role="alert">{error}</p> : null}
+            {notice ? <p className="caminos-saved" role="status">{notice}</p> : null}
           </div>
         </div>
-
-        <section className="caminos-plans" aria-labelledby="caminos-plans-title">
-          <div className="caminos-plans__inner">
-            <JourneyNextPlans plans={plans} loading={loading || !journeyReady} onOpenDay={(day) => openCalendar(day)} />
-            <JourneyKeepsake photos={keepsakes} />
-          </div>
-        </section>
       </section>
 
-      <div className="caminos-wrap caminos-panel" id="caminos-panel">
-        {error && !journeyReady ? (
-          <div className="caminos-loadfail">
-            <p className="caminos-error" role="alert">{error}</p>
-            <button type="button" onClick={() => setLoadNonce((value) => value + 1)}>Reintentar</button>
-          </div>
-        ) : error ? <p className="caminos-error" role="alert">{error}</p> : null}
-        {notice ? <p className="caminos-saved" role="status">{notice}</p> : null}
-
-        {!loading && section === "proximas" ? (
-          <JourneyUpcoming plans={plans} onUpdatePlan={updatePlan} onDeletePlan={removePlan} />
-        ) : null}
-
-        {!loading && section === "bitacora" ? (
-          <JourneyJournal
-            memories={memories}
-            seed={seed}
-            onSeedConsumed={clearSeed}
-            onSave={saveMemory}
-            onDelete={removeMemory}
-            onUpload={uploadPhoto}
-            onDeletePhoto={removePhoto}
-            onAddSticker={addSticker}
-            onMoveSticker={moveSticker}
-            onDeleteSticker={removeSticker}
-          />
-        ) : null}
-      </div>
+      {!loading && (section === "proximas" || section === "bitacora") ? (
+        <div className="caminos-wrap caminos-panel" id="caminos-panel">
+          {section === "proximas" ? (
+            <JourneyUpcoming plans={plans} onUpdatePlan={updatePlan} onDeletePlan={removePlan} />
+          ) : null}
+          {section === "bitacora" ? (
+            <JourneyJournal
+              memories={memories}
+              seed={seed}
+              onSeedConsumed={clearSeed}
+              onSave={saveMemory}
+              onDelete={removeMemory}
+              onUpload={uploadPhoto}
+              onDeletePhoto={removePhoto}
+              onAddSticker={addSticker}
+              onMoveSticker={moveSticker}
+              onDeleteSticker={removeSticker}
+            />
+          ) : null}
+        </div>
+      ) : null}
       <div ref={closeRef} className={`caminos-close${closeInView ? " is-revealed" : ""}`}>
         <img className="caminos-close__dove caminos-close__dove--left" src={palomaLeft} alt="" aria-hidden="true" decoding="async" />
         <img className="caminos-close__dove caminos-close__dove--right" src={palomaRight} alt="" aria-hidden="true" decoding="async" />

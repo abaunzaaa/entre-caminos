@@ -32,7 +32,7 @@ import {
   CircleAlert,
   LoaderCircle,
 } from "lucide-react";
-import { deleteBitacoraAsset, loadBitacora, saveBitacora, uploadBitacoraPhoto } from "../../services/bitacora.service";
+import { deleteBitacoraAsset, loadBitacora, peekBitacora, saveBitacora, uploadBitacoraPhoto } from "../../services/bitacora.service";
 import { AuthKeyIcon } from "../auth/AuthKeyIcon";
 import { KeyConfirmDialog } from "../ui/KeyConfirmDialog";
 import { SuccessConfirmDialog } from "../ui/SuccessConfirmDialog";
@@ -128,9 +128,10 @@ export function BitacoraStudio() {
   const mobile = useMobile();
   const dockRef = useRef<HTMLDivElement>(null);
   const dockDensity = useDockDensity(dockRef);
-  const [history, setHistory] = useState<HistoryState<PageDoc[]>>(createHistory([]));
-  const [assets, setAssets] = useState<BitacoraAsset[]>([]);
-  const [loaded, setLoaded] = useState(false);
+  const opening = peekBitacora();
+  const [history, setHistory] = useState<HistoryState<PageDoc[]>>(createHistory(opening?.pages ?? []));
+  const [assets, setAssets] = useState<BitacoraAsset[]>(() => opening?.assets ?? []);
+  const [loaded, setLoaded] = useState(() => Boolean(opening));
   const [loadNonce, setLoadNonce] = useState(0);
   const [loadError, setLoadError] = useState("");
   const [message, setMessage] = useState("");
@@ -142,7 +143,7 @@ export function BitacoraStudio() {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<StickerCategory | "todas">("todas");
   const [cursor, setCursor] = useState(0);
-  const [activePageId, setActivePageId] = useState<string | null>(null);
+  const [activePageId, setActivePageId] = useState<string | null>(opening?.pages[0]?.id ?? null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [paperBoth, setPaperBoth] = useState(false);
@@ -173,7 +174,7 @@ export function BitacoraStudio() {
   const activeRef = useRef<string | null>(null);
   const cursorRef = useRef(0);
   const dirtyRef = useRef(false);
-  const loadedRef = useRef(false);
+  const loadedRef = useRef(Boolean(opening));
   const saveChain = useRef(Promise.resolve());
   const ticketRef = useRef(0);
   const pages = history.present;
@@ -185,9 +186,12 @@ export function BitacoraStudio() {
 
   useEffect(() => {
     let active = true;
-    setLoaded(false);
-    setLoadError("");
-    void loadBitacora()
+    if (loadNonce > 0) {
+      setLoaded(false);
+      loadedRef.current = false;
+      setLoadError("");
+    }
+    void loadBitacora({ fresh: loadNonce > 0 })
       .then((bundle) => {
         if (!active) {
           return;
@@ -195,7 +199,7 @@ export function BitacoraStudio() {
         presentRef.current = bundle.pages;
         setHistory(createHistory(bundle.pages));
         setAssets(bundle.assets);
-        setActivePageId(bundle.pages[0]?.id ?? null);
+        setActivePageId((current) => current ?? bundle.pages[0]?.id ?? null);
         setLoaded(true);
         loadedRef.current = true;
       })
@@ -290,7 +294,7 @@ export function BitacoraStudio() {
     if (!loaded || opened) {
       return;
     }
-    const timer = window.setTimeout(() => setCoverLeaving(true), 700);
+    const timer = window.setTimeout(() => setCoverLeaving(true), 240);
     return () => window.clearTimeout(timer);
   }, [loaded, opened]);
 
@@ -298,7 +302,7 @@ export function BitacoraStudio() {
     if (!coverLeaving || opened) {
       return;
     }
-    const timer = window.setTimeout(() => setOpened(true), 1100);
+    const timer = window.setTimeout(() => setOpened(true), 960);
     return () => window.clearTimeout(timer);
   }, [coverLeaving, opened]);
 
@@ -1331,7 +1335,7 @@ function PhotoLibrary({
               onDragStart={(event) => writeBitacoraDrop(event, { kind: "photo", assetId: asset.id, url: asset.url })}
               onClick={() => onUse(asset)}
             >
-              <img src={mediaUrl(asset.url, 240)} alt="" draggable={false} />
+              <img src={mediaUrl(asset.url, 240)} alt="" draggable={false} loading="lazy" decoding="async" />
             </button>
             <button type="button" aria-label="Eliminar fotografía" onClick={() => onDelete(asset.id)}>
               <Trash2 size={13} />
@@ -1383,7 +1387,7 @@ function StickerLibrary({
               onDragStart={(event) => writeBitacoraDrop(event, { kind: "sticker", stickerId: item.id })}
               onClick={() => onPick(item.id)}
             >
-              <img src={item.src} alt={item.name} draggable={false} />
+              <img src={item.src} alt={item.name} draggable={false} loading="lazy" decoding="async" />
             </button>
           </li>
         ))}

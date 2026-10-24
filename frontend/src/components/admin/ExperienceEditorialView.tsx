@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useLocation } from "react-router-dom";
 import { CircleHelp, Heart, Share } from "lucide-react";
 import { VisitedCheckIcon } from "../icons/VisitedCheckIcon";
@@ -327,6 +327,12 @@ export function ExperienceEditorialView({
   const [activeTab, setActiveTab] = useState(
     () => experienceDetailTabFromHash(hash) ?? EXPERIENCE_DETAIL_SECTIONS.info,
   );
+  const hashRef = useRef(hash);
+  hashRef.current = hash;
+
+  useEffect(() => {
+    setActiveTab(experienceDetailTabFromHash(hashRef.current) ?? EXPERIENCE_DETAIL_SECTIONS.info);
+  }, [experience.id]);
 
   useEffect(() => {
     const next = experienceDetailTabFromHash(hash);

@@ -15,9 +15,9 @@ import { OnboardingCatalogGuard } from "../components/onboarding/OnboardingCatal
 import { OnboardingLayout } from "../components/onboarding/OnboardingLayout";
 import { OnboardingPage } from "../pages/onboarding/OnboardingPage";
 import { ExplorePage } from "../pages/ExplorePage";
-import { ExplorerBlankPage } from "../pages/ExplorerBlankPage";
 import { MapPage } from "../pages/MapPage";
 import { ExperienceDetailPage } from "../pages/ExperienceDetailPage";
+import { PlannerPage } from "../pages/PlannerPage";
 import { FavoritesPage } from "../pages/FavoritesPage";
 import { VisitedPage } from "../pages/VisitedPage";
 import { ProfilePage } from "../pages/ProfilePage";
@@ -57,6 +57,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/visitados": "Visitados | Entre Caminos",
   "/perfil": "Tu perfil | Entre Caminos",
   "/mis-caminos": "Mis caminos | Entre Caminos",
+  "/planear-mi-plan": "Planear mi plan | Entre Caminos",
   "/mis-caminos/bitacora": "Mi bitácora | Entre Caminos",
   "/preguntas-frecuentes": "Preguntas frecuentes | Entre Caminos",
   "/admin/preguntas-frecuentes": "Preguntas frecuentes | Entre Caminos",
@@ -148,11 +149,13 @@ export function AppRoutes() {
             <Route element={<ProtectedRoute />}>
               <Route path="/mis-caminos" element={<MisCaminosPage />} />
               <Route path="/mis-caminos/bitacora" element={<BitacoraPage />} />
+              <Route path="/planear-mi-plan" element={<PlannerPage />} />
+              <Route path="/planear-mi-plan/guardado/:id" element={<PlannerPage />} />
             </Route>
             <Route path="/explorar/:id" element={<ExperienceDetailPage />} />
             <Route path="/favoritos" element={<FavoritesPage />} />
             <Route path="/mapa" element={<MapPage />} />
-            <Route path="/plan-con-amigos" element={<ExplorerBlankPage title="PLAN CON AMIGOS" />} />
+            <Route path="/plan-con-amigos" element={<Navigate to="/planear-mi-plan" replace />} />
             <Route path="/visitados" element={<VisitedPage />} />
           </Route>
         </Route>

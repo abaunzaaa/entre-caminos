@@ -237,6 +237,7 @@ export function AdminNotifications() {
         role="dialog"
         aria-label="Notificaciones"
         aria-hidden={!open}
+        inert={!open}
       >
         <div className="admin-notify__head">
           <p>Notificaciones</p>
