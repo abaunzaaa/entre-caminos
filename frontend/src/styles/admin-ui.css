@@ -3686,6 +3686,17 @@
   touch-action: pan-y;
 }
 
+.dash-exps-map__land,
+.dash-exps-map__scaler {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.dash-exps-map__scaler {
+  transform-origin: center center;
+}
+
 .dash-exps-map__tile {
   position: absolute;
   top: 0;
