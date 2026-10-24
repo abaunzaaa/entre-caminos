@@ -338,13 +338,6 @@ function organizingMinutes(item: Candidate, input: Preferences) {
   return Math.min(userMax, core + 40);
 }
 
-function expectedStops(minutes: number) {
-  if (minutes < 120) return 2;
-  if (minutes < 240) return 3;
-  if (minutes < 420) return 4;
-  return 5;
-}
-
 function durationText(minutes: number | null) {
   if (!minutes || minutes <= 0) return null;
   const hours = Math.floor(minutes / 60);
@@ -355,10 +348,19 @@ function durationText(minutes: number | null) {
 }
 
 function formatClock(total: number) {
-  const bounded = Math.max(6 * 60, Math.min(22 * 60, total));
-  const hour = Math.floor(bounded / 60);
-  const minute = bounded % 60;
+  const minutes = ((Math.round(total) % (24 * 60)) + 24 * 60) % (24 * 60);
+  const hour = Math.floor(minutes / 60);
+  const minute = minutes % 60;
   return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+}
+
+function absoluteFrom(clock: string, notBefore: number) {
+  const minutes = clockMinutes(clock);
+  if (minutes == null) return null;
+  if (notBefore <= 0) return minutes;
+  let absolute = Math.floor(notBefore / (24 * 60)) * (24 * 60) + minutes;
+  if (absolute < notBefore) absolute += 24 * 60;
+  return absolute;
 }
 
 function shortCopy(value: string, max: number) {
@@ -376,34 +378,43 @@ function scheduleLabel(stops: BuiltStop[]) {
   return "Horario flexible";
 }
 
+function stopSpan(stop: BuiltStop) {
+  if (stop.stopType === "experience") return Math.max(15, stop.durationMinutes ?? 45);
+  return Math.max(10, Math.min(30, stop.durationMinutes ?? 15));
+}
+
 function fillTimes(stops: BuiltStop[], catalogStart: string) {
   const anchor = CLOCK.test(catalogStart) ? clockMinutes(catalogStart) : null;
   const firstExperience = stops.findIndex((stop) => stop.stopType === "experience");
-  let before = 0;
+  let lead = 0;
   for (let index = 0; index < firstExperience; index += 1) {
-    before += stops[index]?.durationMinutes && stops[index]?.durationMinutes! > 0 ? stops[index]!.durationMinutes! : 25;
+    lead += stopSpan(stops[index]!);
   }
-  let cursor = anchor != null ? Math.max(6 * 60, anchor - before) : 8 * 60;
+  let cursor = anchor != null ? anchor - lead : 8 * 60;
+  if (anchor != null && cursor < 6 * 60 && firstExperience > 0) {
+    const room = Math.max(0, anchor - 6 * 60);
+    const each = Math.max(10, Math.floor(room / firstExperience));
+    for (let index = 0; index < firstExperience; index += 1) {
+      const stop = stops[index]!;
+      stop.durationMinutes = Math.min(stopSpan(stop), each);
+    }
+    lead = stops.slice(0, firstExperience).reduce((sum, stop) => sum + (stop.durationMinutes ?? 10), 0);
+    cursor = Math.max(6 * 60, anchor - lead);
+  } else if (cursor < 6 * 60) {
+    cursor = 6 * 60;
+  }
   for (const [index, stop] of stops.entries()) {
-    const fallback = stop.stopType === "suggestion" ? 25 : 45;
-    let minutes = stop.durationMinutes && stop.durationMinutes > 0 ? stop.durationMinutes : fallback;
     if (index === firstExperience && anchor != null) cursor = anchor;
-    if (anchor != null && index < firstExperience) minutes = Math.min(minutes, Math.max(15, anchor - cursor));
-    const given = clockMinutes(stop.suggestedAt);
-    if (given != null && given >= cursor && !(anchor != null && index < firstExperience && given >= anchor)) cursor = given;
+    const minutes = stop.stopType === "experience" ? Math.max(15, stop.durationMinutes ?? 45) : stopSpan(stop);
+    stop.durationMinutes = minutes;
+    stop.durationLabel = durationText(minutes);
     stop.suggestedAt = formatClock(cursor);
-    const end = cursor + minutes;
-    stop.suggestedEnd = formatClock(end);
-    const startMinutes = clockMinutes(stop.suggestedAt) ?? cursor;
-    const endMinutes = Math.max(startMinutes + 15, clockMinutes(stop.suggestedEnd) ?? end);
-    stop.suggestedEnd = formatClock(endMinutes);
-    stop.durationMinutes = Math.max(15, (clockMinutes(stop.suggestedEnd) ?? endMinutes) - startMinutes);
-    stop.durationLabel = durationText(stop.durationMinutes);
-    cursor = clockMinutes(stop.suggestedEnd) ?? endMinutes;
+    stop.suggestedEnd = formatClock(cursor + minutes);
+    cursor += minutes;
   }
 }
 
-function validatePlan(raw: Record<string, unknown> | null, primary: Candidate, input: Preferences, lenient = false) {
+function validatePlan(raw: Record<string, unknown> | null, primary: Candidate, input: Preferences) {
   const errors: string[] = [];
   if (!raw) return { errors: ["La respuesta no es JSON."], plan: null as BuiltPlan | null };
   const windowMinutes = organizingMinutes(primary, input);
@@ -471,17 +482,30 @@ function validatePlan(raw: Record<string, unknown> | null, primary: Candidate, i
     }
     if (stops.length >= 8) break;
   }
+  let used = stops.reduce((sum, stop) => sum + (stop.durationMinutes ?? 0), 0);
+  while (used > windowMinutes + 15 && stops.filter((stop) => stop.stopType === "suggestion").length > 1) {
+    const extra = stops.map((stop, index) => ({ stop, index })).reverse().find((item) => item.stop.stopType === "suggestion");
+    if (!extra) break;
+    stops.splice(extra.index, 1);
+    used = stops.reduce((sum, stop) => sum + (stop.durationMinutes ?? 0), 0);
+  }
+  stops.forEach((stop, index) => {
+    stop.position = index + 1;
+  });
   fillTimes(stops, primary.catalogTimes[0] ?? "");
-  let cursor = 0;
+  let notBefore = 0;
   for (const stop of stops) {
-    const startMinutes = clockMinutes(stop.suggestedAt);
-    const endMinutes = clockMinutes(stop.suggestedEnd);
-    if (startMinutes == null || endMinutes == null || endMinutes <= startMinutes) {
+    const start = absoluteFrom(stop.suggestedAt, notBefore);
+    const end = clockMinutes(stop.suggestedEnd);
+    const minutes = stop.durationMinutes ?? 0;
+    const shown = start != null && end != null ? (end - (start % (24 * 60)) + 24 * 60) % (24 * 60) : -1;
+    const coherent = start != null && end != null && minutes >= 10 && shown === minutes % (24 * 60);
+    if (!coherent) {
       errors.push(`«${stop.title}» no tiene un horario propuesto coherente.`);
       continue;
     }
-    if (startMinutes < cursor) errors.push(`«${stop.title}» se superpone con la parada anterior.`);
-    cursor = endMinutes;
+    if (notBefore > 0 && start < notBefore) errors.push(`«${stop.title}» se superpone con la parada anterior.`);
+    notBefore = start + minutes;
   }
   if (!stops.some((stop) => stop.stopType === "experience")) {
     errors.push("Incluye al menos un momento respaldado por la ficha, sin servicios que el texto no confirme.");
@@ -494,16 +518,6 @@ function validatePlan(raw: Record<string, unknown> | null, primary: Candidate, i
   }
   const sameAsExperience = stops.filter((stop) => stop.title.toLocaleLowerCase("es") === primary.title.toLocaleLowerCase("es")).length;
   if (sameAsExperience > 1) errors.push("No repitas el nombre de la experiencia en varias paradas.");
-  let used = stops.reduce((sum, stop) => sum + (stop.durationMinutes ?? 0), 0);
-  while (used > windowMinutes + 15 && stops.filter((stop) => stop.stopType === "suggestion").length > 1) {
-    const extra = stops.map((stop, index) => ({ stop, index })).reverse().find((item) => item.stop.stopType === "suggestion");
-    if (!extra) break;
-    stops.splice(extra.index, 1);
-    used = stops.reduce((sum, stop) => sum + (stop.durationMinutes ?? 0), 0);
-  }
-  stops.forEach((stop, index) => {
-    stop.position = index + 1;
-  });
   const experienceMinutes = stops.filter((stop) => stop.stopType === "experience").reduce((sum, stop) => sum + (stop.durationMinutes ?? 0), 0);
   if (used > windowMinutes + 15 && used - experienceMinutes > 45) {
     errors.push("Las sugerencias superan el tiempo disponible. Acórtalas; no cambies la duración de la experiencia.");
@@ -515,9 +529,8 @@ function validatePlan(raw: Record<string, unknown> | null, primary: Candidate, i
       errors.push("No interrumpas la experiencia con sugerencias. Pon la llegada antes y el cierre después.");
     }
   }
-  const needed = expectedStops(windowMinutes);
-  if (stops.length < 2 || (!lenient && stops.length < needed)) {
-    errors.push(`Devuelve al menos ${lenient ? 2 : needed} momentos distintos. Uno debe salir de la ficha y los demás pueden ser llegada, pausa o cierre, marcados como suggestion y sin inventar lugares.`);
+  if (stops.length < 2) {
+    errors.push("Devuelve al menos 2 momentos distintos. Uno debe salir de la ficha y el otro puede ser llegada o cierre, marcado como suggestion y sin inventar lugares.");
   }
   const planTitle = asText(raw.title, 90);
   if (!planTitle || planTitle.toLocaleLowerCase("es") === primary.title.toLocaleLowerCase("es")) {
@@ -735,7 +748,6 @@ export async function generateItinerary(input: Preferences) {
         await askModel(input, selected, errors, resolved.notes, input.municipality, attempt),
         selected,
         input,
-        attempt === 2,
       );
       plan = checked.plan;
       errors = checked.errors;
