@@ -168,6 +168,7 @@ export async function generateStructuredGroqJson(input: {
   attempt: number;
   maxTokens?: number;
   format?: "json_schema" | "json_object";
+  reasoningEffort?: "low" | "medium" | "high";
 }) {
   const key = groqKey();
   if (!key) {
@@ -199,6 +200,7 @@ export async function generateStructuredGroqJson(input: {
         model,
         temperature: 0.3,
         max_tokens: input.maxTokens ?? 1200,
+        ...(input.reasoningEffort ? { reasoning_effort: input.reasoningEffort } : {}),
         response_format: responseFormat,
         messages: [
           { role: "system", content: input.system },

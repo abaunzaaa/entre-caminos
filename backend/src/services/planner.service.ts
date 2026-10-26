@@ -782,7 +782,8 @@ async function askSelection(input: Preferences, options: Candidate[], repair: st
     schema: selectionSchema(keys) as unknown as Record<string, unknown>,
     stage: "planner.select",
     attempt,
-    maxTokens: 500,
+    maxTokens: 1200,
+    reasoningEffort: "low",
   });
   return { raw: parseGeminiJson(text), keys };
 }
@@ -812,7 +813,8 @@ async function askItinerary(
     schema: itinerarySchema() as unknown as Record<string, unknown>,
     stage: "planner.generate",
     attempt,
-    maxTokens: 900,
+    maxTokens: 1800,
+    reasoningEffort: "low",
   });
   return parseGeminiJson(text);
 }
@@ -854,7 +856,7 @@ export async function generateItinerary(input: Preferences) {
         logger.warn("planner.groq_failed", { stage: "planner.select", attempt, message: error instanceof Error ? error.message : "error" });
       }
       if (decision.status === "invalid") {
-        repair = "Si eliges, selectedCandidateKey debe ser una clave de la lista. Si ninguna cumple, responde no_match y null.";
+        repair = "Si eliges, selectedCandidateKey debe ser una clave de la lista. Si ninguna cumple, responde no_match y NONE.";
         logger.warn("planner.invalid_choice", {
           stage: "planner.select",
           attempt,
